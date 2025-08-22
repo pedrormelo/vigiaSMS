@@ -80,8 +80,8 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
           src="/logos/logo-jaboatao.png"
           alt="Prefeitura"
           className="mb-4 mx-auto"
-           width={152}
-           height={32}
+          width={152}
+          height={32}
         />
 
         {/* Perfil */}
@@ -94,18 +94,19 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
         </div>
 
         {/* Menu com scroll */}
-        <nav className="flex flex-col gap-2 w-full overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-blue-300 scrollbar-track-transparent">
-          {menuOptions[role].map(({ label, icon: Icon, href }) => (
-            <Link
-              key={label}
-              href={href}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700"
-            >
-              <Icon size={18} />
-              {label}
-            </Link>
-          ))}
-        </nav>
+          <nav className="flex flex-col items-center gap-2 w-full overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-blue-300 min-w-30 scrollbar-track-transparent">
+            {menuOptions[role].map(({ label, icon: Icon, href }) => (
+              <Link
+                key={label}
+                href={href}
+                className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 w-full"
+                style={{ minWidth: "180px" }}
+              >
+                <Icon size={18} className="shrink-0" />
+                <span className="text-center w-full">{label}</span>
+              </Link>
+            ))}
+          </nav>
       </motion.aside>
     </>
   );

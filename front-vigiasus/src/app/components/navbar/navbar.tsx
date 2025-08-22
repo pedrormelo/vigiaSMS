@@ -13,7 +13,7 @@ export default function Navbar() {
   return (
     <>
       <header className="bg-white w-full shadow-sm">
-        <div className="container mx-auto flex justify-between items-center py-2 px-4">
+        <div className="container mx-auto flex justify-between min-h-[68px] items-center py-2 px-4">
           {/* Botão Menu (mobile e desktop) */}
           <button onClick={() => setOpen(true)} className="text-blue-700">
             <Image
@@ -26,10 +26,10 @@ export default function Navbar() {
           </button>
 
           {/*Bloco central com VigiaSUS e Logo Jaboatão juntos */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-28">
             {/* Texto VigiaSUS (visível apenas em desktop) */}
-            <h1 className="hidden md:block font-bold text-2xl text-blue-700">
-              VigiaSUS
+            <h1 className="hidden md:block text-2xl text-blue-700">
+              Vigia<b>SUS</b>
             </h1>
             {/* Logo Prefeitura (visível em mobile e desktop) */}
             <Image
