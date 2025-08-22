@@ -1,9 +1,11 @@
 // src/app/layout.tsx
+
 //import type { Metadata } from 'next';
 import { Montserrat } from 'next/font/google';
 import './globals.css';
 // Navbar 
 import Navbar from '@/app/components/navbar/navbar';
+import Footer from './components/footer/footer';
 
 const montserrat = Montserrat({
   subsets: ['latin'],
@@ -26,7 +28,8 @@ export default function RootLayout({
         {/* A Navbar é renderizada aqui */}
         <Navbar />
         {/* O conteúdo da página (nossa {homePage} será renderizado aqui quando a gentr construir, Pedro*/}
-        <main>{children}</main>
+         <main>{children}</main>
+       <Footer />
       </body>
     </html>
   );

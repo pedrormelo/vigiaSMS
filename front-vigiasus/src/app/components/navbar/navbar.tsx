@@ -28,9 +28,9 @@ export default function Navbar() {
           {/*Bloco central com VigiaSUS e Logo Jaboatão juntos */}
           <div className="flex items-center gap-4">
             {/* Texto VigiaSUS (visível apenas em desktop) */}
-            <h1 className="hidden md:block font-bold text-2xl text-blue-700">
-              VigiaSUS
-            </h1>
+            <h1 className="hidden md:block text-2xl text-blue-700">
+             Vigia<b>SUS</b>
+            </h1> 
             {/* Logo Prefeitura (visível em mobile e desktop) */}
             <Image
               src="/logos/logo-jaboatao.png"
