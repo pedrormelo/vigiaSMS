@@ -7,7 +7,7 @@ export default function Footer() {
                 {/* Esquerda */}
                 <div className="flex justify-start">
                     <Image
-                        src="/logos/artefato-prefeitura2.png"
+                        src="/logos/artefato-prefeitura1.png"
                         alt="Símbolos Jaboatão"
                         width={120}
                         height={40}
