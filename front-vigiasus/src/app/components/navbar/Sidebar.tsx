@@ -81,17 +81,12 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
   return (
     <>
       {/* Overlay escuro no fundo */}
-      {isOpen && (
-        <div
-          onClick={onClose}
-          className="fixed inset-0 z-40 md:hidden bg-black/60 backdrop-blur-sm"
-        />
-      )}
+      {isOpen && <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40" onClick={onClose} />}
 
       <motion.aside
         initial={{ x: "-100%" }}
         animate={{ x: isOpen ? 0 : "-100%" }}
-        transition={{ type: "spring", stiffness: 100, damping: 20 }}
+        transition={{ type: "spring", stiffness: 114, damping: 20 }}
         className="fixed top-0 left-0 h-full w-full min-w-2xs md:w-64 bg-white shadow-lg z-50 flex flex-col p-4"
       >
         {/* Botão fechar menu */}
