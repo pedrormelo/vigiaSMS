@@ -2,7 +2,7 @@
 "use client";
 import { useState } from "react";
 import Image from "next/image";
-import Sidebar from "./Sidebar"; 
+import Sidebar from "./Sidebar";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -13,7 +13,7 @@ export default function Navbar() {
   return (
     <>
       <header className="bg-white w-full shadow-sm">
-        <div className="container mx-auto flex justify-between items-center py-2 px-4">
+        <div className="container flex min-w-full min-h-[64px] justify-between items-center py-2 px-18">
           {/* Botão Menu (mobile e desktop) */}
           <button onClick={() => setOpen(true)} className="text-blue-700">
             <Image
@@ -26,18 +26,18 @@ export default function Navbar() {
           </button>
 
           {/*Bloco central com VigiaSUS e Logo Jaboatão juntos */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-22">
             {/* Texto VigiaSUS (visível apenas em desktop) */}
             <h1 className="hidden md:block text-2xl text-blue-700">
-             Vigia<b>SUS</b>
-            </h1> 
+              Vigia<b>SUS</b>
+            </h1>
             {/* Logo Prefeitura (visível em mobile e desktop) */}
             <Image
               src="/logos/logo-jaboatao.png"
               alt="Prefeitura de Jaboatão"
               width={170}
               height={32}
-              className="h-8" 
+              className="h-8"
             />
           </div>
 

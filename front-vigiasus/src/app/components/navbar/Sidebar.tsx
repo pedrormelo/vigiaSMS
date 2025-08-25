@@ -9,6 +9,12 @@ import {
   HiOutlineLogout,
   HiOutlineChatAlt,
 } from "react-icons/hi";
+import { 
+  PanelRightOpen,
+  CircleUserRound 
+} from 'lucide-react';
+
+
 
 interface SidebarProps {
   role: "secretario" | "diretor" | "gerente" | "membro";
@@ -57,7 +63,7 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
       {isOpen && (
         <div
           onClick={onClose}
-          className="fixed inset-0 bg-black/40 z-40 md:hidden"
+          className="fixed inset-0 z-40 md:hidden bg-black/60 backdrop-blur-sm"
         />
       )}
 
@@ -65,29 +71,31 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
         initial={{ x: "-100%" }}
         animate={{ x: isOpen ? 0 : "-100%" }}
         transition={{ type: "spring", stiffness: 100, damping: 20 }}
-        className="fixed top-0 left-0 h-full w-full md:w-64 bg-white shadow-lg z-50 flex flex-col p-4"
+        className="fixed top-0 left-0 h-full w-full min-w-2xs md:w-64 bg-white shadow-lg z-50 flex flex-col p-4"
       >
         {/* Botão fechar menu */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 text-blue-700 text-xl"
+          className="absolute top-3 right-3 text-green-700 text-xl cursor-pointer"
         >
-          ✕
+          <PanelRightOpen className="w-8 h-8" />
         </button>
 
-        {/* Logo */}
-        <Image
-          src="/logos/logo-jaboatao.png"
-          alt="Prefeitura"
-          className="mb-4 mx-auto"
-           width={152}
-           height={32}
-        />
+        {/* Logo alinhado à esquerda */}
+        <div className="mb-4 flex justify-start">
+          <Image
+            src="/logos/logo-jaboatao2.png"
+            alt="Prefeitura"
+            className="max-h-28 max-w-28"
+            width={152}
+            height={32}
+          />
+        </div>
 
         {/* Perfil */}
         <div className="text-center mb-4">
-          <div className="w-16 h-16 border-2 border-blue-600 rounded-full flex items-center justify-center mx-auto mb-2">
-            <span className="text-2xl text-blue-600">👤</span>
+          <div className="w-16 h-16 flex items-center justify-center mx-auto mb-2">
+            <span className=" text-blue-600"><CircleUserRound strokeWidth={0.75} className="w-20 h-20" /></span>
           </div>
           <h2 className="font-bold text-blue-700 text-sm">Usuário</h2>
           <p className="text-xs text-blue-600 capitalize">{role}</p>
