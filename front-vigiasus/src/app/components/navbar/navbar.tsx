@@ -8,7 +8,7 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
 
   // Esse role futuramente vem do AuthContext
-  const role: "secretario" | "diretor" | "gerente" | "membro" = "gerente";
+  const role: "secretario" | "diretor" | "gerente" | "membro" = "diretor";
 
   return (
     <>
