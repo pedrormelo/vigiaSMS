@@ -2,6 +2,10 @@
 
 import { FileGrid } from "@/app/components/contextosCard/contextosGrid";
 import type { FileType } from "@/app/components/contextosCard/contextoCard";
+import { Button } from "@/components/button"
+import { div } from "framer-motion/m";
+
+import { Plus } from 'lucide-react';
 
 const sampleFiles = [
     {
@@ -51,9 +55,20 @@ export default function HomePage() {
     return (
         <div className="min-h-screen bg-[#FDFDFD] p-6">
             <div className="container mx-auto">
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold mb-2 text-white">File System</h1>
-                    <p className="text-gray-400">Manage your documents, dashboards, and links with color-coded organization</p>
+                <div className="mb-4 flex">
+                    <h1 className="text-4xl font-bold mb-2 text-blue-700">GTI</h1>
+                    <h2 className="text-4xl ml-2.5 text-blue-600">GERÊNCIA DE TECNOLOGIA DA INFORMAÇÃO</h2>
+                </div>
+
+                <div className="flex items-center gap-1 mb-7">
+                    <h1 className="text-3xl mr-2 text-blue-600">Dashboard</h1>
+                    <Button
+                        size="icon"
+                        onClick={() => ("")}
+                        className="text-blue-500 hover:text-white bg-gradient-to-b from-[#e4eaff] to-[#9fb2ff] hover:from-[#486DFF]/70 hover:to-[#CDD7FF]/75 rounded-full h-10 w-10 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 border border-[#BFCCFF]/100 hover:border-[#9fb2ff]"
+                    >
+                        <Plus strokeWidth={2.55} className="h-6 w-6" />
+                    </Button>
                 </div>
 
                 <FileGrid files={sampleFiles} onFileClick={handleFileClick} />
