@@ -3,11 +3,19 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { SearchBar } from "../ui/search-bar";
 
 type Tab = "diretoria" | "todas";
 
 export default function GerenciasFilterBar() {
   const [activeTab, setActiveTab] = useState<Tab>("todas");
+  
+  const [searchValue, setSearchValue] = useState("")
+
+  const handleSearch = (value: string) => {
+    console.log("Searching for:", value)
+    // Add your search logic here
+  }
 
   return (
     <div className="mb-8">
@@ -16,8 +24,17 @@ export default function GerenciasFilterBar() {
         {/* Título */}
         <h2 className="text-4xl font-extralight text-[#1745FF]">Gerências</h2>
 
-        {/* Input de busca */}
         <div className="flex-1 relative max-w-full ml-8">
+          <SearchBar
+            value={searchValue}
+            onChange={setSearchValue}
+            onSearch={handleSearch}
+            placeholder="Pesquise pelo nome da Gerência..."
+          />
+        </div>
+
+        {/* Input de busca */}
+        {/* <div className="flex-1 relative max-w-full ml-8">
           <input
             type="text"
             placeholder="Pesquise pelo nome da Gerência..."
@@ -30,7 +47,7 @@ export default function GerenciasFilterBar() {
             height={24}
             className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
           />
-        </div>
+        </div> */}
       </div>
 
       {/* LINHA 2: Filtros */}
@@ -46,21 +63,19 @@ export default function GerenciasFilterBar() {
         {/* Botões de abas */}
         <button
           onClick={() => setActiveTab("diretoria")}
-          className={`px-6 py-2 rounded-full font-medium transition shadow-sm ${
-            activeTab === "diretoria"
-              ? "bg-blue-600 text-white" // Estilo ativo (exemplo)
-              : "bg-white text-gray-500 hover:bg-gray-50"
-          }`}
+          className={`px-6 py-2 rounded-full font-medium transition shadow-sm ${activeTab === "diretoria"
+            ? "bg-blue-600 text-white" // Estilo ativo (exemplo)
+            : "bg-white text-gray-500 hover:bg-gray-50"
+            }`}
         >
           Diretória
         </button>
         <button
           onClick={() => setActiveTab("todas")}
-          className={`px-6 py-2 rounded-full font-medium transition shadow-sm ${
-            activeTab === "todas"
-              ? "bg-blue-600 text-white"
-              : "bg-white text-gray-500 hover:bg-gray-50"
-          }`}
+          className={`px-6 py-2 rounded-full font-medium transition shadow-sm ${activeTab === "todas"
+            ? "bg-blue-600 text-white"
+            : "bg-white text-gray-500 hover:bg-gray-50"
+            }`}
         >
           Todas
         </button>

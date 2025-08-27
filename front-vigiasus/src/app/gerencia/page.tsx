@@ -124,7 +124,7 @@ export default function HomePage() {
                     <Button
                         size="icon"
                         onClick={() => ("")}
-                        className="text-blue-500 hover:text-white bg-gradient-to-b from-[#e4eaff] to-[#9fb2ff] hover:from-[#486DFF]/70 hover:to-[#CDD7FF]/75 rounded-full h-10 w-10 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 border border-[#BFCCFF]/100 hover:border-[#9fb2ff]"
+                        className="text-[#7C96FF] hover:text-white bg-gradient-to-b from-[#e4eaff] to-[#9fb2ff] hover:from-[#CDD7FF]/70 hover:to-[#486DFF]/75 rounded-full h-10 w-10 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 border border-[#BFCCFF]/100 hover:border-[#9fb2ff]"
                     >
                         <Plus strokeWidth={2.55} className="h-6 w-6" />
                     </Button>

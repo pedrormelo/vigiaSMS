@@ -123,7 +123,7 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
             <Link
               key={label}
               href={href}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 justify-center w-full"
+              className="flex items-center gap-2 px-3 py-2 rounded-[15px] bg-blue-600 text-white text-sm hover:bg-blue-700 justify-center w-full"
             >
               <Icon size={18} />
               <span className="w-full text-center">{label}</span>
