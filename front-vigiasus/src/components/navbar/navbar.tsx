@@ -3,26 +3,21 @@
 import { useState } from "react";
 import Image from "next/image";
 import Sidebar from "./Sidebar";
+import { Menu } from 'lucide-react';
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
 
   // Esse role futuramente vem do AuthContext
-  const role: "secretario" | "diretor" | "gerente" | "membro" = "gerente";
+  const role: "secretario" | "diretor" | "gerente" | "membro" = "diretor";
 
   return (
     <>
       <header className="bg-white w-full shadow-sm">
         <div className="container flex min-w-full min-h-[64px] justify-between items-center py-2 px-18">
           {/* Botão Menu (mobile e desktop) */}
-          <button onClick={() => setOpen(true)} className="text-blue-700">
-            <Image
-              src="/icons/menu.svg"
-              alt="Menu"
-              width={28}
-              height={28}
-              className="w-7 h-7"
-            />
+          <button onClick={() => setOpen(true)} className="text-blue-700 hover:text-blue-500 cursor-pointer">
+            <Menu strokeWidth={2.5} className="w-9 h-9" />
           </button>
 
           {/*Bloco central com VigiaSUS e Logo Jaboatão juntos */}
