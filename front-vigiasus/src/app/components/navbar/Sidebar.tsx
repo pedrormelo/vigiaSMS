@@ -9,11 +9,17 @@ import {
   HiOutlineLogout,
   HiOutlineChatAlt,
 } from "react-icons/hi";
-import { 
+import {
   PanelRightOpen,
-  CircleUserRound 
-} from 'lucide-react';
+  CircleUserRound,
+  BookCheck,
+  LayoutDashboard,
+  GalleryVerticalEnd,
+  Layers,
+  MessageSquareMore,
+  FolderClock
 
+} from 'lucide-react';
 
 
 interface SidebarProps {
@@ -22,37 +28,52 @@ interface SidebarProps {
   onClose: () => void;
 }
 
+//icones da sidebar LUCIDE + react  icons
+const icons = {
+  home: HiHome,
+  validarContextos: HiOutlineClipboardList,
+  contextos : BookCheck,
+  logout: HiOutlineLogout,
+  comentarios: MessageSquareMore,
+  book: BookCheck,
+  dashboard: LayoutDashboard,
+  dadosGerais: GalleryVerticalEnd,
+  minhasGerencias : Layers,
+  contextosEnviados: FolderClock 
+};
+
+
 const menuOptions = {
   secretario: [
-    { label: "Página Inicial", icon: HiHome, href: "/" },
-    { label: "Dashboard", icon: HiOutlineClipboardList, href: "/dashboard" },
-    { label: "Dados Gerais", icon: HiOutlineClipboardList, href: "/dados" },
-    { label: "Meus Comentários", icon: HiOutlineChatAlt, href: "/comentarios" },
-    { label: "Sair do Sistema", icon: HiOutlineLogout, href: "/logout" },
+    { label: "Página Inicial", icon: icons.home, href: "/" },
+    { label: "Dashboard", icon: icons.dashboard, href: "/dashboard" },
+    { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
+    { label: "Meus Comentários", icon: icons.comentarios, href: "/comentarios" },
+    { label: "Sair do Sistema", icon: icons.logout, href: "/logout" },
   ],
   diretor: [
-    { label: "Página Inicial", icon: HiHome, href: "/" },
-    { label: "Dashboard da Diretoria", icon: HiOutlineClipboardList, href: "/dashboard" },
-    { label: "Minhas Gerências", icon: HiOutlineClipboardList, href: "/gerencias" },
-    { label: "Validar Contextos", icon: HiOutlineClipboardList, href: "/validar" },
-    { label: "Dados Gerais", icon: HiOutlineClipboardList, href: "/dados" },
-    { label: "Meus Comentários", icon: HiOutlineChatAlt, href: "/comentarios" },
-    { label: "Sair do Sistema", icon: HiOutlineLogout, href: "/logout" },
+    { label: "Página Inicial", icon: icons.home, href: "/" },
+    { label: "Dashboard da Diretoria", icon: icons.dashboard, href: "/dashboard" },
+    { label: "Minhas Gerências", icon: icons.minhasGerencias, href: "/gerencias" },
+    { label: "Validar Contextos", icon: icons.contextos, href: "/validar" },
+    { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
+    { label: "Meus Comentários", icon: icons.comentarios, href: "/comentarios" },
+    { label: "Sair do Sistema", icon: icons.logout, href: "/logout" },
   ],
   gerente: [
-    { label: "Página Inicial", icon: HiHome, href: "/" },
-    { label: "Dashboard da Gerência", icon: HiOutlineClipboardList, href: "/dashboard" },
-    { label: "Validar Contextos", icon: HiOutlineClipboardList, href: "/validar" },
-    { label: "Dados Gerais", icon: HiOutlineClipboardList, href: "/dados" },
-    { label: "Meus Comentários", icon: HiOutlineChatAlt, href: "/comentarios" },
-    { label: "Sair do Sistema", icon: HiOutlineLogout, href: "/logout" },
+    { label: "Página Inicial", icon: icons.home, href: "/" },
+    { label: "Dashboard da Gerência", icon: icons.dashboard, href: "/dashboard" },
+    { label: "Validar Contextos", icon: icons.contextos, href: "/validar" },
+    { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
+    { label: "Meus Comentários", icon: icons.comentarios, href: "/comentarios" },
+    { label: "Sair do Sistema", icon: icons.logout, href: "/logout" },
   ],
   membro: [
-    { label: "Página Inicial", icon: HiHome, href: "/" },
-    { label: "Contextos Enviados", icon: HiOutlineClipboardList, href: "/validar" },
-    { label: "Dados Gerais", icon: HiOutlineClipboardList, href: "/dados" },
-    { label: "Meus Comentários", icon: HiOutlineChatAlt, href: "/comentarios" },
-    { label: "Sair do Sistema", icon: HiOutlineLogout, href: "/logout" },
+    { label: "Página Inicial", icon: icons.home, href: "/" },
+    { label: "Contextos Enviados", icon: icons.dashboard, href: "/validar" },
+    { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
+    { label: "Meus Comentários", icon: icons.comentarios, href: "/comentarios" },
+    { label: "Sair do Sistema", icon: icons.logout, href: "/logout" },
   ],
 };
 
@@ -60,17 +81,12 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
   return (
     <>
       {/* Overlay escuro no fundo */}
-      {isOpen && (
-        <div
-          onClick={onClose}
-          className="fixed inset-0 z-40 md:hidden bg-black/60 backdrop-blur-sm"
-        />
-      )}
+      {isOpen && <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40" onClick={onClose} />}
 
       <motion.aside
         initial={{ x: "-100%" }}
         animate={{ x: isOpen ? 0 : "-100%" }}
-        transition={{ type: "spring", stiffness: 100, damping: 20 }}
+        transition={{ type: "spring", stiffness: 114, damping: 20 }}
         className="fixed top-0 left-0 h-full w-full min-w-2xs md:w-64 bg-white shadow-lg z-50 flex flex-col p-4"
       >
         {/* Botão fechar menu */}
@@ -107,10 +123,10 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
             <Link
               key={label}
               href={href}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 justify-center w-full"
             >
               <Icon size={18} />
-              {label}
+              <span className="w-full text-center">{label}</span>
             </Link>
           ))}
         </nav>
