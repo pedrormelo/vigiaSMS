@@ -56,7 +56,7 @@ export default function Footer() {
                         Secretaria Municipal de Saúde de Jaboatão dos Guararapes. Av.
                         Barreto de Menezes, S/N – Prazeres – Jaboatão dos Guararapes – PE.
                         CEP: 54.330-900 – CNPJ: 03.904.395/0001-45 – Julho de 2025 – Ver:
-                        0.1.0
+                        0.1
                     </span>
                 </p>
             </div>
