@@ -4,8 +4,8 @@
 import { Montserrat } from 'next/font/google';
 import './globals.css';
 // Navbar 
-import Navbar from '@/app/components/navbar/navbar';
-import Footer from './components/footer/footer';
+import Navbar from '@/components/navbar/navbar';
+import Footer from '../components/footer/footer';
 import { PanelRightOpen } from 'lucide-react';
 
 
