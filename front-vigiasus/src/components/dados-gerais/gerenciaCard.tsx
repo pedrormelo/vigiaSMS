@@ -15,7 +15,7 @@ export default function GerenciaCard({ label, color }: GerenciaCardProps) {
         style={{ backgroundColor: color }}
       ></div>
 
-      {/* Truncate serve para limitar o tamanho do texto "..."
+      {/* Truncate serve para limitar o tamanho do texto das diretorias "..."
       */}
       <span className="truncate py-3 px-4 m-2 font-medium text-gray-800">
         {label}
