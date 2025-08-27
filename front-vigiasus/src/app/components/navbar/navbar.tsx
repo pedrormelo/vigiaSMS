@@ -2,31 +2,26 @@
 "use client";
 import { useState } from "react";
 import Image from "next/image";
-import Sidebar from "./Sidebar"; 
+import Sidebar from "./Sidebar";
+import { Menu } from 'lucide-react';
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
 
   // Esse role futuramente vem do AuthContext
-  const role: "secretario" | "diretor" | "gerente" | "membro" = "gerente";
+  const role: "secretario" | "diretor" | "gerente" | "membro" = "diretor";
 
   return (
     <>
       <header className="bg-white w-full shadow-sm">
-        <div className="container mx-auto flex justify-between min-h-[68px] items-center py-2 px-4">
+        <div className="container flex min-w-full min-h-[64px] justify-between items-center py-2 px-18">
           {/* Botão Menu (mobile e desktop) */}
-          <button onClick={() => setOpen(true)} className="text-blue-700">
-            <Image
-              src="/icons/menu.svg"
-              alt="Menu"
-              width={28}
-              height={28}
-              className="w-7 h-7"
-            />
+          <button onClick={() => setOpen(true)} className="text-blue-700 hover:text-blue-500 cursor-pointer">
+            <Menu strokeWidth={2.5} className="w-9 h-9" />
           </button>
 
           {/*Bloco central com VigiaSUS e Logo Jaboatão juntos */}
-          <div className="flex items-center gap-28">
+          <div className="flex items-center gap-22">
             {/* Texto VigiaSUS (visível apenas em desktop) */}
             <h1 className="hidden md:block text-2xl text-blue-700">
               Vigia<b>SUS</b>
@@ -37,7 +32,7 @@ export default function Navbar() {
               alt="Prefeitura de Jaboatão"
               width={170}
               height={32}
-              className="h-8" 
+              className="h-8"
             />
           </div>
 
