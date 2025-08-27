@@ -1,7 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
 
 @import "tailwindcss";
 @import "tw-animate-css";
 
+<<<<<<< HEAD
+:root {
+  --background: #ededed;
+  --foreground: #ffffff;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --background: #ededed;
+=======
 @custom-variant dark (&:is(.dark *));
 @tailwind utilities;
 
@@ -48,6 +59,7 @@
 @media (prefers-color-scheme: light) {
   :root {
     --background:#f2f2f2;
+>>>>>>> 596e8c1deb31a39a24ea6362f527989b2182409c
     --foreground: #0a0a0a;
   }
 }
