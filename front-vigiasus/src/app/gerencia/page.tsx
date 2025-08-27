@@ -1,7 +1,7 @@
 "use client"
 
-import { FileGrid } from "@/app/components/contextosCard/contextosGrid";
-import type { FileType } from "@/app/components/contextosCard/contextoCard";
+import { FileGrid } from "@/components/contextosCard/contextosGrid";
+import type { FileType } from "@/components/contextosCard/contextoCard";
 import { Button } from "@/components/button"
 import { div } from "framer-motion/m";
 
