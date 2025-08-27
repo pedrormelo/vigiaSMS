@@ -13,7 +13,7 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="bg-white w-full shadow-sm">
+  <header className="bg-white w-full drop-shadow-md">
         <div className="container flex min-w-full min-h-[64px] justify-between items-center py-2 px-18">
           {/* Botão Menu (mobile e desktop) */}
           <button onClick={() => setOpen(true)} className="text-blue-700 hover:text-blue-500 cursor-pointer">
