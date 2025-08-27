@@ -44,6 +44,65 @@ const sampleFiles = [
         type: "link" as FileType,
         insertedDate: "2024-06-23",
     },
+        {
+        id: "3",
+        title: "Unidades com o PEC implementado",
+        type: "dashboard" as FileType,
+        insertedDate: "2025-08-22",
+    },
+    {
+        id: "4",
+        title: "Servidores ativos - comissionados, efetivos e contratos",
+        type: "excel" as FileType,
+        insertedDate: "2024-06-23",
+    },
+    {
+        id: "5",
+        title: "Resolução 20/07/2025",
+        type: "resolucao" as FileType,
+        insertedDate: "2024-06-23",
+    },
+    {
+        id: "6",
+        title: "Link para Dashboard Externo",
+        type: "link" as FileType,
+        insertedDate: "2024-06-23",
+    },
+        {
+        id: "3",
+        title: "Unidades com o PEC implementado",
+        type: "dashboard" as FileType,
+        insertedDate: "2025-08-22",
+    },
+    {
+        id: "4",
+        title: "Servidores ativos - comissionados, efetivos e contratos",
+        type: "excel" as FileType,
+        insertedDate: "2024-06-23",
+    },
+    {
+        id: "5",
+        title: "Resolução 20/07/2025",
+        type: "resolucao" as FileType,
+        insertedDate: "2024-06-23",
+    },
+    {
+        id: "6",
+        title: "Link para Dashboard Externo",
+        type: "link" as FileType,
+        insertedDate: "2024-06-23",
+    },    {
+        id: "3",
+        title: "Unidades com o PEC implementado",
+        type: "dashboard" as FileType,
+        insertedDate: "2025-08-22",
+    },
+    {
+        id: "4",
+        title: "Servidores ativos - comissionados, efetivos e contratos",
+        type: "excel" as FileType,
+        insertedDate: "2024-06-23",
+    },
 ]
 
 export default function HomePage() {

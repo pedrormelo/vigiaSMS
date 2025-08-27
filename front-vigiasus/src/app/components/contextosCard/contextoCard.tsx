@@ -15,34 +15,34 @@ interface FileItemProps {
 
 const fileTypeConfig = {
     pdf: {
-        color: "bg-[#C53131]",
+        color: "bg-[#C53131] hover:bg-[#A02020]",
         icon: FileText,
         label: "PDF",
     },
     doc: {
-        color: "bg-[#2651FF]",
+        color: "bg-[#2651FF] hover:bg-[#1E40B8]",
         icon: FileText,
         label: "DOC",
     },
     dashboard: {
-        color: "bg-[#B329E9]",
+        color: "bg-[#B329E9] hover:bg-[#A020B5]",
         icon: ChartNetwork,
-        label: "Dashboard",
+        label: "Gráfico de Dashboard",
     },
     excel: {
-        color: "bg-[#008C32]",
+        color: "bg-[#008C32] hover:bg-[#006B24]",
         icon: FileSpreadsheet,
-        label: "Excel/XLSX",
+        label: "Excel/XLSX/CSV",
     },
     resolucao: {
-        color: "bg-[#E2712A]",
+        color: "bg-[#E2712A] hover:bg-[#C95A2A]",
         icon: FileText,
-        label: "Resolução",
+        label: "Arquivo de Resolução",
     },
     link: {
-        color: "bg-[#81BFDE]",
+        color: "bg-[#81BFDE] hover:bg-[#6BAEDB]",
         icon: Link,
-        label: "Link",
+        label: "Link Externo",
     },
 }
 
@@ -53,7 +53,7 @@ export function FileItem({ title, type, insertedDate, className, onClick }: File
     return (
         <div
             className={cn(
-                "rounded-2xl p-6 cursor-pointer hover:scale-105 transition-transform duration-200 flex flex-col justify-between min-h-[160px]",
+                "rounded-4xl p-6 cursor-pointer hover:scale-105 transition-transform duration-200 flex flex-col justify-between min-h-[160px] max-w-2xs",
                 config.color,
                 className,
             )}
@@ -64,7 +64,7 @@ export function FileItem({ title, type, insertedDate, className, onClick }: File
             </div>
 
             <div className="text-center mb-4">
-                <h3 className="font-medium text-white text-lg leading-tight">{title}</h3>
+                <h3 className="flex items-center justify-center font-medium text-white text-lg leading-tight">{title}</h3>
             </div>
 
             <div className="flex items-center justify-center gap-2 text-white/90">
