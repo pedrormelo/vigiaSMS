@@ -13,11 +13,13 @@ const diretorias = [
 
 export default function DiretoriasGrid() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-      {diretorias.map((d, i) => (
-        // Passando o array 'colors' como prop.
-        <DiretoriaCard key={i} label={d.label} colors={d.colors} />
-      ))}
+    <div className="flex justify-center">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-x-16 mb-8 mx-auto">
+        {diretorias.map((d, i) => (
+          // Passando o array 'colors' como prop.
+          <DiretoriaCard key={i} label={d.label} colors={d.colors} />
+        ))}
+      </div>
     </div>
   );
 }
