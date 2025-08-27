@@ -12,6 +12,10 @@
     "@radix-ui/react-slot": "^1.2.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+<<<<<<< HEAD
+=======
+    "embla-carousel-react": "^8.6.0",
+>>>>>>> 596e8c1deb31a39a24ea6362f527989b2182409c
     "framer-motion": "^12.23.12",
     "lucide-react": "^0.541.0",
     "next": "15.4.6",
