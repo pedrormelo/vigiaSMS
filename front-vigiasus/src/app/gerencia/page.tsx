@@ -6,6 +6,8 @@ import { Button } from "@/components/button"
 import { div } from "framer-motion/m";
 
 import { Plus } from 'lucide-react';
+import ScrollArea from '../../components/ui/scroll-area';
+import ScrollBar from '../../components/ui/scroll-bar';
 
 const sampleFiles = [
     {
@@ -129,7 +131,6 @@ export default function HomePage() {
                         <Plus strokeWidth={2.55} className="h-6 w-6" />
                     </Button>
                 </div>
-
                 <FileGrid files={sampleFiles} onFileClick={handleFileClick} />
             </div>
         </div>

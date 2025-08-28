@@ -6,7 +6,9 @@ import './globals.css';
 // Navbar 
 import Navbar from '@/components/navbar/navbar';
 import Footer from '../components/footer/footer';
-import { PanelRightOpen } from 'lucide-react';
+import { PanelRightOpen, Scroll } from 'lucide-react';
+import ScrollArea from '@/components/ui/scroll-area';
+import { Scrollbar } from '@radix-ui/react-scroll-area';
 
 
 const montserrat = Montserrat({
@@ -30,7 +32,7 @@ export default function RootLayout({
         {/* A Navbar é renderizada aqui */}
         <Navbar />
         {/* O conteúdo da página (nossa {homePage} será renderizado aqui quando a gentr construir, Pedro*/}
-        <main className="flex-1">{children}</main>
+          <main className="flex-1">{children}</main>
         <Footer />
       </body>
     </html>
