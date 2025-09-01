@@ -7,7 +7,6 @@ import {
   HiHome,
   HiOutlineClipboardList,
   HiOutlineLogout,
-  HiOutlineChatAlt,
 } from "react-icons/hi";
 import {
   PanelRightOpen,

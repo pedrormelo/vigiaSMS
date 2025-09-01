@@ -4,9 +4,9 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Sidebar from "./Sidebar";
-import { Link as LucideLink, Menu } from 'lucide-react';
-import { Button } from "../button";
-import { h1 } from "framer-motion/client";
+import { Menu } from 'lucide-react';
+//import { Button } from "../button";
+//import { h1 } from "framer-motion/client";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
