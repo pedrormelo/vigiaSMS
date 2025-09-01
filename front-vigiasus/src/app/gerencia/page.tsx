@@ -132,6 +132,7 @@ export default function HomePage() {
                     </Button>
                 </div>
                 <FileGrid files={sampleFiles} onFileClick={handleFileClick} />
+                
             </div>
         </div>
     )
