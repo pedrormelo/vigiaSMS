@@ -120,15 +120,14 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
         {/* Menu com scroll */}
         <nav className="flex flex-col gap-2 w-full overflow-y-auto px-2 pr-1 scrollbar-thin scrollbar-thumb-blue-300 scrollbar-track-transparent">
           {menuOptions[role].map(({ label, icon: Icon, href }) => (
-         <Link
-  key={label}
-  href={href}
-  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 overflow-hidden"
->
-  <Icon size={18} />
-  <span className="w-full text-center">{label}</span>
-</Link>
-
+            <Link
+              key={label}
+              href={href}
+              className="flex items-center gap-2 px-3 py-2 rounded-[15px] bg-blue-600 text-white text-sm hover:bg-blue-700 justify-center w-full"
+            >
+              <Icon size={18} />
+              <span className="w-full text-center">{label}</span>
+            </Link>
           ))}
         </nav>
 

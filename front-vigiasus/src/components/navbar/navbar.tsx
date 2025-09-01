@@ -2,8 +2,11 @@
 "use client";
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import Sidebar from "./Sidebar";
-import { Menu } from 'lucide-react';
+import { Link as LucideLink, Menu } from 'lucide-react';
+import { Button } from "../button";
+import { h1 } from "framer-motion/client";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -13,7 +16,7 @@ export default function Navbar() {
 
   return (
     <>
-  <header className="bg-white w-full drop-shadow-md">
+      <header className="bg-white w-full drop-shadow-md">
         <div className="container flex min-w-full min-h-[64px] justify-between items-center py-2 px-18">
           {/* Botão Menu (mobile e desktop) */}
           <button onClick={() => setOpen(true)} className="text-blue-700 hover:text-blue-500 cursor-pointer">
@@ -23,9 +26,11 @@ export default function Navbar() {
           {/*Bloco central com VigiaSUS e Logo Jaboatão juntos */}
           <div className="flex items-center gap-22">
             {/* Texto VigiaSUS (visível apenas em desktop) */}
-            <h1 className="hidden md:block text-2xl text-blue-700">
-              Vigia<b>SUS</b>
-            </h1>
+            <Link href="/" className="block">
+              <h1 className="text-2xl text-blue-700 hover:text-blue-500 cursor-pointer transition-transform">
+                Vigia<b>SUS</b>
+              </h1>
+            </Link>
             {/* Logo Prefeitura (visível em mobile e desktop) */}
             <Image
               src="/logos/logo-jaboatao.png"
