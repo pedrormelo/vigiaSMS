@@ -20,7 +20,7 @@ interface FileGridProps {
 export function FileGrid({ files, onFileClick, className }: FileGridProps) {
     return (
         <div className="flex justify-center items-center w-full h-full">
-            <div className="bg-white border border-[#f0f0f0] rounded-4xl shadow-lg backdrop-blur-sm flex flex-col items-center justify-center p-6">
+            <div className="bg-white border border-[#f0f0f0] rounded-[50px] shadow-lg backdrop-blur-sm flex flex-col items-center justify-center p-6">
                 <ScrollArea height="100vh" className="flex-1 w-full" showScrollbar="always">
                     <div
                         className={`grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-x-6 mx-auto  p-6 max-h-192 `}

@@ -13,7 +13,6 @@ import { Scrollbar } from '@radix-ui/react-scroll-area';
 
 const montserrat = Montserrat({
   subsets: ['latin'],
-  weight: ['400', '700'],
 });
 
 export const metadata = {
