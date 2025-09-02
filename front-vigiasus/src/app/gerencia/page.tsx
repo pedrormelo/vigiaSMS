@@ -3,7 +3,7 @@
 import { FileGrid } from "@/components/contextosCard/contextosGrid";
 import type { FileType } from "@/components/contextosCard/contextoCard";
 import { Button } from "@/components/button"
-import { div } from "framer-motion/m";
+//import { div } from "framer-motion/m";
 
 import { Plus } from 'lucide-react';
 
