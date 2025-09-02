@@ -10,8 +10,7 @@ import { PanelRightOpen } from 'lucide-react';
 
 
 const montserrat = Montserrat({
-  subsets: ['latin'],
-  weight: ['400', '700'],
+  subsets: ['latin']
 });
 
 export const metadata = {

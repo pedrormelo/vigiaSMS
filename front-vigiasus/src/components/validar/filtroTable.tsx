@@ -3,8 +3,8 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils"; 
 
-// Define os tipos para as abas, para um controle mais estrito
 type FilterOption = "recentes" | "analise" | "deferidos" | "indeferidos";
 
 export default function FilterTabs() {
@@ -19,17 +19,27 @@ export default function FilterTabs() {
 
   return (
     <div className="flex items-center gap-2 mb-6">
-      {tabs.map((tab) => (
-        <Button
-          key={tab.id}
-          onClick={() => setActiveTab(tab.id)}
-          // A variante do botão muda dinamicamente com base na aba ativa
-          variant={activeTab === tab.id ? "default" : "outline"}
-          className="rounded-full bg-white transition-all"
-        >
-          {tab.label}
-        </Button>
-      ))}
+      {tabs.map((tab) => {
+        const isActive = activeTab === tab.id;
+
+        return (
+          <Button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+         
+            variant="outline"
+
+            className={cn(
+              "rounded-full transition-all border-gray-300",
+              isActive
+                ? "bg-blue-600 text-white hover:bg-blue-700" 
+                : "bg-white text-gray-600 hover:bg-gray-100" 
+            )}
+          >
+            {tab.label}
+          </Button>
+        );
+      })}
     </div>
   );
 }
