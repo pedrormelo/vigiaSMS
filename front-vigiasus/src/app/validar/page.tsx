@@ -67,7 +67,7 @@ const mockData: Contexto[] = [
         docType: "dashboard",
         gerencia: "Gerência de Vigilância em Saúde",
         data: "02-08-2025",
-        detalhes: "Apresentação do relatório epidemiológico semanal. Foi indeferido por inconsistências nos dados de notificação compulsória. Necessita de revisão urgente."
+        detalhes: "Apresentação do relatório epidemiológico semanal."
     },
 ];
 
