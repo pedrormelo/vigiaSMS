@@ -51,12 +51,12 @@ const mockData: Contexto[] = [
         id: "4",
         solicitante: "Julia Maria da Cunha Leite",
         email: "cunhajuliamaria02@gmail.com",
-        nome: "Pagamento PV/SET - Julho de 2025",
+        nome: "Pagamento PV/JET - Julho de 2025",
         situacao: StatusContexto.Deferido,
         docType: "pdf",
         gerencia: "Gerência de Gestão do Trabalho",
         data: "02-08-2025",
-        detalhes: "Comprovativo de pagamento referente ao Programa de Valorização dos Trabalhadores do SUS (PV/SET) para o mês de Julho de 2025. O documento foi validado e o pagamento foi efetuado."
+        detalhes: "Comprovativo de pagamento referente ao Programa de Valorização dos Trabalhadores do SUS (PV/JET) para o mês de Julho de 2025."
     },
     {
         id: "5",

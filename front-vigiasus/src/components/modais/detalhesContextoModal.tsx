@@ -33,11 +33,11 @@ export default function DetalhesContextoModal({ contexto, isOpen, onClose, perfi
     }
     return (
       <>
-        <Button className="bg-[#E54848] hover:bg-[#D94040] text-white rounded-xl px-8 py-3 text-base">
+        <Button className="bg-[#E0440E] hover:bg-[#D94040] text-white rounded-xl px-8 py-3 text-base">
           <ShieldX className="mr-2" size={20} />
           INDEFERIR
         </Button>
-        <Button className="bg-[#23A566] hover:bg-[#1E8C56] text-white rounded-b-lg px-8 py-3 text-base">
+        <Button className="bg-[#50CF5F] hover:bg-[#1E8C56] text-white rounded-b-lg px-8 py-3 text-base">
           <ShieldCheck className="mr-2" size={20} />
           DEFERIR
         </Button>
