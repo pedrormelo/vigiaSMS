@@ -57,7 +57,7 @@ export default function DetalhesContextoModal({ contexto, isOpen, onClose, perfi
           <DialogHeader className="bg-gradient-to-r from-blue-600 to-cyan-500 p-4 rounded-t-4xl flex-row items-center justify-between">
             <div className="flex ml-3 items-center gap-3">
               <FileText className="text-white" />
-              <span className="text-white text-xl">Detalhes do Contexto</span>
+              <span className="text-white text-2xl">Detalhes do Contexto</span>
               <DialogTitle className="text-white "></DialogTitle>
             </div>
             <Button size="icon" variant="ghost" onClick={onClose} className="rounded-full hover:bg-white/20">
