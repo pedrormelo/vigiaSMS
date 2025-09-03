@@ -8,16 +8,20 @@ interface Gerencia {
 interface Diretoria {
   id: string;
   nome: string;
-  cor: string; // Classe de cor do Tailwind
-  gerencias: Gerencia[]; // A lista de gerências de cada diretoria
+  // objeto com as cores do gradiente
+  cores: {
+    from: string; // Cor inicial em hexadecimal
+    to: string;   // Cor final em hexadecimal
+  };
+  gerencias: Gerencia[];
 }
 
-// Exporta a configuração completa
+// Exporta a configuração completa com as cores
 export const diretoriasConfig: { [key: string]: Diretoria } = {
   "atencao-saude": {
     id: "atencao-saude",
     nome: "Diretoria de Atenção à Saúde",
-    cor: "bg-blue-600",
+    cores: { from: "#1745FF", to: "#002BDB" },
     gerencias: [
       { id: "g1", nome: "Gerência de Fluxos Assistenciais" },
       { id: "g2", nome: "Gerência de Atenção Básica" },
@@ -26,7 +30,7 @@ export const diretoriasConfig: { [key: string]: Diretoria } = {
   "regulacao-sus": {
     id: "regulacao-sus",
     nome: "Diretoria de Regulação do SUS",
-    cor: "bg-cyan-500",
+    cores: { from: "#00BDFF", to: "#07ABE4" },
     gerencias: [
       { id: "g3", nome: "Gerência de Leitos" },
       { id: "g4", nome: "Gerência de Regulação Ambulatorial" },
@@ -36,9 +40,28 @@ export const diretoriasConfig: { [key: string]: Diretoria } = {
   "gestao-sus": {
     id: "gestao-sus",
     nome: "Diretoria de Gestão do SUS",
-    cor: "bg-green-600",
+    cores: { from: "#109326", to: "#008C32" }, 
     gerencias: [
-        { id: "g6", nome: "Gerência de Orçamento e Finanças" },
+        { id: "g6", nome: "Gerência de Planejamento" },
+        { id: "g7", nome: "Gerência de Tecnologia da Informação" },
+    ],
+  },
+
+    "vigilancia-saude": {
+    id: "vigilancia-saude",
+    nome: "Diretoria de Vigilância em Saúde",
+    cores: { from: "#FF8500", to: "#FD8400" }, 
+    gerencias: [
+        { id: "g8", nome: "Gerência de Insperção Sanitária" },
+    ],
+  },
+
+    "administrativo-financeira": {
+    id: "administrativo-financeira",
+    nome: "Diretoria Administrativa Financeiro",
+    cores: { from: "#FB4242", to: "#EF2828" }, 
+    gerencias: [
+        { id: "g9", nome: "Gerência Administrativa Financeiro" },
     ],
   },
 };
