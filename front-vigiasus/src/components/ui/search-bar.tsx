@@ -48,7 +48,7 @@ export function SearchBar({
                     onChange={handleInputChange}
                     onKeyPress={handleKeyPress}
                     placeholder={placeholder}
-                    className="w-full pl-12 pr-4 py-3 text-sm text-gray-700 placeholder-gray-400 bg-white border border-gray-50 rounded-full shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    className="w-full min-w-3xl pl-12 pr-4 py-3 text-sm text-gray-700 placeholder-gray-400 bg-white border border-gray-50 rounded-full shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                 />
             </div>
         </div>

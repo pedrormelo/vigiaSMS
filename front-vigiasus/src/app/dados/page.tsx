@@ -5,12 +5,17 @@ import GerenciasCarousel from "@/components/dados-gerais/gerenciasCarousel";
 
 export default function Dashboard() {
   return (
-    <div className="p-6">
-      <SectionTitle>Dados Gerais</SectionTitle>
-      <DiretoriasGrid />
+    <div className="min-h-screen bg-[#FDFDFD] p-6">
+      <div className="container mx-auto">
+        <div>
 
-      <FilterBar />
-      <GerenciasCarousel />
+        </div>
+        <SectionTitle>Dados Gerais</SectionTitle>
+        <DiretoriasGrid />
+
+        <FilterBar />
+        <GerenciasCarousel />
+      </div>
     </div>
   );
 }
