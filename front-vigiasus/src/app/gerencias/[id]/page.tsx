@@ -4,7 +4,7 @@
 import { useParams } from "next/navigation";
 import { diretoriasConfig } from "@/constants/diretorias";
 import GerenciaCard from "@/components/dados-gerais/gerenciaCard";
-import { Info, LayoutGrid } from "lucide-react";
+import { Info, LayoutDashboard,  } from "lucide-react";
 
 export default function GerenciasPage() {
   const params = useParams();
@@ -41,11 +41,11 @@ export default function GerenciasPage() {
 
           {/* Botões do canto direito */}
           <div className="flex flex-col items-center gap-3">
-            <button className="flex items-center justify-center mb-9 w-8 h-8 bg-[#ffffff] text-[#1745FF] rounded-full border-none hover:bg-white/80 transition-all duration-200 shadow-sm">
+            <button className="flex items-center justify-center mb-9 w-8 h-8 cursor-pointer bg-[#ffffff] text-[#1745FF] rounded-full border-none hover:bg-white/80 transition-all duration-200 shadow-sm">
               <Info size={20} />
             </button>
-            <button className="flex items-center justify-center w-9 h-9 rounded-[0.6rem] bg-white text-[#1745FF] hover:bg-white/80 transition-all duration-200 shadow-sm">
-              <LayoutGrid size={20} />
+            <button className="flex items-center justify-center w-11 h-11 cursor-pointer rounded-[0.6rem] bg-white text-gray-600 hover:bg-white/80 transition-all duration-200 shadow-sm">
+              <LayoutDashboard size={25} />
             </button>
           </div>
         </div>
