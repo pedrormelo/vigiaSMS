@@ -7,6 +7,40 @@ import { Plus } from 'lucide-react';
 import ScrollArea from '../../components/ui/scroll-area';
 import ScrollBar from '../../components/ui/scroll-bar';
 import { useState, useEffect } from 'react';
+import FilterBar from "@/components/gerencia/filterBar";
+import { AddIndicatorButton } from "@/components/indicadores/adicionarIndicador";
+import { IndicatorCard } from "@/components/indicadores/indicadorCard";
+import { image } from "framer-motion/client";
+
+const indicators = [
+    {
+        title: "População Atendida",
+        value: "68 milhões",
+        subtitle: "Atendimento da Rede Municipal",
+        change: "+32% em relação ao PMQA",
+        changeType: "positive" as const,
+        borderColor: "border-l-blue-500",
+        iconType: "cuidados",
+    },
+    {
+        title: "Unidades de Saúde",
+        value: "200",
+        subtitle: "Unidades ativas",
+        change: "— Sem alteração",
+        changeType: "neutral" as const,
+        borderColor: "border-l-green-500",
+        iconType: "unidades",
+    },
+    {
+        title: "Profissionais Ativos",
+        value: "2.345",
+        subtitle: "Em toda Secretaria",
+        change: "+4,2% em relação ao PMQA",
+        changeType: "positive" as const,
+        borderColor: "border-l-red-500",
+        iconType: "servidores",
+    },
+]
 
 const sampleFiles = [
     {
@@ -113,18 +147,21 @@ const mockGerencias = [
         sigla: "GTI",
         nome: "Gestão de Tecnologia da Informação",
         descricao: "A Gestão de Tecnologia da Informação é responsável por planejar, implementar e gerenciar a infraestrutura de TI da organização. Assim, busca garantir que os recursos tecnológicos estejam alinhados às necessidades da gestão. Por isso, é fundamental que a equipe de TI esteja sempre atualizada e capacitada para lidar com as demandas do gestão. Nossa equipe está comprometida em fornecer suporte e soluções tecnológicas que impulsionem a eficiência e a inovação.",
+        image: "/gerencias/images/gti.jpg"
     },
     {
         id: "2",
         sigla: "GPLAN",
         nome: "Gestão de Planejamento",
         descricao: "A Gestão de Planejamento é responsável por planejar, implementar e gerenciar as atividades de planejamento da organização. Assim, busca garantir que os colaboradores estejam alinhados às necessidades da gestão. Por isso, é fundamental que a equipe de gestão de planejamento esteja sempre atualizada e capacitada para lidar com as demandas da gestão. Nossa equipe está comprometida em fornecer suporte e soluções que impulsionem a eficiência e a inovação.",
+        image: ""
     },
     {
         id: "3",
         sigla: "GPEP",
         nome: "Gestão de Politicas Estrategicas",
         descricao: "A Gestão de Politicas Estrategicas é responsável por planejar, implementar e gerenciar as políticas estratégicas da organização. Assim, busca garantir que os recursos estejam alinhados às necessidades da gestão. Por isso, é fundamental que a equipe de gestão de políticas esteja sempre atualizada e capacitada para lidar com as demandas da gestão. Nossa equipe está comprometida em fornecer suporte e soluções que impulsionem a eficiência e a inovação.",
+        image: ""
     },
 ];
 
@@ -132,7 +169,7 @@ const mockGerencias = [
 export default function HomePage() {
     // State for selected gerencia
     const [selectedGerenciaId, setSelectedGerenciaId] = useState<string>(mockGerencias[0].id);
-    const [gerenciaDetails, setGerenciaDetails] = useState<{ sigla: string; nome: string; descricao: string } | null>(mockGerencias[0]);
+    const [gerenciaDetails, setGerenciaDetails] = useState<{ sigla: string; nome: string; descricao: string, image: string } | null>(mockGerencias[0]);
     const [gerenciaLoading, setGerenciaLoading] = useState(false);
     const [gerenciaError, setGerenciaError] = useState<string | null>(null);
 
@@ -178,10 +215,29 @@ export default function HomePage() {
                         <Plus strokeWidth={2.55} className="h-6 w-6" />
                     </Button>
                 </div>
+
+                {/* Indicadores Cards */}
+                <div className="flex justify-center items-center gap-4 mb-16 flex-wrap">
+                    <AddIndicatorButton />
+                    {indicators.map((indicator, index) => (
+                        <IndicatorCard
+                            key={index}
+                            title={indicator.title}
+                            value={indicator.value}
+                            subtitle={indicator.subtitle}
+                            change={indicator.change}
+                            changeType={indicator.changeType}
+                            borderColor={indicator.borderColor}
+                            iconType={indicator.iconType}
+                        />
+                    ))}
+                </div>
+
+                <FilterBar />
                 <FileGrid files={sampleFiles} onFileClick={handleFileClick} />
 
                 {/* Gerencia Selector (for demo, use buttons) */}
-                <div className="flex gap-4 mt-22 mb-8">
+                <div className="flex gap-4 mt-18 mb-8">
                     {mockGerencias.map(g => (
                         <Button
                             key={g.id}
@@ -200,13 +256,25 @@ export default function HomePage() {
                     <div className="text-red-500 text-xl font-bold">{gerenciaError}</div>
                 ) : gerenciaDetails && (
                     <>
-                        <div className="mb-2 flex items-center gap-4">
-                            <h1 className="text-6xl font-extrabold text-blue-700">{gerenciaDetails.sigla}</h1>
-                            <h3 className="text-4xl font-regular text-blue-600">{gerenciaDetails.nome}</h3>
-                        </div>
-                        <span className="text-2xl font-medium ml-2 text-blue-600">SOBRE</span>
-                        <div className="mb-8 mt-3 max-w-[70%]">
-                            <p className="text-md ml-2 text-blue-600">{gerenciaDetails.descricao}</p>
+                        <div className="mb-2 flex flex-row items-start gap-8">
+                            <div className="flex-1">
+                                <div className="flex gap-4 justify-start items-center mb-4">
+                                    <h1 className="text-6xl font-extrabold text-blue-700">{gerenciaDetails.sigla}</h1>
+                                    <h3 className="text-4xl font-regular text-blue-600">{gerenciaDetails.nome}</h3>
+                                </div>
+                                <span className="text-2xl font-medium ml-2 text-blue-600">SOBRE</span>
+                                <div className="mb-8 mt-3 max-w-[90%]">
+                                    <p className="text-md ml-2 text-blue-600">{gerenciaDetails.descricao}</p>
+                                </div>
+                            </div>
+                            {/* Image area: show if gerenciaDetails.image exists, else show placeholder */}
+                            <div className="flex-shrink-0 w-[280px] h-[320px] rounded-2xl bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200 shadow-md">
+                                {gerenciaDetails.image ? (
+                                    <img src={gerenciaDetails.image} alt={gerenciaDetails.nome} className="object-cover w-full h-full" />
+                                ) : (
+                                    <span className="text-gray-400 text-lg">Sem imagem</span>
+                                )}
+                            </div>
                         </div>
                     </>
                 )}

@@ -1,9 +1,9 @@
 "use client"
 
-import { Scrollbar } from "@radix-ui/react-scroll-area"
 import { FileItem, type FileType } from "../contextosCard/contextoCard"
-import ScrollArea from "../ui/scroll-area"
 import { AddContextButton } from "./adicionarContexto"
+import ScrollArea from "../ui/scroll-area"
+import ScrollBar from "../ui/scroll-bar"
 
 interface FileData {
     id: string
