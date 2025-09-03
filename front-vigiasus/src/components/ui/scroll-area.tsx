@@ -119,118 +119,49 @@ const ScrollArea: React.FC<ScrollAreaProps> = ({
     return (
         <div
             className={cn("relative", className)}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
             style={{ height }}
             {...props}
         >
             {/* Scrollable Content */}
             <div
                 ref={scrollRef}
-                className="h-full w-full overflow-auto scrollbar-hide"
+                className="h-full w-full overflow-y-auto overflow-x-hidden relative"
                 style={{
                     scrollbarWidth: 'none',
-                    msOverflowStyle: 'none'
+                    msOverflowStyle: 'none',
                 }}
             >
                 {children}
             </div>
-
-            {/* Vertical Scrollbar */}
-            {(orientation === 'vertical' || orientation === 'both') && shouldShowVerticalScrollbar() && (
+            {/* Custom vertical scrollbar overlays scroll area */}
+            {shouldShowVerticalScrollbar() && (
                 <div
-                    className={cn(
-                        "absolute right-0 top-0 z-10 transition-all duration-200 ease-out",
-                        "bg-gradient-to-b from-transparent via-black/5 to-transparent",
-                        isHovered || isScrolling ? "opacity-100" : "opacity-0"
-                    )}
+                    className="absolute right-2 top-2 bottom-2 w-2 rounded-full bg-gradient-to-b from-blue-300 via-blue-500 to-blue-700 shadow-md transition-opacity duration-200 pointer-events-none"
                     style={{
-                        width: getScrollbarWidth() + 2,
-                        height: containerHeight,
-                        transform: `translateX(-1px)`
+                        height: containerHeight - 4,
+                        opacity: isHovered || isScrolling ? 1 : 0.5,
                     }}
                 >
                     <div
-                        className={cn(
-                            "absolute right-0 rounded-full transition-all duration-200 ease-out cursor-pointer",
-                            "bg-gradient-to-b from-blue-400 to-blue-600 hover:from-blue-500 hover:to-blue-700",
-                            "shadow-sm hover:shadow-md active:shadow-lg",
-                            isScrolling ? "bg-blue-600" : ""
-                        )}
+                        className="absolute left-0 w-full rounded-full bg-blue-600 hover:bg-blue-700 cursor-pointer transition-all duration-200 shadow-lg pointer-events-auto"
                         style={{
-                            width: getScrollbarWidth(),
                             height: verticalThumbHeight,
                             top: verticalThumbTop,
-                            transform: isHovered ? 'scaleX(1.2)' : 'scaleX(1)'
                         }}
                         onMouseDown={(e: React.MouseEvent<HTMLDivElement>) => {
                             e.preventDefault();
                             const startY = e.clientY;
                             const startScrollTop = scrollTop;
-
                             const handleMouseMove = (e: MouseEvent) => {
                                 const deltaY = e.clientY - startY;
                                 const scrollRatio = deltaY / (containerHeight - verticalThumbHeight);
                                 const newScrollTop = startScrollTop + (scrollRatio * (contentHeight - containerHeight));
                                 scrollToPosition(Math.max(0, Math.min(newScrollTop, contentHeight - containerHeight)));
                             };
-
                             const handleMouseUp = () => {
                                 document.removeEventListener('mousemove', handleMouseMove);
                                 document.removeEventListener('mouseup', handleMouseUp);
                             };
-
-                            document.addEventListener('mousemove', handleMouseMove);
-                            document.addEventListener('mouseup', handleMouseUp);
-                        }}
-                    />
-                </div>
-            )}
-
-            {/* Horizontal Scrollbar */}
-            {(orientation === 'horizontal' || orientation === 'both') && shouldShowHorizontalScrollbar() && (
-                <div
-                    className={cn(
-                        "absolute bottom-0 left-0 z-10 transition-all duration-200 ease-out",
-                        "bg-gradient-to-r from-transparent via-black/5 to-transparent",
-                        isHovered || isScrolling ? "opacity-100" : "opacity-0"
-                    )}
-                    style={{
-                        height: getScrollbarWidth() + 2,
-                        width: containerWidth,
-                        transform: `translateY(-1px)`
-                    }}
-                >
-                    <div
-                        className={cn(
-                            "absolute bottom-0 rounded-full transition-all duration-200 ease-out cursor-pointer",
-                            "bg-gradient-to-r from-gray-400 to-gray-600 hover:from-gray-500 hover:to-gray-700",
-                            "shadow-sm hover:shadow-md active:shadow-lg",
-                            isScrolling ? "bg-gray-600" : ""
-                        )}
-                        style={{
-                            height: getScrollbarWidth(),
-                            width: horizontalThumbWidth,
-                            left: horizontalThumbLeft,
-                            transform: isHovered ? 'scaleY(1.2)' : 'scaleY(1)'
-                        }}
-                        onMouseDown={(e: React.MouseEvent<HTMLDivElement>) => {
-                            e.preventDefault();
-                            const startX = e.clientX;
-                            const startScrollLeft = scrollLeft;
-
-                            const handleMouseMove = (e: MouseEvent) => {
-                                const deltaX = e.clientX - startX;
-                                const scrollRatio = deltaX / (containerWidth - horizontalThumbWidth);
-                                const newScrollLeft = startScrollLeft + (scrollRatio * (contentWidth - containerWidth));
-                                scrollToPosition(Math.max(0, Math.min(newScrollLeft, contentWidth - containerWidth)), 'horizontal');
-                            };
-
-                            const handleMouseUp = () => {
-                                document.removeEventListener('mousemove', handleMouseMove);
-                                document.removeEventListener('mouseup', handleMouseUp);
-                            };
-
                             document.addEventListener('mousemove', handleMouseMove);
                             document.addEventListener('mouseup', handleMouseUp);
                         }}

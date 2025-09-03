@@ -123,8 +123,8 @@ const mockGerencias = [
     {
         id: "3",
         sigla: "GPEP",
-        nome: "Gestão de Contratos e Convênios",
-        descricao: "A Gestão de Contratos e Convênios é responsável por planejar, implementar e gerenciar os contratos e convênios da organização. Assim, busca garantir que os recursos estejam alinhados às necessidades da gestão. Por isso, é fundamental que a equipe de gestão de contratos esteja sempre atualizada e capacitada para lidar com as demandas da gestão. Nossa equipe está comprometida em fornecer suporte e soluções que impulsionem a eficiência e a inovação.",
+        nome: "Gestão de Politicas Estrategicas",
+        descricao: "A Gestão de Politicas Estrategicas é responsável por planejar, implementar e gerenciar as políticas estratégicas da organização. Assim, busca garantir que os recursos estejam alinhados às necessidades da gestão. Por isso, é fundamental que a equipe de gestão de políticas esteja sempre atualizada e capacitada para lidar com as demandas da gestão. Nossa equipe está comprometida em fornecer suporte e soluções que impulsionem a eficiência e a inovação.",
     },
 ];
 
@@ -200,12 +200,12 @@ export default function HomePage() {
                     <div className="text-red-500 text-xl font-bold">{gerenciaError}</div>
                 ) : gerenciaDetails && (
                     <>
-                        <div className="mb-4 flex items-center gap-4">
+                        <div className="mb-2 flex items-center gap-4">
                             <h1 className="text-6xl font-extrabold text-blue-700">{gerenciaDetails.sigla}</h1>
                             <h3 className="text-4xl font-regular text-blue-600">{gerenciaDetails.nome}</h3>
                         </div>
-                        <span className="text-2xl font-medium mb-8 ml-2 text-blue-600">SOBRE</span>
-                        <div className="mb-8 max-w-[70%]">
+                        <span className="text-2xl font-medium ml-2 text-blue-600">SOBRE</span>
+                        <div className="mb-8 mt-3 max-w-[70%]">
                             <p className="text-md ml-2 text-blue-600">{gerenciaDetails.descricao}</p>
                         </div>
                     </>
