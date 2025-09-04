@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Contexto } from "@/components/validar/typesDados";
-import { FileText, ArrowLeft, Download, Eye, MessageSquareText, ShieldX, ShieldCheck, FileCheck2, FileX, Weight } from "lucide-react";
+import { FilePen, ArrowLeft, Download, Eye, BookAlert, FileCheck2, FileX } from "lucide-react";
 import IconeDocumento from "@/components/validar/iconeDocumento";
 
 interface Props {
@@ -26,7 +26,7 @@ export default function DetalhesContextoModal({ contexto, isOpen, onClose, perfi
     if (perfil === "membro") {
       return (
         <Button className="bg-purple-500 hover:bg-purple-600 text-white rounded-2xl px-8 py-3 text-base">
-          <MessageSquareText className="mr-2" size={20} />
+          <BookAlert className="mr-2" size={24} />
           COMENTÁRIOS DESSE CONTEXTO
         </Button>
       );
@@ -56,7 +56,7 @@ export default function DetalhesContextoModal({ contexto, isOpen, onClose, perfi
 
           <DialogHeader className="bg-gradient-to-r from-blue-600 to-cyan-500 p-4 rounded-t-4xl flex-row items-center justify-between">
             <div className="flex ml-3 items-center gap-3">
-              <FileText className="text-white" />
+              <FilePen className="text-white" />
               <span className="text-white text-2xl">Detalhes do Contexto</span>
               <DialogTitle className="text-white "></DialogTitle>
             </div>
@@ -107,7 +107,7 @@ export default function DetalhesContextoModal({ contexto, isOpen, onClose, perfi
 
           </div>
 
-          {/* 👇 ALTERAÇÃO AQUI: Força a centralização horizontalmente */}
+          {/* Força a centralização horizontalmente */}
           <DialogFooter className="p-6 pt-0 sm:justify-center gap-4">
             {renderFooter()}
           </DialogFooter>
