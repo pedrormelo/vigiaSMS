@@ -4,10 +4,10 @@ import { FileGrid } from "@/components/contextosCard/contextosGrid";
 import type { FileType } from "@/components/contextosCard/contextoCard";
 import { Button } from "@/components/button";
 import { Plus } from 'lucide-react';
-import ScrollArea from '../../components/ui/scroll-area';
-import ScrollBar from '../../components/ui/scroll-bar';
+import ScrollArea from '@/components/ui/scroll-area';
+import ScrollBar from '@/components/ui/scroll-bar';
 import { useState, useEffect } from 'react';
-import FilterBar from "@/components/gerencia/filterBar";
+import FilterBar from "@/components/gerencia/painel-filterBar";
 import { AddIndicatorButton } from "@/components/indicadores/adicionarIndicador";
 import { IndicatorCard } from "@/components/indicadores/indicadorCard";
 import { image } from "framer-motion/client";
@@ -232,7 +232,7 @@ export default function HomePage() {
                         />
                     ))}
                 </div>
-
+                {/* BARRA DE FILTRO DO PAINEL DE CONTEXTO */}
                 <FilterBar />
                 <FileGrid files={sampleFiles} onFileClick={handleFileClick} />
 

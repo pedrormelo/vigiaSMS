@@ -1,6 +1,6 @@
 import SectionTitle from "@/components/dados-gerais/sectionTitle";
 import DiretoriasGrid from "@/components/dados-gerais/diretoriasGrid";
-import FilterBar from "@/components/gerencia/filterBar";
+import FilterBar from "@/components/gerencia/painel-filterBar";
 import GerenciasCarousel from "@/components/dados-gerais/gerenciasCarousel";
 
 export default function Dashboard() {

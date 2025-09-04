@@ -1,4 +1,4 @@
-// src/components/dados-gerais/GerenciasFilterBar.tsx
+// src/components/gerencia/PaineldeContextosFilterBar.tsx
 "use client";
 
 import { useState } from "react";
