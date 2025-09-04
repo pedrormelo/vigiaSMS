@@ -107,7 +107,7 @@ export default function DetalhesContextoModal({ contexto, isOpen, onClose, perfi
 
           </div>
 
-          {/* 👇 ALTERAÇÃO AQUI: Força a centralização horizontalmente */}
+          {/* Força a centralização horizontalmente */}
           <DialogFooter className="p-6 pt-0 sm:justify-center gap-4">
             {renderFooter()}
           </DialogFooter>
