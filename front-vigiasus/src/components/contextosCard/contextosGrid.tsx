@@ -2,8 +2,7 @@
 
 import { FileItem, type FileType } from "../contextosCard/contextoCard"
 import { AddContextButton } from "./adicionarContexto"
-import ScrollArea from "../ui/scroll-area"
-import ScrollBar from "../ui/scroll-bar"
+import ScrollArea from "@/components/ui/scroll-area"
 
 interface FileData {
     id: string
@@ -74,8 +73,9 @@ export function FileGrid({ files, onFileClick, onAddContextClick, className }: F
     return (
         <div className="flex justify-center items-center w-full h-full">
             <div className="rounded-[50px] flex flex-col items-center justify-center">
-                <ScrollArea height="100vh" className="flex-1 p-6 w-full overflow-x-hidden" showScrollbar="always">
-                    <div className="flex flex-col p-6 gap-4 snap-y snap-mandatory overflow-y-auto max-h-[880px] overflow-x-hidden scroll-smooth">
+                <ScrollArea height="880px" snap>
+                    {/* <div className="flex-1 p-6 w-full overflow-x-hidden> */}
+                    <div className="flex flex-col w-full p-6 gap-4 snap-y snap-mandatory overflow-y-auto max-h-[880px] overflow-x-hidden scroll-smooth">
                         {rows.map((row, rowIndex) => (
                             <div key={rowIndex} className="grid pt-2 grid-cols-1 md:grid-cols-4 gap-6 snap-start">
                                 {row.map((item, colIndex) => item)}

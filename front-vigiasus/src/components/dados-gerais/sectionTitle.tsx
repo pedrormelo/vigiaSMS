@@ -8,7 +8,7 @@ interface SectionTitleProps {
 
 export default function SectionTitle({ children }: SectionTitleProps) {
   return (
-    <h2 className="text-4xl font-extralight text-[#1745FF] mb-6">
+    <h2 className="text-4xl font-light text-[#1745FF] mb-6">
       {children}
     </h2>
   );

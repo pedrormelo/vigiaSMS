@@ -60,3 +60,20 @@ body {
   font-optical-sizing: auto;
   font-style: normal;
 }
+
+/* Esconde scrollbar nativo */
+::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+}
+
+/* Alternativa para Firefox */
+html {
+  scrollbar-width: none;
+}
+
+/* Habilita scroll suave globalmente */
+html, body {
+  scroll-behavior: smooth;
+  overflow: hidden; /* evita scroll duplo */
+}
