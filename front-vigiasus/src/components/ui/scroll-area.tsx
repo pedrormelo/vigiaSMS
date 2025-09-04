@@ -64,8 +64,8 @@ export default function ScrollArea({
             <div className="absolute top-0 right-1 h-full w-2 rounded-full bg-gray-200">
                 <div
                     className={cn(
-                        "absolute right-0 w-2 rounded-full transition-all duration-200",
-                        "bg-blue-400 hover:bg-blue-500 shadow-md"
+                        "absolute right-0 w-2 cursor-hold hover:cursor-holding rounded-full transition-all duration-200",
+                        "bg-green-400 hover:bg-green-500 shadow-md"
                     )}
                     style={{
                         height: `${thumbHeight}px`,
