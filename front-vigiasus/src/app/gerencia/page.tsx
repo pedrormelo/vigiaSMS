@@ -268,7 +268,7 @@ export default function HomePage() {
                                 </div>
                             </div>
                             {/* Image area: show if gerenciaDetails.image exists, else show placeholder */}
-                            <div className="flex-shrink-0 w-[280px] h-[320px] rounded-2xl bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200 shadow-md">
+                            <div className="flex-shrink-0 w-[300px] h-[340px] rounded-2xl bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200 shadow-md">
                                 {gerenciaDetails.image ? (
                                     <img src={gerenciaDetails.image} alt={gerenciaDetails.nome} className="object-cover w-full h-full" />
                                 ) : (
