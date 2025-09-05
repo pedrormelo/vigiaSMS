@@ -6,7 +6,7 @@ import './globals.css';
 // Navbar 
 import Navbar from '@/components/navbar/navbar';
 import Footer from '../components/footer/footer';
-import { PanelRightOpen, Scroll } from 'lucide-react';
+//import { PanelRightOpen, Scroll } from 'lucide-react';
 import GlobalScrollArea from '@/components/ui/global-scroll-area';
 
 
