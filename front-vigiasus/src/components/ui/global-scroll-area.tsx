@@ -14,6 +14,7 @@ export default function GlobalScrollArea({ children, className }: GlobalScrollAr
     const [scrollHeight, setScrollHeight] = useState(0)
     const [clientHeight, setClientHeight] = useState(0)
     const [isVisible, setIsVisible] = useState(false)
+    const [isMouseNear, setIsMouseNear] = useState(false)
 
     useEffect(() => {
         const el = scrollRef.current
@@ -28,11 +29,29 @@ export default function GlobalScrollArea({ children, className }: GlobalScrollAr
             setIsVisible(true)
 
             clearTimeout(timeout)
-            timeout = setTimeout(() => setIsVisible(false), 1800) // esconde após 1.8s parado
+            timeout = setTimeout(() => setIsVisible(false), 2200) // esconde após 2.2s parado
         }
 
         el.addEventListener("scroll", handleScroll)
         return () => el.removeEventListener("scroll", handleScroll)
+    }, [])
+
+    // Show thumb when mouse is near right edge
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => {
+            const el = scrollRef.current
+            if (!el) return
+            const rect = el.getBoundingClientRect()
+            // If mouse is within 100px of right edge
+            if (e.clientX > rect.right - 100 && e.clientX < rect.right + 24 && e.clientY > rect.top && e.clientY < rect.bottom) {
+                setIsMouseNear(true)
+                setIsVisible(true)
+            } else {
+                setIsMouseNear(false)
+            }
+        }
+        window.addEventListener("mousemove", handleMouseMove)
+        return () => window.removeEventListener("mousemove", handleMouseMove)
     }, [])
 
     const thumbHeight =
@@ -48,30 +67,6 @@ export default function GlobalScrollArea({ children, className }: GlobalScrollAr
 
     // Drag logic for scrollbar thumb
     const isDraggingRef = useRef(false)
-    useEffect(() => {
-        const handleMouseMove = (e: MouseEvent) => {
-            if (!isDraggingRef.current || !scrollRef.current) return
-            const el = scrollRef.current
-            const rect = el.getBoundingClientRect()
-            const y = e.clientY - rect.top
-            const scrollRatio = (y - thumbHeight / 2) / (clientHeight - thumbHeight)
-            const newScrollTop = scrollRatio * (scrollHeight - clientHeight)
-            el.scrollTop = Math.max(0, Math.min(newScrollTop, scrollHeight - clientHeight))
-        }
-        const handleMouseUp = () => {
-            isDraggingRef.current = false
-            document.removeEventListener("mousemove", handleMouseMove)
-            document.removeEventListener("mouseup", handleMouseUp)
-        }
-        if (isDraggingRef.current) {
-            document.addEventListener("mousemove", handleMouseMove)
-            document.addEventListener("mouseup", handleMouseUp)
-        }
-        return () => {
-            document.removeEventListener("mousemove", handleMouseMove)
-            document.removeEventListener("mouseup", handleMouseUp)
-        }
-    }, [isDraggingRef.current, clientHeight, scrollHeight, thumbHeight])
 
     return (
         <div
@@ -88,15 +83,16 @@ export default function GlobalScrollArea({ children, className }: GlobalScrollAr
             {/* Scrollbar lateral */}
             <div
                 className={cn(
-                    "absolute top-0 right-1 h-full w-2 rounded-full transition-opacity duration-300 ease-in-out",
-                    isVisible ? "opacity-100" : "opacity-0"
+                    "absolute top-0 right-1 h-full w-2 rounded-full transition-opacity duration-700 ease-in-out",
+                    (isVisible || isMouseNear) ? "opacity-100" : "opacity-0"
                 )}
             >
                 <div
                     className={cn(
-                        "absolute right-0 w-2 rounded-full transition-all duration-200",
-                        isDraggingRef.current ? "cursor-grabbing" : "cursor-grab",
+                        "absolute right-0 w-1.5 rounded-full transition-all duration-300",
+                        // isDraggingRef.current ? "cursor-grabbing" : "cursor-grab",
                         "bg-gradient-to-b from-blue-400 via-blue-500 to-blue-600",
+                        "hover:bg-gradient-to-b hover:from-blue-300 hover:to-blue-400",
                         "shadow-lg"
                     )}
                     style={{
