@@ -54,7 +54,7 @@ const menuOptions = {
   diretor: [
     { label: "Página Inicial", icon: icons.home, href: "/" },
     { label: "Dashboard da Diretoria", icon: icons.dashboard, href: "/dashboard" },
-    { label: "Minhas Gerências", icon: icons.minhasGerencias, href: "/gerencias" },
+    { label: "Minhas Gerências", icon: icons.minhasGerencias, href: "/diretorias" },
     { label: "Validar Contextos", icon: icons.contextos, href: "/validar" },
     { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
     { label: "Meus Comentários", icon: icons.comentarios, href: "/comentarios" },
