@@ -26,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <body className={`${montserrat.className} antialiased min-h-screen flex flex-col selection:bg-green-400 selection:text-white`}>
+      <body className={`${montserrat.className} antialiased min-h-screen bg-[#FDFDFD] flex flex-col selection:bg-green-400 selection:text-white`}>
         <GlobalScrollArea>
           {/* A Navbar é renderizada aqui */}
           <Navbar />

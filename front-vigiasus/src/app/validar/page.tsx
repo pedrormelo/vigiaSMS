@@ -142,7 +142,7 @@ export default function ValidacaoContextos() {
       </div>
 
       {/* Renderiza o modal, passando os estados e a função para fechar */}
-     <DetalhesContextoModal
+      <DetalhesContextoModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         contexto={selectedContexto}

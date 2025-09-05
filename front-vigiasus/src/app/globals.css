@@ -55,7 +55,7 @@
 }
 
 body {
-  background: var(--background);
+  background: #FDFDFD;
   color: var(--foreground);
   font-family: "Montserrat", sans-serif;
   font-optical-sizing: auto;
