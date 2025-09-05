@@ -78,8 +78,8 @@ export default function GerenciasCarousel() {
         ))}
       </CarouselContent>
 
-      <CarouselPrevious className="hidden sm:flex" />
-      <CarouselNext className="hidden sm:flex" />
+      <CarouselPrevious className="hidden cursor-pointer sm:flex bg-gray-50/25 hover:bg-gray-200 text-gray-400 hover:text-gray-500" />
+      <CarouselNext className="hidden cursor-pointer sm:flex bg-gray-50/25 hover:bg-gray-200 text-gray-400 hover:text-gray-500" />
     </Carousel>
   );
 }

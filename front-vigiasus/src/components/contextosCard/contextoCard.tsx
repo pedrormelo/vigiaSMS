@@ -53,7 +53,7 @@ export function FileItem({ title, type, insertedDate, className, onClick }: File
     return (
         <div
             className={cn(
-                "rounded-4xl p-6 cursor-pointer hover:scale-105 transition-transform duration-200 flex flex-col justify-between min-h-[160px] max-w-2xs",
+                "rounded-4xl p-6 cursor-pointer hover:scale-105 transition-transform duration-200 shadow-md flex flex-col justify-between max-h-[200px] max-w-[245px]",
                 config.color,
                 className,
             )}

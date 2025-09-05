@@ -48,8 +48,9 @@
 
 @media (prefers-color-scheme: light) {
   :root {
-    --background:#f2f2f2;
+    --background:#f2f2f2 !important;
     --foreground: #0a0a0a;
+    --radius: 0.5rem;
   }
 }
 
@@ -58,6 +59,22 @@ body {
   color: var(--foreground);
   font-family: "Montserrat", sans-serif;
   font-optical-sizing: auto;
-  font-weight: 400;
   font-style: normal;
+}
+
+/* Esconde scrollbar nativo */
+::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+}
+
+/* Alternativa para Firefox */
+html {
+  scrollbar-width: none;
+}
+
+/* Habilita scroll suave globalmente */
+html, body {
+  scroll-behavior: smooth;
+  overflow: hidden; /* evita scroll duplo */
 }

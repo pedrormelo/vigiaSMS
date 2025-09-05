@@ -1,8 +1,9 @@
-// src/components/dados-gerais/GerenciasFilterBar.tsx
+// src/components/gerencia/PaineldeContextosFilterBar.tsx
 "use client";
 
 import { useState } from "react";
 import Image from "next/image";
+import { Funnel } from 'lucide-react';
 import { SearchBar } from "../ui/search-bar";
 
 type Tab = "diretoria" | "todas";
@@ -18,18 +19,18 @@ export default function GerenciasFilterBar() {
   }
 
   return (
-    <div className="mb-8">
+    <div className="mb-4">
       {/* LINHA 1: Título e Barra de Pesquisa */}
       <div className="flex justify-between items-center mb-4">
         {/* Título */}
-        <h2 className="text-4xl font-extralight text-[#1745FF]">Gerências</h2>
+        <h2 className="text-3xl font-extralight text-[#1745FF]">Painel de Contextos</h2>
 
-        <div className="flex-1 relative max-w-full ml-8">
+        <div className="flex-1 relative ml-6">
           <SearchBar
             value={searchValue}
             onChange={setSearchValue}
             onSearch={handleSearch}
-            placeholder="Pesquise pelo nome da Gerência..."
+            placeholder="Pesquise pelo nome do Contexto..."
           />
         </div>
 
@@ -54,26 +55,26 @@ export default function GerenciasFilterBar() {
       <div className="flex items-center gap-3">
         {/* Botão de filtro */}
         <button
-          className="p-0 bg-transparent border-none transition-transform duration-200 ease-in-out hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 rounded-full"
+          className="p-2 bg-blue-600 hover:bg-blue-500 border-blue-500 text-white hover:text-blue-50 rounded-2xl shadow-sm cursor-pointer transition-transform duration-200 ease-in-out hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2"
           aria-label="Abrir filtros"
         >
-          <Image src="/icons/filtro-icon.svg" alt="Filtro" width={52} height={52} />
+          <Funnel className="h-5 w-5" />
         </button>
 
         {/* Botões de abas */}
         <button
           onClick={() => setActiveTab("diretoria")}
-          className={`px-6 py-2 rounded-full font-medium transition shadow-sm ${activeTab === "diretoria"
-            ? "bg-blue-600 text-white" // Estilo ativo (exemplo)
+          className={`px-6 py-2 cursor-pointer rounded-full font-medium transition shadow-sm ${activeTab === "diretoria"
+            ? "bg-blue-600 hover:bg-blue-500 text-white" // Estilo ativo (exemplo)
             : "bg-white text-gray-500 hover:bg-gray-50"
             }`}
         >
-          Diretória
+          Recentes
         </button>
         <button
           onClick={() => setActiveTab("todas")}
-          className={`px-6 py-2 rounded-full font-medium transition shadow-sm ${activeTab === "todas"
-            ? "bg-blue-600 text-white"
+          className={`px-6 py-2 cursor-pointer rounded-full font-medium transition shadow-sm ${activeTab === "todas"
+            ? "bg-blue-600 hover:bg-blue-500 text-white"
             : "bg-white text-gray-500 hover:bg-gray-50"
             }`}
         >

@@ -6,12 +6,12 @@ import './globals.css';
 // Navbar 
 import Navbar from '@/components/navbar/navbar';
 import Footer from '../components/footer/footer';
-import { PanelRightOpen } from 'lucide-react';
+//import { PanelRightOpen, Scroll } from 'lucide-react';
+import GlobalScrollArea from '@/components/ui/global-scroll-area';
 
 
 const montserrat = Montserrat({
   subsets: ['latin'],
-  weight: ['400', '700'],
 });
 
 export const metadata = {
@@ -26,12 +26,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <body className={`${montserrat.className} antialiased min-h-screen flex flex-col`}>
-        {/* A Navbar é renderizada aqui */}
-        <Navbar />
-        {/* O conteúdo da página (nossa {homePage} será renderizado aqui quando a gentr construir, Pedro*/}
-        <main className="flex-1">{children}</main>
-        <Footer />
+      <body className={`${montserrat.className} antialiased min-h-screen flex flex-col selection:bg-green-400 selection:text-white`}>
+        <GlobalScrollArea>
+          {/* A Navbar é renderizada aqui */}
+          <Navbar />
+          {/* O conteúdo da página (nossa {homePage} será renderizado aqui quando a gentr construir, Pedro*/}
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </GlobalScrollArea>
       </body>
     </html>
   );
