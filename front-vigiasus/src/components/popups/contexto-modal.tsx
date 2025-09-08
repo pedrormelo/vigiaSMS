@@ -6,7 +6,7 @@ import { X, Paperclip, Link, Eye, Trash2, Plus } from "lucide-react";
 interface ContextModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit: (data: any) => void;
+    onSubmit: (data: unknown) => void;
 }
 
 export function ContextModal({ isOpen, onClose, onSubmit }: ContextModalProps) {

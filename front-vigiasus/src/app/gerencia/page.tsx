@@ -3,14 +3,15 @@
 import { FileGrid } from "@/components/contextosCard/contextosGrid";
 import type { FileType } from "@/components/contextosCard/contextoCard";
 import { Button } from "@/components/button";
-import { Plus } from 'lucide-react';
-//import ScrollArea from '@/components/ui/global-scroll-area';
-//import ScrollBar from '@/components/ui/scroll-area';
 import { useState, useEffect } from 'react';
 import FilterBar from "@/components/gerencia/painel-filterBar";
 import { AddIndicatorButton } from "@/components/indicadores/adicionarIndicador";
+import { ContextModal as AddContextoModal } from "@/components/popups/addContexto-modal";
+import { ContextModal as AddIndicadorModal } from "@/components/popups/addIndicador-modal";
 import { IndicatorCard } from "@/components/indicadores/indicadorCard";
-//import { image } from "framer-motion/client";
+import { image } from "framer-motion/client";
+import { AddDashboardButton } from "@/components/gerencia/dashboard-btn1";
+import { ContextModal as AddDashboardModal } from "@/components/popups/addDashboard-modal";
 
 const indicators = [
     {
@@ -145,28 +146,32 @@ const mockGerencias = [
     {
         id: "1",
         sigla: "GTI",
-        nome: "Gestão de Tecnologia da Informação",
-        descricao: "A Gestão de Tecnologia da Informação é responsável por planejar, implementar e gerenciar a infraestrutura de TI da organização. Assim, busca garantir que os recursos tecnológicos estejam alinhados às necessidades da gestão. Por isso, é fundamental que a equipe de TI esteja sempre atualizada e capacitada para lidar com as demandas do gestão. Nossa equipe está comprometida em fornecer suporte e soluções tecnológicas que impulsionem a eficiência e a inovação.",
+        nome: "Gerência de Tecnologia da Informação",
+        descricao: "A Gerência de Tecnologia da Informação é responsável por planejar, implementar e gerenciar a infraestrutura de TI da organização. Assim, busca garantir que os recursos tecnológicos estejam alinhados às necessidades da gestão. Por isso, é fundamental que a equipe de TI esteja sempre atualizada e capacitada para lidar com as demandas do gestão. Nossa equipe está comprometida em fornecer suporte e soluções tecnológicas que impulsionem a eficiência e a inovação.",
         image: "/gerencias/images/gti.jpg"
     },
     {
         id: "2",
         sigla: "GPLAN",
-        nome: "Gestão de Planejamento",
-        descricao: "A Gestão de Planejamento é responsável por planejar, implementar e gerenciar as atividades de planejamento da organização. Assim, busca garantir que os colaboradores estejam alinhados às necessidades da gestão. Por isso, é fundamental que a equipe de gestão de planejamento esteja sempre atualizada e capacitada para lidar com as demandas da gestão. Nossa equipe está comprometida em fornecer suporte e soluções que impulsionem a eficiência e a inovação.",
+        nome: "Gerência de Planejamento",
+        descricao: "A Gerência de Planejamento é responsável por planejar, implementar e gerenciar as atividades de planejamento da organização. Assim, busca garantir que os colaboradores estejam alinhados às necessidades da gestão. Por isso, é fundamental que a equipe de gestão de planejamento esteja sempre atualizada e capacitada para lidar com as demandas da gestão. Nossa equipe está comprometida em fornecer suporte e soluções que impulsionem a eficiência e a inovação.",
         image: ""
     },
     {
         id: "3",
         sigla: "GPEP",
-        nome: "Gestão de Politicas Estrategicas",
-        descricao: "A Gestão de Politicas Estrategicas é responsável por planejar, implementar e gerenciar as políticas estratégicas da organização. Assim, busca garantir que os recursos estejam alinhados às necessidades da gestão. Por isso, é fundamental que a equipe de gestão de políticas esteja sempre atualizada e capacitada para lidar com as demandas da gestão. Nossa equipe está comprometida em fornecer suporte e soluções que impulsionem a eficiência e a inovação.",
+        nome: "Gerência de Políticas Estratégicas",
+        descricao: "A Gerência de Políticas Estratégicas é responsável por planejar, implementar e gerenciar as políticas estratégicas da organização. Assim, busca garantir que os recursos estejam alinhados às necessidades da gestão. Por isso, é fundamental que a equipe de gestão de políticas esteja sempre atualizada e capacitada para lidar com as demandas da gestão. Nossa equipe está comprometida em fornecer suporte e soluções que impulsionem a eficiência e a inovação.",
         image: ""
     },
 ];
 
 
 export default function HomePage() {
+    // Modal state
+    const [showAddContexto, setShowAddContexto] = useState(false);
+    const [showAddIndicador, setShowAddIndicador] = useState(false);
+    const [showAddDashboard, setShowAddDashboard] = useState(false);
     // State for selected gerencia
     const [selectedGerenciaId, setSelectedGerenciaId] = useState<string>(mockGerencias[0].id);
     const [gerenciaDetails, setGerenciaDetails] = useState<{ sigla: string; nome: string; descricao: string, image: string } | null>(mockGerencias[0]);
@@ -197,6 +202,17 @@ export default function HomePage() {
 
     return (
         <div className="min-h-screen bg-[#FDFDFD] p-6">
+            {/* Modals */}
+            <AddContextoModal
+                isOpen={showAddContexto}
+                onClose={() => setShowAddContexto(false)}
+                onSubmit={() => setShowAddContexto(false)}
+            />
+            <AddIndicadorModal
+                isOpen={showAddIndicador}
+                onClose={() => setShowAddIndicador(false)}
+                onSubmit={() => setShowAddIndicador(false)}
+            />
             <div className="container mx-auto">
 
                 <div className="mb-4 flex items-center gap-4">
@@ -207,18 +223,18 @@ export default function HomePage() {
                 {/* Dashboard and FileGrid (still using sampleFiles for demo) */}
                 <div className="flex items-center gap-1 mb-7">
                     <h1 className="text-3xl mr-2 text-blue-600">Dashboard</h1>
-                    <Button
-                        size="icon"
-                        onClick={() => ("")}
-                        className="text-[#7C96FF] hover:text-white bg-gradient-to-b from-[#e4eaff] to-[#9fb2ff] hover:from-[#CDD7FF]/70 hover:to-[#486DFF]/75 rounded-full h-10 w-10 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 border border-[#BFCCFF]/100 hover:border-[#9fb2ff]"
-                    >
-                        <Plus strokeWidth={2.55} className="h-6 w-6" />
-                    </Button>
+                    <AddDashboardButton onClick={() => setShowAddDashboard(true)} />
                 </div>
+                {/* Add Dashboard Modal */}
+                <AddDashboardModal
+                    isOpen={showAddDashboard}
+                    onClose={() => setShowAddDashboard(false)}
+                    onSubmit={() => setShowAddDashboard(false)}
+                />
 
                 {/* Indicadores Cards */}
                 <div className="flex justify-center items-center gap-4 mb-16 flex-wrap">
-                    <AddIndicatorButton />
+                    <AddIndicatorButton onClick={() => setShowAddIndicador(true)} />
                     {indicators.map((indicator, index) => (
                         <IndicatorCard
                             key={index}
@@ -234,7 +250,11 @@ export default function HomePage() {
                 </div>
                 {/* BARRA DE FILTRO DO PAINEL DE CONTEXTO */}
                 <FilterBar />
-                <FileGrid files={sampleFiles} onFileClick={handleFileClick} />
+                <FileGrid
+                    files={sampleFiles}
+                    onFileClick={handleFileClick}
+                    onAddContextClick={() => setShowAddContexto(true)}
+                />
 
                 {/* Gerencia Selector (for demo, use buttons) */}
                 <div className="flex gap-4 mt-18 mb-8">
