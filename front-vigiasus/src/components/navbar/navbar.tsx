@@ -1,8 +1,7 @@
-// src/components/layout/Navbar.tsx
 "use client";
 import { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import Link from "next/link"; // Importado o componente Link
 import Sidebar from "./Sidebar";
 import { Link as LucideLink, Menu } from 'lucide-react';
 //import { Button } from "../button";
@@ -23,7 +22,7 @@ export default function Navbar() {
             <Menu strokeWidth={2.5} className="w-9 h-9" />
           </button>
 
-          {/*Bloco central com VigiaSUS e Logo Jaboatão juntos */}
+          {/* Bloco central com VigiaSUS e Logo Jaboatão juntos */}
           <div className="flex items-center gap-22">
             {/* Texto VigiaSUS (visível apenas em desktop) */}
             <Link href="/" className="block">
@@ -52,7 +51,9 @@ export default function Navbar() {
                 className="w-6 h-6"
               />
             </button>
-            <button className="hover:opacity-70">
+            
+            {/* Ícone de Notificações*/}
+            <Link href="/notifications" className="hover:opacity-70">
               <Image
                 src="/icons/sininho.svg"
                 alt="Notificações"
@@ -60,7 +61,7 @@ export default function Navbar() {
                 height={24}
                 className="w-6 h-6"
               />
-            </button>
+            </Link>
           </div>
         </div>
       </header>

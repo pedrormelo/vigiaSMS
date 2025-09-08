@@ -203,7 +203,7 @@ export default function HomePage() {
         }, 400);
     }, [selectedGerenciaId]);
 
-    const handleFileClick = (file: any) => {
+    const handleFileClick = (file: unknown) => {
         console.log("File clicked:", file)
         // Handle file click logic here
     };
