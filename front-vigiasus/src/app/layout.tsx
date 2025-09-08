@@ -6,7 +6,7 @@ import './globals.css';
 // Navbar 
 import Navbar from '@/components/navbar/navbar';
 import Footer from '../components/footer/footer';
-//import { PanelRightOpen, Scroll } from 'lucide-react';
+import { PanelRightOpen, Scroll } from 'lucide-react';
 import GlobalScrollArea from '@/components/ui/global-scroll-area';
 
 
@@ -26,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <body className={`${montserrat.className} antialiased min-h-screen bg-[#FDFDFD] flex flex-col selection:bg-green-400 selection:text-white`}>
+      <body className={`${montserrat.className} antialiased min-h-screen flex flex-col selection:bg-green-400 selection:text-white`}>
         <GlobalScrollArea>
           {/* A Navbar é renderizada aqui */}
           <Navbar />

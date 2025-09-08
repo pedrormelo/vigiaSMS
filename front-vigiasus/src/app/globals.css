@@ -48,33 +48,48 @@
 
 @media (prefers-color-scheme: light) {
   :root {
-    --background:#f2f2f2 !important;
+    --background:#f2f2f2;
     --foreground: #0a0a0a;
-    --radius: 0.5rem;
   }
 }
 
 body {
-  background: #FDFDFD;
+  background: var(--background);
   color: var(--foreground);
   font-family: "Montserrat", sans-serif;
   font-optical-sizing: auto;
   font-style: normal;
 }
 
-/* Esconde scrollbar nativo */
-::-webkit-scrollbar {
-  width: 0px;
-  height: 0px;
+/* Scrollbar customizada */
+.scrollbar-custom::-webkit-scrollbar {
+  width: 8px;
+}
+.scrollbar-custom::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #60a5fa, #2563eb);
+  border-radius: 8px;
+}
+.scrollbar-custom::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-/* Alternativa para Firefox */
-html {
+/* Firefox */
+.scrollbar-custom {
+  scrollbar-width: thin;
+  scrollbar-color: #2563eb transparent;
+}
+
+/* Escondida */
+.scrollbar-hidden::-webkit-scrollbar {
+  width: 0px;
+}
+.scrollbar-hidden {
   scrollbar-width: none;
 }
 
-/* Habilita scroll suave globalmente */
-html, body {
-  scroll-behavior: smooth;
-  overflow: hidden; /* evita scroll duplo */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none; /* Firefox */
 }
