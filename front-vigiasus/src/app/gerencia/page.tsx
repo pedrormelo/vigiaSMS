@@ -13,13 +13,21 @@ import { image } from "framer-motion/client";
 import { AddDashboardButton } from "@/components/gerencia/dashboard-btn1";
 import { ContextModal as AddDashboardModal } from "@/components/popups/addDashboard-modal";
 
-const indicators = [
+const indicators: {
+    title: string;
+    value: string;
+    subtitle: string;
+    change: string;
+    changeType: "positive" | "negative" | "neutral";
+    borderColor: string;
+    iconType: "cuidados" | "unidades" | "servidores" | "atividade" | "cruz" | "populacao" | "medicos";
+}[] = [
     {
         title: "População Atendida",
         value: "68 milhões",
         subtitle: "Atendimento da Rede Municipal",
         change: "+32% em relação ao PMQA",
-        changeType: "positive" as const,
+        changeType: "positive",
         borderColor: "border-l-blue-500",
         iconType: "cuidados",
     },
@@ -28,7 +36,7 @@ const indicators = [
         value: "200",
         subtitle: "Unidades ativas",
         change: "— Sem alteração",
-        changeType: "neutral" as const,
+        changeType: "neutral",
         borderColor: "border-l-green-500",
         iconType: "unidades",
     },
@@ -37,7 +45,7 @@ const indicators = [
         value: "2.345",
         subtitle: "Em toda Secretaria",
         change: "+4,2% em relação ao PMQA",
-        changeType: "positive" as const,
+        changeType: "positive",
         borderColor: "border-l-red-500",
         iconType: "servidores",
     },
