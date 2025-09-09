@@ -30,17 +30,22 @@ export default function NotificationItem({
       case "doc":
         return "/icons/doc-icon.svg";
       case "planilha":
-      case "planilha":
         return "/icons/planilha-icon.svg";
+        case "pdf":
+        return "/icons/pdf-icon-2.svg";
       case "comentario":
+        return "/icons/comentario-icon.svg";
+      case "sistema":
         return "/icons/system.svg";
+      default:
+        return "/icons/default-icon.svg";
     }
   };
 
   return (
     <button
       onClick={onClick}
-      className={`flex items-start gap-4 p-4 rounded-lg text-left transition ${
+      className={`flex items-start gap-4 p-4 rounded-4xl text-left transition ${
         isActive
           ? "bg-blue-600 text-white shadow-md"
           : "bg-white text-gray-800 hover:bg-gray-100"

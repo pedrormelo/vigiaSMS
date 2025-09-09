@@ -1,4 +1,4 @@
-import { Comment } from "@/constants/notificationsData";
+import { Comment } from "@/constants/notificationsData"; // Certifique-se de que o caminho para o seu mock de dados está correto
 
 interface CommentItemProps {
   comment: Comment;

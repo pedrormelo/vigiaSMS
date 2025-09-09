@@ -8,6 +8,7 @@ import Navbar from '@/components/navbar/navbar';
 import Footer from '../components/footer/footer';
 import { PanelRightOpen, Scroll } from 'lucide-react';
 import GlobalScrollArea from '@/components/ui/global-scroll-area';
+import { Toaster } from "sonner"; 
 
 
 const montserrat = Montserrat({
@@ -32,6 +33,7 @@ export default function RootLayout({
           <Navbar />
           {/* O conteúdo da página (nossa {homePage} será renderizado aqui quando a gentr construir, Pedro*/}
           <main className="flex-1">{children}</main>
+          <Toaster />
           <Footer />
         </GlobalScrollArea>
       </body>
