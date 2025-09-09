@@ -8,7 +8,7 @@ import DocumentView from "@/components/notifications/DocumentView";
 export default function NotificationDetailView({ notification }: { notification: Notification | null; }) {
   if (!notification) {
     return (
-      <div className="flex-1 bg-white p-6 flex items-center justify-center rounded-xl shadow-lg border border-gray-200">
+      <div className="flex-1 bg-white p-6 flex items-center justify-center rounded-r-3xl shadow-lg border border-gray-200">
         <p className="text-gray-500 text-center">
           Selecione uma notificação para ver os detalhes.
         </p>
@@ -26,7 +26,7 @@ export default function NotificationDetailView({ notification }: { notification:
   }
 
   return (
-    <div className="flex-1 flex flex-col rounded-xl shadow-lg border border-gray-200 bg-white">
+    <div className="flex-1 flex flex-col shadow-lg border border-gray-200 rounded-r-3xl bg-white">
       {viewComponent}
     </div>
   );

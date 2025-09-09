@@ -13,7 +13,7 @@ export default function DocumentView({ notification }: NotificationProps) {
       <p className="text-gray-600">
         Clique no botão para abrir o documento: {notification.title}
       </p>
-      <button className="self-end px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+      <button className="self-end cursor-pointer px-4 py-2 bg-blue-600 text-white rounded-2xl hover:bg-blue-700">
         Abrir Documento
       </button>
     </div>

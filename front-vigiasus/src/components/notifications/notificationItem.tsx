@@ -45,7 +45,7 @@ export default function NotificationItem({
   return (
     <button
       onClick={onClick}
-      className={`flex items-start gap-4 p-4 rounded-4xl text-left transition ${
+      className={`flex items-start cursor-pointer gap-4 p-4 rounded-4xl text-left transition ${
         isActive
           ? "bg-blue-600 text-white shadow-md"
           : "bg-white text-gray-800 hover:bg-gray-100"

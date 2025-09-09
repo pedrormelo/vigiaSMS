@@ -13,8 +13,7 @@ export default function NotificationList({
   onSelectNotification,
 }: NotificationListProps) {
   return (
-    <div className="w-96 p-4 rounded-xl shadow-lg border border-gray-200 overflow-y-auto">
-      <h2 className="text-2xl font-semibold text-blue-600 mb-4">Notificações</h2>
+    <div className="w-96 p-4 shadow-lg rounded-bl-3xl border-t border-gray-200 overflow-y-auto scrollbar-custom max-h-[70vh]">
       <div className="flex flex-col gap-3">
         {notifications.map((notification) => (
           <NotificationItem

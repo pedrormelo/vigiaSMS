@@ -55,20 +55,16 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div className="p-8 bg-gray-100 min-h-screen">
-      {/* DOCUMENTAÇÃO DA MUDANÇA:
-        - A classe 'min-h-[80vh]' foi REMOVIDA.
-        - Ao remover esta classe, o container não força mais uma altura mínima.
-        - Agora, a altura do container se ajustará automaticamente ao tamanho do conteúdo
-          (a lista de notificações e os detalhes da notificação).
-        - A largura máxima ('max-w-7xl') foi mantida, conforme o seu pedido.
-      */}
-      <div className="max-w-7xl mx-auto rounded-2xl shadow-xl flex border border-gray-200 bg-white">
-        <NotificationList
-          notifications={notifications}
-          activeNotificationId={activeNotification?.id || null}
-          onSelectNotification={handleSelectNotification}
-        />
+    <div className="p-8 bg-gradient-to-r from-[#fdfdfd] to-[#f6f8ff] min-h-screen">
+      <div className="max-w-7xl mx-auto rounded-3xl shadow-xl flex border border-gray-200 bg-white">
+        <div className="flex-col items-center border-r border-gray-200 max-h-[80vh]">
+          <h2 className="text-2xl text-left ml-6 pt-4 font-semibold text-blue-600 mb-3">Notificações</h2>
+          <NotificationList
+            notifications={notifications}
+            activeNotificationId={activeNotification?.id || null}
+            onSelectNotification={handleSelectNotification}
+          />
+        </div>
         <NotificationDetailView notification={activeNotification} />
       </div>
     </div>

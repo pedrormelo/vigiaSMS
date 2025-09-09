@@ -40,7 +40,7 @@ export default function SystemUpdateView({ notification }: NotificationProps) {
       />
       <h3 className="text-xl font-bold text-blue-700">{notification.title}</h3>
       <p className="text-gray-600 leading-relaxed max-w-md">{notification.description}</p>
-      <div className="w-full mt-4 p-4 border rounded-lg bg-gray-50 text-left">
+      <div className="w-full mt-4 p-4 border border-gray-300/80 rounded-3xl bg-gray-50 text-left">
         <p className="font-semibold mb-2">O que há de novo:</p>
         <ul className="list-disc list-inside text-sm text-gray-700">
           <li>Novas funcionalidades de filtro de dados.</li>
@@ -50,7 +50,7 @@ export default function SystemUpdateView({ notification }: NotificationProps) {
       </div>
       <button
         onClick={handleUnderstood}
-        className="self-end px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+        className="self-end cursor-pointer px-4 py-2 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition"
       >
         Entendido
       </button>

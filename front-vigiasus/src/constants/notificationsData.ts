@@ -9,6 +9,7 @@ export interface Comment {
   time: string;
   date: string;
   isMyComment: boolean;
+  role: "info" | "secretaria" | "diretoria" | "gerencia" | "user" | "zelma";
 }
 
 export interface Notification {
@@ -36,6 +37,7 @@ export const notificationsData: Notification[] = [
         time: "10:30",
         date: "04/08/2025",
         isMyComment: false,
+        role: "gerencia",
       },
     ],
   },
@@ -61,6 +63,16 @@ export const notificationsData: Notification[] = [
         time: "14:00",
         date: "04/08/2025",
         isMyComment: false,
+        role: "gerencia",
+      },
+      {
+        id: 2,
+        author: "Diretoria RH",
+        text: "Precisamos de mais informações para analisar a planilha.",
+        time: "15:00",
+        date: "04/08/2025",
+        isMyComment: false,
+        role: "secretaria",
       },
     ],
   },
@@ -74,10 +86,10 @@ export const notificationsData: Notification[] = [
   },
   {
     id: 5,
-    type: "comentario",
-    title: "Pagamento ESF / ESB",
-    description: "Um novo comentário foi feito no documento",
-    status: "visto",
+    type: "doc",
+    title: "TESTE",
+    description: "TESTE 1",
+    status: "indeferido",
     relatedFileType: "doc",
     comments: [
       {
@@ -87,6 +99,7 @@ export const notificationsData: Notification[] = [
         time: "20:00",
         date: "04/08/2025",
         isMyComment: false,
+        role: "zelma",
       },
       {
         id: 2,
@@ -94,7 +107,26 @@ export const notificationsData: Notification[] = [
         text: "Rapaz, ajude aí. Precisamos rever esse documento, Zelma encontrou alguns erros no documento.",
         time: "21:00",
         date: "04/08/2025",
-        isMyComment: true,
+        isMyComment: false,
+        role: "diretoria",
+      },
+      {
+        id: 3,
+        author: "Gerência de Tecnologia da Informação",
+        text: "Precisamos de mais informações para analisar o documento.",
+        time: "22:00",
+        date: "04/08/2025",
+        isMyComment: false,
+        role: "gerencia",
+      },
+      {
+        id: 4,
+        author: "Secretário 1",
+        text: "xaropagem.",
+        time: "22:10",
+        date: "04/08/2025",
+        isMyComment: false,
+        role: "secretaria",
       },
     ],
   },
@@ -112,7 +144,32 @@ export const notificationsData: Notification[] = [
         time: "16:45",
         date: "04/08/2025",
         isMyComment: false,
+        role: "gerencia",
       },
     ],
+  },
+  {
+    id: 7,
+    type: "pdf",
+    title: "teste 2",
+    description: "O documento foi deferido",
+    status: "deferido",
+    comments: [],
+  },
+  {
+    id: 8,
+    type: "planilha",
+    title: "teste 2",
+    description: "O documento foi deferido",
+    status: "deferido",
+    comments: [],
+  },
+    {
+    id: 9,
+    type: "sistema",
+    title: "teste 2",
+    description: "O documento foi deferido",
+    status: "deferido",
+    comments: [],
   },
 ];
