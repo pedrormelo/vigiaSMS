@@ -27,18 +27,6 @@ export default function WelcomeBar({ nivelAcesso = "Usuário", nomeUser = "Visit
         ${isVisible ? 'max-h-20 py-2 px-6 opacity-100' : 'max-h-0 py-0 px-6 opacity-50'}
       `}
     >
-      {/* DOCUMENTAÇÃO:
-        - A animação de 'transform' por 'max-height'.
-        - overflow-hidden: Essencial para que o conteúdo não vaze enquanto a altura diminui.
-        - Se 'isVisible' for true:
-          - max-h-20: Uma altura máxima grande o suficiente para a barra.
-          - py-2 px-6: Padding normal.
-          - opacity-100: Totalmente visível.
-        - Se 'isVisible' for false:
-          - max-h-0: A altura máxima colapsa para zero, removendo o espaço.
-          - py-0: O padding vertical também vai a zero para um colapso suave.
-          - opacity-50: A opacidade diminui junto com a altura.
-      */}
       <div className="max-w-7xl mx-auto flex items-center justify-center gap-2">
         <User size={16} />
         <p>
