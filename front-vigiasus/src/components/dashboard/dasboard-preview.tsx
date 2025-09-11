@@ -84,7 +84,7 @@ export function DashboardPreview({
                         <div key={index} className={cn("flex items-center justify-center", getItemClasses(index))}>
                             {graph ? (
                                 <div className="relative w-full h-full group">
-                                    <ChartPreview type={graph.type} title={graph.title} isHighlighted={graph.isHighlighted} />
+                                    <ChartPreview type={graph.type} title={graph.title} isHighlighted={graph.isHighlighted} data={graph.data} />
                                     {/* Overlay controls */}
                                     <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
                                         <button

@@ -13,6 +13,15 @@ interface ChartPreviewProps {
 export function ChartPreview({ type, title, data, isHighlighted }: ChartPreviewProps) {
     const chartRef = useRef<HTMLDivElement>(null)
 
+    // Show error if data is not a valid array
+    if (!Array.isArray(data) || data.length === 0) {
+        return (
+            <div className="bg-white rounded-lg border shadow-sm p-4 h-full flex items-center justify-center text-gray-400">
+                Dados indisponíveis
+            </div>
+        )
+    }
+
     useEffect(() => {
         const loadGoogleCharts = () => {
             if (!(window as any).google) {
@@ -64,8 +73,7 @@ export function ChartPreview({ type, title, data, isHighlighted }: ChartPreviewP
 
     return (
         <div
-            className={`bg-white rounded-lg border shadow-sm p-4 h-full flex flex-col ${isHighlighted ? "ring-2 ring-yellow-400 ring-opacity-50" : ""
-                }`}
+            className={`bg-white rounded-lg border shadow-sm p-4 h-full flex flex-col ${isHighlighted ? "ring-2 ring-yellow-400 ring-opacity-50" : ""}`}
         >
             <div className="flex-1">
                 <div ref={chartRef} style={{ width: "100%", height: "100%" }} />
@@ -73,3 +81,5 @@ export function ChartPreview({ type, title, data, isHighlighted }: ChartPreviewP
         </div>
     )
 }
+
+
