@@ -48,7 +48,7 @@ const mockGraphs: GraphData[] = [
         insertedDate: "2024-01-20",
         data: [
             ["Mês", "Alta", "Média", "Baixa"],
-            ["Jan", 100, 80, 50],
+            ["Jan", 50, 180, 150],
             ["Fev", 120, 85, 55],
             ["Mar", 130, 90, 60],
         ],
