@@ -3,7 +3,8 @@
 import { useState } from "react"
 import { LayoutSelector, type LayoutType } from "@/components/dashboard/selecionarLayout"
 import { DashboardPreview, type GraphData } from "@/components/dashboard/dasboard-preview"
-import { AvailableGraphs } from "@/components/dashboard/graficosDisponiveis"
+import { AvailableGraphsPanel } from "@/components/dashboard/graficos-filterBar"
+import { SelecioneGraficoModal } from "@/components/popups/selecioneGrafico-modal"
 import { diretoriasConfig } from "@/constants/diretorias";
 import { Button } from "@/components/ui/button"
 import { useParams } from "next/dist/client/components/navigation"
@@ -16,7 +17,7 @@ const mockGraphs: GraphData[] = [
         id: "1",
         title: "Distribuição de Atendimentos",
         type: "pie",
-        gerencia: "GERAN",
+        gerencia: "GPLAN",
         insertedDate: "2024-01-15",
         data: [
             ["Categoria", "Atendimentos"],
@@ -30,7 +31,7 @@ const mockGraphs: GraphData[] = [
         id: "2",
         title: "Unidades com o PEC Implementado",
         type: "chart",
-        gerencia: "CTI",
+        gerencia: "GTI",
         insertedDate: "2024-01-10",
         data: [
             ["Unidade", "Implementado"],
@@ -43,7 +44,7 @@ const mockGraphs: GraphData[] = [
         id: "3",
         title: "Atendimento de Alta vs Média e Baixa Complexidade",
         type: "line",
-        gerencia: "GERAN",
+        gerencia: "GPLAN",
         insertedDate: "2024-01-20",
         data: [
             ["Mês", "Alta", "Média", "Baixa"],
@@ -160,21 +161,14 @@ export default function DashboardBuilder() {
                     </Button>
                 </div>
 
-                <AvailableGraphs graphs={mockGraphs} onGraphSelect={handleGraphSelect} />
+                <AvailableGraphsPanel graphs={mockGraphs} onGraphSelect={handleGraphSelect} />
 
-                {selectedPosition !== null && (
-                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                        <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-lg font-semibold">Selecione um gráfico</h3>
-                                <Button variant="outline" onClick={() => setSelectedPosition(null)}>
-                                    Cancelar
-                                </Button>
-                            </div>
-                            <AvailableGraphs graphs={mockGraphs} onGraphSelect={handleGraphSelect} />
-                        </div>
-                    </div>
-                )}
+                <SelecioneGraficoModal
+                    open={selectedPosition !== null}
+                    onClose={() => setSelectedPosition(null)}
+                    graphs={mockGraphs}
+                    onGraphSelect={handleGraphSelect}
+                />
             </div>
         </div>
     )

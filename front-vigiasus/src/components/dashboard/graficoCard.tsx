@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Switch } from "@/components/ui/switch"
 
+import { ChartPie, ChartLine, ChartColumn } from 'lucide-react'
+
 export type GraphType = "line" | "chart" | "pie"
 
 interface GraphCardProps {
@@ -25,49 +27,21 @@ const graphTypeConfig = {
     line: {
         color: "bg-[#B329E9] hover:bg-[#A020B5]",
         icon: () => (
-            <svg className="h-12 w-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4" />
-                <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"
-                />
-            </svg>
+            <ChartLine className="h-9 w-9 text-white"></ChartLine>
         ),
         label: "Gráfico de Linhas",
     },
     chart: {
         color: "bg-[#B329E9] hover:bg-[#A020B5]",
         icon: () => (
-            <svg className="h-12 w-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                />
-            </svg>
+            <ChartColumn className="h-9 w-9 text-white"></ChartColumn>
         ),
         label: "Gráfico de Barras",
     },
     pie: {
         color: "bg-[#B329E9] hover:bg-[#A020B5]",
         icon: () => (
-            <svg className="h-12 w-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"
-                />
-                <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"
-                />
-            </svg>
+            <ChartPie className="h-9 w-9 text-white"></ChartPie>
         ),
     },
 }
