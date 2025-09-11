@@ -50,14 +50,14 @@ export default function Metrics() {
         
         <MetricCard 
           icon={<FileText size={28} className="text-white" />}
-          value="+70"
-          label="Documentos"
+          value="+20"
+          label="Dashboards"
           className="animate-fade-in-up"
           style={{ animationDelay: '150ms' }}
         />
         <MetricCard 
           icon={<Users size={28} className="text-white" />}
-          value="+30"
+          value="5"
           label="Diretorias"
           className="animate-fade-in-up" 
           style={{ animationDelay: '300ms' }}
