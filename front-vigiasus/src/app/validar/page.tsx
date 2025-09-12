@@ -117,7 +117,7 @@ export default function ValidacaoContextos() {
   const pageTitle = perfil === "membro" ? "Requisição de Contextos" : "Validar Contextos";
 
   return (
-    <div className="p-8">
+    <div className="p-8 bg-white">
       {/* Simulação de Perfil */}
       <div className="flex gap-2 mb-4 bg-yellow-100 p-2 rounded-md text-sm">
           <p className="font-bold my-auto">Simulação de Perfil:</p>
