@@ -20,10 +20,10 @@ export default function HeroCMS() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 mt-4">
-            <Button className="bg-[#E2712A] hover:bg-[#E2713E] text-white rounded-2xl px-7 py-5">
+            <Button className="bg-[#E2712A] hover:bg-[#E2713E] cursor-pointer text-white rounded-2xl px-7 py-5">
               Veja as Resoluções
             </Button>
-            <Button className="bg-white hover:bg-gray-100 text-indigo-700 rounded-2xl px-7 py-5">
+            <Button className="bg-white hover:bg-gray-100 cursor-pointer text-indigo-700 rounded-2xl px-7 py-5">
               Baixe o Organograma
             </Button>
           </div>

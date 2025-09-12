@@ -21,11 +21,11 @@ export default function GerenciasFilterBar() {
   return (
     <div className="mb-4">
       {/* LINHA 1: Título e Barra de Pesquisa */}
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex  items-center mb-4">
         {/* Título */}
         <h2 className="text-3xl font-extralight text-[#1745FF]">Painel de Contextos</h2>
 
-        <div className="flex-1 relative ml-6">
+        <div className="flex-1 relative ml-6 max-w-[75%]">
           <SearchBar
             value={searchValue}
             onChange={setSearchValue}
