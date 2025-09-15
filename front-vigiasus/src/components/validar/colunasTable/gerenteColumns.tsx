@@ -1,9 +1,10 @@
 // src/components/validar/colunasTable/gerenteColumns.tsx
 
 import React from 'react';
-import { Column, Contexto, StatusContexto } from "@/components/validar/typesDados";
+import { Column, Contexto } from "@/components/validar/typesDados";
 import { FaEye } from 'react-icons/fa';
 import IconeDocumento from '@/components/validar/iconeDocumento';
+import { statusConfig } from './statusConfig'; 
 
 export const gerenteColumns: Column<Contexto>[] = [
   {
@@ -26,17 +27,17 @@ export const gerenteColumns: Column<Contexto>[] = [
   },
   {
     key: "situacao", header: "Situação",
-    render: () => (
-        <span className="bg-yellow-100 text-yellow-800 px-3 py-1 text-xs font-semibold rounded-full">
-            Aguardando validação
-        </span>
-    ),
+    //  O status agora é lido de `row.situacao`
+    // e usa a configuração central para exibir o texto e a cor corretos.
+    render: (row) => {
+      const config = statusConfig[row.situacao] || { text: row.situacao, className: "bg-gray-100 text-gray-800" };
+      return <span className={`px-3 py-1 text-xs font-semibold rounded-full ${config.className}`}>{config.text}</span>;
+    }
   },
   {
     key: "acoes", header: "Ações",
     render: () => (
       <div className="flex items-center gap-4 text-gray-500">
-        {/* 👇 2. O botão agora usa o ícone FaEye e o título correto */}
         <button className="hover:text-blue-600" title="Visualizar Contexto">
           <FaEye size={16} />
         </button>

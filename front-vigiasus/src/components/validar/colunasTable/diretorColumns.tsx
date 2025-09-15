@@ -5,6 +5,7 @@ import { Column, Contexto } from "@/components/validar/typesDados";
 import IconeDocumento from '@/components/validar/iconeDocumento';
 import { Eye } from 'lucide-react'; // Ícone de olho do Lucide
 import { getGerenciaColor } from "@/constants/gerenciaColor"; // Importa a função de cores
+import { statusConfig } from './statusConfig'; // ✨ 1. Importar a configuração de status centralizada
 
 export const diretorColumns: Column<Contexto>[] = [
   {
@@ -43,7 +44,12 @@ export const diretorColumns: Column<Contexto>[] = [
   {
     key: "situacao",
     header: "Situação",
-    render: () => <span className="bg-yellow-100 text-yellow-800 px-3 py-1 text-xs font-semibold rounded-full">Aguardando analise</span>,
+    // O status agora é lido de `row.situacao`
+    // e usa a configuração central para exibir o texto e a cor corretos.
+    render: (row) => {
+      const config = statusConfig[row.situacao] || { text: row.situacao, className: "bg-gray-100 text-gray-800" };
+      return <span className={`px-3 py-1 text-xs font-semibold rounded-full ${config.className}`}>{config.text}</span>;
+    }
   },
   {
     key: "acoes",

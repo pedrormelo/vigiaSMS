@@ -1,13 +1,12 @@
-// src/app/validar/page.tsx
+// src/app/validar/historico/page.tsx
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { useValidarContextos } from "@/hooks/useValidarContextos";
+import Link from "next/link"; 
+import { useHistoricoContextos } from "@/hooks/useHistoricoContextos";
 
 // Componentes
 import ContextoTable from "@/components/validar/ContextoTable";
-import FilterTabs from "@/components/validar/filtroTable";
 import DetalhesContextoModal from "@/components/popups/detalhesContextoModal";
 import { Button } from "@/components/ui/button";
 
@@ -18,25 +17,20 @@ import { diretorColumns } from "@/components/validar/colunasTable/diretorColumns
 import { Contexto } from "@/components/validar/typesDados";
 
 // Ícones
-import { RefreshCw, Eye, Trash } from "lucide-react";
+import { ArrowLeft, Eye, Trash } from "lucide-react";
 
-export default function ValidacaoContextos() {
-  // Usamos o hook para obter dados e estados
-  const { data, isLoading, error } = useValidarContextos();
+export default function HistoricoPage() {
+  const { data, isLoading, error } = useHistoricoContextos(); 
 
   const [perfil, setPerfil] = useState<"diretor" | "gerente" | "membro">("gerente");
-
-  // Estados para controlar o modal (isso é uma responsabilidade da UI, então fica aqui)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedContexto, setSelectedContexto] = useState<Contexto | null>(null);
 
-  // Função para abrir o modal
   const handleViewClick = (contexto: Contexto) => {
     setSelectedContexto(contexto);
     setIsModalOpen(true);
   };
 
-  // Lógica para selecionar as colunas com base no perfil
   const getColumns = () => {
     const baseColumns =
       perfil === "membro"
@@ -44,8 +38,7 @@ export default function ValidacaoContextos() {
         : perfil === "gerente"
         ? gerenteColumns
         : diretorColumns;
-
-    // Adiciona a ação de visualização a todas as colunas de "ações"
+    
     return baseColumns.map(col => {
       if (col.key === 'acoes') {
         return {
@@ -55,7 +48,6 @@ export default function ValidacaoContextos() {
               <button onClick={() => handleViewClick(row)} className="hover:text-blue-600" title="Visualizar Contexto">
                 <Eye size={16} />
               </button>
-              {/* Adiciona o botão de apagar apenas para o perfil "membro" */}
               {perfil === 'membro' && (
                 <button className="hover:text-red-600" title="Apagar Contexto">
                   <Trash size={16} />
@@ -69,11 +61,8 @@ export default function ValidacaoContextos() {
     });
   };
 
-  const pageTitle = perfil === "membro" ? "Requisição de Contextos" : "Validar Contextos";
-
-  // Renderização condicional para o estado de carregamento e erro
   if (isLoading) {
-    return <div className="p-8">Carregando dados...</div>;
+    return <div className="p-8">Carregando histórico...</div>;
   }
 
   if (error) {
@@ -82,31 +71,28 @@ export default function ValidacaoContextos() {
 
   return (
     <div className="p-8 bg-white">
-      {/* Seção de Simulação de Perfil (mantida como estava) */}
+      {/* Simulação de Perfil */}
       <div className="flex gap-2 mb-4 bg-yellow-100 p-2 rounded-md text-sm">
-        <p className="font-bold my-auto">Simulação de Perfil:</p>
-        <button onClick={() => setPerfil("diretor")} className={`px-3 py-1 rounded-md ${perfil === 'diretor' && 'bg-blue-200 font-semibold'}`}>Diretor</button>
-        <button onClick={() => setPerfil("gerente")} className={`px-3 py-1 rounded-md ${perfil === 'gerente' && 'bg-blue-200 font-semibold'}`}>Gerente</button>
-        <button onClick={() => setPerfil("membro")} className={`px-3 py-1 rounded-md ${perfil === 'membro' && 'bg-blue-200 font-semibold'}`}>Membro</button>
+          <p className="font-bold my-auto">Simulação de Perfil:</p>
+          <button onClick={() => setPerfil("diretor")} className={`px-3 py-1 rounded-md ${perfil === 'diretor' && 'bg-blue-200 font-semibold'}`}>Diretor</button>
+          <button onClick={() => setPerfil("gerente")} className={`px-3 py-1 rounded-md ${perfil === 'gerente' && 'bg-blue-200 font-semibold'}`}>Gerente</button>
+          <button onClick={() => setPerfil("membro")} className={`px-3 py-1 rounded-md ${perfil === 'membro' && 'bg-blue-200 font-semibold'}`}>Membro</button>
+      </div>
+      
+      {/* Título da página e botão de voltar */}
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-3xl font-bold text-[#1745FF]">Histórico de Contextos</h1>
+        <Link href="/validar">
+          <Button variant="outline" className="bg-white rounded-full shadow-sm">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Voltar
+          </Button>
+        </Link>
       </div>
 
-      <h1 className="text-3xl font-bold text-[#1745FF] mb-8">{pageTitle}</h1>
-
       <div className="bg-gray-50 rounded-[2rem] p-6 shadow-sm">
-        {perfil === "gerente" && <FilterTabs />}
-        <h2 className="text-xl font-semibold text-[#1745FF] mb-4">Solicitações em aberto</h2>
-
-        {/*A tabela agora recebe os dados do hook */}
+        <h2 className="text-xl font-semibold text-[#1745FF] mb-4">Solicitações finalizadas</h2>
         <ContextoTable data={data} columns={getColumns()} />
-        
-        <div className="flex justify-end mt-6">
-          <Link href="/validar/historico">
-            <Button variant="outline" className="bg-white rounded-full shadow-sm">
-              Histórico
-              <RefreshCw className="ml-2 h-4 w-4" />
-            </Button>
-          </Link>
-        </div>
       </div>
 
       <DetalhesContextoModal
