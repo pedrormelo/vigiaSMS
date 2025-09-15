@@ -1,7 +1,7 @@
 // src/app/components/navbar/Sidebar.tsx
 "use client";
 import { motion } from "framer-motion";
-import diretoriasConfig from "@/constants/diretorias";
+import {diretoriasConfig} from "@/constants/diretorias";
 
 import Link from "next/link";
 import Image from "next/image";

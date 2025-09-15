@@ -1,6 +1,6 @@
 "use client"
 
-import { FileText, FileSpreadsheet, BarChart3, Link, Calendar1 , ChartNetwork  } from "lucide-react"
+import { FileText, FileSpreadsheet, FileSearch, BarChart3, Link, Calendar1 , ChartNetwork  } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export type FileType = "pdf" | "doc" | "dashboard" | "excel" | "resolucao" | "link"
@@ -37,6 +37,11 @@ const fileTypeConfig = {
     resolucao: {
         color: "bg-[#E2712A] hover:bg-[#C95A2A]",
         icon: FileText,
+        label: "Arquivo de Resolução",
+    },
+      leis: {
+        color: "bg-[#f27] hover:bg-[#f26]",
+        icon: FileSearch,
         label: "Arquivo de Resolução",
     },
     link: {
