@@ -34,7 +34,7 @@ export function AvailableGraphsPanel({ graphs, onGraphSelect }: AvailableGraphsP
   });
 
   return (
-    <div className="mb-4">
+    <div className="pb-16">
       {/* Título e Barra de Pesquisa */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-3xl font-extralight text-[#1745FF]">Gráficos Disponíveis</h2>
