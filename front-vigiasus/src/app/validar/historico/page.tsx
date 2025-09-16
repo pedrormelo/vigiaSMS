@@ -2,25 +2,27 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link"; 
+import Link from "next/link";
+import { useDebounce } from "@/hooks/useDebounce";
 import { useHistoricoContextos } from "@/hooks/useHistoricoContextos";
 
-// Componentes
 import ContextoTable from "@/components/validar/ContextoTable";
 import DetalhesContextoModal from "@/components/popups/detalhesContextoModal";
 import { Button } from "@/components/ui/button";
+import HistoricoFilterBar from "@/components/validar/HistoricoFilterBar";
 
-// Definições de colunas e tipos
 import { membroColumns } from "@/components/validar/colunasTable/membroColumns";
 import { gerenteColumns } from "@/components/validar/colunasTable/gerenteColumns";
 import { diretorColumns } from "@/components/validar/colunasTable/diretorColumns";
 import { Contexto } from "@/components/validar/typesDados";
 
-// Ícones
-import { ArrowLeft, Eye, Trash } from "lucide-react";
+import { ArrowLeft, Eye } from "lucide-react";
 
 export default function HistoricoPage() {
-  const { data, isLoading, error } = useHistoricoContextos(); 
+  const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+
+  const { data, error } = useHistoricoContextos(debouncedSearchQuery);
 
   const [perfil, setPerfil] = useState<"diretor" | "gerente" | "membro">("gerente");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -48,11 +50,6 @@ export default function HistoricoPage() {
               <button onClick={() => handleViewClick(row)} className="hover:text-blue-600" title="Visualizar Contexto">
                 <Eye size={16} />
               </button>
-              {perfil === 'membro' && (
-                <button className="hover:text-red-600" title="Apagar Contexto">
-                  <Trash size={16} />
-                </button>
-              )}
             </div>
           )
         };
@@ -61,25 +58,19 @@ export default function HistoricoPage() {
     });
   };
 
-  if (isLoading) {
-    return <div className="p-8">Carregando histórico...</div>;
-  }
-
   if (error) {
     return <div className="p-8 text-red-500">{error}</div>;
   }
 
   return (
     <div className="p-8 bg-white">
-      {/* Simulação de Perfil */}
       <div className="flex gap-2 mb-4 bg-yellow-100 p-2 rounded-md text-sm">
-          <p className="font-bold my-auto">Simulação de Perfil:</p>
-          <button onClick={() => setPerfil("diretor")} className={`px-3 py-1 rounded-md ${perfil === 'diretor' && 'bg-blue-200 font-semibold'}`}>Diretor</button>
-          <button onClick={() => setPerfil("gerente")} className={`px-3 py-1 rounded-md ${perfil === 'gerente' && 'bg-blue-200 font-semibold'}`}>Gerente</button>
-          <button onClick={() => setPerfil("membro")} className={`px-3 py-1 rounded-md ${perfil === 'membro' && 'bg-blue-200 font-semibold'}`}>Membro</button>
+        <p className="font-bold my-auto">Simulação de Perfil:</p>
+        <button onClick={() => setPerfil("diretor")} className={`px-3 py-1 rounded-md ${perfil === 'diretor' && 'bg-blue-200 font-semibold'}`}>Diretor</button>
+        <button onClick={() => setPerfil("gerente")} className={`px-3 py-1 rounded-md ${perfil === 'gerente' && 'bg-blue-200 font-semibold'}`}>Gerente</button>
+        <button onClick={() => setPerfil("membro")} className={`px-3 py-1 rounded-md ${perfil === 'membro' && 'bg-blue-200 font-semibold'}`}>Membro</button>
       </div>
       
-      {/* Título da página e botão de voltar */}
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-[#1745FF]">Histórico de Contextos</h1>
         <Link href="/validar">
@@ -92,6 +83,12 @@ export default function HistoricoPage() {
 
       <div className="bg-gray-50 rounded-[2rem] p-6 shadow-sm">
         <h2 className="text-xl font-semibold text-[#1745FF] mb-4">Solicitações finalizadas</h2>
+        
+        <HistoricoFilterBar 
+          searchValue={searchQuery} 
+          onSearchChange={setSearchQuery} 
+        />
+        
         <ContextoTable data={data} columns={getColumns()} />
       </div>
 

@@ -21,22 +21,18 @@ import { Contexto } from "@/components/validar/typesDados";
 import { RefreshCw, Eye, Trash } from "lucide-react";
 
 export default function ValidacaoContextos() {
-  // Usamos o hook para obter dados e estados
-  const { data, isLoading, error } = useValidarContextos();
+  // O `isLoading` foi removido. O loading.tsx cuida disso agora.
+  const { data, error } = useValidarContextos();
 
   const [perfil, setPerfil] = useState<"diretor" | "gerente" | "membro">("gerente");
-
-  // Estados para controlar o modal (isso é uma responsabilidade da UI, então fica aqui)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedContexto, setSelectedContexto] = useState<Contexto | null>(null);
 
-  // Função para abrir o modal
   const handleViewClick = (contexto: Contexto) => {
     setSelectedContexto(contexto);
     setIsModalOpen(true);
   };
 
-  // Lógica para selecionar as colunas com base no perfil
   const getColumns = () => {
     const baseColumns =
       perfil === "membro"
@@ -45,7 +41,6 @@ export default function ValidacaoContextos() {
         ? gerenteColumns
         : diretorColumns;
 
-    // Adiciona a ação de visualização a todas as colunas de "ações"
     return baseColumns.map(col => {
       if (col.key === 'acoes') {
         return {
@@ -55,7 +50,6 @@ export default function ValidacaoContextos() {
               <button onClick={() => handleViewClick(row)} className="hover:text-blue-600" title="Visualizar Contexto">
                 <Eye size={16} />
               </button>
-              {/* Adiciona o botão de apagar apenas para o perfil "membro" */}
               {perfil === 'membro' && (
                 <button className="hover:text-red-600" title="Apagar Contexto">
                   <Trash size={16} />
@@ -71,18 +65,15 @@ export default function ValidacaoContextos() {
 
   const pageTitle = perfil === "membro" ? "Requisição de Contextos" : "Validar Contextos";
 
-  // Renderização condicional para o estado de carregamento e erro
-  if (isLoading) {
-    return <div className="p-8">Carregando dados...</div>;
-  }
-
+  // A verificação de erro ainda é necessária.
   if (error) {
     return <div className="p-8 text-red-500">{error}</div>;
   }
+  
+  // O bloco `if (isLoading)` foi removido.
 
   return (
     <div className="p-8 bg-white">
-      {/* Seção de Simulação de Perfil (mantida como estava) */}
       <div className="flex gap-2 mb-4 bg-yellow-100 p-2 rounded-md text-sm">
         <p className="font-bold my-auto">Simulação de Perfil:</p>
         <button onClick={() => setPerfil("diretor")} className={`px-3 py-1 rounded-md ${perfil === 'diretor' && 'bg-blue-200 font-semibold'}`}>Diretor</button>
@@ -96,7 +87,6 @@ export default function ValidacaoContextos() {
         {perfil === "gerente" && <FilterTabs />}
         <h2 className="text-xl font-semibold text-[#1745FF] mb-4">Solicitações em aberto</h2>
 
-        {/*A tabela agora recebe os dados do hook */}
         <ContextoTable data={data} columns={getColumns()} />
         
         <div className="flex justify-end mt-6">
