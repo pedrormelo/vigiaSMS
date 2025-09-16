@@ -14,6 +14,7 @@ export interface GraphData {
     insertedDate: string
     data: any[]        // <-- novo campo
     isHighlighted?: boolean
+    editMode?: boolean
 }
 
 
@@ -23,6 +24,7 @@ interface DashboardPreviewProps {
     onGraphSelect: (position: number) => void
     onGraphRemove: (id: string) => void
     onHighlightToggle: (id: string, highlighted: boolean) => void
+    editMode?: boolean
 }
 
 export function DashboardPreview({
@@ -31,17 +33,18 @@ export function DashboardPreview({
     onGraphSelect,
     onGraphRemove,
     onHighlightToggle,
+    editMode = false,
 }: DashboardPreviewProps) {
     const getLayoutClasses = () => {
         switch (layout) {
             case "asymmetric":
-                return "grid grid-cols-2 grid-rows-2 gap-4 h-96"
+                return "grid grid-cols-2 grid-rows-2 gap-4 h-[32rem]"
             case "grid":
-                return "grid grid-cols-2 grid-rows-2 gap-4 h-96"
+                return "grid grid-cols-2 grid-rows-2 gap-4 h-[32rem]"
             case "sideBySide":
-                return "grid grid-cols-2 gap-4 h-96"
+                return "grid grid-cols-2 gap-4 h-[32rem]"
             default:
-                return "grid grid-cols-2 grid-rows-2 gap-4 h-96"
+                return "grid grid-cols-2 grid-rows-2 gap-4 h-[32rem]"
         }
     }
 
@@ -83,27 +86,28 @@ export function DashboardPreview({
                     return (
                         <div key={index} className={cn("flex items-center justify-center", getItemClasses(index))}>
                             {graph ? (
-                                <div className="relative w-full h-full group">
-                                    <ChartPreview type={graph.type} title={graph.title} isHighlighted={graph.isHighlighted} data={graph.data} />
-                                    {/* Overlay controls */}
-                                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                                        <button
-                                            onClick={() => onHighlightToggle(graph.id, !graph.isHighlighted)}
-                                            className={`px-2 py-1 text-xs rounded ${graph.isHighlighted ? "bg-blue-500 text-white" : "bg-white text-gray-700 border"
-                                                }`}
-                                        >
-                                            {graph.isHighlighted ? "Destacado" : "Marcar como Destaque"}
-                                        </button>
-                                        <button
-                                            onClick={() => onGraphRemove(graph.id)}
-                                            className="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600"
-                                        >
-                                            Remover
-                                        </button>
-                                    </div>
+                                <div className={`relative w-full h-full group ${editMode ? "border-2 rounded-2xl border-dashed border-gray-200" : ""}`}>
+                                    <ChartPreview type={graph.type} title={graph.title} isHighlighted={graph.isHighlighted} data={graph.data} editMode={graph.editMode} />
+                                    {editMode && (
+                                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                                            <button
+                                                onClick={() => onHighlightToggle(graph.id, !graph.isHighlighted)}
+                                                className={`px-2 py-1 text-xs rounded ${graph.isHighlighted ? "bg-blue-500 text-white" : "bg-white text-gray-700 border"
+                                                    }`}
+                                            >
+                                                {graph.isHighlighted ? "Destacado" : "Marcar como Destaque"}
+                                            </button>
+                                            <button
+                                                onClick={() => onGraphRemove(graph.id)}
+                                                className="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600"
+                                            >
+                                                Remover
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             ) : (
-                                <AddGraphButton onClick={() => onGraphSelect(index)} className="w-full h-full" />
+                                editMode ? <AddGraphButton onClick={() => onGraphSelect(index)} className="w-full h-full" /> : null
                             )}
                         </div>
                     )

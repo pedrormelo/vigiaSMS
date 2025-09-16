@@ -7,7 +7,7 @@ import { AvailableGraphsPanel } from "@/components/dashboard/graficos-filterBar"
 import { SelecioneGraficoModal } from "@/components/popups/selecioneGrafico-modal"
 import { diretoriasConfig } from "@/constants/diretorias";
 import { Button } from "@/components/ui/button"
-import { useParams } from "next/dist/client/components/navigation"
+import { useParams, useRouter } from "next/dist/client/components/navigation"
 
 import { Info, LayoutDashboard } from "lucide-react";
 
@@ -91,12 +91,14 @@ export default function DashboardBuilder() {
 
     const handleSaveDashboard = () => {
         const filledGraphs = layoutGraphs.filter((graph) => graph !== null)
+        router.push(`/dashboard/${id}`);
         console.log("Saving dashboard:", { layout: selectedLayout, graphs: filledGraphs })
         // Here you would typically save to a backend
         alert("Dashboard salvo com sucesso!")
     }
 
     const params = useParams();
+    const router = useRouter();
     const id = params.id as string;
 
     if (!id) {
@@ -149,6 +151,7 @@ export default function DashboardBuilder() {
                     onGraphSelect={handlePositionSelect}
                     onGraphRemove={handleGraphRemove}
                     onHighlightToggle={handleHighlightToggle}
+                    editMode={true}
                 />
 
                 <div className="flex justify-end">

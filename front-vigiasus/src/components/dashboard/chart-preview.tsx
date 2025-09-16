@@ -8,9 +8,10 @@ interface ChartPreviewProps {
     title: string
     data: any[] // Array esperado pelo Google Charts
     isHighlighted?: boolean
+    editMode?: boolean
 }
 
-export function ChartPreview({ type, title, data, isHighlighted }: ChartPreviewProps) {
+export function ChartPreview({ type, title, data, isHighlighted, editMode }: ChartPreviewProps) {
     const chartRef = useRef<HTMLDivElement>(null)
 
     // Show error if data is not a valid array
@@ -47,7 +48,7 @@ export function ChartPreview({ type, title, data, isHighlighted }: ChartPreviewP
             const options = {
                 title,
                 backgroundColor: "transparent",
-                chartArea: { width: "85%", height: "70%" },
+                chartArea: { width: "85%", height: "75%" },
                 legend: { position: "bottom" },
             }
 
