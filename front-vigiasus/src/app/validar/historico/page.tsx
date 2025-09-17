@@ -10,6 +10,8 @@ import ContextoTable from "@/components/validar/ContextoTable";
 import DetalhesContextoModal from "@/components/popups/detalhesContextoModal";
 import { Button } from "@/components/ui/button";
 import HistoricoFilterBar from "@/components/validar/HistoricoFilterBar";
+import Paginacao from "@/components/ui/paginacao"; 
+import FilterTabs from "@/components/validar/filtroTable";
 
 import { membroColumns } from "@/components/validar/colunasTable/membroColumns";
 import { gerenteColumns } from "@/components/validar/colunasTable/gerenteColumns";
@@ -22,7 +24,8 @@ export default function HistoricoPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
-  const { data, error } = useHistoricoContextos(debouncedSearchQuery);
+  // O hook agora devolve os estados e a função para controlar a paginação
+  const { data, error, currentPage, totalPages, setCurrentPage } = useHistoricoContextos(debouncedSearchQuery);
 
   const [perfil, setPerfil] = useState<"diretor" | "gerente" | "membro">("gerente");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -83,13 +86,19 @@ export default function HistoricoPage() {
 
       <div className="bg-gray-50 rounded-[2rem] p-6 shadow-sm">
         <h2 className="text-xl font-semibold text-[#1745FF] mb-4">Solicitações finalizadas</h2>
-        
         <HistoricoFilterBar 
           searchValue={searchQuery} 
           onSearchChange={setSearchQuery} 
         />
-        
+        {perfil === "gerente" && <FilterTabs />}
         <ContextoTable data={data} columns={getColumns()} />
+
+        {/* O componente de paginação */}
+        <Paginacao 
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       <DetalhesContextoModal
@@ -97,6 +106,7 @@ export default function HistoricoPage() {
         onClose={() => setIsModalOpen(false)}
         contexto={selectedContexto}
         perfil={perfil}
+        isFromHistory={true}
       />
     </div>
   );

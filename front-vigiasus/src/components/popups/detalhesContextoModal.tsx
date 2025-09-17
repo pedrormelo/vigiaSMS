@@ -4,19 +4,20 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Contexto, HistoricoEvento, StatusContexto } from "@/components/validar/typesDados";
+import { Contexto } from "@/components/validar/typesDados";
 import { FilePen, ArrowLeft, Download, Eye, BookAlert, FileCheck2, FileX } from "lucide-react";
 import IconeDocumento from "@/components/validar/iconeDocumento";
-import HistoricoTimeline from "@/components/validar/HistoricoTimeline"; // ✨ 1. Importar o novo componente
+import HistoricoTimeline from "@/components/validar/HistoricoTimeline"; // Importa o componente externo
 
 interface Props {
   contexto: Contexto | null;
   isOpen: boolean;
   onClose: () => void;
   perfil: "diretor" | "gerente" | "membro";
+  isFromHistory?: boolean;
 }
 
-export default function DetalhesContextoModal({ contexto, isOpen, onClose, perfil }: Props) {
+export default function DetalhesContextoModal({ contexto, isOpen, onClose, perfil, isFromHistory = false }: Props) {
   const [comentario, setComentario] = useState("");
 
   if (!contexto) {
@@ -24,6 +25,9 @@ export default function DetalhesContextoModal({ contexto, isOpen, onClose, perfi
   }
 
   const renderFooter = (): React.ReactNode => {
+    if (isFromHistory) {
+      return null;
+    }
     if (perfil === "membro") {
       return (
         <Button className="bg-purple-500 hover:bg-purple-600 text-white rounded-2xl px-8 py-3 text-base">
@@ -32,20 +36,19 @@ export default function DetalhesContextoModal({ contexto, isOpen, onClose, perfi
         </Button>
       );
     }
-    
     if (perfil === "gerente" || perfil === "diretor") {
-        return (
-            <div className="flex items-center gap-4">
-                <Button className="bg-[#E0440E] hover:bg-[#c93a4d] border border-[#B22E00] text-white rounded-2xl px-8 py-3 text-base">
-                <FileX className="mr-2" size={25} />
-                INDEFERIR
-                </Button>
-                <Button className="bg-[#50CF5F] hover:bg-[#1E8C56] border border-[#02B917] text-white rounded-2xl px-8 py-3 text-base">
-                <FileCheck2 className="mr-2" size={25} />
-                DEFERIR
-                </Button>
-            </div>
-        );
+      return (
+        <div className="flex items-center gap-4">
+          <Button className="bg-[#E0440E] hover:bg-[#c93a4d] border border-[#B22E00] text-white rounded-2xl px-8 py-3 text-base">
+            <FileX className="mr-2" size={25} />
+            INDEFERIR
+          </Button>
+          <Button className="bg-[#50CF5F] hover:bg-[#1E8C56] border border-[#02B917] text-white rounded-2xl px-8 py-3 text-base">
+            <FileCheck2 className="mr-2" size={25} />
+            DEFERIR
+          </Button>
+        </div>
+      );
     }
     return null;
   };
@@ -64,7 +67,6 @@ export default function DetalhesContextoModal({ contexto, isOpen, onClose, perfi
               <ArrowLeft className="text-white" />
             </Button>
           </DialogHeader>
-
           <div className="flex flex-col gap-2">
             <div className="flex justify-between p-4 items-center border border-gray-200 bg-gray-50 w-full text-gray-500">
               <p className="text-lg font-medium text-[#8983a5]">{contexto.nome}</p>
@@ -72,7 +74,6 @@ export default function DetalhesContextoModal({ contexto, isOpen, onClose, perfi
                 {new Date(contexto.data).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
               </p>
             </div>
-            
             <div className="flex flex-col gap-6 p-4">
               <div className="flex justify-between items-start rounded-lg">
                 <div className="flex gap-4">
@@ -89,7 +90,7 @@ export default function DetalhesContextoModal({ contexto, isOpen, onClose, perfi
                 </div>
               </div>
               
-              {/* ✨ 2. A chamada ao componente agora é mais limpa e passa os dados necessários ✨ */}
+              {/* ✨ A chamada ao componente agora funciona corretamente ✨ */}
               <HistoricoTimeline eventos={contexto.historico} statusAtual={contexto.situacao} />
               
               <div>
@@ -98,8 +99,7 @@ export default function DetalhesContextoModal({ contexto, isOpen, onClose, perfi
                   {contexto.detalhes}
                 </div>
               </div>
-
-              {perfil !== "membro" && (
+              {!isFromHistory && perfil !== "membro" && (
                 <div>
                   <h3 className="font-semibold text-gray-700 mb-2">Comentar Observação</h3>
                   <textarea
@@ -112,7 +112,6 @@ export default function DetalhesContextoModal({ contexto, isOpen, onClose, perfi
               )}
             </div>
           </div>
-
           <DialogFooter className="p-6 pt-0 sm:justify-center gap-4">
             {renderFooter()}
           </DialogFooter>

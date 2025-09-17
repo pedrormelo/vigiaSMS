@@ -7,7 +7,6 @@ import { useValidarContextos } from "@/hooks/useValidarContextos";
 
 // Componentes
 import ContextoTable from "@/components/validar/ContextoTable";
-import FilterTabs from "@/components/validar/filtroTable";
 import DetalhesContextoModal from "@/components/popups/detalhesContextoModal";
 import { Button } from "@/components/ui/button";
 
@@ -21,9 +20,8 @@ import { Contexto } from "@/components/validar/typesDados";
 import { RefreshCw, Eye, Trash } from "lucide-react";
 
 export default function ValidacaoContextos() {
-  // O `isLoading` foi removido. O loading.tsx cuida disso agora.
-  const { data, error } = useValidarContextos();
 
+  const { data, error } = useValidarContextos();
   const [perfil, setPerfil] = useState<"diretor" | "gerente" | "membro">("gerente");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedContexto, setSelectedContexto] = useState<Contexto | null>(null);
@@ -70,7 +68,6 @@ export default function ValidacaoContextos() {
     return <div className="p-8 text-red-500">{error}</div>;
   }
   
-  // O bloco `if (isLoading)` foi removido.
 
   return (
     <div className="p-8 bg-white">
@@ -84,7 +81,6 @@ export default function ValidacaoContextos() {
       <h1 className="text-3xl font-bold text-[#1745FF] mb-8">{pageTitle}</h1>
 
       <div className="bg-gray-50 rounded-[2rem] p-6 shadow-sm">
-        {perfil === "gerente" && <FilterTabs />}
         <h2 className="text-xl font-semibold text-[#1745FF] mb-4">Solicitações em aberto</h2>
 
         <ContextoTable data={data} columns={getColumns()} />

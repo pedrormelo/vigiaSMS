@@ -4,8 +4,13 @@ import { mockData } from "@/constants/contextos";
 import { mockDataHistorico } from "@/constants/contextosHistorico";
 import { Contexto } from "@/components/validar/typesDados";
 
-// Esta variável permite alternar facilmente entre o mock e a API real.
 const USE_MOCKS = true;
+
+// Agora ela inclui a lista de dados e o número total de itens.
+interface HistoricoResponse {
+  data: Contexto[];
+  total: number;
+}
 
 /**
  * Busca os dados de contextos ABERTOS para validação.
@@ -14,7 +19,6 @@ export const getContextos = async (): Promise<Contexto[]> => {
   console.log("Service: buscando dados de contextos...");
 
   if (USE_MOCKS) {
-    // Simula o tempo de espera de uma chamada de rede
     return new Promise(resolve => {
       setTimeout(() => {
         console.log("Service: retornando dados mockados.");
@@ -27,39 +31,50 @@ export const getContextos = async (): Promise<Contexto[]> => {
 };
 
 /**
- *
- * Busca o HISTÓRICO de contextos, agora com suporte para pesquisa (filtro).
+ * Busca o HISTÓRICO de contextos com suporte para pesquisa e paginação.
  * @param searchQuery O termo opcional a ser pesquisado.
- * @returns Uma promessa que resolve para um array de Contextos já filtrados.
+ * @param page O número da página a ser retornada (padrão: 1).
+ * @param limit O número de itens por página (padrão: 10).
+ * @returns Uma promessa que resolve para um objeto com os dados da página e o total de registos.
  */
-export const getHistoricoContextos = async (searchQuery?: string): Promise<Contexto[]> => {
-  console.log(`Service: buscando HISTÓRICO com o termo: "${searchQuery}"`);
+export const getHistoricoContextos = async (
+  searchQuery?: string,
+  page: number = 1,
+  limit: number = 10
+): Promise<HistoricoResponse> => {
+  console.log(`Service: buscando HISTÓRICO página ${page}, termo: "${searchQuery}"`);
 
   if (USE_MOCKS) {
     return new Promise(resolve => {
       setTimeout(() => {
         let dadosFiltrados = mockDataHistorico;
 
-        // SIMULAÇÃO DO BACK-END: Se uma pesquisa foi enviada, o "servidor" filtra os dados.
+        // A lógica de filtro continua a mesma
         if (searchQuery && searchQuery.trim() !== "") {
           const lowercasedQuery = searchQuery.toLowerCase();
-          dadosFiltrados = mockDataHistorico.filter(contexto =>
+          dadosFiltrados = mockDataHistorico.filter((contexto: Contexto) =>
             contexto.nome.toLowerCase().includes(lowercasedQuery) ||
             contexto.solicitante.toLowerCase().includes(lowercasedQuery)
           );
         }
         
-        console.log(`Service: retornando ${dadosFiltrados.length} registos filtrados.`);
-        resolve(dadosFiltrados);
-      }, 500); // Atraso para simular a resposta da rede
+        // SIMULAÇÃO DO BACK-END: Pega o total de itens ANTES de fatiar.
+        const total = dadosFiltrados.length;
+        
+        // "Fatia" o array para devolver apenas os itens da página pedida.
+        const startIndex = (page - 1) * limit;
+        const endIndex = page * limit;
+        const dataPaginada = dadosFiltrados.slice(startIndex, endIndex);
+
+        console.log(`Service: retornando ${dataPaginada.length} de ${total} registos.`);
+        
+        // Devolve o objeto completo com os dados paginados e o total.
+        resolve({ data: dataPaginada, total: total });
+      }, 500);
     });
   } else {
-    // No futuro, a chamada real da API enviaria a pesquisa como um query param:
-    // const response = await fetch(`https://api.com/contextos/historico?search=${searchQuery}`);
-    // if (!response.ok) {
-    //   throw new Error('Falha ao buscar dados da API de histórico');
-    // }
-    // return response.json();
-    return [];
+    // A chamada real da API enviaria os parâmetros de paginação
+    // const response = await fetch(`.../historico?search=${searchQuery}&page=${page}&limit=${limit}`);
+    return { data: [], total: 0 };
   }
 };
