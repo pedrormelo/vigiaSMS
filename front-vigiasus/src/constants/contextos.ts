@@ -69,7 +69,7 @@ export const mockData: Contexto[] = [
         solicitante: "Carlos Eduardo",
         email: "cadu@exemplo.com",
         nome: "Relatório Epidemiológico",
-        situacao: StatusContexto.Indeferido,
+        situacao: StatusContexto.AguardandoCorrecao,
         docType: "dashboard",
         gerencia: "Gerência de Vigilância em Saúde",
         data: "2025-08-01T09:00:00Z",

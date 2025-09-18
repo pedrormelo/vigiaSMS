@@ -1,7 +1,6 @@
-// src/app/validar/historico/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react"; // Importamos o useCallback
 import Link from "next/link";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useHistoricoContextos } from "@/hooks/useHistoricoContextos";
@@ -9,9 +8,8 @@ import { useHistoricoContextos } from "@/hooks/useHistoricoContextos";
 import ContextoTable from "@/components/validar/ContextoTable";
 import DetalhesContextoModal from "@/components/popups/detalhesContextoModal";
 import { Button } from "@/components/ui/button";
-import HistoricoFilterBar from "@/components/validar/HistoricoFilterBar";
-import Paginacao from "@/components/ui/paginacao"; 
-import FilterTabs from "@/components/validar/filtroTable";
+import Paginacao from "@/components/ui/paginacao";
+import { SearchBar } from "@/components/ui/search-bar";
 
 import { membroColumns } from "@/components/validar/colunasTable/membroColumns";
 import { gerenteColumns } from "@/components/validar/colunasTable/gerenteColumns";
@@ -24,7 +22,12 @@ export default function HistoricoPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
-  // O hook agora devolve os estados e a função para controlar a paginação
+  const [dateRange, setDateRange] = useState<{ from: Date | undefined, to: Date | undefined }>({
+    from: undefined,
+    to: undefined,
+  });
+
+  // No futuro, o hook receberá também o dateRange
   const { data, error, currentPage, totalPages, setCurrentPage } = useHistoricoContextos(debouncedSearchQuery);
 
   const [perfil, setPerfil] = useState<"diretor" | "gerente" | "membro">("gerente");
@@ -35,6 +38,13 @@ export default function HistoricoPage() {
     setSelectedContexto(contexto);
     setIsModalOpen(true);
   };
+
+  // A função agora está "memorizada" pelo useCallback.
+  // Ela só será recriada se as suas dependências (que estão vazias []) mudarem.
+  const handleDateFilterChange = useCallback((range: { from: Date | undefined; to: Date | undefined }) => {
+    setDateRange(range);
+    console.log("Novo filtro de datas selecionado:", range);
+  }, []);
 
   const getColumns = () => {
     const baseColumns =
@@ -85,15 +95,17 @@ export default function HistoricoPage() {
       </div>
 
       <div className="bg-gray-50 rounded-[2rem] p-6 shadow-sm">
-        <h2 className="text-xl font-semibold text-[#1745FF] mb-4">Solicitações finalizadas</h2>
-        <HistoricoFilterBar 
-          searchValue={searchQuery} 
-          onSearchChange={setSearchQuery} 
-        />
-        {perfil === "gerente" && <FilterTabs />}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+          <SearchBar
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Pesquise por nome do contexto ou solicitante..."
+            className="w-full md:w-auto md:flex-1"
+          />
+        </div>
+        
         <ContextoTable data={data} columns={getColumns()} />
 
-        {/* O componente de paginação */}
         <Paginacao 
           currentPage={currentPage}
           totalPages={totalPages}
