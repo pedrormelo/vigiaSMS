@@ -25,7 +25,7 @@ const fileTypeConfig = {
         label: "DOC",
     },
     dashboard: {
-        color: "bg-[#B329E9] hover:bg-[#A020B5]",
+        color: "bg-[#B329E9] hover:bg-purple-600",
         icon: ChartNetwork,
         label: "Gráfico de Dashboard",
     },

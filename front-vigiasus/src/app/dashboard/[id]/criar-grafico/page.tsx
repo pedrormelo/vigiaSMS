@@ -138,7 +138,7 @@ export default function NovoGraficoPage({ onSubmit }: NovoGraficoPageProps) {
                     <div className="flex space-x-2 mb-8 bg-gray-100 rounded-2xl p-2">
                         <button
                             onClick={() => setTab("manual")}
-                            className={`flex-1 py-3 px-6 rounded-xl font-semibold transition-all ${tab === "manual"
+                            className={`flex-1 py-3 px-6 rounded-2xl font-semibold transition-all ${tab === "manual"
                                     ? "bg-white text-blue-600 shadow-md"
                                     : "text-gray-600 hover:text-gray-800"
                                 }`}
@@ -148,7 +148,7 @@ export default function NovoGraficoPage({ onSubmit }: NovoGraficoPageProps) {
                         </button>
                         <button
                             onClick={() => setTab("upload")}
-                            className={`flex-1 py-3 px-6 rounded-xl font-semibold transition-all ${tab === "upload"
+                            className={`flex-1 py-3 px-6 rounded-2xl font-semibold transition-all ${tab === "upload"
                                     ? "bg-white text-blue-600 shadow-md"
                                     : "text-gray-600 hover:text-gray-800"
                                 }`}
@@ -170,7 +170,7 @@ export default function NovoGraficoPage({ onSubmit }: NovoGraficoPageProps) {
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
                                 placeholder="Ex.: Atendimentos de Alta vs Média e Baixa complexidade"
-                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                className="w-full px-4 py-3 rounded-2xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                             />
                         </div>
 
@@ -184,7 +184,7 @@ export default function NovoGraficoPage({ onSubmit }: NovoGraficoPageProps) {
                                     <button
                                         key={g}
                                         onClick={() => handleTypeChange(g)}
-                                        className={`p-4 rounded-xl border-2 flex flex-col items-center justify-center transition-all hover:scale-105 ${type === g
+                                        className={`p-4 rounded-3xl border-2 flex flex-col items-center justify-center transition-all hover:scale-105 ${type === g
                                                 ? "bg-blue-500 text-white border-blue-500 shadow-lg"
                                                 : "border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-gray-400"
                                             }`}
@@ -211,7 +211,7 @@ export default function NovoGraficoPage({ onSubmit }: NovoGraficoPageProps) {
                                 onChange={(e) => setDetails(e.target.value)}
                                 placeholder="Descreva o contexto, período, fonte dos dados, etc."
                                 rows={4}
-                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none transition-all"
+                                className="w-full px-4 py-3 rounded-2xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none transition-all"
                             />
                         </div>
 
@@ -225,12 +225,12 @@ export default function NovoGraficoPage({ onSubmit }: NovoGraficoPageProps) {
                                     type="file"
                                     accept=".csv,.xlsx,.xls"
                                     onChange={(e) => setDataFile(e.target.files?.[0] || null)}
-                                    className="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-blue-400 transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                    className="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-3xl cursor-pointer hover:border-blue-400 transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-2xl file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                                 />
                                 <div className="mt-3 flex justify-start">
                                     <button
                                         onClick={downloadTemplate}
-                                        className="flex items-center px-4 py-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
+                                        className="flex items-center px-4 py-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-2xl transition-colors"
                                     >
                                         <Download className="w-4 h-4 mr-2" />
                                         Baixar template CSV
@@ -249,20 +249,20 @@ export default function NovoGraficoPage({ onSubmit }: NovoGraficoPageProps) {
                                     <div className="flex gap-2">
                                         <button
                                             onClick={addColumn}
-                                            className="px-3 py-1 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm font-medium"
+                                            className="px-3 py-1 bg-green-100 text-green-700 rounded-2xl hover:bg-green-200 transition-colors text-sm font-medium"
                                         >
                                             + Coluna
                                         </button>
                                         <button
                                             onClick={addRow}
-                                            className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium"
+                                            className="px-3 py-1 bg-blue-100 text-blue-700 rounded-2xl hover:bg-blue-200 transition-colors text-sm font-medium"
                                         >
                                             + Linha
                                         </button>
                                     </div>
                                 </div>
 
-                                <div className="overflow-x-auto bg-gray-50 rounded-xl p-4">
+                                <div className="overflow-x-auto bg-gray-50 rounded-3xl p-4">
                                     <table className="w-full border-collapse">
                                         {/* Header Row */}
                                         <thead>
@@ -274,7 +274,7 @@ export default function NovoGraficoPage({ onSubmit }: NovoGraficoPageProps) {
                                                                 type="text"
                                                                 value={col}
                                                                 onChange={(e) => updateColumnName(cIdx, e.target.value)}
-                                                                className="w-full px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg font-semibold text-blue-800 text-center"
+                                                                className="w-full px-3 py-2 bg-blue-50 border border-blue-200 rounded-2xl font-semibold text-blue-800 text-center"
                                                                 placeholder="Nome da coluna"
                                                             />
                                                             {dataset.columns.length > 1 && (
@@ -301,7 +301,7 @@ export default function NovoGraficoPage({ onSubmit }: NovoGraficoPageProps) {
                                                                 type="text"
                                                                 value={cell}
                                                                 onChange={(e) => updateCell(rIdx, cIdx, e.target.value)}
-                                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                                                className="w-full px-3 py-2 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                                                                 placeholder="Valor"
                                                             />
                                                         </td>
@@ -330,7 +330,7 @@ export default function NovoGraficoPage({ onSubmit }: NovoGraficoPageProps) {
                     <div className="flex justify-between items-center pt-6 border-t border-gray-200">
                         <button
                             onClick={downloadTemplate}
-                            className="flex items-center px-4 py-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
+                            className="flex items-center px-4 py-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-2xl transition-colors"
                         >
                             <Download className="w-4 h-4 mr-2" />
                             Baixar template
@@ -340,15 +340,15 @@ export default function NovoGraficoPage({ onSubmit }: NovoGraficoPageProps) {
                             <Button
                                 variant="outline"
                                 onClick={handleCancel}
-                                className="px-8 py-3 text-gray-600 border-gray-300 hover:bg-gray-50"
+                                className="px-8 py-3 text-gray-600 rounded-2xl border-gray-300 hover:bg-gray-50"
                             >
                                 Cancelar
                             </Button>
                             <Button
                                 variant="default"
                                 onClick={handleSubmit}
-                                className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white"
-                                disabled={!title.trim()}
+                                className="px-8 py-3 bg-blue-600 rounded-2xl hover:bg-blue-700 text-white"
+                                disabled={!title.trim() && (tab === "upload" && !dataFile) ||  (tab === "manual" && dataset.rows.length === 0)}
                             >
                                 Salvar Gráfico
                             </Button>

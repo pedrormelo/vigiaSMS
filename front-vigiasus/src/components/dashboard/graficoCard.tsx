@@ -25,21 +25,21 @@ interface GraphCardProps {
 
 const graphTypeConfig = {
     line: {
-        color: "bg-[#B329E9] hover:bg-[#A020B5]",
+        color: "bg-[#B329E9] hover:bg-purple-600",
         icon: () => (
             <ChartLine className="h-9 w-9 text-white"></ChartLine>
         ),
         label: "Gráfico de Linhas",
     },
     chart: {
-        color: "bg-[#B329E9] hover:bg-[#A020B5]",
+        color: "bg-[#B329E9] hover:bg-purple-600",
         icon: () => (
             <ChartColumn className="h-9 w-9 text-white"></ChartColumn>
         ),
         label: "Gráfico de Barras",
     },
     pie: {
-        color: "bg-[#B329E9] hover:bg-[#A020B5]",
+        color: "bg-[#B329E9] hover:bg-purple-600",
         icon: () => (
             <ChartPie className="h-9 w-9 text-white"></ChartPie>
         ),
@@ -75,7 +75,7 @@ export function GraphCard({
                 <>
                     <div className="absolute top-2 right-2 flex items-center gap-2">
                         {isHighlighted && (
-                            <svg className="h-4 w-4 text-yellow-300 fill-yellow-300" viewBox="0 0 24 24">
+                            <svg className="h-4 w-4 text-blue-400 fill-blue-400" viewBox="0 0 24 24">
                                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                             </svg>
                         )}
