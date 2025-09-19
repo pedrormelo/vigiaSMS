@@ -1,12 +1,16 @@
 "use client";
 
 import React, { useState } from "react";
-import { ArrowLeft, FileX2, Download, FileSymlink } from "lucide-react";
+
+import { 
+    ArrowLeft, FileX2, Download, FileSymlink, ChartPie, ChartBar, ChartLine
+} from "lucide-react";
+
 import { Button } from "@/components/button";
 import { saveAs } from "file-saver";
 import { useRouter } from "next/navigation";
 
-type GraphType = "pie" | "chart" | "line" | "bar";
+type GraphType = "pie" | "chart" | "line";
 
 interface ChartDataset {
     columns: string[];
@@ -42,7 +46,7 @@ export default function NovoGraficoPage({ onSubmit }: NovoGraficoPageProps) {
             setDataset({ columns: ["Categoria", "Atendimentos"], rows: [["", 0]] });
         if (t === "line")
             setDataset({ columns: ["Mês", "Alta", "Média", "Baixa"], rows: [["", 0, 0, 0]] });
-        if (t === "bar" || t === "chart")
+        if (t === "chart")
             setDataset({ columns: ["Faixa etária", "Cobertura Atual", "Meta"], rows: [["", 0, 0]] });
     };
 
@@ -116,6 +120,18 @@ export default function NovoGraficoPage({ onSubmit }: NovoGraficoPageProps) {
         router.back();
     };
 
+    const graphIcons = {
+        "pie-icon": () => (
+            <ChartPie className="h-9 w-9 text-white"></ChartPie>
+        ),
+        "bar-icon": () => (
+            <ChartBar className="h-9 w-9 text-white"></ChartBar>
+        ),
+        "line-icon": () => (
+            <ChartLine className="h-9 w-9 text-white"></ChartLine>
+        ),
+    };
+
     return (
         <main className="min-h-screen bg-gray-50 py-8">
             <div className="container mx-auto px-4 max-w-4xl">
@@ -139,8 +155,8 @@ export default function NovoGraficoPage({ onSubmit }: NovoGraficoPageProps) {
                         <button
                             onClick={() => setTab("manual")}
                             className={`flex-1 py-3 px-6 rounded-2xl font-semibold transition-all ${tab === "manual"
-                                    ? "bg-white text-blue-600 shadow-md"
-                                    : "text-gray-600 hover:text-gray-800"
+                                ? "bg-white text-blue-600 shadow-md"
+                                : "text-gray-600 hover:text-gray-800"
                                 }`}
                         >
                             <FileX2 className="w-5 h-5 inline mr-2" />
@@ -149,8 +165,8 @@ export default function NovoGraficoPage({ onSubmit }: NovoGraficoPageProps) {
                         <button
                             onClick={() => setTab("upload")}
                             className={`flex-1 py-3 px-6 rounded-2xl font-semibold transition-all ${tab === "upload"
-                                    ? "bg-white text-blue-600 shadow-md"
-                                    : "text-gray-600 hover:text-gray-800"
+                                ? "bg-white text-blue-600 shadow-md"
+                                : "text-gray-600 hover:text-gray-800"
                                 }`}
                         >
                             <FileSymlink className="w-5 h-5 inline mr-2" />
@@ -179,25 +195,37 @@ export default function NovoGraficoPage({ onSubmit }: NovoGraficoPageProps) {
                             <label className="block text-lg font-semibold text-blue-700 mb-3">
                                 Selecionar Tipo de Gráfico
                             </label>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                {(["pie", "chart", "line", "bar"] as GraphType[]).map((g) => (
-                                    <button
-                                        key={g}
-                                        onClick={() => handleTypeChange(g)}
-                                        className={`p-4 rounded-3xl border-2 flex flex-col items-center justify-center transition-all hover:scale-105 ${type === g
-                                                ? "bg-blue-500 text-white border-blue-500 shadow-lg"
-                                                : "border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-gray-400"
-                                            }`}
-                                        title={g === "pie" ? "Pizza" : g === "chart" ? "Barras" : g === "line" ? "Linhas" : "Barra"}
-                                    >
-                                        <div className="text-2xl mb-1">
-                                            {g === "pie" ? "🥧" : g === "chart" ? "📊" : g === "line" ? "📈" : "📊"}
+                            <div className="flex justify-center">
+                                {/** Simpler, more maintainable graph type selection with icon components **/}
+                                {(() => {
+                                    const graphTypes = [
+                                        { key: "pie", label: "Pizza", icon: ChartPie },
+                                        { key: "chart", label: "Barras", icon: ChartBar },
+                                        { key: "line", label: "Linhas", icon: ChartLine },
+                                    ] as const;
+                                    return (
+                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                            {graphTypes.map((g) => {
+                                                const Icon = g.icon;
+                                                return (
+                                                    <button
+                                                        key={g.key}
+                                                        onClick={() => handleTypeChange(g.key as GraphType)}
+                                                        className={`p-4 rounded-3xl border-2 flex flex-col items-center justify-center transition-all hover:scale-105 ${type === g.key
+                                                            ? "bg-blue-500 text-white border-blue-500 shadow-lg"
+                                                            : "border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-gray-400"
+                                                        }`}
+                                                        title={g.label}
+                                                    >
+                                                        <Icon className="w-7 h-7 mb-1" />
+                                                        <span className="text-sm font-medium">{g.label}</span>
+                                                    </button>
+                                                );
+                                            })}
                                         </div>
-                                        <span className="text-sm font-medium">
-                                            {g === "pie" ? "Pizza" : g === "chart" ? "Barras" : g === "line" ? "Linhas" : "Barra"}
-                                        </span>
-                                    </button>
-                                ))}
+                                    );
+                                })()}
+
                             </div>
                         </div>
 
@@ -348,7 +376,7 @@ export default function NovoGraficoPage({ onSubmit }: NovoGraficoPageProps) {
                                 variant="default"
                                 onClick={handleSubmit}
                                 className="px-8 py-3 bg-blue-600 rounded-2xl hover:bg-blue-700 text-white"
-                                disabled={!title.trim() && (tab === "upload" && !dataFile) ||  (tab === "manual" && dataset.rows.length === 0)}
+                                disabled={!title.trim() && (tab === "upload" && !dataFile) || (tab === "manual" && dataset.rows.length === 0)}
                             >
                                 Salvar Gráfico
                             </Button>
