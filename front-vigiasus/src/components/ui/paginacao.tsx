@@ -27,7 +27,7 @@ export default function Paginacao({ currentPage, totalPages, onPageChange }: Pro
         <ChevronLeft className="h-4 w-4" />
       </Button>
 
-      <span className="text-sm font-medium text-gray-700">
+      <span className="text-sm font-medium text-gray-600">
         Página {currentPage} de {totalPages}
       </span>
 

@@ -70,7 +70,7 @@ export default function ValidacaoContextos() {
   
 
   return (
-    <div className="p-8 bg-white">
+    <div className="p-8 bg-white h-screen">
       <div className="flex gap-2 mb-4 bg-yellow-100 p-2 rounded-md text-sm">
         <p className="font-bold my-auto">Simulação de Perfil:</p>
         <button onClick={() => setPerfil("diretor")} className={`px-3 py-1 rounded-md ${perfil === 'diretor' && 'bg-blue-200 font-semibold'}`}>Diretor</button>

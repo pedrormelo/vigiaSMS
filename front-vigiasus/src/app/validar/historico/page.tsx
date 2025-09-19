@@ -87,7 +87,7 @@ export default function HistoricoPage() {
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-[#1745FF]">Histórico de Contextos</h1>
         <Link href="/validar">
-          <Button variant="outline" className="bg-white rounded-full shadow-sm">
+          <Button variant="outline" className="bg-white rounded-full border border-gray-200 shadow-sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Voltar
           </Button>
