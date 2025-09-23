@@ -35,7 +35,7 @@ export function SearchBar({
     }
 
     return (
-        <div className={`relative max-w-[75%] ${className}`}>
+        <div className={`relative max-w-full ${className}`}>
             <div className="relative flex items-center">
                 <Search
                     strokeWidth={2.5}

@@ -1,6 +1,8 @@
 // src/app/components/navbar/Sidebar.tsx
 "use client";
 import { motion } from "framer-motion";
+import {diretoriasConfig} from "@/constants/diretorias";
+
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -46,14 +48,14 @@ const icons = {
 const menuOptions = {
   secretario: [
     { label: "Página Inicial", icon: icons.home, href: "/" },
-    { label: "Dashboard", icon: icons.dashboard, href: "/dashboard" },
+    { label: "Dashboard", icon: icons.dashboard, href: `/dashboard/${diretoriasConfig[0]?.id || ""}` },
     { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
     { label: "Meus Comentários", icon: icons.comentarios, href: "/comentarios" },
     { label: "Sair do Sistema", icon: icons.logout, href: "/logout" },
   ],
   diretor: [
     { label: "Página Inicial", icon: icons.home, href: "/" },
-    { label: "Dashboard da Diretoria", icon: icons.dashboard, href: "/dashboard" },
+    { label: "Dashboard da Diretoria", icon: icons.dashboard, href: `/dashboard/${diretoriasConfig[0]?.id || ""}` },
     { label: "Minhas Gerências", icon: icons.minhasGerencias, href: "/diretorias" },
     { label: "Validar Contextos", icon: icons.contextos, href: "/validar" },
     { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
