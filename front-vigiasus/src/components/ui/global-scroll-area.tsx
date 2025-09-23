@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import {useRef } from "react"
 import { cn } from "@/lib/utils"
 
 interface GlobalScrollAreaProps {
