@@ -10,7 +10,7 @@ interface Props {
 
 export default function ContextoTable({ data, columns, onUpdate }: Props) {
     return (
-        <div className="overflow-x-auto bg-white rounded-lg border border-gray-200">
+        <div className="overflow-x-auto bg-white rounded-3xl border border-gray-200">
             <table className="w-full text-left">
                 {/* Cabeçalho da tabela */}
                 <thead className="bg-gray-50 border-b border-gray-200">

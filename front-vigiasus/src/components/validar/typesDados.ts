@@ -2,14 +2,20 @@
 
 import { ReactNode } from "react";
 
+export interface HistoricoEvento {
+  data: string; 
+  autor: string;
+  acao: string;
+}
+
 //Tipos para os diferentes formatos de documento
 export type DocType = "excel" | "pdf" | "doc" | "dashboard" | "money";
 
 /** Estados possíveis do contexto */
 export enum StatusContexto {
-  AguardandoAnalise = "Aguardando análise",
   AguardandoGerente = "Aguardando análise do Gerente",
   AguardandoDiretor = "Aguardando análise do Diretor",
+  AguardandoCorrecao = "Aguardando Correção",
   Deferido = "Deferido",
   Indeferido = "Indeferido",
   Publicado = "Publicado",
@@ -27,6 +33,7 @@ export interface Contexto {
   docType: DocType; 
   detalhes: string;
   data: string;
+  historico?: HistoricoEvento[];
 }
 
 /** Tipo Column genérico para a tabela */

@@ -3,15 +3,9 @@
 import React from 'react';
 import { Column, Contexto } from "@/components/validar/typesDados";
 import IconeDocumento from '@/components/validar/iconeDocumento';
-import { FaEye } from 'react-icons/fa'; // 👈 1. Importa o ícone de olho
-
-// Mapeamento de gerências para cores (sem alteração)
-const gerenciaColors: { [key: string]: string } = {
-  "Gerência de Gestão Ensino e Serviço": "bg-green-100 text-green-800",
-  "Gerência de Planejamento em Saúde": "bg-purple-100 text-purple-800",
-  "Coordenação de Ouvidoria do SUS": "bg-cyan-100 text-cyan-800",
-  "Gerência de Gestão do Trabalho": "bg-red-100 text-red-800",
-};
+import { Eye } from 'lucide-react'; // Ícone de olho do Lucide
+import { getGerenciaColor } from "@/constants/gerenciaColor"; // Importa a função de cores
+import { statusConfig } from './statusConfig'; // ✨ 1. Importar a configuração de status centralizada
 
 export const diretorColumns: Column<Contexto>[] = [
   {
@@ -28,8 +22,13 @@ export const diretorColumns: Column<Contexto>[] = [
     key: "gerencia",
     header: "Gerência",
     render: (row) => {
-      const colorClass = gerenciaColors[row.gerencia] || "bg-gray-100 text-gray-800";
-      return <span className={`px-3 py-1 text-xs font-semibold rounded-full ${colorClass}`}>{row.gerencia}</span>;
+      const backgroundColor = getGerenciaColor(row.gerencia);
+      const style = {
+        backgroundColor: backgroundColor,
+        color: "#fff", // Para garantir que o texto seja legível
+      };
+      
+      return <span className={`px-3 py-1 text-xs font-semibold rounded-full`} style={style}>{row.gerencia}</span>;
     },
   },
   {
@@ -45,17 +44,21 @@ export const diretorColumns: Column<Contexto>[] = [
   {
     key: "situacao",
     header: "Situação",
-    render: () => <span className="bg-yellow-100 text-yellow-800 px-3 py-1 text-xs font-semibold rounded-full">Aguardando analise</span>,
+    // O status agora é lido de `row.situacao`
+    // e usa a configuração central para exibir o texto e a cor corretos.
+    render: (row) => {
+      const config = statusConfig[row.situacao] || { text: row.situacao, className: "bg-gray-100 text-gray-800" };
+      return <span className={`px-3 py-1 text-xs font-semibold rounded-full ${config.className}`}>{config.text}</span>;
+    }
   },
   {
     key: "acoes",
     header: "Ações",
-    // 👇 2. Atualiza a renderização para usar o ícone de visualizar
     render: () => (
-        <div className="flex items-center gap-4 text-gray-500">
-            <button className="hover:text-blue-600" title="Visualizar Contexto">
-                <FaEye size={16} />
-            </button>
+      <div className="flex items-center gap-4 text-gray-500">
+        <button className="hover:text-blue-600" title="Visualizar Contexto">
+          <Eye size={16} />
+        </button>
       </div>
     ),
   },
