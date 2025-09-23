@@ -30,7 +30,7 @@ export default function RootLayout({
       <body className={`${montserrat.className} antialiased min-h-screen flex flex-col selection:bg-green-400 selection:text-white`}>
         <GlobalScrollArea>
           {/* A Navbar é renderizada aqui */}
-          <Navbar />
+          <Navbar className="sticky" />
           {/* O conteúdo da página (nossa {homePage} será renderizado aqui quando a gentr construir, Pedro*/}
           <main className="flex-1">{children}</main>
           <Toaster />

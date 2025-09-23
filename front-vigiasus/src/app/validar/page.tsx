@@ -1,4 +1,3 @@
-// src/app/validar/page.tsx
 "use client";
 
 import { useState } from "react";
@@ -78,7 +77,7 @@ export default function ValidacaoContextos() {
         <button onClick={() => setPerfil("membro")} className={`px-3 py-1 rounded-md ${perfil === 'membro' && 'bg-blue-200 font-semibold'}`}>Membro</button>
       </div>
 
-      <h1 className="text-3xl font-bold text-[#1745FF] mb-8">{pageTitle}</h1>
+            <h1 className="text-3xl font-bold text-[#1745FF] mb-8">{pageTitle}</h1>
 
       <div className="bg-gray-50 rounded-[2rem] p-6 shadow-sm">
         <h2 className="text-xl font-semibold text-[#1745FF] mb-4">Solicitações em aberto</h2>
