@@ -1,13 +1,9 @@
 "use client";
-import React, { useState } from "react";
-import { X, FileX2, FileSymlink } from "lucide-react";
-import { saveAs } from "file-saver";
 
-type GraphType = "pie" | "chart" | "line" | "bar";
-interface ChartDataset {
-    columns: string[];
-    rows: (string | number)[][];
-}
+import { useState } from "react";
+import { X, FileX2, FileSymlink } from "lucide-react";
+
+type GraphType = "pie" | "chart" | "line";
 
 interface AddGraphModalProps {
     isOpen: boolean;
@@ -17,7 +13,6 @@ interface AddGraphModalProps {
         details: string;
         type: GraphType;
         dataFile?: File | null;
-        dataset?: ChartDataset;
     }) => void;
 }
 
@@ -27,51 +22,15 @@ export function AddGraphModal({ isOpen, onClose, onSubmit }: AddGraphModalProps)
     const [details, setDetails] = useState("");
     const [type, setType] = useState<GraphType>("pie");
     const [dataFile, setDataFile] = useState<File | null>(null);
-    const [dataset, setDataset] = useState<ChartDataset>({
-        columns: ["Categoria", "Valor"],
-        rows: [["", 0]],
-    });
-
-    // Change columns when type changes
-    const handleTypeChange = (t: GraphType) => {
-        setType(t);
-        if (t === "pie")
-            setDataset({ columns: ["Categoria", "Atendimentos"], rows: [["", 0]] });
-        if (t === "line")
-            setDataset({ columns: ["Mês", "Alta", "Média", "Baixa"], rows: [["", 0, 0, 0]] });
-        if (t === "bar" || t === "chart")
-            setDataset({ columns: ["Faixa etária", "Cobertura Atual", "Meta"], rows: [["", 0, 0]] });
-    };
-
-    // Download template CSV
-    const downloadTemplate = () => {
-        const header = dataset.columns.join(",") + "\n";
-        const csv = header + dataset.rows.map((r: (string | number)[]) => r.join(",")).join("\n");
-        const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-        saveAs(blob, `template-${type}.csv`);
-    };
-
-    const addRow = () =>
-        setDataset((d: ChartDataset) => ({ ...d, rows: [...d.rows, Array(d.columns.length).fill("")] }));
-
-    const updateCell = (row: number, col: number, value: string) => {
-        setDataset((d: ChartDataset) => {
-            const rows = d.rows.map((r: (string | number)[], i: number) =>
-                i === row ? r.map((c: string | number, j: number) => (j === col ? value : c)) : r
-            );
-            return { ...d, rows };
-        });
-    };
 
     if (!isOpen) return null;
 
     const handleSubmit = () => {
-        onSubmit({ title, details, type, dataFile, dataset });
+        onSubmit({ title, details, type, dataFile });
         setTitle("");
         setDetails("");
         setType("pie");
         setDataFile(null);
-        setDataset({ columns: ["Categoria", "Valor"], rows: [["", 0]] });
         onClose();
     };
 
@@ -80,7 +39,6 @@ export function AddGraphModal({ isOpen, onClose, onSubmit }: AddGraphModalProps)
         setDetails("");
         setType("pie");
         setDataFile(null);
-        setDataset({ columns: ["Categoria", "Valor"], rows: [["", 0]] });
         onClose();
     };
 
@@ -134,15 +92,17 @@ export function AddGraphModal({ isOpen, onClose, onSubmit }: AddGraphModalProps)
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-3">Selecionar Tipo de Gráfico</label>
                         <div className="flex gap-4">
-                            {(["pie", "chart", "line", "bar"] as GraphType[]).map((g) => (
+                            {(["pie", "chart", "line"] as GraphType[]).map((g) => (
                                 <button
                                     key={g}
-                                    onClick={() => handleTypeChange(g)}
+                                    onClick={() => setType(g)}
                                     className={`p-3 rounded-xl border flex items-center justify-center transition ${type === g ? "bg-blue-500 text-white border-blue-500" : "border-gray-300 text-gray-600 hover:bg-gray-50"
                                         }`}
-                                    title={g === "pie" ? "Pizza" : g === "chart" ? "Barras" : g === "line" ? "Linhas" : "Barra"}
+                                    title={g === "pie" ? "Pizza" : g === "chart" ? "Barras" : "Linhas"}
                                 >
-                                    {g}
+                                    {g === "pie" && <span className="material-icons">pie_chart</span>}
+                                    {g === "chart" && <span className="material-icons">bar_chart</span>}
+                                    {g === "line" && <span className="material-icons">show_chart</span>}
                                 </button>
                             ))}
                         </div>
@@ -172,63 +132,24 @@ export function AddGraphModal({ isOpen, onClose, onSubmit }: AddGraphModalProps)
                             />
                         </div>
                     )}
-
-                    {/* Tabela dinâmica para dados manuais */}
-                    {tab === "manual" && (
-                        <div className="overflow-x-auto mt-4">
-                            <table className="min-w-full border">
-                                <thead>
-                                    <tr>
-                                        {dataset.columns.map((c: string, i: number) => (
-                                            <th key={i} className="border px-2 py-1">{c}</th>
-                                        ))}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {dataset.rows.map((row: (string | number)[], rIdx: number) => (
-                                        <tr key={rIdx}>
-                                            {row.map((cell: string | number, cIdx: number) => (
-                                                <td key={cIdx} className="border">
-                                                    <input
-                                                        className="w-full p-1 text-center"
-                                                        value={cell}
-                                                        onChange={(e) => updateCell(rIdx, cIdx, e.target.value)}
-                                                    />
-                                                </td>
-                                            ))}
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                            <button
-                                onClick={addRow}
-                                className="mt-2 px-3 py-1 bg-gray-100 border rounded"
-                            >
-                                + Linha
-                            </button>
-                        </div>
-                    )}
                 </div>
 
-                {/* Ações */}
-                <div className="flex justify-between items-center mt-4">
+                {/* Footer */}
+                <div className="flex justify-center gap-4 px-6 py-4 bg-gray-50">
                     <button
-                        onClick={downloadTemplate}
-                        className="text-blue-600 underline"
+                        onClick={resetAndClose}
+                        className="px-6 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 flex items-center gap-2 font-semibold"
                     >
-                        Baixar template
+                        <FileX2 className="w-5 h-5" />
+                        Cancelar
                     </button>
-                    <div className="flex gap-3">
-                        <button onClick={resetAndClose} className="px-4 py-2 bg-gray-300 rounded">
-                            Cancelar
-                        </button>
-                        <button
-                            onClick={handleSubmit}
-                            className="px-4 py-2 bg-green-500 text-white rounded"
-                        >
-                            Salvar
-                        </button>
-                    </div>
+                    <button
+                        onClick={handleSubmit}
+                        className="px-6 py-2 bg-green-500 text-white rounded-xl hover:bg-green-600 flex items-center gap-2 font-semibold"
+                    >
+                        <FileSymlink className="w-5 h-5" />
+                        Submeter
+                    </button>
                 </div>
             </div>
         </div>

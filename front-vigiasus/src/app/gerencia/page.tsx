@@ -11,7 +11,7 @@ import { ContextModal as AddIndicadorModal } from "@/components/popups/addIndica
 import { IndicatorCard } from "@/components/indicadores/indicadorCard";
 import { image } from "framer-motion/client";
 import { AddDashboardButton } from "@/components/gerencia/dashboard-btn1";
-import { ContextModal as AddDashboardModal } from "@/components/popups/addDashboard-modal";
+import { AddGraphModal } from "@/components/popups/addDashboard-modal";
 
 const indicators: {
     title: string;
@@ -22,34 +22,34 @@ const indicators: {
     borderColor: string;
     iconType: "cuidados" | "unidades" | "servidores" | "atividade" | "cruz" | "populacao" | "medicos";
 }[] = [
-    {
-        title: "População Atendida",
-        value: "68 milhões",
-        subtitle: "Atendimento da Rede Municipal",
-        change: "+32% em relação ao PMQA",
-        changeType: "positive",
-        borderColor: "border-l-blue-500",
-        iconType: "cuidados",
-    },
-    {
-        title: "Unidades de Saúde",
-        value: "200",
-        subtitle: "Unidades ativas",
-        change: "— Sem alteração",
-        changeType: "neutral",
-        borderColor: "border-l-green-500",
-        iconType: "unidades",
-    },
-    {
-        title: "Profissionais Ativos",
-        value: "2.345",
-        subtitle: "Em toda Secretaria",
-        change: "+4,2% em relação ao PMQA",
-        changeType: "positive",
-        borderColor: "border-l-red-500",
-        iconType: "servidores",
-    },
-]
+        {
+            title: "População Atendida",
+            value: "68 milhões",
+            subtitle: "Atendimento da Rede Municipal",
+            change: "+32% em relação ao PMQA",
+            changeType: "positive",
+            borderColor: "border-l-blue-500",
+            iconType: "cuidados",
+        },
+        {
+            title: "Unidades de Saúde",
+            value: "200",
+            subtitle: "Unidades ativas",
+            change: "— Sem alteração",
+            changeType: "neutral",
+            borderColor: "border-l-green-500",
+            iconType: "unidades",
+        },
+        {
+            title: "Profissionais Ativos",
+            value: "2.345",
+            subtitle: "Em toda Secretaria",
+            change: "+4,2% em relação ao PMQA",
+            changeType: "positive",
+            borderColor: "border-l-red-500",
+            iconType: "servidores",
+        },
+    ]
 
 const sampleFiles = [
     {
@@ -180,6 +180,7 @@ export default function HomePage() {
     const [showAddContexto, setShowAddContexto] = useState(false);
     const [showAddIndicador, setShowAddIndicador] = useState(false);
     const [showAddDashboard, setShowAddDashboard] = useState(false);
+
     // State for selected gerencia
     const [selectedGerenciaId, setSelectedGerenciaId] = useState<string>(mockGerencias[0].id);
     const [gerenciaDetails, setGerenciaDetails] = useState<{ sigla: string; nome: string; descricao: string, image: string } | null>(mockGerencias[0]);
@@ -221,6 +222,14 @@ export default function HomePage() {
                 onClose={() => setShowAddIndicador(false)}
                 onSubmit={() => setShowAddIndicador(false)}
             />
+            <AddGraphModal
+                isOpen={showAddDashboard}
+                onClose={() => setShowAddDashboard(false)}
+                onSubmit={(graph) => {
+                    console.log("Novo gráfico:", graph);
+                    // aqui você poderia salvar no estado ou enviar para API
+                }}
+            />
             <div className="container mx-auto">
 
                 <div className="mb-4 flex items-center gap-4">
@@ -233,12 +242,7 @@ export default function HomePage() {
                     <h1 className="text-3xl mr-2 text-blue-600">Dashboard</h1>
                     <AddDashboardButton onClick={() => setShowAddDashboard(true)} />
                 </div>
-                {/* Add Dashboard Modal */}
-                <AddDashboardModal
-                    isOpen={showAddDashboard}
-                    onClose={() => setShowAddDashboard(false)}
-                    onSubmit={() => setShowAddDashboard(false)}
-                />
+
 
                 {/* Indicadores Cards */}
                 <div className="flex justify-center items-center gap-4 mb-16 flex-wrap">
