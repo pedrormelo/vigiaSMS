@@ -4,12 +4,16 @@ import { useState, useEffect } from "react";
 import { useNotifications } from "@/hooks/useNotifications";
 import { Notification } from "@/constants/notificationsData";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import NotificationList from "@/components/notifications/notificationList";
 import NotificationDetailView from "@/components/notifications/NotificationDetailView";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { Button } from "@/components/ui/button";
-import { Bell, Inbox, ArrowLeft } from "lucide-react";
+import { Bell, Inbox, ArrowLeft, Loader2 } from "lucide-react";
 
 interface Props {
   isOpen: boolean;
@@ -18,9 +22,12 @@ interface Props {
 
 export default function NotificationsModal({ isOpen, onClose }: Props) {
   const { notifications, isLoading, isError } = useNotifications();
-  const [activeNotification, setActiveNotification] = useState<Notification | null>(null);
-  
-  const [readNotifications, setReadNotifications] = useState<Set<number>>(new Set());
+  const [activeNotification, setActiveNotification] =
+    useState<Notification | null>(null);
+
+  const [readNotifications, setReadNotifications] = useState<Set<number>>(
+    new Set()
+  );
 
   useEffect(() => {
     if (notifications.length > 0 && !activeNotification) {
@@ -36,8 +43,7 @@ export default function NotificationsModal({ isOpen, onClose }: Props) {
   };
 
   const handleMarkAsRead = (id: number) => {
-
-    setReadNotifications(prevReadIds => new Set(prevReadIds).add(id));
+    setReadNotifications((prevReadIds) => new Set(prevReadIds).add(id));
   };
 
   const EmptyState = () => (
@@ -51,18 +57,25 @@ export default function NotificationsModal({ isOpen, onClose }: Props) {
   const renderContent = () => {
     if (isLoading) {
       return (
-        <div className="flex items-center justify-center h-[50vh]">
-          <LoadingSpinner />
+        <div className="flex flex-col items-center justify-center h-[50vh]">
+          <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
+          <p className="mt-3 text-sm font-medium text-gray-700">
+            Carregando notificações...
+          </p>
         </div>
       );
     }
+
     if (isError) {
       return (
         <div className="flex items-center justify-center h-[50vh]">
-          <p className="text-red-500">Ocorreu um erro ao carregar as notificações.</p>
+          <p className="text-red-500">
+            Ocorreu um erro ao carregar as notificações.
+          </p>
         </div>
       );
     }
+
     if (notifications.length === 0) {
       return <EmptyState />;
     }
@@ -80,7 +93,7 @@ export default function NotificationsModal({ isOpen, onClose }: Props) {
             onSelectNotification={handleSelectNotification}
           />
         </div>
-        
+
         <NotificationDetailView
           notification={activeNotification}
           isRead={isCurrentNotificationRead}
@@ -97,7 +110,9 @@ export default function NotificationsModal({ isOpen, onClose }: Props) {
           <DialogHeader className="p-6 flex-row items-center justify-between">
             <div className="flex items-center gap-3">
               <Bell className="h-6 w-6 text-blue-600" />
-              <DialogTitle className="text-2xl font-semibold mt-2 text-blue-600">Notificações</DialogTitle>
+              <DialogTitle className="text-2xl font-semibold text-blue-600">
+                Notificações
+              </DialogTitle>
             </div>
             <div>
             <Button onClick={onClose} variant="ghost"  className="rounded-full text-blue-600 hover:text-blue-800">
