@@ -99,9 +99,11 @@ export default function NotificationsModal({ isOpen, onClose }: Props) {
               <Bell className="h-6 w-6 text-blue-600" />
               <DialogTitle className="text-2xl font-semibold mt-2 text-blue-600">Notificações</DialogTitle>
             </div>
-            <Button onClick={onClose} variant="ghost" size="icon" className="rounded-full h-8 w-8">
-              <ArrowLeft className="h-20 w-20 text-blue-600 hover:text-color-700" />
+            <div>
+            <Button onClick={onClose} variant="ghost"  className="rounded-full text-blue-600 hover:text-blue-800">
+              <ArrowLeft className="!h-6 !w-6" />
             </Button>
+            </div>
           </DialogHeader>
           {renderContent()}
         </div>
