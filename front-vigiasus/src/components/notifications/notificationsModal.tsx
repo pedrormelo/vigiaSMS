@@ -9,7 +9,7 @@ import NotificationList from "@/components/notifications/notificationList";
 import NotificationDetailView from "@/components/notifications/NotificationDetailView";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { Button } from "@/components/ui/button";
-import { Bell, Inbox, X } from "lucide-react";
+import { Bell, Inbox, ArrowLeft } from "lucide-react";
 
 interface Props {
   isOpen: boolean;
@@ -97,10 +97,10 @@ export default function NotificationsModal({ isOpen, onClose }: Props) {
           <DialogHeader className="p-6 flex-row items-center justify-between">
             <div className="flex items-center gap-3">
               <Bell className="h-6 w-6 text-blue-600" />
-              <DialogTitle className="text-2xl font-semibold text-blue-600">Notificações</DialogTitle>
+              <DialogTitle className="text-2xl font-semibold mt-2 text-blue-600">Notificações</DialogTitle>
             </div>
             <Button onClick={onClose} variant="ghost" size="icon" className="rounded-full h-8 w-8">
-              <X className="h-5 w-5 text-gray-500" />
+              <ArrowLeft className="h-20 w-20 text-blue-600 hover:text-color-700" />
             </Button>
           </DialogHeader>
           {renderContent()}
