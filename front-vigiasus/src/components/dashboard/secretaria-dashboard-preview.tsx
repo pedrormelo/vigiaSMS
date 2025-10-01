@@ -87,28 +87,46 @@ export function SecretariaDashboardPreview({ graphs, pageSize = 6, className }: 
         return page * 100 + layoutCode * 10 + (current?.graphs.length ?? 0)
     }, [page, layout, current?.graphs.length])
 
+    const titleColor = useMemo(() => {
+        const token = current && current.id !== "outras" ? diretoriasConfig[current.id]?.corUI : undefined
+        switch (token) {
+            case "blue": return "text-blue-600"
+            case "green": return "text-green-600"
+            case "orange": return "text-orange-500"
+            case "red": return "text-red-500"
+            case "cyan": return "text-cyan-400"
+            default: return "text-blue-700"
+        }
+    }, [current])
+
     return (
         <div className={cn("bg-gray-50/25 rounded-2xl p-6 border border-gray-200 shadow-sm", className)}>
             <div className="mb-2">
-                <h1 className="text-5xl font-bold text-blue-600">Contextos em Destaque</h1>
-            </div>
-
-            {/* Diretoria label */}
-            <div className="mb-6">
-                <h3 className="text-3xl font-semibold">
+                <h3 className={cn("text-5xl font-bold", titleColor)}>
                     {current?.nome}
                 </h3>
             </div>
 
-            <DashboardPreview
-                layout={layout}
-                graphs={pageGraphs}
-                onGraphSelect={() => { }}
-                onGraphRemove={() => { }}
-                onHighlightToggle={() => { }}
-                editMode={false}
-                renderVersion={renderVersion}
-            />
+            {/* Diretoria label */}
+            <div className="mb-6">
+                <h1 className="text-3xl font-regular text-gray-500">Contextos em Destaque</h1>
+            </div>
+
+            {pageGraphs.length > 0 ? (
+                <DashboardPreview
+                    layout={layout}
+                    graphs={pageGraphs}
+                    onGraphSelect={() => { }}
+                    onGraphRemove={() => { }}
+                    onHighlightToggle={() => { }}
+                    editMode={false}
+                    renderVersion={renderVersion}
+                />
+            ) : (
+                <div className="bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 p-10 text-center">
+                    <p className="text-gray-500 text-lg">Nenhum gráfico destacado por essa diretoria.</p>
+                </div>
+            )}
 
             {totalPages > 1 && (
                 <div className="mt-6 flex items-center justify-between gap-3">

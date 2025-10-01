@@ -91,7 +91,7 @@ export function ChartPreview({ type, title, data, isHighlighted, editMode, rende
 
     return (
         <div
-            className={`bg-white rounded-2xl border border-gray-200 shadow-md p-4 h-full flex flex-col ${isHighlighted ? "ring-3 ring-blue-400 shadow-lg shadow-blue-400 ring-opacity-100 ring-offset-2" : ""}`}
+            className={`bg-white rounded-2xl border border-gray-200 shadow-md p-4 h-full flex flex-col ${isHighlighted && editMode ? "ring-3 ring-blue-400 shadow-lg shadow-blue-400 ring-opacity-100 ring-offset-2" : ""}`}
         >
             <div className="flex-1">
                 <div ref={chartRef} style={{ width: "100%", height: "100%" }} />

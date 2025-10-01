@@ -3,6 +3,8 @@
 import { useParams, useRouter } from "next/dist/client/components/navigation"
 import { DashboardPreview, type GraphData } from "@/components/dashboard/dasboard-preview"
 import { SecretariaDashboardPreview } from "@/components/dashboard/secretaria-dashboard-preview"
+import { SecretariaMetricsSection } from "@/components/dashboard/secretaria/metrics-section"
+
 import { diretoriasConfig } from "@/constants/diretorias"
 import { Info, Pen } from "lucide-react"
 import React from "react"
@@ -212,7 +214,7 @@ export default function DashboardView() {
                 }
             >
                 <div className="flex justify-between items-center">
-                    <div>
+                    <div className="min-h-[150px]">
                         <h1 className="text-4xl font-regular">{diretoria.nome}</h1>
                         <p className="text-5xl mt-2 font-bold opacity-90">DASHBOARD</p>
                     </div>
@@ -222,11 +224,13 @@ export default function DashboardView() {
                         <button className="flex items-center justify-center mb-9 w-8 h-8 cursor-pointer bg-[#ffffff] text-[#1745FF] rounded-full border-none hover:bg-white/80 transition-all duration-200 shadow-sm">
                             <Info size={20} />
                         </button>
-                        <button
-                            onClick={() => router.push(`/dashboard/${id}/editar-layout`)}
-                            className="flex items-center justify-center w-11 h-11 cursor-pointer rounded-[0.6rem] bg-white text-gray-600 hover:bg-white/80 transition-all duration-200 shadow-sm">
-                            <Pen size={25} />
-                        </button>
+                        {id !== "secretaria" && (
+                            <button
+                                onClick={() => router.push(`/dashboard/${id}/editar-layout`)}
+                                className="flex items-center justify-center w-11 h-11 cursor-pointer rounded-[0.6rem] bg-white text-gray-600 hover:bg-white/80 transition-all duration-200 shadow-sm">
+                                <Pen size={25} />
+                            </button>
+                        )}
                     </div>
 
                 </div>
@@ -255,7 +259,12 @@ export default function DashboardView() {
             <div className="flex justify-center items-center w-full pt-2 mb-28">
                 <div className="max-w-[90%] w-full">
                     {id === "secretaria" ? (
-                        <SecretariaDashboardPreview graphs={graphs} />
+                        <>
+                            <SecretariaDashboardPreview graphs={graphs} />
+                            <div className="mt-10">
+                                <SecretariaMetricsSection />
+                            </div>
+                        </>
                     ) : (
                         <DashboardPreview
                             layout={layout}
