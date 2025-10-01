@@ -25,6 +25,7 @@ interface DashboardPreviewProps {
     onGraphRemove: (id: string) => void
     onHighlightToggle: (id: string, highlighted: boolean) => void
     editMode?: boolean
+    renderVersion?: number
 }
 
 export function DashboardPreview({
@@ -34,6 +35,7 @@ export function DashboardPreview({
     onGraphRemove,
     onHighlightToggle,
     editMode = false,
+    renderVersion,
 }: DashboardPreviewProps) {
     const getLayoutClasses = () => {
         switch (layout) {
@@ -87,7 +89,15 @@ export function DashboardPreview({
                         <div key={index} className={cn("flex items-center justify-center", getItemClasses(index))}>
                             {graph ? (
                                 <div className={`relative w-full h-full group ${editMode ? "border-2 rounded-2xl border-dashed border-gray-200" : ""}`}>
-                                    <ChartPreview type={graph.type} title={graph.title} isHighlighted={graph.isHighlighted} data={graph.data} editMode={graph.editMode} />
+                                    <ChartPreview
+                                        key={`${graph.id}-${renderVersion ?? 0}`}
+                                        type={graph.type}
+                                        title={graph.title}
+                                        isHighlighted={graph.isHighlighted}
+                                        data={graph.data}
+                                        editMode={graph.editMode}
+                                        renderVersion={renderVersion}
+                                    />
                                     {editMode && (
                                         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
                                             <button

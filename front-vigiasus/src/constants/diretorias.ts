@@ -13,6 +13,9 @@ interface Diretoria {
     from: string; // Cor inicial em hexadecimal
     to: string;   // Cor final em hexadecimal
   };
+  // caminho (a partir de /public) para um banner de imagem opcional
+  // Quando presente, use esta imagem em vez do gradiente
+  bannerImage?: string;
   gerencias: Gerencia[];
 }
 
@@ -62,6 +65,18 @@ export const diretoriasConfig: { [key: string]: Diretoria } = {
     cores: { from: "#FB4242", to: "#EF2828" }, 
     gerencias: [
         { id: "g9", nome: "Gerência Administrativa Financeiro" },
+    ],
+  },
+
+    "secretaria": {
+    id: "secretaria",
+    nome: "Página da Secretária",
+    // Mantemos as cores por compatibilidade, mas prefira usar bannerImage quando disponível
+    cores: { from: "#ffcb3e", to: "#f7721c" },
+    // Imagem localizada em /public/secretaria/images/banner1.png
+    bannerImage: "/secretaria/images/banner1.png",
+    gerencias: [
+        { id: "g10", nome: "Secretaria" },
     ],
   },
 };

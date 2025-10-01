@@ -9,9 +9,11 @@ interface ChartPreviewProps {
     data: any[] // Array esperado pelo Google Charts
     isHighlighted?: boolean
     editMode?: boolean
+    // quando mudar, força redesenho do gráfico (ex.: troca de layout/página)
+    renderVersion?: number
 }
 
-export function ChartPreview({ type, title, data, isHighlighted, editMode }: ChartPreviewProps) {
+export function ChartPreview({ type, title, data, isHighlighted, editMode, renderVersion }: ChartPreviewProps) {
     const chartRef = useRef<HTMLDivElement>(null)
 
     // Show error if data is not a valid array
@@ -24,21 +26,9 @@ export function ChartPreview({ type, title, data, isHighlighted, editMode }: Cha
     }
 
     useEffect(() => {
-        const loadGoogleCharts = () => {
-            if (!(window as any).google) {
-                const script = document.createElement("script")
-                script.src = "https://www.gstatic.com/charts/loader.js"
-                script.onload = () => {
-                    ; (window as any).google.charts.load("current", { packages: ["corechart", "bar"] })
-                        ; (window as any).google.charts.setOnLoadCallback(drawChart)
-                }
-                document.head.appendChild(script)
-            } else {
-                drawChart()
-            }
-        }
+        let resizeObserver: ResizeObserver | null = null
 
-        const drawChart = () => {
+        const draw = () => {
             if (!(window as any).google || !chartRef.current) return
 
             const google = (window as any).google
@@ -69,8 +59,35 @@ export function ChartPreview({ type, title, data, isHighlighted, editMode }: Cha
             chart.draw(chartData, options)
         }
 
+        const loadGoogleCharts = () => {
+            if (!(window as any).google) {
+                const script = document.createElement("script")
+                script.src = "https://www.gstatic.com/charts/loader.js"
+                script.onload = () => {
+                    ; (window as any).google.charts.load("current", { packages: ["corechart", "bar"] })
+                        ; (window as any).google.charts.setOnLoadCallback(draw)
+                }
+                document.head.appendChild(script)
+            } else {
+                draw()
+            }
+        }
+
         loadGoogleCharts()
-    }, [type, data, title])
+
+        // Redesenha ao mudar tamanho do container
+        if (chartRef.current && (window as any).ResizeObserver) {
+            resizeObserver = new ResizeObserver(() => draw())
+            resizeObserver.observe(chartRef.current)
+        }
+
+        return () => {
+            if (resizeObserver && chartRef.current) {
+                resizeObserver.unobserve(chartRef.current)
+                resizeObserver.disconnect()
+            }
+        }
+    }, [type, data, title, renderVersion])
 
     return (
         <div

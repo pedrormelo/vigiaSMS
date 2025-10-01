@@ -78,9 +78,15 @@ export default function DashboardBuilder() {
     }
 
     const handleHighlightToggle = (id: string, highlighted: boolean) => {
-        setLayoutGraphs((prev) =>
-            prev.map((graph) => (graph?.id === id ? { ...graph, isHighlighted: highlighted } : graph)),
-        )
+        setLayoutGraphs((prev) => {
+            const currentHighlighted = prev.filter((g) => g?.isHighlighted).length
+            if (highlighted && currentHighlighted >= 3) {
+                // Limite de 3 destaques
+                alert("Cada diretoria pode destacar no máximo 3 gráficos.")
+                return prev
+            }
+            return prev.map((graph) => (graph?.id === id ? { ...graph, isHighlighted: highlighted } : graph))
+        })
     }
 
     const handleLayoutChange = (layout: LayoutType) => {
@@ -116,9 +122,17 @@ export default function DashboardBuilder() {
             {/* Header com gradiente dinâmico via 'style' */}
             <div
                 className="relative p-10 text-white shadow-lg"
-                style={{
-                    background: `linear-gradient(to right, ${diretoria.cores.from}, ${diretoria.cores.to})`
-                }}
+                style={
+                    diretoria.bannerImage
+                        ? {
+                            backgroundImage: `url(${diretoria.bannerImage})`,
+                            backgroundSize: "cover",
+                            backgroundPosition: "center",
+                        }
+                        : {
+                            background: `linear-gradient(to right, ${diretoria.cores.from}, ${diretoria.cores.to})`
+                        }
+                }
             >
                 <div className="flex justify-between items-center">
                     {/* Títulos */}

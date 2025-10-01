@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from "next/dist/client/components/navigation"
 import { DashboardPreview, type GraphData } from "@/components/dashboard/dasboard-preview"
+import { SecretariaDashboardPreview } from "@/components/dashboard/secretaria-dashboard-preview"
 import { diretoriasConfig } from "@/constants/diretorias"
 import { Info, Pen } from "lucide-react"
 import React from "react"
@@ -42,47 +43,140 @@ const indicators = [
 // Example: Replace with real data from backend or context
 const layout: "asymmetric" | "grid" | "sideBySide" = "asymmetric";
 const graphs: (GraphData | null)[] = [
+    // Destacados (para testar Secretaria)
     {
-        id: "main",
+        id: "g1-line",
         type: "line",
-        title: "Atendimentos de Alta vs Média e Baixa complexidade",
+        title: "Produção Ambulatorial (Mensal)",
         gerencia: "GPLAN",
         insertedDate: "2025-09-15",
+        isHighlighted: true,
         data: [
             ["Mês", "Alta", "Média", "Baixa"],
-            ["Maio", 1000, 800, 600],
-            ["Junho", 1200, 850, 650],
-            ["Julho", 1300, 900, 700],
-            ["Agosto", 1400, 950, 750],
+            ["Mai", 1000, 800, 600],
+            ["Jun", 1200, 850, 650],
+            ["Jul", 1300, 900, 700],
+            ["Ago", 1400, 950, 750],
         ],
     },
     {
-        id: "pie",
+        id: "g2-pie",
         type: "pie",
         title: "Distribuição de Atendimentos",
         gerencia: "GPLAN",
-        insertedDate: "2025-09-15",
+        insertedDate: "2025-09-16",
+        isHighlighted: true,
         data: [
             ["Categoria", "Atendimentos"],
-            ["Work", 45],
             ["Urgência", 25],
-            ["Consulta", 15],
-            ["Especialidades", 10],
-            ["Atenção Básica", 5],
+            ["Consulta", 35],
+            ["Especialidades", 20],
+            ["Atenção Básica", 20],
         ],
     },
     {
-        id: "bar",
+        id: "g3-bar",
         type: "chart",
-        title: "Cobertura Vacinal",
+        title: "Cobertura Vacinal (Meta vs Atual)",
         gerencia: "GTI",
-        insertedDate: "2025-09-15",
+        insertedDate: "2025-09-17",
+        isHighlighted: true,
         data: [
-            ["Faixa etária", "Cobertura Atual", "Meta"],
+            ["Faixa", "Atual", "Meta"],
             ["0-1", 80, 90],
             ["1-5", 85, 95],
             ["6-10", 90, 98],
             ["11-15", 88, 97],
+        ],
+    },
+    {
+        id: "g4-line",
+        type: "line",
+        title: "Tempo Médio de Espera (Dias)",
+        gerencia: "Regulação",
+        insertedDate: "2025-09-18",
+        isHighlighted: true,
+        data: [
+            ["Mês", "Consultas", "Exames"],
+            ["Mai", 12, 8],
+            ["Jun", 10, 7],
+            ["Jul", 9, 6],
+            ["Ago", 8, 5],
+        ],
+    },
+    {
+        id: "g5-pie",
+        type: "pie",
+        title: "Tipos de Procedimentos",
+        gerencia: "Atenção Básica",
+        insertedDate: "2025-09-19",
+        isHighlighted: true,
+        data: [
+            ["Tipo", "%"],
+            ["Consulta", 45],
+            ["Vacinação", 20],
+            ["Coleta", 15],
+            ["Visita Domiciliar", 20],
+        ],
+    },
+    {
+        id: "g6-bar",
+        type: "chart",
+        title: "Leitos Ocupados por Setor",
+        gerencia: "Regulação de Leitos",
+        insertedDate: "2025-09-19",
+        isHighlighted: true,
+        data: [
+            ["Setor", "Ocupação"],
+            ["Clínico", 78],
+            ["Cirúrgico", 66],
+            ["UTI", 85],
+            ["Pediatria", 60],
+        ],
+    },
+    {
+        id: "g7-line",
+        type: "line",
+        title: "Atendimentos por Especialidade",
+        gerencia: "Especialidades",
+        insertedDate: "2025-09-20",
+        isHighlighted: true,
+        data: [
+            ["Mês", "Cardio", "Orto", "Neuro"],
+            ["Mai", 320, 210, 90],
+            ["Jun", 400, 220, 110],
+            ["Jul", 380, 240, 120],
+            ["Ago", 420, 260, 130],
+        ],
+    },
+    // Não destacados (não devem aparecer na Secretaria)
+    {
+        id: "g8-pie",
+        type: "pie",
+        title: "Canais de Atendimento",
+        gerencia: "Ouvidoria",
+        insertedDate: "2025-09-20",
+        isHighlighted: false,
+        data: [
+            ["Canal", "%"],
+            ["Telefone", 30],
+            ["Web", 50],
+            ["Presencial", 20],
+        ],
+    },
+    {
+        id: "g9-bar",
+        type: "chart",
+        title: "Absenteísmo por Unidade",
+        gerencia: "Gestão",
+        insertedDate: "2025-09-21",
+        isHighlighted: false,
+        data: [
+            ["Unidade", "%"],
+            ["A", 12],
+            ["B", 9],
+            ["C", 15],
+            ["D", 7],
         ],
     },
 ];
@@ -105,9 +199,17 @@ export default function DashboardView() {
             {/* Header */}
             <div
                 className="relative p-10 text-white shadow-lg"
-                style={{
-                    background: `linear-gradient(to right, ${diretoria.cores.from}, ${diretoria.cores.to})`,
-                }}
+                style={
+                    diretoria.bannerImage
+                        ? {
+                            backgroundImage: `url(${diretoria.bannerImage})`,
+                            backgroundSize: "cover",
+                            backgroundPosition: "center",
+                        }
+                        : {
+                            background: `linear-gradient(to right, ${diretoria.cores.from}, ${diretoria.cores.to})`,
+                        }
+                }
             >
                 <div className="flex justify-between items-center">
                     <div>
@@ -147,19 +249,23 @@ export default function DashboardView() {
                     </div>
                 ))}
             </div>
-            
 
-            {/* Dashboard Charts - use DashboardPreview for layout and rendering */}
+
+            {/* Dashboard Charts - Secretaria uses a special preview showing only highlighted graphs */}
             <div className="flex justify-center items-center w-full pt-2 mb-28">
                 <div className="max-w-[90%] w-full">
-                    <DashboardPreview
-                        layout={layout}
-                        graphs={graphs}
-                        onGraphSelect={() => {}}
-                        onGraphRemove={() => {}}
-                        onHighlightToggle={() => {}}
-                        editMode={false}
-                    />
+                    {id === "secretaria" ? (
+                        <SecretariaDashboardPreview graphs={graphs} />
+                    ) : (
+                        <DashboardPreview
+                            layout={layout}
+                            graphs={graphs}
+                            onGraphSelect={() => { }}
+                            onGraphRemove={() => { }}
+                            onHighlightToggle={() => { }}
+                            editMode={false}
+                        />
+                    )}
                 </div>
             </div>
 
