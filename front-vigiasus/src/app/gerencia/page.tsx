@@ -1,17 +1,17 @@
 "use client"
 
-import { FileGrid } from "@/components/contextosCard/contextosGrid";
-import type { FileType } from "@/components/contextosCard/contextoCard";
-import { Button } from "@/components/button";
 import { useState, useEffect } from 'react';
+import type { FileType } from "@/components/contextosCard/contextoCard";
+
+// Componentes da UI
+import { FileGrid } from "@/components/contextosCard/contextosGrid";
+import { Button } from "@/components/button";
 import FilterBar from "@/components/gerencia/painel-filterBar";
 import { AddIndicatorButton } from "@/components/indicadores/adicionarIndicador";
-import { ContextModal as AddContextoModal } from "@/components/popups/addContexto-modal";
-import { ContextModal as AddIndicadorModal } from "@/components/popups/addIndicador-modal";
 import { IndicatorCard } from "@/components/indicadores/indicadorCard";
-import { image } from "framer-motion/client";
 import { AddDashboardButton } from "@/components/gerencia/dashboard-btn1";
-import { AddGraphModal } from "@/components/popups/addDashboard-modal";
+
+import { AddContentModal } from "@/components/popups/addContextoModal/index"; 
 
 const indicators: {
     title: string;
@@ -175,23 +175,19 @@ const mockGerencias = [
 ];
 
 
-export default function HomePage() {
-    // Modal state
-    const [showAddContexto, setShowAddContexto] = useState(false);
-    const [showAddIndicador, setShowAddIndicador] = useState(false);
-    const [showAddDashboard, setShowAddDashboard] = useState(false);
 
-    // State for selected gerencia
+export default function HomePage() {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [initialTab, setInitialTab] = useState<'contexto' | 'dashboard'>('contexto');
+
     const [selectedGerenciaId, setSelectedGerenciaId] = useState<string>(mockGerencias[0].id);
     const [gerenciaDetails, setGerenciaDetails] = useState<{ sigla: string; nome: string; descricao: string, image: string } | null>(mockGerencias[0]);
     const [gerenciaLoading, setGerenciaLoading] = useState(false);
     const [gerenciaError, setGerenciaError] = useState<string | null>(null);
 
-    // Simulate loading logic (replace with real API in future)
     useEffect(() => {
         setGerenciaLoading(true);
         setGerenciaError(null);
-        // Simulate async fetch
         setTimeout(() => {
             const found = mockGerencias.find(g => g.id === selectedGerenciaId);
             if (found) {
@@ -204,71 +200,65 @@ export default function HomePage() {
         }, 400);
     }, [selectedGerenciaId]);
 
+
+    const openModal = (tab: 'contexto' | 'dashboard') => {
+        setInitialTab(tab);
+        setIsModalOpen(true);
+    };
+
+    const handleContentSubmit = (data: { type: 'contexto' | 'dashboard'; payload: any }) => {
+        console.log("Novo conteúdo recebido:", data);
+        
+        if (data.type === 'contexto') {
+            console.log("Salvando um novo CONTEXTO:", data.payload);
+
+        } else if (data.type === 'dashboard') {
+            console.log("Salvando um novo DASHBOARD:", data.payload);
+        }
+    };
+
     const handleFileClick = (file: unknown) => {
         console.log("File clicked:", file)
-        // Handle file click logic here
     };
 
     return (
         <div className="min-h-screen bg-[#FDFDFD] p-6">
-            {/* Modals */}
-            <AddContextoModal
-                isOpen={showAddContexto}
-                onClose={() => setShowAddContexto(false)}
-                onSubmit={() => setShowAddContexto(false)}
+            <AddContentModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSubmit={handleContentSubmit}
+                initialTab={initialTab}
             />
-            <AddIndicadorModal
-                isOpen={showAddIndicador}
-                onClose={() => setShowAddIndicador(false)}
-                onSubmit={() => setShowAddIndicador(false)}
-            />
-            <AddGraphModal
-                isOpen={showAddDashboard}
-                onClose={() => setShowAddDashboard(false)}
-                onSubmit={(graph) => {
-                    console.log("Novo gráfico:", graph);
-                    // aqui você poderia salvar no estado ou enviar para API
-                }}
-            />
+            
             <div className="container mx-auto">
-
                 <div className="mb-4 flex items-center gap-4">
                     <h1 className="text-6xl font-bold text-blue-700">GTI</h1>
                     <h2 className="text-4xl ml-2.5 text-blue-600">GERÊNCIA DE TECNOLOGIA DA INFORMAÇÃO</h2>
                 </div>
 
-                {/* Dashboard and FileGrid (still using sampleFiles for demo) */}
+                {/* Seção do Dashboard */}
                 <div className="flex items-center gap-1 mb-7">
                     <h1 className="text-3xl mr-2 text-blue-600">Dashboard</h1>
-                    <AddDashboardButton onClick={() => setShowAddDashboard(true)} />
+                    <AddDashboardButton onClick={() => openModal('dashboard')} />
                 </div>
 
-
-                {/* Indicadores Cards */}
+                {/* Seção de Indicadores */}
                 <div className="flex justify-center items-center gap-4 mb-16 flex-wrap">
-                    <AddIndicatorButton onClick={() => setShowAddIndicador(true)} />
+                    <AddIndicatorButton onClick={() => openModal('contexto')} />
                     {indicators.map((indicator, index) => (
-                        <IndicatorCard
-                            key={index}
-                            title={indicator.title}
-                            value={indicator.value}
-                            subtitle={indicator.subtitle}
-                            change={indicator.change}
-                            changeType={indicator.changeType}
-                            borderColor={indicator.borderColor}
-                            iconType={indicator.iconType}
-                        />
+                        <IndicatorCard key={index} {...indicator} />
                     ))}
                 </div>
-                {/* BARRA DE FILTRO DO PAINEL DE CONTEXTO */}
+                
+                {/* Seção de Contexto */}
                 <FilterBar />
                 <FileGrid
                     files={sampleFiles}
                     onFileClick={handleFileClick}
-                    onAddContextClick={() => setShowAddContexto(true)}
+                    onAddContextClick={() => openModal('contexto')}
                 />
 
-                {/* Gerencia Selector (for demo, use buttons) */}
+                {/* Gerencia Selector */}
                 <div className="flex gap-4 mt-18 mb-8">
                     {mockGerencias.map(g => (
                         <Button
@@ -283,9 +273,9 @@ export default function HomePage() {
 
                 {/* Gerencia Details */}
                 {gerenciaLoading ? (
-                    <div className="text-blue-600 text-xl font-bold">Carregando...</div>
+                    <div>Carregando...</div>
                 ) : gerenciaError ? (
-                    <div className="text-red-500 text-xl font-bold">{gerenciaError}</div>
+                    <div>{gerenciaError}</div>
                 ) : gerenciaDetails && (
                     <>
                         <div className="mb-2 flex flex-row items-start gap-8">
@@ -299,7 +289,6 @@ export default function HomePage() {
                                     <p className="text-md ml-2 text-blue-600">{gerenciaDetails.descricao}</p>
                                 </div>
                             </div>
-                            {/* Image area: show if gerenciaDetails.image exists, else show placeholder */}
                             <div className="flex-shrink-0 w-[300px] h-[340px] rounded-2xl bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200 shadow-md">
                                 {gerenciaDetails.image ? (
                                     <img src={gerenciaDetails.image} alt={gerenciaDetails.nome} className="object-cover w-full h-full" />
