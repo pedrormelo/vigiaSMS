@@ -2,9 +2,19 @@
 
 import { PieChart, BarChart3, LineChart } from "lucide-react";
 
-export type AbaAtiva = "contexto" | "dashboard";
+export type AbaAtiva = "contexto" | "dashboard" | "indicador";
 export type AbaFonteDeDados = "manual" | "upload";
 export type TipoGrafico = "pie" | "chart" | "line";
+
+export type NomeIcone = 
+    | "Heart" 
+    | "Landmark" 
+    | "ClipboardList" 
+    | "Users"
+    | "TrendingUp"
+    | "DollarSign"
+    | "Building"
+    | "UserCheck";
 
 export interface ConjuntoDeDadosGrafico {
   colunas: string[];
@@ -38,6 +48,26 @@ export interface SecaoUploadArquivoProps {
   setArquivoDeDados: (arquivo: File | null) => void;
   aoBaixarModelo: () => void;
 }
+
+export interface AbaIndicadorProps {
+  tituloIndicador: string;
+  setTituloIndicador: (valor: string) => void;
+  descricaoIndicador: string;
+  setDescricaoIndicador: (valor: string) => void;
+  valorAtualIndicador: string;
+  setValorAtualIndicador: (valor: string) => void;
+  valorAlvoIndicador: string;
+  setValorAlvoIndicador: (valor: string) => void;
+  unidadeIndicador: string;
+  setUnidadeIndicador: (valor: string) => void;
+  textoComparativoIndicador: string;
+  setTextoComparativoIndicador: (valor: string) => void;
+  corIndicador: string;
+  setCorIndicador: (valor: string) => void;
+  iconeIndicador: NomeIcone;
+  setIconeIndicador: (valor: NomeIcone) => void;
+}
+
 
 export const TIPOS_GRAFICOS = {
   pie: { Icon: PieChart, rotulo: "Pizza" },

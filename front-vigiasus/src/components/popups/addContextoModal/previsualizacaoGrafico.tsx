@@ -3,7 +3,7 @@
 import React from "react";
 import { Chart } from "react-google-charts";
 import { Eye, BarChart3, Expand } from "lucide-react";
-import { TipoGrafico, ConjuntoDeDadosGrafico } from "@/components/popups/addContextoModal/types";
+import { TipoGrafico, ConjuntoDeDadosGrafico } from "./types";
 
 interface PrevisualizacaoGraficoProps {
     tipoGrafico: TipoGrafico;
@@ -33,7 +33,8 @@ export const PrevisualizacaoGrafico: React.FC<PrevisualizacaoGraficoProps> = ({
             <div className="flex flex-col items-center justify-center p-6 text-center bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl h-full">
                 <BarChart3 className="w-12 h-12 text-gray-400 mb-3" />
                 <h3 className="font-semibold text-gray-600">Pré-visualização do Gráfico</h3>
-                <p className="text-sm text-gray-500">Clique em &quot;Gerar Gráfico&quot; após inserir os dados.</p></div>
+                <p className="text-sm text-gray-500">Clique em &quot;Gerar Gráfico&quot; após inserir os dados.</p>
+            </div>
         );
     }
 
@@ -60,13 +61,26 @@ export const PrevisualizacaoGrafico: React.FC<PrevisualizacaoGraficoProps> = ({
         )
     ];
 
-    const opcoes = {
+    // MUDANÇA: Separamos as opções para aplicar a correção condicionalmente
+    const opcoesBase = {
         title: titulo || "Pré-visualização do Gráfico",
         backgroundColor: "transparent",
         legend: { position: "bottom", textStyle: { fontSize: 12 } },
         chartArea: { width: "90%", height: "75%" },
         colors: ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444'],
     };
+
+    // Adiciona a opção para forçar o eixo a começar em 0 para gráficos de barra e linha
+    const opcoesEspecificas =
+        (tipoGrafico === 'chart' || tipoGrafico === 'line')
+            ? {
+                vAxis: {
+                    viewWindow: { min: 0 }, // Força o eixo vertical a começar em 0
+                },
+              }
+            : {};
+
+    const opcoesFinais = { ...opcoesBase, ...opcoesEspecificas };
 
     const obterTipoGrafico = () => {
         switch (tipoGrafico) {
@@ -83,7 +97,7 @@ export const PrevisualizacaoGrafico: React.FC<PrevisualizacaoGraficoProps> = ({
                 key={JSON.stringify(conjuntoDeDados)}
                 chartType={obterTipoGrafico()}
                 data={dadosGrafico}
-                options={opcoes}
+                options={opcoesFinais} // Usamos as opções finais aqui
                 width="100%"
                 height="100%"
                 loader={<div>Carregando gráfico...</div>}

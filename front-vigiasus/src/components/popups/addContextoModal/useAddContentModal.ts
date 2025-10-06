@@ -1,17 +1,22 @@
 import { useState, useEffect } from "react";
 import { saveAs } from "file-saver";
-import { AbaAtiva, AbaFonteDeDados, TipoGrafico, ConjuntoDeDadosGrafico, ModalAdicionarConteudoProps } from "@/components/popups/addContextoModal/types";
+// MUDANÇA: Importamos o novo tipo 'NomeIcone'
+import { AbaAtiva, AbaFonteDeDados, TipoGrafico, ConjuntoDeDadosGrafico, ModalAdicionarConteudoProps, NomeIcone } from "./types";
 import { showWarningToast, showErrorToast, showInfoToast } from "@/components/ui/Toasts";
 
 export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, abaInicial = 'contexto' }: ModalAdicionarConteudoProps) => {
-    // --- ESTADO ---
+    // --- ESTADOS ---
     const [abaAtiva, setAbaAtiva] = useState<AbaAtiva>(abaInicial);
     const [abaFonteDeDados, setAbaFonteDeDados] = useState<AbaFonteDeDados>('manual');
     const [arrastandoSobre, setArrastandoSobre] = useState(false);
+    
+    // Estados do Contexto
     const [tituloContexto, setTituloContexto] = useState("");
     const [detalhesContexto, setDetalhesContexto] = useState("");
     const [arquivoContexto, setArquivoContexto] = useState<File | null>(null);
     const [urlContexto, setUrlContexto] = useState("");
+    
+    // Estados do Dashboard
     const [tituloGrafico, setTituloGrafico] = useState("");
     const [detalhesGrafico, setDetalhesGrafico] = useState("");
     const [tipoGrafico, setTipoGrafico] = useState<TipoGrafico>("pie");
@@ -21,37 +26,56 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
         linhas: [["Exemplo de Categoria", 100]],
     });
 
-    // --- FUNÇÕES E EFEITOS ---
-    
+    // Estados do Indicador
+    const [tituloIndicador, setTituloIndicador] = useState("");
+    const [descricaoIndicador, setDescricaoIndicador] = useState("");
+    const [valorAtualIndicador, setValorAtualIndicador] = useState("");
+    const [valorAlvoIndicador, setValorAlvoIndicador] = useState("");
+    const [unidadeIndicador, setUnidadeIndicador] = useState("Nenhum");
+    const [textoComparativoIndicador, setTextoComparativoIndicador] = useState("");
+    const [corIndicador, setCorIndicador] = useState("#3B82F6");
+    // MUDANÇA: Adicionado o estado para o ícone
+    const [iconeIndicador, setIconeIndicador] = useState<NomeIcone>("Heart");
+
+
     const reiniciarTodoOEstado = () => {
         setTituloContexto(""); setDetalhesContexto(""); setArquivoContexto(null); setUrlContexto("");
         setTituloGrafico(""); setDetalhesGrafico(""); setTipoGrafico("pie");
         setArquivoDeDados(null);
-        setConjuntoDeDados({
-            colunas: ["Categoria", "Valor"],
-            linhas: [["Exemplo de Categoria", 100]],
-        });
-        setAbaAtiva(abaInicial);
+        setConjuntoDeDados({ colunas: ["Categoria", "Valor"], linhas: [["Exemplo de Categoria", 100]], });
+        
+        // MUDANÇA: Adicionado o reset para os estados do indicador, incluindo o ícone
+        setTituloIndicador("");
+        setDescricaoIndicador("");
+        setValorAtualIndicador("");
+        setValorAlvoIndicador("");
+        setUnidadeIndicador("Nenhum");
+        setTextoComparativoIndicador("");
+        setCorIndicador("#3B82F6");
+        setIconeIndicador("Heart");
+
+        setAbaAtiva(abaInicial); 
         setAbaFonteDeDados('manual');
     };
 
     useEffect(() => {
-        if (estaAberto) {
-            setAbaAtiva(abaInicial);
-        } else {
-            setTimeout(reiniciarTodoOEstado, 200);
-        }
+        if (estaAberto) { setAbaAtiva(abaInicial); } 
+        else { setTimeout(reiniciarTodoOEstado, 200); }
     }, [estaAberto, abaInicial]);
 
     const aoSubmeterFormulario = () => {
         if (abaAtiva === 'contexto') {
             aoSubmeter({ type: 'contexto', payload: { title: tituloContexto, details: detalhesContexto, file: arquivoContexto, url: urlContexto } });
-        } else {
+        } else if (abaAtiva === 'dashboard') {
             aoSubmeter({ type: 'dashboard', payload: { title: tituloGrafico, details: detalhesGrafico, type: tipoGrafico, dataFile: arquivoDeDados, dataset: conjuntoDeDados } });
+        } else if (abaAtiva === 'indicador') {
+            // MUDANÇA: Adicionado 'icone' ao payload da submissão
+            aoSubmeter({ type: 'indicador', payload: { titulo: tituloIndicador, descricao: descricaoIndicador, valorAtual: valorAtualIndicador, valorAlvo: valorAlvoIndicador, unidade: unidadeIndicador, textoComparativo: textoComparativoIndicador, cor: corIndicador, icone: iconeIndicador } });
         }
         aoFechar();
     };
     
+    // ... (restante do ficheiro, como as funções de arrastar e largar, não precisa de alterações)
     const aoSelecionarArquivo = (arquivo: File | null) => {
         if (arquivo) { setArquivoContexto(arquivo); setUrlContexto(""); }
     };
@@ -74,26 +98,14 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
 
     const aoMudarTipoGrafico = (t: TipoGrafico) => {
         setTipoGrafico(t);
-
-        const modelos = {
-            pie: { colunas: ["Categoria", "Valor"], linhasPadrao: [["", ""]] },
-            chart: { colunas: ["Grupo", "Valor 1", "Valor 2"], linhasPadrao: [["", "", ""]] },
-            line: { colunas: ["Eixo X", "Linha A", "Linha B"], linhasPadrao: [["", "", ""]] },
-        };
-
+        const modelos = { pie: { colunas: ["Categoria", "Valor"], linhasPadrao: [["", ""]] }, chart: { colunas: ["Grupo", "Valor 1", "Valor 2"], linhasPadrao: [["", "", ""]] }, line: { colunas: ["Eixo X", "Linha A", "Linha B"], linhasPadrao: [["", "", ""]] }, };
         setConjuntoDeDados(dadosAtuais => {
             const { colunas: colunasAtuais, linhas: linhasAtuais } = dadosAtuais;
             const alvo = modelos[t];
-            
             let novasColunas = alvo.colunas.slice(0, colunasAtuais.length);
-            for(let i=0; i<colunasAtuais.length; i++){
-                novasColunas[i] = colunasAtuais[i];
-            }
-
+            for(let i=0; i<colunasAtuais.length; i++){ novasColunas[i] = colunasAtuais[i]; }
             let novasLinhas = linhasAtuais.map(linha => linha.slice(0, alvo.colunas.length));
-            
             const diff = alvo.colunas.length - novasColunas.length;
-
             if (diff > 0) {
                 for (let i = 0; i < diff; i++) {
                     novasColunas.push(alvo.colunas[novasColunas.length]);
@@ -105,7 +117,6 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
                 novasLinhas = novasLinhas.map(linha => linha.slice(0, alvo.colunas.length));
                 showInfoToast("Tabela ajustada", "Colunas extras foram removidas para este tipo de gráfico.");
             }
-
             return { colunas: novasColunas, linhas: novasLinhas.length > 0 ? novasLinhas : alvo.linhasPadrao };
         });
     };
@@ -145,12 +156,10 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
 
     const removerColuna = (indiceColuna: number) => {
         if (indiceColuna === 0) {
-            showErrorToast("Ação não permitida", "A coluna de categorias não pode ser removida.");
-            return;
+            showErrorToast("Ação não permitida", "A coluna de categorias não pode ser removida."); return;
         }
         if (conjuntoDeDados.colunas.length <= 2) {
-            showErrorToast("Ação não permitida", "O gráfico precisa de pelo menos uma coluna de valores.");
-            return;
+            showErrorToast("Ação não permitida", "O gráfico precisa de pelo menos uma coluna de valores."); return;
         }
         setConjuntoDeDados((d) => ({ colunas: d.colunas.filter((_, i) => i !== indiceColuna), linhas: d.linhas.map(linha => linha.filter((_, i) => i !== indiceColuna)) }));
     };
@@ -167,8 +176,7 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
 
     const formatarTamanhoArquivo = (bytes: number) => {
         if (bytes === 0) return '0 Bytes';
-        const k = 1024;
-        const tamanhos = ['Bytes', 'KB', 'MB', 'GB'];
+        const k = 1024; const tamanhos = ['Bytes', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + tamanhos[i];
     };
@@ -179,18 +187,52 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
         return "Nenhum arquivo ou link selecionado";
     };
 
-    const submissaoDesativada = abaAtiva === 'contexto' ? !tituloContexto.trim() : !tituloGrafico.trim();
-
+    const submissaoDesativada = (() => {
+        switch(abaAtiva) {
+            case 'contexto': return !tituloContexto.trim();
+            case 'dashboard': return !tituloGrafico.trim();
+            case 'indicador': return !tituloIndicador.trim() || !valorAtualIndicador.trim();
+            default: return true;
+        }
+    })();
+    
+    // MUDANÇA: Adicionadas as propriedades do ícone ao objeto de retorno
     return {
-        abaAtiva, setAbaAtiva, abaFonteDeDados, setAbaFonteDeDados, arrastandoSobre,
-        tituloContexto, setTituloContexto, detalhesContexto, setDetalhesContexto,
-        arquivoContexto, setArquivoContexto, urlContexto, setUrlContexto,
-        tituloGrafico, setTituloGrafico, detalhesGrafico, setDetalhesGrafico,
-        tipoGrafico, arquivoDeDados, setArquivoDeDados, conjuntoDeDados,
-        aoCancelar: aoFechar, aoSubmeter: aoSubmeterFormulario, aoSelecionarArquivo, aoClicarBotaoUrl,
+        // Gerais
+        abaAtiva, setAbaAtiva,
+        aoCancelar: aoFechar,
+        aoSubmeter: aoSubmeterFormulario,
+        submissaoDesativada,
+        
+        // Aba de Contexto
+        tituloContexto, setTituloContexto,
+        detalhesContexto, setDetalhesContexto,
+        arquivoContexto, setArquivoContexto,
+        urlContexto, setUrlContexto,
+        arrastandoSobre,
+        aoSelecionarArquivo, aoClicarBotaoUrl,
         aoEntrarNaArea, aoSairDaArea, aoArrastarSobre, aoSoltarArquivo,
-        aoMudarTipo: aoMudarTipoGrafico, adicionarLinha, removerLinha, atualizarCelula, adicionarColuna,
-        removerColuna, atualizarNomeColuna, baixarModelo,
-        submissaoDesativada, formatarTamanhoArquivo, obterNomeFonteContexto,
+        obterNomeFonteContexto, formatarTamanhoArquivo,
+
+        // Aba de Dashboard
+        abaFonteDeDados, setAbaFonteDeDados,
+        tituloGrafico, setTituloGrafico,
+        detalhesGrafico, setDetalhesGrafico,
+        tipoGrafico, aoMudarTipo: aoMudarTipoGrafico,
+        arquivoDeDados, setArquivoDeDados,
+        conjuntoDeDados,
+        adicionarLinha, removerLinha, atualizarCelula,
+        adicionarColuna, removerColuna, atualizarNomeColuna,
+        baixarModelo,
+
+        // Aba de Indicador
+        tituloIndicador, setTituloIndicador,
+        descricaoIndicador, setDescricaoIndicador,
+        valorAtualIndicador, setValorAtualIndicador,
+        valorAlvoIndicador, setValorAlvoIndicador,
+        unidadeIndicador, setUnidadeIndicador,
+        textoComparativoIndicador, setTextoComparativoIndicador,
+        corIndicador, setCorIndicador,
+        iconeIndicador, setIconeIndicador,
     };
 };

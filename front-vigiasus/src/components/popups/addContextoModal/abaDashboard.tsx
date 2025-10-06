@@ -42,7 +42,6 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
     return (
         <>
             <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,_1fr)_minmax(0,_1.5fr)_minmax(0,_1fr)] gap-6 h-full animate-fade-in pb-4">
-                
                 <div className="flex flex-col space-y-6 pt-1">
                     <div>
                         <label className="block text-lg font-medium text-gray-700 mb-2">Título do Gráfico</label>
@@ -53,7 +52,6 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                         <textarea value={detalhesGrafico} onChange={(e) => setDetalhesGrafico(e.target.value)} placeholder="Descreva o contexto, período, fonte dos dados, etc." rows={8} className="w-full px-4 py-3 border bg-gray-50/25 border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"/>
                     </div>
                 </div>
-
                 <div className="flex flex-col space-y-6 border-x-0 lg:border-x border-gray-200 px-0 lg:px-6">
                     <SeletorTipoGrafico tipoSelecionado={tipoGrafico} aoMudarTipo={aoMudarTipo} />
                     <div className="pt-4">
@@ -64,52 +62,37 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                         </div>
                         {abaFonteDeDados === 'manual' ? ( 
                             <SecaoDadosManuais 
-                                conjuntoDeDados={conjuntoDeDados} aoAtualizarNomeColuna={atualizarCelula} onAddRow={adicionarLinha} onRemoveRow={removerLinha}
-                                onAddColumn={adicionarColuna} onRemoveColumn={removerColuna} onUpdateColumnName={atualizarNomeColuna}
+                                conjuntoDeDados={conjuntoDeDados}
+                                aoAtualizarCelula={atualizarCelula}
+                                aoAdicionarLinha={adicionarLinha}
+                                aoRemoverLinha={removerLinha}
+                                aoAdicionarColuna={adicionarColuna}
+                                aoRemoverColuna={removerColuna}
+                                aoAtualizarNomeColuna={atualizarNomeColuna}
                             /> 
                         ) : ( 
                             <SecaoUploadArquivo arquivoDeDados={arquivoDeDados} setArquivoDeDados={setArquivoDeDados} aoBaixarModelo={baixarModelo} /> 
                         )}
                     </div>
                 </div>
-
                 <div className="flex flex-col space-y-4 h-full pt-1">
                     <label className="block text-lg font-medium text-gray-700 flex-shrink-0">Pré-visualização</label>
                     <div className="flex-1 min-h-0">
-                        <PrevisualizacaoGrafico 
-                            tipoGrafico={tipoGrafico} 
-                            conjuntoDeDados={conjuntoDeDadosPrevisualizacao} 
-                            titulo={tituloGrafico} 
-                            previsualizacaoGerada={previsualizacaoGerada} 
-                            aoAlternarTelaCheia={alternarTelaCheia}
-                        />
+                        <PrevisualizacaoGrafico tipoGrafico={tipoGrafico} conjuntoDeDados={conjuntoDeDadosPrevisualizacao} titulo={tituloGrafico} previsualizacaoGerada={previsualizacaoGerada} aoAlternarTelaCheia={alternarTelaCheia} />
                     </div>
                     <button onClick={gerarPrevisualizacao} className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition shadow flex-shrink-0">
                         <BarChart3 className="w-5 h-5" /> Gerar Gráfico
                     </button>
                 </div>
             </div>
-
             {graficoEmTelaCheia && (
                 <div className="fixed inset-0 bg-white z-[60] p-4 lg:p-8 flex flex-col animate-fade-in">
                     <div className="flex justify-between items-center mb-4 flex-shrink-0">
                         <h2 className="text-2xl font-semibold text-gray-800">{tituloGrafico || "Gráfico em Tela Cheia"}</h2>
-                        <button 
-                            onClick={alternarTelaCheia}
-                            className="p-3 bg-gray-100 rounded-full text-gray-700 hover:bg-gray-200 transition-colors"
-                            title="Fechar tela cheia"
-                        >
-                            <Minimize className="w-6 h-6" />
-                        </button>
+                        <button onClick={alternarTelaCheia} className="p-3 bg-gray-100 rounded-full text-gray-700 hover:bg-gray-200 transition-colors" title="Fechar tela cheia"><Minimize className="w-6 h-6" /></button>
                     </div>
                     <div className="flex-1 min-h-0 w-full h-full">
-                        <PrevisualizacaoGrafico
-                            tipoGrafico={tipoGrafico}
-                            conjuntoDeDados={conjuntoDeDadosPrevisualizacao}
-                            titulo={tituloGrafico}
-                            previsualizacaoGerada={previsualizacaoGerada}
-                            emTelaCheia={true}
-                        />
+                        <PrevisualizacaoGrafico tipoGrafico={tipoGrafico} conjuntoDeDados={conjuntoDeDadosPrevisualizacao} titulo={tituloGrafico} previsualizacaoGerada={previsualizacaoGerada} emTelaCheia={true} />
                     </div>
                 </div>
             )}
