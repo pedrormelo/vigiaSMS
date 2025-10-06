@@ -36,7 +36,6 @@ const PrevisualizacaoIndicador: React.FC<Omit<AbaIndicadorProps, 'setCorIndicado
     const corTextoComparativo = ePositivo ? 'text-green-600' : eNegativo ? 'text-red-600' : 'text-gray-600';
     const IconeComparativo = ePositivo ? TrendingUp : eNegativo ? TrendingDown : TrendingUp;
 
-    // MUDANÇA: Lógica para a posição da unidade monetária
     const unidadesMonetarias = ["R$", "$", "€"];
     const eUnidadeMonetaria = unidadesMonetarias.includes(unidadeIndicador);
 
@@ -50,7 +49,6 @@ const PrevisualizacaoIndicador: React.FC<Omit<AbaIndicadorProps, 'setCorIndicado
                 {iconesDisponiveis[iconeIndicador]}
             </div>
             <div className="my-2 text-center">
-                {/* MUDANÇA: Renderização condicional da unidade */}
                 <p className="text-4xl font-bold text-gray-900 leading-none">
                     {eUnidadeMonetaria && <span className="text-2xl font-medium text-gray-500 mr-1">{unidadeIndicador}</span>}
                     {valorAtualIndicador || "0"}

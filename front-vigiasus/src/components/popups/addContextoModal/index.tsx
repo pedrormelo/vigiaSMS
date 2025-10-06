@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-// MUDANÇA: Adicionado o ícone 'Gauge' para a nova aba
 import { X, FilePlus2, LayoutDashboard, FileSymlink, Gauge } from "lucide-react";
 import { ModalAdicionarConteudoProps } from "@/components/popups/addContextoModal/types"; 
 import { useModalAdicionarConteudo } from "@/components/popups/addContextoModal/useAddContentModal";
@@ -30,9 +29,6 @@ export function ModalAdicionarConteudo(props: ModalAdicionarConteudoProps) {
         <>
             <EstilosModal />
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                {/* MUDANÇA DEFINITIVA: 
-                    A largura máxima (max-w-7xl) agora é aplicada para a aba 'dashboard' E para a 'indicador'.
-                */}
                 <div className={`bg-white rounded-[40px] w-full ${abaAtiva === 'dashboard' || abaAtiva === 'indicador' ? 'max-w-7xl' : 'max-w-4xl'} max-h-[90vh] flex flex-col shadow-2xl transition-all duration-300`}>
                     
                     <div className="bg-gradient-to-r from-[#0037C1] to-[#00BDFF] px-8 py-4 flex items-center justify-between rounded-t-[40px] flex-shrink-0">

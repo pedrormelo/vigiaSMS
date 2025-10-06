@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { saveAs } from "file-saver";
-// MUDANÇA: Importamos o novo tipo 'NomeIcone'
 import { AbaAtiva, AbaFonteDeDados, TipoGrafico, ConjuntoDeDadosGrafico, ModalAdicionarConteudoProps, NomeIcone } from "./types";
 import { showWarningToast, showErrorToast, showInfoToast } from "@/components/ui/Toasts";
 
@@ -34,7 +33,6 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
     const [unidadeIndicador, setUnidadeIndicador] = useState("Nenhum");
     const [textoComparativoIndicador, setTextoComparativoIndicador] = useState("");
     const [corIndicador, setCorIndicador] = useState("#3B82F6");
-    // MUDANÇA: Adicionado o estado para o ícone
     const [iconeIndicador, setIconeIndicador] = useState<NomeIcone>("Heart");
 
 
@@ -44,7 +42,6 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
         setArquivoDeDados(null);
         setConjuntoDeDados({ colunas: ["Categoria", "Valor"], linhas: [["Exemplo de Categoria", 100]], });
         
-        // MUDANÇA: Adicionado o reset para os estados do indicador, incluindo o ícone
         setTituloIndicador("");
         setDescricaoIndicador("");
         setValorAtualIndicador("");
@@ -69,13 +66,11 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
         } else if (abaAtiva === 'dashboard') {
             aoSubmeter({ type: 'dashboard', payload: { title: tituloGrafico, details: detalhesGrafico, type: tipoGrafico, dataFile: arquivoDeDados, dataset: conjuntoDeDados } });
         } else if (abaAtiva === 'indicador') {
-            // MUDANÇA: Adicionado 'icone' ao payload da submissão
             aoSubmeter({ type: 'indicador', payload: { titulo: tituloIndicador, descricao: descricaoIndicador, valorAtual: valorAtualIndicador, valorAlvo: valorAlvoIndicador, unidade: unidadeIndicador, textoComparativo: textoComparativoIndicador, cor: corIndicador, icone: iconeIndicador } });
         }
         aoFechar();
     };
     
-    // ... (restante do ficheiro, como as funções de arrastar e largar, não precisa de alterações)
     const aoSelecionarArquivo = (arquivo: File | null) => {
         if (arquivo) { setArquivoContexto(arquivo); setUrlContexto(""); }
     };
@@ -196,7 +191,6 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
         }
     })();
     
-    // MUDANÇA: Adicionadas as propriedades do ícone ao objeto de retorno
     return {
         // Gerais
         abaAtiva, setAbaAtiva,
