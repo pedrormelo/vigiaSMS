@@ -11,7 +11,7 @@ import { AddIndicatorButton } from "@/components/indicadores/adicionarIndicador"
 import { IndicatorCard } from "@/components/indicadores/indicadorCard";
 import { AddDashboardButton } from "@/components/gerencia/dashboard-btn1";
 
-import { AddContentModal } from "@/components/popups/addContextoModal/index"; 
+import { ModalAdicionarConteudo } from "@/components/popups/addContextoModal/index"; 
 
 const indicators: {
     title: string;
@@ -206,7 +206,7 @@ export default function HomePage() {
         setIsModalOpen(true);
     };
 
-    const handleContentSubmit = (data: { type: 'contexto' | 'dashboard'; payload: any }) => {
+    const handleContentSubmit = (data: { type: 'contexto' | 'dashboard'; payload: unknown }) => {
         console.log("Novo conteúdo recebido:", data);
         
         if (data.type === 'contexto') {
@@ -223,10 +223,10 @@ export default function HomePage() {
 
     return (
         <div className="min-h-screen bg-[#FDFDFD] p-6">
-            <AddContentModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                onSubmit={handleContentSubmit}
+            <ModalAdicionarConteudo
+                estaAberto={isModalOpen}
+                aoFechar={() => setIsModalOpen(false)}
+                aoSubmeter={handleContentSubmit}
                 initialTab={initialTab}
             />
             
