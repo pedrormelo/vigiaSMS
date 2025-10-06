@@ -1,195 +1,196 @@
 import { useState, useEffect } from "react";
 import { saveAs } from "file-saver";
-import { ActiveTab, DataSourceTab, GraphType, ChartDataset, AddContentModalProps } from "./types";
-import { showWarningToast, showErrorToast, showInfoToast } from "@/components/ui/Toasts"; // Importamos showInfoToast
+import { AbaAtiva, AbaFonteDeDados, TipoGrafico, ConjuntoDeDadosGrafico, ModalAdicionarConteudoProps } from "@/components/popups/addContextoModal/types";
+import { showWarningToast, showErrorToast, showInfoToast } from "@/components/ui/Toasts";
 
-export const useAddContentModal = ({ isOpen, onClose, onSubmit, initialTab = 'contexto' }: AddContentModalProps) => {
+export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, abaInicial = 'contexto' }: ModalAdicionarConteudoProps) => {
     // --- ESTADO ---
-    const [activeTab, setActiveTab] = useState<ActiveTab>(initialTab);
-    const [dataSourceTab, setDataSourceTab] = useState<DataSourceTab>('manual');
-    const [isDraggingOver, setIsDraggingOver] = useState(false);
-    const [contextTitle, setContextTitle] = useState("");
-    const [contextDetails, setContextDetails] = useState("");
-    const [contextFile, setContextFile] = useState<File | null>(null);
-    const [contextUrl, setContextUrl] = useState("");
-    const [graphTitle, setGraphTitle] = useState("");
-    const [graphDetails, setGraphDetails] = useState("");
-    const [graphType, setGraphType] = useState<GraphType>("pie");
-    const [dataFile, setDataFile] = useState<File | null>(null);
-    const [dataset, setDataset] = useState<ChartDataset>({
-        columns: ["Categoria", "Valor"],
-        rows: [["Exemplo de Categoria", 100]],
+    const [abaAtiva, setAbaAtiva] = useState<AbaAtiva>(abaInicial);
+    const [abaFonteDeDados, setAbaFonteDeDados] = useState<AbaFonteDeDados>('manual');
+    const [arrastandoSobre, setArrastandoSobre] = useState(false);
+    const [tituloContexto, setTituloContexto] = useState("");
+    const [detalhesContexto, setDetalhesContexto] = useState("");
+    const [arquivoContexto, setArquivoContexto] = useState<File | null>(null);
+    const [urlContexto, setUrlContexto] = useState("");
+    const [tituloGrafico, setTituloGrafico] = useState("");
+    const [detalhesGrafico, setDetalhesGrafico] = useState("");
+    const [tipoGrafico, setTipoGrafico] = useState<TipoGrafico>("pie");
+    const [arquivoDeDados, setArquivoDeDados] = useState<File | null>(null);
+    const [conjuntoDeDados, setConjuntoDeDados] = useState<ConjuntoDeDadosGrafico>({
+        colunas: ["Categoria", "Valor"],
+        linhas: [["Exemplo de Categoria", 100]],
     });
 
     // --- FUNÇÕES E EFEITOS ---
     
-    const resetAllState = () => {
-        setContextTitle(""); setContextDetails(""); setContextFile(null); setContextUrl("");
-        setGraphTitle(""); setGraphDetails(""); setGraphType("pie");
-        setDataFile(null);
-        setDataset({
-            columns: ["Categoria", "Valor"],
-            rows: [["Exemplo de Categoria", 100]],
+    const reiniciarTodoOEstado = () => {
+        setTituloContexto(""); setDetalhesContexto(""); setArquivoContexto(null); setUrlContexto("");
+        setTituloGrafico(""); setDetalhesGrafico(""); setTipoGrafico("pie");
+        setArquivoDeDados(null);
+        setConjuntoDeDados({
+            colunas: ["Categoria", "Valor"],
+            linhas: [["Exemplo de Categoria", 100]],
         });
-        setActiveTab(initialTab);
-        setDataSourceTab('manual');
+        setAbaAtiva(abaInicial);
+        setAbaFonteDeDados('manual');
     };
 
     useEffect(() => {
-        if (isOpen) {
-            setActiveTab(initialTab);
+        if (estaAberto) {
+            setAbaAtiva(abaInicial);
         } else {
-            setTimeout(resetAllState, 200);
+            setTimeout(reiniciarTodoOEstado, 200);
         }
-    }, [isOpen, initialTab]);
+    }, [estaAberto, abaInicial]);
 
-    const handleSubmit = () => {
-        if (activeTab === 'contexto') {
-            onSubmit({ type: 'contexto', payload: { title: contextTitle, details: contextDetails, file: contextFile, url: contextUrl } });
+    const aoSubmeterFormulario = () => {
+        if (abaAtiva === 'contexto') {
+            aoSubmeter({ type: 'contexto', payload: { title: tituloContexto, details: detalhesContexto, file: arquivoContexto, url: urlContexto } });
         } else {
-            onSubmit({ type: 'dashboard', payload: { title: graphTitle, details: graphDetails, type: graphType, dataFile, dataset } });
+            aoSubmeter({ type: 'dashboard', payload: { title: tituloGrafico, details: detalhesGrafico, type: tipoGrafico, dataFile: arquivoDeDados, dataset: conjuntoDeDados } });
         }
-        onClose();
+        aoFechar();
     };
     
-    const handleFileSelected = (file: File | null) => {
-        if (file) { setContextFile(file); setContextUrl(""); }
+    const aoSelecionarArquivo = (arquivo: File | null) => {
+        if (arquivo) { setArquivoContexto(arquivo); setUrlContexto(""); }
     };
     
-    const handleUrlButtonClick = () => {
+    const aoClicarBotaoUrl = () => {
         const url = prompt("Por favor, insira a URL:");
-        if (url) { setContextUrl(url); setContextFile(null); }
+        if (url) { setUrlContexto(url); setArquivoContexto(null); }
     };
 
-    const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); setIsDraggingOver(true); };
-    const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); setIsDraggingOver(false); };
-    const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); };
-    const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-        e.preventDefault(); e.stopPropagation(); setIsDraggingOver(false);
+    const aoEntrarNaArea = (e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); setArrastandoSobre(true); };
+    const aoSairDaArea = (e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); setArrastandoSobre(false); };
+    const aoArrastarSobre = (e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); };
+    const aoSoltarArquivo = (e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault(); e.stopPropagation(); setArrastandoSobre(false);
         if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-            handleFileSelected(e.dataTransfer.files[0]);
+            aoSelecionarArquivo(e.dataTransfer.files[0]);
             e.dataTransfer.clearData();
         }
     };
 
-    // MUDANÇA: Lógica aprimorada para PRESERVAR dados ao trocar de gráfico
-    const handleTypeChange = (t: GraphType) => {
-        setGraphType(t);
+    const aoMudarTipoGrafico = (t: TipoGrafico) => {
+        setTipoGrafico(t);
 
-        const targetTemplates = {
-            pie: { columns: ["Categoria", "Valor"], defaultRows: [["", ""]] },
-            chart: { columns: ["Grupo", "Valor 1", "Valor 2"], defaultRows: [["", "", ""]] },
-            line: { columns: ["Eixo X", "Linha A", "Linha B"], defaultRows: [["", "", ""]] },
+        const modelos = {
+            pie: { colunas: ["Categoria", "Valor"], linhasPadrao: [["", ""]] },
+            chart: { colunas: ["Grupo", "Valor 1", "Valor 2"], linhasPadrao: [["", "", ""]] },
+            line: { colunas: ["Eixo X", "Linha A", "Linha B"], linhasPadrao: [["", "", ""]] },
         };
 
-        setDataset(currentDataset => {
-            const currentColumns = currentDataset.columns;
-            const currentRows = currentDataset.rows;
-            const target = targetTemplates[t];
+        setConjuntoDeDados(dadosAtuais => {
+            const { colunas: colunasAtuais, linhas: linhasAtuais } = dadosAtuais;
+            const alvo = modelos[t];
             
-            let newColumns = target.columns.slice(0, currentColumns.length);
-            for(let i=0; i<currentColumns.length; i++){
-                newColumns[i] = currentColumns[i];
+            let novasColunas = alvo.colunas.slice(0, colunasAtuais.length);
+            for(let i=0; i<colunasAtuais.length; i++){
+                novasColunas[i] = colunasAtuais[i];
             }
 
-            let newRows = currentRows.map(row => row.slice(0, target.columns.length));
+            let novasLinhas = linhasAtuais.map(linha => linha.slice(0, alvo.colunas.length));
             
-            // Adiciona ou remove colunas para corresponder ao novo tipo
-            const diff = target.columns.length - newColumns.length;
+            const diff = alvo.colunas.length - novasColunas.length;
 
-            if (diff > 0) { // Adicionar colunas
+            if (diff > 0) {
                 for (let i = 0; i < diff; i++) {
-                    newColumns.push(target.columns[newColumns.length]);
-                    newRows.forEach(row => row.push(""));
+                    novasColunas.push(alvo.colunas[novasColunas.length]);
+                    novasLinhas.forEach(linha => linha.push(""));
                 }
                 showInfoToast("Tabela ajustada", "Novas colunas foram adicionadas para este tipo de gráfico.");
-            } else if (diff < 0) { // Remover colunas
-                newColumns = newColumns.slice(0, target.columns.length);
-                newRows = newRows.map(row => row.slice(0, target.columns.length));
+            } else if (diff < 0) {
+                novasColunas = novasColunas.slice(0, alvo.colunas.length);
+                novasLinhas = novasLinhas.map(linha => linha.slice(0, alvo.colunas.length));
                 showInfoToast("Tabela ajustada", "Colunas extras foram removidas para este tipo de gráfico.");
             }
 
-            return { columns: newColumns, rows: newRows.length > 0 ? newRows : target.defaultRows };
+            return { colunas: novasColunas, linhas: novasLinhas.length > 0 ? novasLinhas : alvo.linhasPadrao };
         });
     };
 
-    const addRow = () => {
-        if (dataset.rows.length >= 25) {
+    const adicionarLinha = () => {
+        if (conjuntoDeDados.linhas.length >= 25) {
             showWarningToast("Limite de 25 linhas atingido.");
             return;
         }
-        setDataset((d) => ({ ...d, rows: [...d.rows, Array(d.columns.length).fill("")] }));
+        setConjuntoDeDados((d) => ({ ...d, linhas: [...d.linhas, Array(d.colunas.length).fill("")] }));
     };
 
-    const removeRow = (index: number) => setDataset((d) => ({ ...d, rows: d.rows.filter((_, i) => i !== index) }));
+    const removerLinha = (index: number) => setConjuntoDeDados((d) => ({ ...d, linhas: d.linhas.filter((_, i) => i !== index) }));
 
-    const updateCell = (row: number, col: number, value: string) => {
-        if (col > 0) {
-            const isNumeric = /^-?\d*\.?\d*$/.test(value);
-            if (!isNumeric) {
+    const atualizarCelula = (linha: number, coluna: number, valor: string) => {
+        if (coluna > 0) {
+            if (valor.includes('-')) {
+                showErrorToast("Valor inválido.", "Números negativos não são permitidos.");
+                return;
+            }
+            const eNumerico = /^\d*\.?\d*$/.test(valor);
+            if (!eNumerico && valor !== "") {
                 showErrorToast("Valor inválido.", "Apenas números são permitidos nesta coluna.");
                 return;
             }
         }
-        setDataset((d) => ({ ...d, rows: d.rows.map((r, i) => i === row ? r.map((c, j) => (j === col ? value : c)) : r) }));
+        setConjuntoDeDados((d) => ({ ...d, linhas: d.linhas.map((l, i) => i === linha ? l.map((c, j) => (j === coluna ? valor : c)) : l) }));
     };
 
-    const addColumn = () => {
-        if (dataset.columns.length >= 30) {
+    const adicionarColuna = () => {
+        if (conjuntoDeDados.colunas.length >= 30) {
             showWarningToast("Limite de 30 colunas atingido.");
             return;
         }
-        setDataset((d) => ({ ...d, columns: [...d.columns, `Série ${d.columns.length}`], rows: d.rows.map(row => [...row, ""]) }));
+        setConjuntoDeDados((d) => ({ ...d, colunas: [...d.colunas, `Série ${d.colunas.length}`], linhas: d.linhas.map(linha => [...linha, ""]) }));
     };
 
-    const removeColumn = (colIndex: number) => {
-        if (colIndex === 0) {
+    const removerColuna = (indiceColuna: number) => {
+        if (indiceColuna === 0) {
             showErrorToast("Ação não permitida", "A coluna de categorias não pode ser removida.");
             return;
         }
-        if (dataset.columns.length <= 2) {
+        if (conjuntoDeDados.colunas.length <= 2) {
             showErrorToast("Ação não permitida", "O gráfico precisa de pelo menos uma coluna de valores.");
             return;
         }
-        setDataset((d) => ({ columns: d.columns.filter((_, i) => i !== colIndex), rows: d.rows.map(row => row.filter((_, i) => i !== colIndex)) }));
+        setConjuntoDeDados((d) => ({ colunas: d.colunas.filter((_, i) => i !== indiceColuna), linhas: d.linhas.map(linha => linha.filter((_, i) => i !== indiceColuna)) }));
     };
 
-    const updateColumnName = (index: number, newName: string) => setDataset((d) => ({ ...d, columns: d.columns.map((col, i) => (i === index ? newName : col)) }));
+    const atualizarNomeColuna = (index: number, novoNome: string) => setConjuntoDeDados((d) => ({ ...d, colunas: d.colunas.map((col, i) => (i === index ? novoNome : col)) }));
 
-    const downloadTemplate = () => {
-        const header = dataset.columns.join(",") + "\n";
-        const placeholderRows = Array(2).fill(Array(dataset.columns.length).fill("dado")).map(r => r.join(",")).join("\n");
-        const csv = header + placeholderRows;
+    const baixarModelo = () => {
+        const cabecalho = conjuntoDeDados.colunas.join(",") + "\n";
+        const linhasExemplo = Array(2).fill(Array(conjuntoDeDados.colunas.length).fill("dado")).map(r => r.join(",")).join("\n");
+        const csv = cabecalho + linhasExemplo;
         const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-        saveAs(blob, `template-${graphType}.csv`);
+        saveAs(blob, `modelo-${tipoGrafico}.csv`);
     };
 
-    const formatFileSize = (bytes: number) => {
+    const formatarTamanhoArquivo = (bytes: number) => {
         if (bytes === 0) return '0 Bytes';
         const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const tamanhos = ['Bytes', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + tamanhos[i];
     };
 
-    const getContextSourceName = () => {
-        if (contextFile) return contextFile.name;
-        if (contextUrl) return contextUrl;
+    const obterNomeFonteContexto = () => {
+        if (arquivoContexto) return arquivoContexto.name;
+        if (urlContexto) return urlContexto;
         return "Nenhum arquivo ou link selecionado";
     };
 
-    const isSubmitDisabled = activeTab === 'contexto' ? !contextTitle.trim() : !graphTitle.trim();
+    const submissaoDesativada = abaAtiva === 'contexto' ? !tituloContexto.trim() : !tituloGrafico.trim();
 
     return {
-        activeTab, setActiveTab, dataSourceTab, setDataSourceTab, isDraggingOver,
-        contextTitle, setContextTitle, contextDetails, setContextDetails,
-        contextFile, setContextFile, contextUrl, setContextUrl,
-        graphTitle, setGraphTitle, graphDetails, setGraphDetails,
-        graphType, dataFile, setDataFile, dataset,
-        handleCancel: onClose, handleSubmit, handleFileSelected, handleUrlButtonClick,
-        handleDragEnter, handleDragLeave, handleDragOver, handleDrop,
-        handleTypeChange, addRow, removeRow, updateCell, addColumn,
-        removeColumn, updateColumnName, downloadTemplate,
-        isSubmitDisabled, formatFileSize, getContextSourceName,
+        abaAtiva, setAbaAtiva, abaFonteDeDados, setAbaFonteDeDados, arrastandoSobre,
+        tituloContexto, setTituloContexto, detalhesContexto, setDetalhesContexto,
+        arquivoContexto, setArquivoContexto, urlContexto, setUrlContexto,
+        tituloGrafico, setTituloGrafico, detalhesGrafico, setDetalhesGrafico,
+        tipoGrafico, arquivoDeDados, setArquivoDeDados, conjuntoDeDados,
+        aoCancelar: aoFechar, aoSubmeter: aoSubmeterFormulario, aoSelecionarArquivo, aoClicarBotaoUrl,
+        aoEntrarNaArea, aoSairDaArea, aoArrastarSobre, aoSoltarArquivo,
+        aoMudarTipo: aoMudarTipoGrafico, adicionarLinha, removerLinha, atualizarCelula, adicionarColuna,
+        removerColuna, atualizarNomeColuna, baixarModelo,
+        submissaoDesativada, formatarTamanhoArquivo, obterNomeFonteContexto,
     };
 };
