@@ -1,7 +1,9 @@
-"use client"
+"use client";
 
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import type { FileType } from "@/components/contextosCard/contextoCard";
+import type { AbaAtiva } from "@/components/popups/addContextoModal/types";
 
 // Componentes da UI
 import { FileGrid } from "@/components/contextosCard/contextosGrid";
@@ -10,8 +12,10 @@ import FilterBar from "@/components/gerencia/painel-filterBar";
 import { AddIndicatorButton } from "@/components/indicadores/adicionarIndicador";
 import { IndicatorCard } from "@/components/indicadores/indicadorCard";
 import { AddDashboardButton } from "@/components/gerencia/dashboard-btn1";
+import { Edit, Eye } from 'lucide-react';
+import { VisualizarContextoModal } from "@/components/popups/visualizarContextoModal/index";
 
-import { ModalAdicionarConteudo } from "@/components/popups/addContextoModal/index"; 
+import { ModalAdicionarConteudo } from "@/components/popups/addContextoModal/index";
 
 const indicators: {
     title: string;
@@ -51,12 +55,22 @@ const indicators: {
         },
     ]
 
+const dadosDashboardPEC = {
+    colunas: ['Status de Implantação', 'Quantidade de Unidades'],
+    linhas: [
+        ['PEC Implantado', 150],
+        ['Em Implantação', 25],
+        ['Não Iniciado', 25],
+    ],
+};
+
 const sampleFiles = [
     {
         id: "1",
         title: "Pagamento ESF e ESB - 2025",
         type: "pdf" as FileType,
         insertedDate: "2024-06-23",
+        url: "/docs/cms.pdf"
     },
     {
         id: "2",
@@ -69,6 +83,7 @@ const sampleFiles = [
         title: "Unidades com o PEC implementado",
         type: "dashboard" as FileType,
         insertedDate: "2025-08-22",
+        payload: dadosDashboardPEC,
     },
     {
         id: "4",
@@ -111,6 +126,7 @@ const sampleFiles = [
         title: "Link para Dashboard Externo",
         type: "link" as FileType,
         insertedDate: "2024-06-23",
+        url: "https://www.google.com",
     },
     {
         id: "3",
@@ -174,17 +190,40 @@ const mockGerencias = [
     },
 ];
 
-
+interface TipoFicheiro {
+    id: string;
+    title: string;
+    type: FileType;
+    insertedDate: string;
+    url?: string;
+    payload?: unknown;
+}
 
 export default function HomePage() {
+    // --- ESTADOS ---
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [initialTab, setInitialTab] = useState<'contexto' | 'dashboard'>('contexto');
+    //O estado da aba inicial usa o tipo 'AbaAtiva'
+    const [abaInicial, setAbaInicial] = useState<AbaAtiva>('contexto');
+
+    //  Estado para controlar o modo de visualização ou edição
+    const [modo, setModo] = useState<'visualizacao' | 'edicao'>('visualizacao');
+
+    // Estado para guardar os dados para pré-preenchimento
+    const [dadosParaEditar, setDadosParaEditar] = useState<TipoFicheiro | null>(null);
+
 
     const [selectedGerenciaId, setSelectedGerenciaId] = useState<string>(mockGerencias[0].id);
     const [gerenciaDetails, setGerenciaDetails] = useState<{ sigla: string; nome: string; descricao: string, image: string } | null>(mockGerencias[0]);
     const [gerenciaLoading, setGerenciaLoading] = useState(false);
     const [gerenciaError, setGerenciaError] = useState<string | null>(null);
 
+    // Estados para controlar o modal de visualização
+    const [modalVisualizacaoAberto, setModalVisualizacaoAberto] = useState(false);
+    const [ficheiroSelecionado, setFicheiroSelecionado] = useState<TipoFicheiro | null>(null);
+
+    
+
+    // --- EFEITOS E FUNÇÕES ---
     useEffect(() => {
         setGerenciaLoading(true);
         setGerenciaError(null);
@@ -201,104 +240,125 @@ export default function HomePage() {
     }, [selectedGerenciaId]);
 
 
-    const openModal = (tab: 'contexto' | 'dashboard') => {
-        setInitialTab(tab);
+    const abrirModal = (aba: AbaAtiva) => {
+        setAbaInicial(aba);
         setIsModalOpen(true);
     };
 
-    const handleContentSubmit = (data: { type: 'contexto' | 'dashboard'; payload: unknown }) => {
-        console.log("Novo conteúdo recebido:", data);
-        
-        if (data.type === 'contexto') {
-            console.log("Salvando um novo CONTEXTO:", data.payload);
+      const lidarComCriarNovaVersao = (dadosDoContextoAntigo: DetalhesContexto) => {
+        setDadosParaEditar(dadosDoContextoAntigo);
+        setModalVisualizacaoAberto(false);
+        // Pequeno atraso para garantir que a transição entre modais seja suave
+        setTimeout(() => abrirModal('contexto'), 50);
+    };
 
-        } else if (data.type === 'dashboard') {
-            console.log("Salvando um novo DASHBOARD:", data.payload);
+    const aoSubmeterConteudo = (dados: { tipo: AbaAtiva; payload: unknown }) => {
+        console.log("Novo conteúdo recebido:", dados);
+
+        if (dados.tipo === 'contexto') {
+            console.log("Salvando um novo CONTEXTO:", dados.payload);
+        } else if (dados.tipo === 'dashboard') {
+            console.log("Salvando um novo DASHBOARD:", dados.payload);
+        } else if (dados.tipo === 'indicador') {
+            console.log("Salvando um novo INDICADOR:", dados.payload);
         }
     };
 
-    const handleFileClick = (file: unknown) => {
-        console.log("File clicked:", file)
+     const aoClicarArquivo = (ficheiro: DetalhesContexto) => {
+        setFicheiroSelecionado(ficheiro);
+        setModalVisualizacaoAberto(true);
     };
 
     return (
         <div className="min-h-screen bg-[#FDFDFD] p-6">
-            <ModalAdicionarConteudo
+        <ModalAdicionarConteudo
                 estaAberto={isModalOpen}
-                aoFechar={() => setIsModalOpen(false)}
-                aoSubmeter={handleContentSubmit}
-                initialTab={initialTab}
+                aoFechar={() => {
+                    setIsModalOpen(false);
+                    setDadosParaEditar(null);
+                }}
+                aoSubmeter={aoSubmeterConteudo}
+                abaInicial={abaInicial}
+                dadosIniciais={dadosParaEditar}
             />
-            
+            <VisualizarContextoModal
+                estaAberto={modalVisualizacaoAberto}
+                aoFechar={() => setModalVisualizacaoAberto(false)}
+                dadosDoContexto={ficheiroSelecionado}
+                aoCriarNovaVersao={lidarComCriarNovaVersao}
+            />
+
+
             <div className="container mx-auto">
-                <div className="mb-4 flex items-center gap-4">
-                    <h1 className="text-6xl font-bold text-blue-700">GTI</h1>
-                    <h2 className="text-4xl ml-2.5 text-blue-600">GERÊNCIA DE TECNOLOGIA DA INFORMAÇÃO</h2>
+                <div className="flex justify-between items-center mb-4">
+                    <div className="flex items-center gap-4">
+                        <h1 className="text-6xl font-bold text-blue-700">GTI</h1>
+                        <h2 className="text-4xl ml-2.5 text-blue-600">GERÊNCIA DE TECNOLOGIA DA INFORMAÇÃO</h2>
+                    </div>
+                    <button
+                        onClick={() => setModo(modo === 'visualizacao' ? 'edicao' : 'visualizacao')}
+                        className="flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 text-white font-bold text-lg hover:bg-blue-700 transition-colors shadow-md"
+                    >
+                        {modo === 'visualizacao' ? <Edit className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        {modo === 'visualizacao' ? 'Modo de Edição' : 'Modo de Visualização'}
+                    </button>
                 </div>
 
-                {/* Seção do Dashboard */}
                 <div className="flex items-center gap-1 mb-7">
                     <h1 className="text-3xl mr-2 text-blue-600">Dashboard</h1>
-                    <AddDashboardButton onClick={() => openModal('dashboard')} />
+                    {modo === 'edicao' && <AddDashboardButton onClick={() => abrirModal('dashboard')} />}
                 </div>
 
-                {/* Seção de Indicadores */}
                 <div className="flex justify-center items-center gap-4 mb-16 flex-wrap">
-                    <AddIndicatorButton onClick={() => openModal('contexto')} />
+                    {modo === 'edicao' && <AddIndicatorButton onClick={() => abrirModal('indicador')} />}
                     {indicators.map((indicator, index) => (
                         <IndicatorCard key={index} {...indicator} />
                     ))}
                 </div>
-                
-                {/* Seção de Contexto */}
+
                 <FilterBar />
                 <FileGrid
                     files={sampleFiles}
-                    onFileClick={handleFileClick}
-                    onAddContextClick={() => openModal('contexto')}
+                    onFileClick={aoClicarArquivo}
+                    isEditing={modo === 'edicao'}
+                    onAddContextClick={() => abrirModal('contexto')}
                 />
 
-                {/* Gerencia Selector */}
+
+                {/* Secção de Seleção e Detalhes da Gerência */}
                 <div className="flex gap-4 mt-18 mb-8">
                     {mockGerencias.map(g => (
-                        <Button
-                            key={g.id}
-                            onClick={() => setSelectedGerenciaId(g.id)}
-                            className={`rounded-xl px-6 py-2 text-base font-bold ${selectedGerenciaId === g.id ? 'bg-blue-600 text-white' : 'bg-gray-200 text-blue-700'}`}
-                        >
+                        <Button key={g.id} onClick={() => setSelectedGerenciaId(g.id)} className={`rounded-xl px-6 py-2 text-base font-bold ${selectedGerenciaId === g.id ? 'bg-blue-600 text-white' : 'bg-gray-200 text-blue-700'}`}>
                             {g.sigla}
                         </Button>
                     ))}
                 </div>
 
-                {/* Gerencia Details */}
-                {gerenciaLoading ? (
-                    <div>Carregando...</div>
-                ) : gerenciaError ? (
-                    <div>{gerenciaError}</div>
-                ) : gerenciaDetails && (
-                    <>
-                        <div className="mb-2 flex flex-row items-start gap-8">
-                            <div className="flex-1">
-                                <div className="flex gap-4 justify-start items-center mb-4">
-                                    <h1 className="text-6xl font-extrabold text-blue-700">{gerenciaDetails.sigla}</h1>
-                                    <h3 className="text-4xl font-regular text-blue-600">{gerenciaDetails.nome}</h3>
+                {gerenciaLoading ? (<div>Carregando...</div>)
+                    : gerenciaError ? (<div>{gerenciaError}</div>)
+                        : gerenciaDetails && (
+                            <>
+                                <div className="mb-2 flex flex-row items-start gap-8">
+                                    <div className="flex-1">
+                                        <div className="flex gap-4 justify-start items-center mb-4">
+                                            <h1 className="text-6xl font-extrabold text-blue-700">{gerenciaDetails.sigla}</h1>
+                                            <h3 className="text-4xl font-regular text-blue-600">{gerenciaDetails.nome}</h3>
+                                        </div>
+                                        <span className="text-2xl font-medium ml-2 text-blue-600">SOBRE</span>
+                                        <div className="mb-8 mt-3 max-w-[90%]">
+                                            <p className="text-md ml-2 text-blue-600">{gerenciaDetails.descricao}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex-shrink-0 relative w-[300px] h-[340px] rounded-2xl bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200 shadow-md">
+                                        {gerenciaDetails.image ? (
+                                            <Image src={gerenciaDetails.image} alt={gerenciaDetails.nome} fill className="object-cover w-full h-full" />
+                                        ) : (
+                                            <span className="text-gray-400 text-lg">Sem imagem</span>
+                                        )}
+                                    </div>
                                 </div>
-                                <span className="text-2xl font-medium ml-2 text-blue-600">SOBRE</span>
-                                <div className="mb-8 mt-3 max-w-[90%]">
-                                    <p className="text-md ml-2 text-blue-600">{gerenciaDetails.descricao}</p>
-                                </div>
-                            </div>
-                            <div className="flex-shrink-0 w-[300px] h-[340px] rounded-2xl bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200 shadow-md">
-                                {gerenciaDetails.image ? (
-                                    <img src={gerenciaDetails.image} alt={gerenciaDetails.nome} className="object-cover w-full h-full" />
-                                ) : (
-                                    <span className="text-gray-400 text-lg">Sem imagem</span>
-                                )}
-                            </div>
-                        </div>
-                    </>
-                )}
+                            </>
+                        )}
             </div>
         </div>
     );

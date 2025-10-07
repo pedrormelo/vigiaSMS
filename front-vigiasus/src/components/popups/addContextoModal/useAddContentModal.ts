@@ -1,9 +1,14 @@
 import { useState, useEffect } from "react";
 import { saveAs } from "file-saver";
-import { AbaAtiva, AbaFonteDeDados, TipoGrafico, ConjuntoDeDadosGrafico, ModalAdicionarConteudoProps, NomeIcone } from "./types";
+import { AbaAtiva, AbaFonteDeDados, TipoGrafico, ConjuntoDeDadosGrafico, ModalAdicionarConteudoProps, NomeIcone, DetalhesContexto } from "./types";
 import { showWarningToast, showErrorToast, showInfoToast } from "@/components/ui/Toasts";
 
-export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, abaInicial = 'contexto' }: ModalAdicionarConteudoProps) => {
+// MUDANÇA: A interface de props agora aceita 'dadosIniciais' opcionalmente
+interface PropsDoHook extends ModalAdicionarConteudoProps {
+    dadosIniciais?: Partial<DetalhesContexto> | null;
+}
+
+export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, abaInicial = 'contexto', dadosIniciais }: PropsDoHook) => {
     // --- ESTADOS ---
     const [abaAtiva, setAbaAtiva] = useState<AbaAtiva>(abaInicial);
     const [abaFonteDeDados, setAbaFonteDeDados] = useState<AbaFonteDeDados>('manual');
@@ -41,24 +46,31 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
         setTituloGrafico(""); setDetalhesGrafico(""); setTipoGrafico("pie");
         setArquivoDeDados(null);
         setConjuntoDeDados({ colunas: ["Categoria", "Valor"], linhas: [["Exemplo de Categoria", 100]], });
-        
-        setTituloIndicador("");
-        setDescricaoIndicador("");
-        setValorAtualIndicador("");
-        setValorAlvoIndicador("");
-        setUnidadeIndicador("Nenhum");
-        setTextoComparativoIndicador("");
-        setCorIndicador("#3B82F6");
-        setIconeIndicador("Heart");
-
-        setAbaAtiva(abaInicial); 
-        setAbaFonteDeDados('manual');
+        setTituloIndicador(""); setDescricaoIndicador(""); setValorAtualIndicador("");
+        setValorAlvoIndicador(""); setUnidadeIndicador("Nenhum"); setTextoComparativoIndicador("");
+        setCorIndicador("#3B82F6"); setIconeIndicador("Heart");
+        setAbaAtiva(abaInicial); setAbaFonteDeDados('manual');
     };
 
+    // Efeito para reiniciar ou pré-preencher o formulário quando o modal abre
     useEffect(() => {
-        if (estaAberto) { setAbaAtiva(abaInicial); } 
-        else { setTimeout(reiniciarTodoOEstado, 200); }
-    }, [estaAberto, abaInicial]);
+        if (estaAberto) {
+            setAbaAtiva(abaInicial); // Garante que a aba correta está aberta
+
+            // Se receber 'dadosIniciais', pré-preenche o formulário
+            if (dadosIniciais) {
+                if (abaInicial === 'contexto') {
+                    setTituloContexto(dadosIniciais.title || "");
+                    // Assumindo que 'details' pode vir nos dados para pré-preencher
+                    // setDetalhesContexto(dadosIniciais.details || ""); 
+                }
+                // Adicionar lógica para pré-preencher outras abas se necessário
+            }
+        } else {
+            // Atraso para que o utilizador não veja os campos a serem limpos durante a animação de fecho
+            setTimeout(reiniciarTodoOEstado, 200);
+        }
+    }, [estaAberto, dadosIniciais, abaInicial]);
 
     const aoSubmeterFormulario = () => {
         if (abaAtiva === 'contexto') {
@@ -72,7 +84,15 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
     };
     
     const aoSelecionarArquivo = (arquivo: File | null) => {
-        if (arquivo) { setArquivoContexto(arquivo); setUrlContexto(""); }
+        if (!arquivo) return;
+        const LIMITE_TAMANHO_MB = 15;
+        const LIMITE_TAMANHO_BYTES = LIMITE_TAMANHO_MB * 1024 * 1024;
+        if (arquivo.size > LIMITE_TAMANHO_BYTES) {
+            showErrorToast("Arquivo muito grande", `O tamanho máximo permitido é de ${LIMITE_TAMANHO_MB} MB.`);
+            return;
+        }
+        setArquivoContexto(arquivo); 
+        setUrlContexto("");
     };
     
     const aoClicarBotaoUrl = () => {
@@ -184,7 +204,7 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
 
     const submissaoDesativada = (() => {
         switch(abaAtiva) {
-            case 'contexto': return !tituloContexto.trim();
+            case 'contexto': return !tituloContexto.trim() || (!arquivoContexto && !urlContexto.trim());
             case 'dashboard': return !tituloGrafico.trim();
             case 'indicador': return !tituloIndicador.trim() || !valorAtualIndicador.trim();
             default: return true;

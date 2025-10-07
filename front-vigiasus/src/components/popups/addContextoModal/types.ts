@@ -1,20 +1,12 @@
 // --- TIPOS E INTERFACES ---
 
 import { PieChart, BarChart3, LineChart } from "lucide-react";
+import type { FileType } from '@/components/contextosCard/contextoCard';
 
 export type AbaAtiva = "contexto" | "dashboard" | "indicador";
 export type AbaFonteDeDados = "manual" | "upload";
 export type TipoGrafico = "pie" | "chart" | "line";
-
-export type NomeIcone = 
-    | "Heart" 
-    | "Landmark" 
-    | "ClipboardList" 
-    | "Users"
-    | "TrendingUp"
-    | "DollarSign"
-    | "Building"
-    | "UserCheck";
+export type NomeIcone = "Heart" | "Landmark" | "ClipboardList" | "Users" | "TrendingUp" | "DollarSign" | "Building" | "UserCheck";
 
 export interface ConjuntoDeDadosGrafico {
   colunas: string[];
@@ -24,9 +16,19 @@ export interface ConjuntoDeDadosGrafico {
 export interface ModalAdicionarConteudoProps {
   estaAberto: boolean;
   aoFechar: () => void;
-  aoSubmeter: (dados: { tipo: AbaAtiva; payload: unknown }) => void;
+  aoSubmeter: (dados: { tipo: AbaAtiva; payload: any }) => void;
   abaInicial?: AbaAtiva;
 }
+
+export interface DetalhesContexto {
+    id: string;
+    title: string;
+    type: FileType;
+    insertedDate: string;
+    url?: string;
+    payload?: ConjuntoDeDadosGrafico; // Tipo corrigido de 'any' para 'ConjuntoDeDadosGrafico'
+}
+
 
 export interface SeletorTipoGraficoProps {
   tipoSelecionado: TipoGrafico;
@@ -67,7 +69,6 @@ export interface AbaIndicadorProps {
   iconeIndicador: NomeIcone;
   setIconeIndicador: (valor: NomeIcone) => void;
 }
-
 
 export const TIPOS_GRAFICOS = {
   pie: { Icon: PieChart, rotulo: "Pizza" },
