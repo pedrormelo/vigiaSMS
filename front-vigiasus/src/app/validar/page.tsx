@@ -79,14 +79,14 @@ export default function ValidacaoContextos() {
 
             <h1 className="text-3xl font-bold text-[#1745FF] mb-8">{pageTitle}</h1>
 
-      <div className="bg-gray-50 rounded-[2rem] p-6 shadow-sm">
-        <h2 className="text-xl font-semibold text-[#1745FF] mb-4">Solicitações em aberto</h2>
+      <div className="bg-gray-100/25 rounded-[2rem] p-6 shadow-sm">
+        <h1 className="text-2xl font-regular text-[#1745FF] mb-4">Solicitações em Aberto</h1>
 
         <ContextoTable data={data} columns={getColumns()} />
         
         <div className="flex justify-end mt-6">
           <Link href="/validar/historico">
-            <Button variant="outline" className="bg-white rounded-full shadow-sm">
+            <Button className="bg-white border border-gray-300 rounded-full shadow-sm">
               Histórico
               <RefreshCw className="ml-2 h-4 w-4" />
             </Button>

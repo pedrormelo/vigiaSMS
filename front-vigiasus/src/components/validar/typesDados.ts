@@ -9,7 +9,7 @@ export interface HistoricoEvento {
 }
 
 //Tipos para os diferentes formatos de documento
-export type DocType = "excel" | "pdf" | "doc" | "dashboard" | "money";
+export type DocType = "excel" | "pdf" | "doc" | "dashboard" | "resolucao";
 
 /** Estados possíveis do contexto */
 export enum StatusContexto {

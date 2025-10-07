@@ -2,6 +2,7 @@
 
 import { FileText, FileSpreadsheet, FileSearch, BarChart3, Link, Calendar1 , ChartNetwork  } from "lucide-react"
 import { cn } from "@/lib/utils"
+import Image from "next/image"
 
 export type FileType = "pdf" | "doc" | "dashboard" | "excel" | "resolucao" | "link"
 
@@ -16,12 +17,12 @@ interface FileItemProps {
 const fileTypeConfig = {
     pdf: {
         color: "bg-[#C53131] hover:bg-[#A02020]",
-        icon: FileText,
+        svg: "/icons/CONTEXTOS/PDF-1.svg",
         label: "PDF",
     },
     doc: {
         color: "bg-[#2651FF] hover:bg-[#1E40B8]",
-        icon: FileText,
+        svg: "/icons/CONTEXTOS/DOC-1.svg",
         label: "DOC",
     },
     dashboard: {
@@ -31,15 +32,15 @@ const fileTypeConfig = {
     },
     excel: {
         color: "bg-[#008C32] hover:bg-[#006B24]",
-        icon: FileSpreadsheet,
+        svg: "/icons/CONTEXTOS/PLA-1.svg",
         label: "Excel/XLSX/CSV",
     },
     resolucao: {
         color: "bg-[#E2712A] hover:bg-[#C95A2A]",
-        icon: FileText,
+        svg: "/icons/CONTEXTOS/RES-1.svg",
         label: "Arquivo de Resolução",
     },
-      leis: {
+    leis: {
         color: "bg-[#f27] hover:bg-[#f26]",
         icon: FileSearch,
         label: "Arquivo de Resolução",
@@ -53,7 +54,7 @@ const fileTypeConfig = {
 
 export function FileItem({ title, type, insertedDate, className, onClick }: FileItemProps) {
     const config = fileTypeConfig[type]
-    const IconComponent = config.icon
+    const IconComponent = (config as any).icon
 
     return (
         <div
@@ -65,7 +66,11 @@ export function FileItem({ title, type, insertedDate, className, onClick }: File
             onClick={onClick}
         >
             <div className="flex justify-center mb-4">
-                <IconComponent className="h-12 w-12 text-white" />
+                { (config as any).svg ? (
+                    <Image src={(config as any).svg} alt={config.label} width={40} height={40} />
+                ) : IconComponent ? (
+                    <IconComponent className="h-10 w-10 text-white" />
+                ) : null }
             </div>
 
             <div className="text-center mb-4">

@@ -10,13 +10,13 @@ interface Props {
 
 export default function ContextoTable({ data, columns, onUpdate }: Props) {
     return (
-        <div className="overflow-x-auto bg-white rounded-3xl border border-gray-200">
+        <div className="overflow-x-auto bg-white rounded-3xl border border-gray-300">
             <table className="w-full text-left">
                 {/* Cabeçalho da tabela */}
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="bg-blue-400">
                     <tr>
                         {columns.map((col) => (
-                            <th key={String(col.key)} className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            <th key={String(col.key)} className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
                                 {col.header}
                             </th>
                         ))}
