@@ -41,10 +41,10 @@ export function FileGrid({ files, onFileClick, onAddContextClick, className, isE
     }
 
     return (
-        <div className="flex justify-center items-center w-full h-full">
+        <div className="flex justify-center items-center mt-10 w-full h-full">
             <div className="rounded-[50px] flex flex-col items-center justify-center">
-                <ScrollArea height="880px" snap className="w-full">
-                    <div className="flex flex-col p-6 gap-4 snap-y snap-mandatory scroll-smooth">
+                <ScrollArea height="660px" snap className="w-full">
+                    <div className="flex flex-col p-6 gap-4 snap-y snap-mandatory">
                         {rows.map((row, rowIndex) => (
                             <div key={rowIndex} className="grid pt-2 grid-cols-1 md:grid-cols-4 gap-6 snap-start">
                                 {row.map((item) => item)}
