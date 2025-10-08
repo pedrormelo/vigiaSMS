@@ -78,7 +78,7 @@ export default function GerenciaPage() {
             >
                 <div className="flex justify-between items-center">
                     <div>
-                        <h1 className="text-4xl font-bold">{gerencia.nome}</h1>
+                        {/* <h1 className="text-4xl font-bold">{gerencia.nome}</h1> */}
                         <h2 className="text-3xl font-regular mt-1">{diretoria.nome}</h2>
                     </div>
                 </div>
