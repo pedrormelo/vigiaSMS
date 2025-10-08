@@ -70,7 +70,8 @@ const sampleFiles = [
         title: "Pagamento ESF e ESB - 2025",
         type: "pdf" as FileType,
         insertedDate: "2024-06-23",
-        url: "/docs/cms.pdf"
+        url: "/docs/cms.pdf",
+        description: "Este é o documento detalhado sobre os pagamentos..."
     },
     {
         id: "2",
@@ -81,6 +82,7 @@ const sampleFiles = [
     {
         id: "3",
         title: "Unidades com o PEC implementado",
+        chartType: "chart",
         type: "dashboard" as FileType,
         insertedDate: "2025-08-22",
         payload: dadosDashboardPEC,
@@ -248,9 +250,16 @@ export default function HomePage() {
       const lidarComCriarNovaVersao = (dadosDoContextoAntigo: DetalhesContexto) => {
         setDadosParaEditar(dadosDoContextoAntigo);
         setModalVisualizacaoAberto(false);
-        // Pequeno atraso para garantir que a transição entre modais seja suave
-        setTimeout(() => abrirModal('contexto'), 50);
+
+        // Decide qual aba abrir com base no tipo do contexto antigo
+        const tabParaAbrir: AbaAtiva = dadosDoContextoAntigo.type === 'dashboard' 
+            ? 'dashboard' 
+            : 'contexto';
+
+        // Atraso para garantir uma transição suave entre os modais
+        setTimeout(() => abrirModal(tabParaAbrir), 50);
     };
+
 
     const aoSubmeterConteudo = (dados: { tipo: AbaAtiva; payload: unknown }) => {
         console.log("Novo conteúdo recebido:", dados);

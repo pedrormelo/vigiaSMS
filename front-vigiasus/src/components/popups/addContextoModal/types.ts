@@ -8,6 +8,17 @@ export type AbaFonteDeDados = "manual" | "upload";
 export type TipoGrafico = "pie" | "chart" | "line";
 export type NomeIcone = "Heart" | "Landmark" | "ClipboardList" | "Users" | "TrendingUp" | "DollarSign" | "Building" | "UserCheck";
 
+export enum TipoVersao {
+  CORRECAO = "Correção de Informação Incorreta",
+  ATUALIZACAO_MENSAL = "Atualização Mensal",
+}
+
+// ✅ NOVO: Define a estrutura para as informações da versão
+export interface VersionInfo {
+  type: TipoVersao;
+  description: string;
+}
+
 export interface ConjuntoDeDadosGrafico {
   colunas: string[];
   linhas: (string | number)[][];

@@ -1,26 +1,28 @@
 import { useState, useEffect } from "react";
 import { saveAs } from "file-saver";
-import { AbaAtiva, AbaFonteDeDados, TipoGrafico, ConjuntoDeDadosGrafico, ModalAdicionarConteudoProps, NomeIcone, DetalhesContexto } from "./types";
+import { AbaAtiva, AbaFonteDeDados, TipoGrafico, ConjuntoDeDadosGrafico, ModalAdicionarConteudoProps, NomeIcone, DetalhesContexto, TipoVersao, VersionInfo } from "./types";
 import { showWarningToast, showErrorToast, showInfoToast } from "@/components/ui/Toasts";
 
-// MUDANÇA: A interface de props agora aceita 'dadosIniciais' opcionalmente
+// A interface de props agora aceita 'dadosIniciais' e uma 'description' opcional
 interface PropsDoHook extends ModalAdicionarConteudoProps {
-    dadosIniciais?: Partial<DetalhesContexto> | null;
+    dadosIniciais?: Partial<DetalhesContexto> & { description?: string; payload?: any; chartType?: TipoGrafico } | null;
 }
 
 export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, abaInicial = 'contexto', dadosIniciais }: PropsDoHook) => {
-    // --- ESTADOS ---
+    // --- ESTADOS GERAIS ---
     const [abaAtiva, setAbaAtiva] = useState<AbaAtiva>(abaInicial);
     const [abaFonteDeDados, setAbaFonteDeDados] = useState<AbaFonteDeDados>('manual');
     const [arrastandoSobre, setArrastandoSobre] = useState(false);
-    
-    // Estados do Contexto
+
+    // --- ESTADOS DO CONTEXTO ---
     const [tituloContexto, setTituloContexto] = useState("");
     const [detalhesContexto, setDetalhesContexto] = useState("");
     const [arquivoContexto, setArquivoContexto] = useState<File | null>(null);
     const [urlContexto, setUrlContexto] = useState("");
-    
-    // Estados do Dashboard
+    const [isNewVersionMode, setIsNewVersionMode] = useState(false);
+    const [selectedVersion, setSelectedVersion] = useState("");
+
+    // --- ESTADOS DO DASHBOARD ---
     const [tituloGrafico, setTituloGrafico] = useState("");
     const [detalhesGrafico, setDetalhesGrafico] = useState("");
     const [tipoGrafico, setTipoGrafico] = useState<TipoGrafico>("pie");
@@ -30,7 +32,7 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
         linhas: [["Exemplo de Categoria", 100]],
     });
 
-    // Estados do Indicador
+    // --- ESTADOS DO INDICADOR ---
     const [tituloIndicador, setTituloIndicador] = useState("");
     const [descricaoIndicador, setDescricaoIndicador] = useState("");
     const [valorAtualIndicador, setValorAtualIndicador] = useState("");
@@ -40,9 +42,14 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
     const [corIndicador, setCorIndicador] = useState("#3B82F6");
     const [iconeIndicador, setIconeIndicador] = useState<NomeIcone>("Heart");
 
+    const [previsualizacaoGerada, setPrevisualizacaoGerada] = useState(false);
+   const [tipoVersao, setTipoVersao] = useState<TipoVersao>(TipoVersao.CORRECAO);
+    const [descricaoVersao, setDescricaoVersao] = useState("");
 
+    // Função única para limpar todos os estados para o padrão inicial
     const reiniciarTodoOEstado = () => {
         setTituloContexto(""); setDetalhesContexto(""); setArquivoContexto(null); setUrlContexto("");
+        setIsNewVersionMode(false); setSelectedVersion("");
         setTituloGrafico(""); setDetalhesGrafico(""); setTipoGrafico("pie");
         setArquivoDeDados(null);
         setConjuntoDeDados({ colunas: ["Categoria", "Valor"], linhas: [["Exemplo de Categoria", 100]], });
@@ -50,45 +57,101 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
         setValorAlvoIndicador(""); setUnidadeIndicador("Nenhum"); setTextoComparativoIndicador("");
         setCorIndicador("#3B82F6"); setIconeIndicador("Heart");
         setAbaAtiva(abaInicial); setAbaFonteDeDados('manual');
+        setPrevisualizacaoGerada(false);
+        setTipoVersao(TipoVersao.CORRECAO);
+        setDescricaoVersao("");
     };
 
-    // Efeito para reiniciar ou pré-preencher o formulário quando o modal abre
+    // Efeito robusto para configurar o modal na abertura
     useEffect(() => {
         if (estaAberto) {
-            setAbaAtiva(abaInicial); // Garante que a aba correta está aberta
+            setAbaAtiva(abaInicial);
 
-            // Se receber 'dadosIniciais', pré-preenche o formulário
             if (dadosIniciais) {
+                setIsNewVersionMode(true);
+                const proximaVersao = 5;
+                setSelectedVersion(`v${proximaVersao}`);
+
                 if (abaInicial === 'contexto') {
                     setTituloContexto(dadosIniciais.title || "");
-                    // Assumindo que 'details' pode vir nos dados para pré-preencher
-                    // setDetalhesContexto(dadosIniciais.details || ""); 
+                    setDetalhesContexto(dadosIniciais.description || "");
+                    setArquivoContexto(null); setUrlContexto("");
+                } else if (abaInicial === 'dashboard') {
+                    setTituloGrafico(dadosIniciais.title || "");
+                    setDetalhesGrafico(dadosIniciais.description || "");
+                    setTipoGrafico(dadosIniciais.chartType || 'pie');
+                    // Pré-carrega os dados do gráfico anterior (payload)
+                    if (dadosIniciais.payload) {
+                        setConjuntoDeDados(dadosIniciais.payload);
+                        setPrevisualizacaoGerada(true);
+                    }
+
+                    setArquivoDeDados(null);
                 }
-                // Adicionar lógica para pré-preencher outras abas se necessário
+            } else {
+                reiniciarTodoOEstado();
             }
-        } else {
-            // Atraso para que o utilizador não veja os campos a serem limpos durante a animação de fecho
-            setTimeout(reiniciarTodoOEstado, 200);
         }
     }, [estaAberto, dadosIniciais, abaInicial]);
 
-    const aoSubmeterFormulario = () => {
-        if (abaAtiva === 'contexto') {
-            aoSubmeter({ type: 'contexto', payload: { title: tituloContexto, details: detalhesContexto, file: arquivoContexto, url: urlContexto } });
-        } else if (abaAtiva === 'dashboard') {
-            aoSubmeter({ type: 'dashboard', payload: { title: tituloGrafico, details: detalhesGrafico, type: tipoGrafico, dataFile: arquivoDeDados, dataset: conjuntoDeDados } });
-        } else if (abaAtiva === 'indicador') {
-            aoSubmeter({ type: 'indicador', payload: { titulo: tituloIndicador, descricao: descricaoIndicador, valorAtual: valorAtualIndicador, valorAlvo: valorAlvoIndicador, unidade: unidadeIndicador, textoComparativo: textoComparativoIndicador, cor: corIndicador, icone: iconeIndicador } });
-        }
-        aoFechar();
-    };
-    
+
+   const aoSubmeterFormulario = () => {
+    let payload;
+    switch (abaAtiva) {
+        case 'contexto':
+            payload = {
+                title: tituloContexto,
+                details: detalhesContexto,
+                file: arquivoContexto,
+                url: urlContexto,
+                // O objeto 'versionInfo' contém todos os detalhes da versão
+                versionInfo: isNewVersionMode ? {
+                    type: tipoVersao,
+                    description: descricaoVersao,
+                    versionNumber: selectedVersion,
+                } : null,
+            };
+            aoSubmeter({ type: 'contexto', payload });
+            break;
+
+        case 'dashboard':
+            payload = { 
+                title: tituloGrafico, 
+                details: detalhesGrafico, 
+                type: tipoGrafico, 
+                dataFile: arquivoDeDados, 
+                dataset: conjuntoDeDados,
+                versionInfo: isNewVersionMode ? {
+                    type: tipoVersao, // Assumindo que o tipo de versão se aplica a dashboards também
+                    description: descricaoVersao,
+                    versionNumber: selectedVersion,
+                } : null,
+            };
+            aoSubmeter({ type: 'dashboard', payload });
+            break;
+
+        case 'indicador':
+            payload = { 
+                titulo: tituloIndicador, 
+                descricao: descricaoIndicador, 
+                valorAtual: valorAtualIndicador, 
+                valorAlvo: valorAlvoIndicador, 
+                unidade: unidadeIndicador, 
+                textoComparativo: textoComparativoIndicador, 
+                cor: corIndicador, 
+                icone: iconeIndicador 
+            };
+            aoSubmeter({ type: 'indicador', payload });
+            break;
+    }
+    aoFechar();
+};
+
     const aoSelecionarArquivo = (arquivo: File | null) => {
         if (!arquivo) return;
         const LIMITE_TAMANHO_MB = 15;
-        const LIMITE_TAMANHO_BYTES = LIMITE_TAMANHO_MB * 1024 * 1024;
-        if (arquivo.size > LIMITE_TAMANHO_BYTES) {
-            showErrorToast("Arquivo muito grande", `O tamanho máximo permitido é de ${LIMITE_TAMANHO_MB} MB.`);
+        if (arquivo.size > LIMITE_TAMANHO_MB * 1024 * 1024) {
+            showErrorToast("Arquivo muito grande", `O tamanho máximo é de ${LIMITE_TAMANHO_MB} MB.`);
             return;
         }
         setArquivoContexto(arquivo); 
@@ -212,7 +275,7 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
     })();
     
     return {
-        // Gerais
+            // Gerais
         abaAtiva, setAbaAtiva,
         aoCancelar: aoFechar,
         aoSubmeter: aoSubmeterFormulario,
@@ -227,6 +290,15 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
         aoSelecionarArquivo, aoClicarBotaoUrl,
         aoEntrarNaArea, aoSairDaArea, aoArrastarSobre, aoSoltarArquivo,
         obterNomeFonteContexto, formatarTamanhoArquivo,
+        
+        // Props de Versão
+        isNewVersionMode,
+        selectedVersion,
+        tipoVersao,
+        setTipoVersao,
+        descricaoVersao,
+        setDescricaoVersao,
+        submissaoDesativada,
 
         // Aba de Dashboard
         abaFonteDeDados, setAbaFonteDeDados,
@@ -238,6 +310,8 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
         adicionarLinha, removerLinha, atualizarCelula,
         adicionarColuna, removerColuna, atualizarNomeColuna,
         baixarModelo,
+        previsualizacaoGerada, // <-- Estava em falta aqui
+        setPrevisualizacaoGerada, // <-- E aqui
 
         // Aba de Indicador
         tituloIndicador, setTituloIndicador,

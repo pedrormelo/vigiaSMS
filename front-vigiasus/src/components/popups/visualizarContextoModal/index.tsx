@@ -1,10 +1,11 @@
+// src/components/popups/visualizarContextoModal/index.tsx
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import {ArrowLeft , Info, History, Eye, FileText, Plus, LucideProps, Link as LinkIcon, Download } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Info, History, Download, FileText, Plus, LucideProps } from 'lucide-react';
 import type { FileType } from '@/components/contextosCard/contextoCard';
 import { PrevisualizacaoGrafico } from '@/components/popups/addContextoModal/previsualizacaoGrafico';
+import IconeDocumento from '@/components/validar/iconeDocumento';
 
 // --- TIPOS E INTERFACES ---
 interface DetalhesContexto {
@@ -14,15 +15,17 @@ interface DetalhesContexto {
     insertedDate: string;
     url?: string;
     payload?: any;
+    description?: string;
 }
 
 interface VisualizarContextoModalProps {
     estaAberto: boolean;
     aoFechar: () => void;
     dadosDoContexto: DetalhesContexto | null;
+    aoCriarNovaVersao?: (dados: DetalhesContexto) => void;
 }
 
-type TipoAba = 'conteudo' | 'detalhes' | 'versoes';
+type TipoAba = 'detalhes' | 'versoes';
 
 // --- DADOS DE EXEMPLO ---
 const versoesMock = [
@@ -31,79 +34,66 @@ const versoesMock = [
     { id: 1, nome: "Pagamento ESF e ESB - 2025 (v1).pdf", data: "2024-06-23", autor: "Carlos" },
 ];
 
-// --- SUB-COMPONENTES PARA AS ABAS ---
-
-const AbaConteudo = ({ dados }: { dados: DetalhesContexto }) => {
-    switch(dados.type) {
-        case 'link':
-            return (
-                <div className="animate-fade-in h-full flex flex-col items-center justify-center bg-gray-50 rounded-2xl p-6 text-center">
-                    <LinkIcon className="w-12 h-12 text-gray-400 mb-4" />
-                    <h3 className="text-xl font-semibold text-gray-700">Link Externo</h3>
-                    <p className="text-gray-500 my-2 break-all">{dados.url}</p>
-                    <a href={dados.url} target="_blank" rel="noopener noreferrer" className="mt-4 px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors">
-                        Abrir Link
-                    </a>
+// --- SUB-COMPONENTE: Aba Detalhes ---
+const AbaDetalhes = ({ dados, aoFazerDownload, chartContainerRef }: { dados: DetalhesContexto; aoFazerDownload: () => void; chartContainerRef: React.RefObject<HTMLDivElement>; }) => (
+    <div className="space-y-6 animate-fade-in p-4">
+        {/* Seção do Arquivo */}
+        <div className="bg-gray-50 rounded-2xl border border-gray-200 p-4 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+                <IconeDocumento type={dados.type} />
+                <div>
+                    <p className="font-semibold text-gray-800">{dados.title}</p>
+                    <p className="text-sm text-gray-500">
+                        {new Date(dados.insertedDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                    </p>
                 </div>
-            );
-        
-        case 'dashboard':
-            return (
-                <div className="animate-fade-in h-full w-full">
-                    {dados.payload ? (
-                        <PrevisualizacaoGrafico 
-                            tipoGrafico="chart"
-                            conjuntoDeDados={dados.payload}
-                            titulo={dados.title}
-                            previsualizacaoGerada={true}
-                        />
-                    ) : (
-                        <p>Dados do dashboard não disponíveis.</p>
-                    )}
-                </div>
-            );
-        
-        case 'pdf':
-            return (
-                 <div className="animate-fade-in h-full w-full bg-gray-100 rounded-lg overflow-hidden">
-                    <iframe src={dados.url} width="100%" height="100%" title={dados.title}>
-                        <p>O seu navegador não suporta a visualização de PDFs. <a href={dados.url} download>Clique aqui para baixar.</a></p>
-                    </iframe>
-                </div>
-            );
-
-        default: // Para excel, doc, etc.
-            return (
-                <div className="animate-fade-in h-full flex flex-col items-center justify-center bg-gray-50 rounded-2xl p-6 text-center">
-                    <FileText className="w-12 h-12 text-gray-400 mb-4" />
-                    <h3 className="text-xl font-semibold text-gray-700">Pré-visualização não disponível</h3>
-                    <p className="text-gray-500 my-2">A pré-visualização para ficheiros do tipo '{dados.type}' não é suportada diretamente.</p>
-                    <a href={dados.url} download className="mt-4 flex items-center gap-2 px-6 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors">
-                        <Download className="w-4 h-4" /> Baixar Ficheiro
-                    </a>
-                </div>
-            );
-    }
-};
-
-const AbaDetalhes = ({ dados }: { dados: DetalhesContexto }) => (
-    <div className="space-y-4 animate-fade-in p-4 bg-gray-50 rounded-lg border">
-        <h3 className="text-xl font-semibold text-gray-700">Informações do Contexto</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-gray-600">
-            <p><strong>ID do Documento:</strong> <span className="font-mono">{dados.id}</span></p>
-            <p><strong>Tipo de Ficheiro:</strong> {dados.type.toUpperCase()}</p>
-            <p><strong>Data de Inserção:</strong> {new Date(dados.insertedDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+            </div>
+            <button onClick={aoFazerDownload} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                <Download className="w-4 h-4" />
+                Baixar
+            </button>
         </div>
+
+        {/* Seção de Descrição */}
+        {dados.description && (
+             <div>
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">Descrição</h3>
+                <p className="text-gray-600 bg-gray-50 p-4 rounded-lg border">{dados.description}</p>
+            </div>
+        )}
+
+        {/* Seção de Pré-visualização para Gráficos */}
+        {dados.type === 'dashboard' && dados.payload && (
+            <div>
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">Pré-visualização do Gráfico</h3>
+                {/* O 'ref' agora está neste 'div' que envolve o gráfico */}
+                <div ref={chartContainerRef} className="h-[400px] w-full">
+                     <PrevisualizacaoGrafico
+                        tipoGrafico="chart"
+                        conjuntoDeDados={dados.payload}
+                        titulo={dados.title}
+                        previsualizacaoGerada={true}
+                    />
+                </div>
+            </div>
+        )}
     </div>
 );
 
-const AbaVersoes = () => (
-    <div className="animate-fade-in">
+
+// --- SUB-COMPONENTE: Aba Versões ---
+const AbaVersoes = ({ aoCriarNovaVersao, dados }: { aoCriarNovaVersao?: (dados: DetalhesContexto) => void; dados: DetalhesContexto; }) => (
+    <div className="animate-fade-in p-4">
         <div className="flex justify-between items-center mb-4">
             <h3 className="text-xl font-semibold text-gray-700">Histórico de Versões</h3>
-            <button className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 font-semibold rounded-lg hover:bg-blue-200 transition">
-                <Plus className="w-4 h-4" /> Criar Nova Versão
-            </button>
+            {aoCriarNovaVersao && (
+                <button
+                    onClick={() => aoCriarNovaVersao(dados)}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 font-semibold rounded-lg hover:bg-blue-200 transition"
+                >
+                    <Plus className="w-4 h-4" /> Criar Nova Versão
+                </button>
+            )}
         </div>
         <ul className="space-y-3">
             {versoesMock.map(versao => (
@@ -119,6 +109,7 @@ const AbaVersoes = () => (
     </div>
 );
 
+// --- SUB-COMPONENTE: Botão de Aba ---
 interface BotaoAbaProps {
     id: TipoAba;
     label: string;
@@ -135,47 +126,80 @@ const BotaoAba: React.FC<BotaoAbaProps> = ({ id, label, Icon, abaAtiva, setAbaAt
 
 
 // --- COMPONENTE PRINCIPAL DO MODAL ---
-
-export function VisualizarContextoModal({ estaAberto, aoFechar, dadosDoContexto }: VisualizarContextoModalProps) {
-    const [abaAtiva, setAbaAtiva] = useState<TipoAba>('conteudo');
+export function VisualizarContextoModal({ estaAberto, aoFechar, dadosDoContexto, aoCriarNovaVersao }: VisualizarContextoModalProps) {
+    const [abaAtiva, setAbaAtiva] = useState<TipoAba>('detalhes');
+    // Esta é a nossa nova ref, apontando para um simples elemento div
+    const chartContainerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (estaAberto) {
-            setAbaAtiva('conteudo');
+            setAbaAtiva('detalhes');
         }
-    }, [estaAberto, dadosDoContexto]);
+    }, [estaAberto]);
+    
+    const lidarComDownload = () => {
+        if (!dadosDoContexto) return;
+
+        // Se for um gráfico, usamos a nossa nova ref
+        if (dadosDoContexto.type === 'dashboard' && chartContainerRef.current) {
+            // Procuramos pelo elemento SVG dentro do nosso div de referência
+            const svg = chartContainerRef.current.querySelector('svg');
+            
+            if (svg) {
+                // Adiciona o namespace XML necessário para o SVG ser válido
+                svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+                const svgData = new XMLSerializer().serializeToString(svg);
+                const blob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${dadosDoContexto.title}.svg`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } else {
+                console.error("Elemento SVG do gráfico não encontrado.");
+                alert("Não foi possível baixar o gráfico. Tente novamente.");
+            }
+        } else if (dadosDoContexto.url) {
+            // Para outros arquivos, o método continua o mesmo
+            const a = document.createElement('a');
+            a.href = dadosDoContexto.url;
+            a.download = dadosDoContexto.title || 'arquivo';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+    };
 
     if (!estaAberto || !dadosDoContexto) return null;
 
     return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-[40px] w-full max-w-6xl h-[90vh] flex flex-col shadow-2xl text-white">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-[40px] w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl">
                 {/* Cabeçalho */}
-                <div className="bg-gradient-to-r from-[#0037C1] to-[#00BDFF] px-8 py-4 flex items-center justify-between rounded-t-[40px] flex-shrink-0 ">
+                <div className="px-8 py-4 flex items-center justify-between border-b border-gray-200 flex-shrink-0">
                     <div className="flex items-center gap-3 min-w-0">
-                        <FileText className="w-6 h-6 text-white flex-shrink-0" />
-                        <h2 className="text-2xl font-medium text-white truncate" title={dadosDoContexto.title}>{dadosDoContexto.title}</h2>
+                        <FileText className="w-6 h-6 text-blue-600 flex-shrink-0" />
+                        <h2 className="text-2xl font-semibold text-gray-800 truncate" title={dadosDoContexto.title}>{dadosDoContexto.title}</h2>
                     </div>
-                    <Button size="icon" variant="ghost" onClick={aoFechar} className="rounded-full hover:bg-white/20">
-              <ArrowLeft className="text-white" />
-            </Button>
+                    <button onClick={aoFechar} className="p-2 text-gray-500 hover:text-gray-800 cursor-pointer rounded-full hover:bg-gray-100 transition-colors">
+                        <X className="w-6 h-6" />
+                    </button>
                 </div>
 
-
-                {/* Corpo do Modal (Abas + Conteúdo) */}
+                {/* Corpo do Modal */}
                 <div className="flex-1 px-8 pt-8 pb-4 flex flex-col min-h-0">
-                    {/* Seletor de Abas (altura fixa) */}
                     <div className="flex space-x-2 bg-gray-100 rounded-2xl p-2 flex-shrink-0 mb-6">
-                        <BotaoAba id="conteudo" label="Conteúdo" Icon={Eye} abaAtiva={abaAtiva} setAbaAtiva={setAbaAtiva} />
                         <BotaoAba id="detalhes" label="Detalhes" Icon={Info} abaAtiva={abaAtiva} setAbaAtiva={setAbaAtiva} />
                         <BotaoAba id="versoes" label="Versões" Icon={History} abaAtiva={abaAtiva} setAbaAtiva={setAbaAtiva} />
                     </div>
 
-                    {/* Área de Conteúdo (ocupa o resto do espaço, com scroll se necessário) */}
-                    <div className="flex-1 min-h-0 overflow-y-auto">
-                        {abaAtiva === 'conteudo' && <AbaConteudo dados={dadosDoContexto} />}
-                        {abaAtiva === 'detalhes' && <AbaDetalhes dados={dadosDoContexto} />}
-                        {abaAtiva === 'versoes' && <AbaVersoes />}
+                    <div className="flex-1 min-h-0 overflow-y-auto py-2 pr-2">
+                        {abaAtiva === 'detalhes' && <AbaDetalhes dados={dadosDoContexto} aoFazerDownload={lidarComDownload} chartContainerRef={chartContainerRef} />}
+                        {abaAtiva === 'versoes' && <AbaVersoes aoCriarNovaVersao={aoCriarNovaVersao} dados={dadosDoContexto}/>}
                     </div>
                 </div>
             </div>

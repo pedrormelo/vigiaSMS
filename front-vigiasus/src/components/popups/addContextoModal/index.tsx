@@ -20,6 +20,7 @@ export function ModalAdicionarConteudo(props: ModalAdicionarConteudoProps) {
         abaAtiva, setAbaAtiva,
         aoCancelar, aoSubmeter,
         submissaoDesativada,
+        isNewVersionMode,
         ...retornosDoHook
     } = useModalAdicionarConteudo(props);
 
@@ -48,14 +49,16 @@ export function ModalAdicionarConteudo(props: ModalAdicionarConteudoProps) {
                     </div>
 
                     <div className="flex-1 p-8 flex flex-col min-h-0 overflow-y-auto">
-                        <div className="flex space-x-2 mb-8 bg-gray-100 rounded-2xl p-2 flex-shrink-0">
-                            <button onClick={() => setAbaAtiva("contexto")} className={`flex-1 py-3 px-6 rounded-2xl font-semibold transition-all flex justify-center items-center ${abaAtiva === "contexto" ? "bg-white text-blue-600 shadow-md" : "text-gray-600 hover:text-gray-800"}`}><FilePlus2 className="w-5 h-5 mr-2" /> Contexto</button>
-                            <button onClick={() => setAbaAtiva("dashboard")} className={`flex-1 py-3 px-6 rounded-2xl font-semibold transition-all flex justify-center items-center ${abaAtiva === "dashboard" ? "bg-white text-blue-600 shadow-md" : "text-gray-600 hover:text-gray-800"}`}><LayoutDashboard className="w-5 h-5 mr-2" /> Dashboard</button>
-                            <button onClick={() => setAbaAtiva("indicador")} className={`flex-1 py-3 px-6 rounded-2xl font-semibold transition-all flex justify-center items-center ${abaAtiva === "indicador" ? "bg-white text-blue-600 shadow-md" : "text-gray-600 hover:text-gray-800"}`}><Gauge className="w-5 h-5 mr-2" /> Indicador</button>
-                        </div>
+                       {!isNewVersionMode && (
+                            <div className="flex space-x-2 mb-8 bg-gray-100 rounded-2xl p-2 flex-shrink-0">
+                                <button onClick={() => setAbaAtiva("contexto")} className={`flex-1 py-3 px-6 rounded-2xl font-semibold transition-all flex justify-center items-center ${abaAtiva === "contexto" ? "bg-white text-blue-600 shadow-md" : "text-gray-600 hover:text-gray-800"}`}><FilePlus2 className="w-5 h-5 mr-2" /> Contexto</button>
+                                <button onClick={() => setAbaAtiva("dashboard")} className={`flex-1 py-3 px-6 rounded-2xl font-semibold transition-all flex justify-center items-center ${abaAtiva === "dashboard" ? "bg-white text-blue-600 shadow-md" : "text-gray-600 hover:text-gray-800"}`}><LayoutDashboard className="w-5 h-5 mr-2" /> Dashboard</button>
+                                <button onClick={() => setAbaAtiva("indicador")} className={`flex-1 py-3 px-6 rounded-2xl font-semibold transition-all flex justify-center items-center ${abaAtiva === "indicador" ? "bg-white text-blue-600 shadow-md" : "text-gray-600 hover:text-gray-800"}`}><Gauge className="w-5 h-5 mr-2" /> Indicador</button>
+                            </div>
+                        )}
                         
                         <div className="flex-1 min-h-0">
-                            {abaAtiva === 'contexto' && <AbaContexto {...retornosDoHook} />}
+                            {abaAtiva === 'contexto' && <AbaContexto {...retornosDoHook} isNewVersionMode={isNewVersionMode} />}
                             {abaAtiva === 'dashboard' && <AbaDashboard {...retornosDoHook} />}
                             {abaAtiva === 'indicador' && <AbaIndicador {...retornosDoHook} />}
                         </div>
