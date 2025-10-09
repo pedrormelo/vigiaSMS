@@ -64,109 +64,89 @@ const dadosDashboardPEC = {
     ],
 };
 
-const sampleFiles = [
+const sampleFiles: DetalhesContexto[] = [
     {
         id: "1",
         title: "Pagamento ESF e ESB - 2025",
-        type: "pdf" as FileType,
+        type: "pdf",
+        insertedDate: "2024-07-15",
+        url: "/docs/teste.pdf",
+        description: "Documento detalhado sobre os pagamentos das equipes de Saúde da Família (ESF) e Saúde Bucal (ESB) para o ano de 2025.",
+        solicitante: "Ana Lima",
+        autor: "Diretoria Financeira",
+        versoes: [
+            { id: 1, nome: "Pagamento ESF e ESB - 2025 (v1).pdf", data: "2024-06-23", autor: "Carlos" },
+            { id: 2, nome: "Pagamento ESF e ESB - 2025 (v2).pdf", data: "2024-07-10", autor: "Carlos" },
+            { id: 3, nome: "Pagamento ESF e ESB - 2025 (v3).pdf", data: "2024-07-15", autor: "Ana" },
+        ]
+    },
+    {
+        id: "3",
+        title: "Unidades com o PEC implementado",
+        type: "dashboard",
+        insertedDate: "2025-08-22",
+        payload: dadosDashboardPEC,
+        description: "Dashboard interativo que monitora o status de implementação do Prontuário Eletrônico do Cidadão (PEC) nas unidades de saúde.",
+        solicitante: "Carlos Andrade",
+        autor: "Gerência de TI",
+        chartType: "chart",
+        versoes: [
+            { id: 1, nome: "PEC Status - (v1)", data: "2025-08-22", autor: "Carlos Andrade" }
+        ]
+    },
+    {
+        id: "4",
+        title: "Servidores Ativos",
+        type: "excel",
         insertedDate: "2024-06-23",
-        url: "/docs/cms.pdf",
-        description: "Este é o documento detalhado sobre os pagamentos...",
-        solicitante: "Pedro"
+        url: "#",
+        description: "Planilha com a relação de todos os servidores ativos, incluindo comissionados, efetivos e contratos temporários.",
+        solicitante: "Mariana Costa",
+        autor: "Recursos Humanos",
+        versoes: [
+            { id: 1, nome: "Servidores Ativos (v1).xlsx", data: "2024-06-23", autor: "Mariana Costa" }
+        ]
+    },
+    {
+        id: "6",
+        title: "Link para Dashboard Externo",
+        type: "link",
+        insertedDate: "2024-06-23",
+        url: "https://www.google.com",
+        description: "Link de acesso ao painel de monitoramento de dados epidemiológicos mantido pelo Ministério da Saúde.",
+        solicitante: "João Silva",
+        autor: "Vigilância Epidemiológica",
+        versoes: [
+            { id: 1, nome: "Link MS Saúde (v1)", data: "2024-06-23", autor: "João Silva" }
+        ]
+    },
+    {
+        id: "5",
+        title: "Resolução 20/07/2025",
+        type: "resolucao",
+        insertedDate: "2024-07-20",
+        url: "#",
+        description: "Publicação oficial da resolução do Conselho Municipal de Saúde sobre as novas diretrizes de atendimento.",
+        solicitante: "Conselho Municipal",
+        autor: "Conselho Municipal",
+        versoes: [
+             { id: 1, nome: "Resolução 20/07/2025 (v1)", data: "2024-07-20", autor: "CMS" }
+        ]
     },
     {
         id: "2",
-        title: "Pagamento ESF e ESB - 2025",
-        type: "doc" as FileType,
-        insertedDate: "2024-06-23",
+        title: "Relatório de Atividades da Atenção Básica",
+        type: "doc",
+        insertedDate: "2024-05-15",
+        url: "/docs/pas.docx",
+        description: "Documento Word contendo o compilado das atividades realizadas pela Atenção Básica no último trimestre.",
+        solicitante: "Fernanda Lima",
+        autor: "Diretoria de Atenção Básica",
+        versoes: [
+            { id: 1, nome: "Relatório Atividades AB (v1).docx", data: "2024-05-15", autor: "Fernanda Lima" }
+        ]
     },
-    {
-        id: "3",
-        title: "Unidades com o PEC implementado",
-        chartType: "chart",
-        type: "dashboard" as FileType,
-        insertedDate: "2025-08-22",
-        payload: dadosDashboardPEC,
-    },
-    {
-        id: "4",
-        title: "Servidores ativos - comissionados, efetivos e contratos",
-        type: "excel" as FileType,
-        insertedDate: "2024-06-23",
-    },
-    {
-        id: "5",
-        title: "Resolução 20/07/2025",
-        type: "resolucao" as FileType,
-        insertedDate: "2024-06-23",
-    },
-    {
-        id: "6",
-        title: "Link para Dashboard Externo",
-        type: "link" as FileType,
-        insertedDate: "2024-06-23",
-    },
-    {
-        id: "3",
-        title: "Unidades com o PEC implementado",
-        type: "dashboard" as FileType,
-        insertedDate: "2025-08-22",
-    },
-    {
-        id: "4",
-        title: "Servidores ativos - comissionados, efetivos e contratos",
-        type: "excel" as FileType,
-        insertedDate: "2024-06-23",
-    },
-    {
-        id: "5",
-        title: "Resolução 20/07/2025",
-        type: "resolucao" as FileType,
-        insertedDate: "2024-06-23",
-    },
-    {
-        id: "6",
-        title: "Link para Dashboard Externo",
-        type: "link" as FileType,
-        insertedDate: "2024-06-23",
-        url: "https://www.google.com",
-    },
-    {
-        id: "3",
-        title: "Unidades com o PEC implementado",
-        type: "dashboard" as FileType,
-        insertedDate: "2025-08-22",
-    },
-    {
-        id: "4",
-        title: "Servidores ativos - comissionados, efetivos e contratos",
-        type: "excel" as FileType,
-        insertedDate: "2024-06-23",
-    },
-    {
-        id: "5",
-        title: "Resolução 20/07/2025",
-        type: "resolucao" as FileType,
-        insertedDate: "2024-06-23",
-    },
-    {
-        id: "6",
-        title: "Link para Dashboard Externo",
-        type: "link" as FileType,
-        insertedDate: "2024-06-23",
-    }, {
-        id: "3",
-        title: "Unidades com o PEC implementado",
-        type: "dashboard" as FileType,
-        insertedDate: "2025-08-22",
-    },
-    {
-        id: "4",
-        title: "Servidores ativos - comissionados, efetivos e contratos",
-        type: "excel" as FileType,
-        insertedDate: "2024-06-23",
-    },
-]
+];
 
 
 const mockGerencias = [

@@ -13,11 +13,19 @@ export enum TipoVersao {
   ATUALIZACAO_MENSAL = "Atualização Mensal",
 }
 
-// ✅ NOVO: Define a estrutura para as informações da versão
+// Define a estrutura para as informações da versão
 export interface VersionInfo {
   type: TipoVersao;
   description: string;
 }
+
+export interface Versao {
+  id: number;
+  nome: string;
+  data: string;
+  autor: string;
+}
+
 
 export interface ConjuntoDeDadosGrafico {
   colunas: string[];
@@ -37,7 +45,12 @@ export interface DetalhesContexto {
     type: FileType;
     insertedDate: string;
     url?: string;
-    payload?: ConjuntoDeDadosGrafico; // Tipo corrigido de 'any' para 'ConjuntoDeDadosGrafico'
+    payload?: any;
+    description?: string;
+    solicitante?: string;
+    autor?: string;
+    chartType?: TipoGrafico;
+    versoes?: Versao[]; 
 }
 
 

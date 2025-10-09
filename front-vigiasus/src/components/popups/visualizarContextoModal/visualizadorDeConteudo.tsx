@@ -4,24 +4,21 @@ import React from 'react';
 import { Link as LinkIcon, Download, FileText } from 'lucide-react';
 import { PrevisualizacaoGrafico } from '@/components/popups/addContextoModal/previsualizacaoGrafico';
 import type { FileType } from '@/components/contextosCard/contextoCard';
+import { VisualizadorPdf } from './visualizadorPDF';
+import { VisualizadorDocx } from './visualizadorDocx';
 
-/**
- * Propriedades para o componente VisualizadorDeConteudo.
- */
 interface VisualizadorProps {
     tipo: FileType;
     url?: string;
     titulo: string;
-    payload?: any; // Dados para dashboards (gráficos)
+    payload?: any;
+    aoAlternarTelaCheia?: () => void;
+    emTelaCheia?: boolean;
+    zoomLevel?: number;
 }
 
-/**
- * Componente responsável por renderizar a visualização de diferentes tipos de conteúdo
- * dentro de um modal.
- */
-export const VisualizadorDeConteudo: React.FC<VisualizadorProps> = ({ tipo, url, titulo, payload }) => {
+export const VisualizadorDeConteudo: React.FC<VisualizadorProps> = ({ tipo, url, titulo, payload, aoAlternarTelaCheia, emTelaCheia = false, zoomLevel = 1 }) => {
     
-    // Renderiza um componente de fallback para tipos de ficheiro sem pré-visualização.
     const renderFallback = () => (
         <div className="animate-fade-in h-full flex flex-col items-center justify-center bg-gray-50 rounded-2xl p-6 text-center">
             <FileText className="w-12 h-12 text-gray-400 mb-4" />
@@ -35,7 +32,6 @@ export const VisualizadorDeConteudo: React.FC<VisualizadorProps> = ({ tipo, url,
         </div>
     );
 
-    // Usa um switch para decidir qual visualização renderizar.
     switch(tipo) {
         case 'link':
             return (
@@ -54,19 +50,42 @@ export const VisualizadorDeConteudo: React.FC<VisualizadorProps> = ({ tipo, url,
                 <div className="animate-fade-in h-full w-full">
                     {payload ? (
                         <PrevisualizacaoGrafico 
-                            tipoGrafico="chart" // Pode ser dinâmico no futuro, se necessário
+                            tipoGrafico="chart"
                             conjuntoDeDados={payload}
                             titulo={titulo}
                             previsualizacaoGerada={true}
+                            aoAlternarTelaCheia={aoAlternarTelaCheia}
+                            emTelaCheia={emTelaCheia}
                         />
                     ) : (
                         <p>Dados do dashboard não disponíveis para visualização.</p>
                     )}
                 </div>
             );
-        
 
-        default: // Para 'excel', 'doc', 'resolucao', etc.
+        case 'pdf':
+            if (!url) return renderFallback();
+            return (
+                <VisualizadorPdf 
+                    url={url} 
+                    emTelaCheia={emTelaCheia} 
+                    aoAlternarTelaCheia={aoAlternarTelaCheia} 
+                    zoomLevel={zoomLevel}
+                />
+            );
+
+        case 'doc':
+            if (!url) return renderFallback();
+            return (
+                <VisualizadorDocx 
+                    url={url} 
+                    emTelaCheia={emTelaCheia}
+                    aoAlternarTelaCheia={aoAlternarTelaCheia}
+                    zoomLevel={zoomLevel}
+                />
+            );
+            
+        default:
             return renderFallback();
     }
 };
