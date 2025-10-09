@@ -71,7 +71,8 @@ const sampleFiles = [
         type: "pdf" as FileType,
         insertedDate: "2024-06-23",
         url: "/docs/cms.pdf",
-        description: "Este é o documento detalhado sobre os pagamentos..."
+        description: "Este é o documento detalhado sobre os pagamentos...",
+        solicitante: "Pedro"
     },
     {
         id: "2",

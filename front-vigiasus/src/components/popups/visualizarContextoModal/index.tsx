@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Info, History, Download, FileText, Plus, LucideProps } from 'lucide-react';
+import { X, Info, History, Download, FileText, Plus, User, FileType as FileIcon, Star, LucideProps } from 'lucide-react';
 import type { FileType } from '@/components/contextosCard/contextoCard';
 import { PrevisualizacaoGrafico } from '@/components/popups/addContextoModal/previsualizacaoGrafico';
 import IconeDocumento from '@/components/validar/iconeDocumento';
@@ -16,6 +16,8 @@ interface DetalhesContexto {
     url?: string;
     payload?: any;
     description?: string;
+    autor?: string; 
+    solicitante?: string;
 }
 
 interface VisualizarContextoModalProps {
@@ -35,50 +37,95 @@ const versoesMock = [
 ];
 
 // --- SUB-COMPONENTE: Aba Detalhes ---
-const AbaDetalhes = ({ dados, aoFazerDownload, chartContainerRef }: { dados: DetalhesContexto; aoFazerDownload: () => void; chartContainerRef: React.RefObject<HTMLDivElement>; }) => (
-    <div className="space-y-6 animate-fade-in p-4">
-        {/* Seção do Arquivo */}
-        <div className="bg-gray-50 rounded-2xl border border-gray-200 p-4 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-                <IconeDocumento type={dados.type} />
+const AbaDetalhes = ({ dados, aoFazerDownload, chartContainerRef }: { dados: DetalhesContexto; aoFazerDownload: () => void; chartContainerRef: React.RefObject<HTMLDivElement>; }) => {
+    
+    const versaoMaisRecente = versoesMock.length > 0
+        ? versoesMock.reduce((maisRecente, versaoAtual) => 
+            (versaoAtual.id > maisRecente.id) ? versaoAtual : maisRecente
+          )
+        : null;
+
+    return (
+        <div className="space-y-6 animate-fade-in p-4">
+            
+            {versaoMaisRecente && (
+                <div className="bg-green-50 border-l-4 border-green-500 text-green-900 p-4 rounded-r-lg shadow-sm">
+                    <div className="flex items-center gap-3">
+                        <Star className="w-6 h-6 text-green-600 flex-shrink-0" />
+                        <div>
+                            <p className="font-bold">Esta é a versão mais recente</p>
+                            <p className="text-sm text-green-800">
+                                {versaoMaisRecente.nome}, por {versaoMaisRecente.autor} em {new Date(versaoMaisRecente.data).toLocaleDateString('pt-BR')}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <div className="bg-gray-50 rounded-2xl border border-gray-200 p-4 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                    <IconeDocumento type={dados.type} />
+                    <div>
+                        <p className="font-semibold text-gray-800">{dados.title}</p>
+                        <p className="text-sm text-gray-500">
+                            {new Date(dados.insertedDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                        </p>
+                    </div>
+                </div>
+                <button onClick={aoFazerDownload} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                    <Download className="w-4 h-4" />
+                    Baixar
+                </button>
+            </div>
+
+            {dados.description && (
+                 <div className="bg-blue-50/50 border border-blue-200 rounded-2xl p-4 space-y-3">
+                    <div className="flex items-center gap-2">
+                        <Info className="w-5 h-5 text-blue-600" />
+                        <h3 className="text-lg font-semibold text-blue-800">Descrição</h3>
+                    </div>
+                    <p className="text-gray-700 leading-relaxed pl-1">{dados.description}</p>
+                </div>
+            )}
+
+            <div className="border-t border-gray-200 pt-4">
+                 <h3 className="text-lg font-semibold text-gray-700 mb-3">Detalhes Adicionais</h3>
+                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                    {dados.solicitante && (
+                        <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
+                            <User className="w-5 h-5 text-gray-500"/>
+                            <div>
+                                <p className="font-semibold text-gray-800">Enviado por</p>
+                                <p className="text-gray-600">{dados.solicitante}</p>
+                            </div>
+                        </div>
+                    )}
+                     <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
+                        <FileIcon className="w-5 h-5 text-gray-500"/>
+                        <div>
+                            <p className="font-semibold text-gray-800">Tipo de Arquivo</p>
+                            <p className="text-gray-600 uppercase">{dados.type}</p>
+                        </div>
+                    </div>
+                 </div>
+            </div>
+
+            {dados.type === 'dashboard' && dados.payload && (
                 <div>
-                    <p className="font-semibold text-gray-800">{dados.title}</p>
-                    <p className="text-sm text-gray-500">
-                        {new Date(dados.insertedDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
-                    </p>
+                    <h3 className="text-lg font-semibold text-gray-700 mb-2">Pré-visualização do Gráfico</h3>
+                    <div ref={chartContainerRef} className="h-[400px] w-full">
+                         <PrevisualizacaoGrafico
+                            tipoGrafico="chart"
+                            conjuntoDeDados={dados.payload}
+                            titulo={dados.title}
+                            previsualizacaoGerada={true}
+                        />
+                    </div>
                 </div>
-            </div>
-            <button onClick={aoFazerDownload} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors">
-                <Download className="w-4 h-4" />
-                Baixar
-            </button>
+            )}
         </div>
-
-        {/* Seção de Descrição */}
-        {dados.description && (
-             <div>
-                <h3 className="text-lg font-semibold text-gray-700 mb-2">Descrição</h3>
-                <p className="text-gray-600 bg-gray-50 p-4 rounded-lg border">{dados.description}</p>
-            </div>
-        )}
-
-        {/* Seção de Pré-visualização para Gráficos */}
-        {dados.type === 'dashboard' && dados.payload && (
-            <div>
-                <h3 className="text-lg font-semibold text-gray-700 mb-2">Pré-visualização do Gráfico</h3>
-                {/* O 'ref' agora está neste 'div' que envolve o gráfico */}
-                <div ref={chartContainerRef} className="h-[400px] w-full">
-                     <PrevisualizacaoGrafico
-                        tipoGrafico="chart"
-                        conjuntoDeDados={dados.payload}
-                        titulo={dados.title}
-                        previsualizacaoGerada={true}
-                    />
-                </div>
-            </div>
-        )}
-    </div>
-);
+    );
+};
 
 
 // --- SUB-COMPONENTE: Aba Versões ---
@@ -125,10 +172,9 @@ const BotaoAba: React.FC<BotaoAbaProps> = ({ id, label, Icon, abaAtiva, setAbaAt
 );
 
 
-// --- COMPONENTE PRINCIPAL DO MODAL ---
+// --- COMPONENTE PRINCIPAL DO MODAL (COM CABEÇALHO ATUALIZADO) ---
 export function VisualizarContextoModal({ estaAberto, aoFechar, dadosDoContexto, aoCriarNovaVersao }: VisualizarContextoModalProps) {
     const [abaAtiva, setAbaAtiva] = useState<TipoAba>('detalhes');
-    // Esta é a nossa nova ref, apontando para um simples elemento div
     const chartContainerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -140,13 +186,10 @@ export function VisualizarContextoModal({ estaAberto, aoFechar, dadosDoContexto,
     const lidarComDownload = () => {
         if (!dadosDoContexto) return;
 
-        // Se for um gráfico, usamos a nossa nova ref
         if (dadosDoContexto.type === 'dashboard' && chartContainerRef.current) {
-            // Procuramos pelo elemento SVG dentro do nosso div de referência
             const svg = chartContainerRef.current.querySelector('svg');
             
             if (svg) {
-                // Adiciona o namespace XML necessário para o SVG ser válido
                 svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
                 const svgData = new XMLSerializer().serializeToString(svg);
                 const blob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
@@ -164,7 +207,6 @@ export function VisualizarContextoModal({ estaAberto, aoFechar, dadosDoContexto,
                 alert("Não foi possível baixar o gráfico. Tente novamente.");
             }
         } else if (dadosDoContexto.url) {
-            // Para outros arquivos, o método continua o mesmo
             const a = document.createElement('a');
             a.href = dadosDoContexto.url;
             a.download = dadosDoContexto.title || 'arquivo';
@@ -179,13 +221,17 @@ export function VisualizarContextoModal({ estaAberto, aoFechar, dadosDoContexto,
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-[40px] w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl">
-                {/* Cabeçalho */}
-                <div className="px-8 py-4 flex items-center justify-between border-b border-gray-200 flex-shrink-0">
+                {/* CABEÇALHO ATUALIZADO */}
+                <div className="bg-gradient-to-r from-[#0037C1] to-[#00BDFF] px-8 py-4 flex items-center justify-between rounded-t-[40px] flex-shrink-0">
                     <div className="flex items-center gap-3 min-w-0">
-                        <FileText className="w-6 h-6 text-blue-600 flex-shrink-0" />
-                        <h2 className="text-2xl font-semibold text-gray-800 truncate" title={dadosDoContexto.title}>{dadosDoContexto.title}</h2>
+                        <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <FileText className="w-6 h-6 text-white" />
+                        </div>
+                        <h2 className="text-2xl font-regular text-white truncate" title={dadosDoContexto.title}>
+                            {dadosDoContexto.title}
+                        </h2>
                     </div>
-                    <button onClick={aoFechar} className="p-2 text-gray-500 hover:text-gray-800 cursor-pointer rounded-full hover:bg-gray-100 transition-colors">
+                    <button onClick={aoFechar} className="w-8 h-8 bg-white/20 text-white hover:bg-white/30 cursor-pointer rounded-full flex items-center justify-center transition-colors flex-shrink-0">
                         <X className="w-6 h-6" />
                     </button>
                 </div>

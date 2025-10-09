@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { saveAs } from "file-saver";
 import { AbaAtiva, AbaFonteDeDados, TipoGrafico, ConjuntoDeDadosGrafico, ModalAdicionarConteudoProps, NomeIcone, DetalhesContexto, TipoVersao, VersionInfo } from "./types";
-import { showWarningToast, showErrorToast, showInfoToast } from "@/components/ui/Toasts";
+import { showWarningToast, showErrorToast } from "@/components/ui/Toasts";
 
 // A interface de props agora aceita 'dadosIniciais' e uma 'description' opcional
 interface PropsDoHook extends ModalAdicionarConteudoProps {
@@ -42,8 +42,9 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
     const [corIndicador, setCorIndicador] = useState("#3B82F6");
     const [iconeIndicador, setIconeIndicador] = useState<NomeIcone>("Heart");
 
+    const [dadosIniciaisDoGrafico, setDadosIniciaisDoGrafico] = useState<ConjuntoDeDadosGrafico | null>(null);
     const [previsualizacaoGerada, setPrevisualizacaoGerada] = useState(false);
-   const [tipoVersao, setTipoVersao] = useState<TipoVersao>(TipoVersao.CORRECAO);
+    const [tipoVersao, setTipoVersao] = useState<TipoVersao>(TipoVersao.CORRECAO);
     const [descricaoVersao, setDescricaoVersao] = useState("");
 
     // Função única para limpar todos os estados para o padrão inicial
@@ -60,6 +61,7 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
         setPrevisualizacaoGerada(false);
         setTipoVersao(TipoVersao.CORRECAO);
         setDescricaoVersao("");
+        setDadosIniciaisDoGrafico(null)
     };
 
     // Efeito robusto para configurar o modal na abertura
@@ -174,29 +176,9 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
         }
     };
 
-    const aoMudarTipoGrafico = (t: TipoGrafico) => {
+      const aoMudarTipoGrafico = (t: TipoGrafico) => {
         setTipoGrafico(t);
-        const modelos = { pie: { colunas: ["Categoria", "Valor"], linhasPadrao: [["", ""]] }, chart: { colunas: ["Grupo", "Valor 1", "Valor 2"], linhasPadrao: [["", "", ""]] }, line: { colunas: ["Eixo X", "Linha A", "Linha B"], linhasPadrao: [["", "", ""]] }, };
-        setConjuntoDeDados(dadosAtuais => {
-            const { colunas: colunasAtuais, linhas: linhasAtuais } = dadosAtuais;
-            const alvo = modelos[t];
-            let novasColunas = alvo.colunas.slice(0, colunasAtuais.length);
-            for(let i=0; i<colunasAtuais.length; i++){ novasColunas[i] = colunasAtuais[i]; }
-            let novasLinhas = linhasAtuais.map(linha => linha.slice(0, alvo.colunas.length));
-            const diff = alvo.colunas.length - novasColunas.length;
-            if (diff > 0) {
-                for (let i = 0; i < diff; i++) {
-                    novasColunas.push(alvo.colunas[novasColunas.length]);
-                    novasLinhas.forEach(linha => linha.push(""));
-                }
-                showInfoToast("Tabela ajustada", "Novas colunas foram adicionadas para este tipo de gráfico.");
-            } else if (diff < 0) {
-                novasColunas = novasColunas.slice(0, alvo.colunas.length);
-                novasLinhas = novasLinhas.map(linha => linha.slice(0, alvo.colunas.length));
-                showInfoToast("Tabela ajustada", "Colunas extras foram removidas para este tipo de gráfico.");
-            }
-            return { colunas: novasColunas, linhas: novasLinhas.length > 0 ? novasLinhas : alvo.linhasPadrao };
-        });
+    
     };
 
     const adicionarLinha = () => {
@@ -265,12 +247,32 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
         return "Nenhum arquivo ou link selecionado";
     };
 
-    const submissaoDesativada = (() => {
+     const submissaoDesativada = (() => {
         switch(abaAtiva) {
-            case 'contexto': return !tituloContexto.trim() || (!arquivoContexto && !urlContexto.trim());
-            case 'dashboard': return !tituloGrafico.trim();
-            case 'indicador': return !tituloIndicador.trim() || !valorAtualIndicador.trim();
-            default: return true;
+            case 'contexto':
+                if (isNewVersionMode) {
+                    return !tipoVersao || !descricaoVersao.trim() || (!arquivoContexto && !urlContexto.trim());
+                }
+                return !tituloContexto.trim() || (!arquivoContexto && !urlContexto.trim());
+            
+            case 'dashboard':
+                if (isNewVersionMode) {
+                    // Compara a "foto" com o estado atual para ver se houve mudança manual
+                    const dadosManuaisForamModificados = abaFonteDeDados === 'manual' && JSON.stringify(conjuntoDeDados) !== JSON.stringify(dadosIniciaisDoGrafico);
+                    const novoArquivoFoiEnviado = abaFonteDeDados === 'upload' && !!arquivoDeDados;
+                    const dadosForamAlterados = dadosManuaisForamModificados || novoArquivoFoiEnviado;
+
+                    // Condição final: requer motivo, descrição E alteração nos dados
+                    return !tipoVersao || !descricaoVersao.trim() || !dadosForamAlterados;
+                }
+                // Lógica para modo normal não muda
+                return !tituloGrafico.trim();
+
+            case 'indicador': 
+                return !tituloIndicador.trim() || !valorAtualIndicador.trim();
+            
+            default: 
+                return true;
         }
     })();
     

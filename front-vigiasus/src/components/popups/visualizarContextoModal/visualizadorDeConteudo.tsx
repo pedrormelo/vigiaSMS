@@ -5,17 +5,37 @@ import { Link as LinkIcon, Download, FileText } from 'lucide-react';
 import { PrevisualizacaoGrafico } from '@/components/popups/addContextoModal/previsualizacaoGrafico';
 import type { FileType } from '@/components/contextosCard/contextoCard';
 
-// As propriedades que este componente precisa para funcionar
+/**
+ * Propriedades para o componente VisualizadorDeConteudo.
+ */
 interface VisualizadorProps {
     tipo: FileType;
     url?: string;
     titulo: string;
-    payload?: any; // Para dados de dashboards, etc.
+    payload?: any; // Dados para dashboards (gráficos)
 }
 
+/**
+ * Componente responsável por renderizar a visualização de diferentes tipos de conteúdo
+ * dentro de um modal.
+ */
 export const VisualizadorDeConteudo: React.FC<VisualizadorProps> = ({ tipo, url, titulo, payload }) => {
     
-    // Usamos um switch para decidir o que renderizar com base no tipo de ficheiro
+    // Renderiza um componente de fallback para tipos de ficheiro sem pré-visualização.
+    const renderFallback = () => (
+        <div className="animate-fade-in h-full flex flex-col items-center justify-center bg-gray-50 rounded-2xl p-6 text-center">
+            <FileText className="w-12 h-12 text-gray-400 mb-4" />
+            <h3 className="text-xl font-semibold text-gray-700">Pré-visualização não disponível</h3>
+            <p className="text-gray-500 my-2">A pré-visualização para ficheiros do tipo '{tipo}' não é suportada.</p>
+            {url && (
+                <a href={url} download className="mt-4 flex items-center gap-2 px-6 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors">
+                    <Download className="w-4 h-4" /> Baixar Ficheiro
+                </a>
+            )}
+        </div>
+    );
+
+    // Usa um switch para decidir qual visualização renderizar.
     switch(tipo) {
         case 'link':
             return (
@@ -34,36 +54,19 @@ export const VisualizadorDeConteudo: React.FC<VisualizadorProps> = ({ tipo, url,
                 <div className="animate-fade-in h-full w-full">
                     {payload ? (
                         <PrevisualizacaoGrafico 
-                            tipoGrafico="chart" // Pode ser dinâmico no futuro
+                            tipoGrafico="chart" // Pode ser dinâmico no futuro, se necessário
                             conjuntoDeDados={payload}
                             titulo={titulo}
                             previsualizacaoGerada={true}
                         />
                     ) : (
-                        <p>Dados do dashboard não disponíveis.</p>
+                        <p>Dados do dashboard não disponíveis para visualização.</p>
                     )}
                 </div>
             );
         
-        case 'pdf':
-            return (
-                 <div className="animate-fade-in h-full w-full bg-gray-100 rounded-lg overflow-hidden">
-                    <iframe src={url} width="100%" height="100%" title={titulo}>
-                        <p>O seu navegador não suporta a visualização de PDFs. <a href={url} download>Clique aqui para baixar.</a></p>
-                    </iframe>
-                </div>
-            );
 
-        default: // Para excel, doc, resolucao, etc.
-            return (
-                <div className="animate-fade-in h-full flex flex-col items-center justify-center bg-gray-50 rounded-2xl p-6 text-center">
-                    <FileText className="w-12 h-12 text-gray-400 mb-4" />
-                    <h3 className="text-xl font-semibold text-gray-700">Pré-visualização não disponível</h3>
-                    <p className="text-gray-500 my-2">A pré-visualização para ficheiros do tipo '{tipo}' não é suportada diretamente.</p>
-                    <a href={url} download className="mt-4 flex items-center gap-2 px-6 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors">
-                        <Download className="w-4 h-4" /> Baixar Ficheiro
-                    </a>
-                </div>
-            );
+        default: // Para 'excel', 'doc', 'resolucao', etc.
+            return renderFallback();
     }
 };
