@@ -1,3 +1,4 @@
+// src/components/popups/visualizarContextoModal/visualizadorPDF.tsx
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -6,20 +7,23 @@ import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 import { ChevronLeft, ChevronRight, Expand, FileText, AlertTriangle } from 'lucide-react';
 
-// SOLUÇÃO DEFINITIVA: Apontamos para o arquivo worker local na pasta /public
-pdfjs.GlobalWorkerOptions.workerSrc = `/pdf.worker.min.mjs`;
-
 interface VisualizadorPdfProps {
     url: string;
     emTelaCheia?: boolean;
     aoAlternarTelaCheia?: () => void;
+    zoomLevel?: number;
 }
 
-export const VisualizadorPdf: React.FC<VisualizadorPdfProps> = ({ url, emTelaCheia = false, aoAlternarTelaCheia }) => {
+export const VisualizadorPdf: React.FC<VisualizadorPdfProps> = ({ url, emTelaCheia = false, aoAlternarTelaCheia, zoomLevel = 1 }) => {
     const [numPaginas, setNumPaginas] = useState<number | null>(null);
     const [paginaAtual, setPaginaAtual] = useState(1);
     const [carregando, setCarregando] = useState(true);
     const [pdfError, setPdfError] = useState<string | null>(null);
+
+    // MELHORIA: Configura o worker dentro de um useEffect para garantir que só rode no cliente
+    useEffect(() => {
+        pdfjs.GlobalWorkerOptions.workerSrc = `/pdf.worker.min.mjs`;
+    }, []);
 
     function aoCarregarDocumento({ numPages }: { numPages: number }) {
         setNumPaginas(numPages);
@@ -58,7 +62,7 @@ export const VisualizadorPdf: React.FC<VisualizadorPdfProps> = ({ url, emTelaChe
 
     return (
         <div className="w-full h-full bg-gray-100 rounded-2xl flex flex-col relative group">
-            <div className="flex-1 overflow-auto flex justify-center items-center p-4">
+            <div className="flex-1 overflow-auto flex justify-center p-4">
                 <Document
                     file={url}
                     onLoadSuccess={aoCarregarDocumento}
@@ -69,7 +73,7 @@ export const VisualizadorPdf: React.FC<VisualizadorPdfProps> = ({ url, emTelaChe
                     {!pdfError && (
                         <Page 
                             pageNumber={paginaAtual} 
-                            width={emTelaCheia ? undefined : 450}
+                            scale={zoomLevel} 
                             renderTextLayer={!emTelaCheia}
                         />
                     )}

@@ -8,39 +8,16 @@ interface VisualizadorDocxProps {
     url: string;
     emTelaCheia?: boolean;
     aoAlternarTelaCheia?: () => void;
-    zoomLevel?: number; // Prop para controlar o zoom
+    zoomLevel?: number;
 }
 
-// Estilos para controlar o conteúdo renderizado e o zoom
 const EstilosDocx = () => (
     <style>{`
-        .docx-wrapper {
-            background-color: transparent !important;
-            padding: 0 !important;
-        }
-        /* Contêiner que aplica o zoom e sua origem */
-        .docx-viewer-container {
-            transform-origin: top center;
-            transition: transform 0.2s ease-out;
-        }
-        /* Estilos para o conteúdo renderizado dentro do contêiner */
-        .docx-viewer .docx-wrapper section.docx {
-            width: 100% !important;
-            padding: 2rem !important;
-            min-height: auto !important;
-            box-shadow: none !important;
-            margin-bottom: 0 !important;
-            background: white !important; /* Fundo branco para simular o papel */
-        }
-        .docx-viewer img, .docx-viewer svg {
-            max-width: 100% !important;
-            height: auto !important;
-        }
-        .docx-viewer table {
-            width: 100% !important;
-            table-layout: fixed;
-            word-wrap: break-word;
-        }
+        .docx-wrapper { background-color: transparent !important; padding: 0 !important; }
+        .docx-viewer-container { transform-origin: top center; transition: transform 0.2s ease-out; }
+        .docx-viewer .docx-wrapper section.docx { width: 100% !important; padding: 2rem !important; min-height: auto !important; box-shadow: none !important; margin-bottom: 0 !important; background: white !important; }
+        .docx-viewer img, .docx-viewer svg { max-width: 100% !important; height: auto !important; }
+        .docx-viewer table { width: 100% !important; table-layout: fixed; word-wrap: break-word; }
     `}</style>
 );
 
@@ -82,32 +59,34 @@ export const VisualizadorDocx: React.FC<VisualizadorDocxProps> = ({ url, emTelaC
     }, [url]);
 
     return (
-        // O contêiner principal agora controla a rolagem
-        <div className="w-full h-full bg-gray-100 rounded-2xl flex flex-col relative group border border-gray-200 overflow-auto">
+        // O contêiner principal agora NÃO tem mais overflow, apenas a posição relativa
+        <div className="w-full h-full bg-gray-50 rounded-2xl flex flex-col relative group border border-gray-200">
             <EstilosDocx />
-            {loading && (
-                <div className="flex items-center justify-center h-full text-gray-500">
-                    <Loader2 className="w-8 h-8 animate-spin mr-2" />
-                    Carregando documento...
-                </div>
-            )}
-            {error && (
-                <div className="flex flex-col items-center justify-center h-full text-red-600 p-4 text-center">
-                    <FileWarning className="w-12 h-12 mb-4" />
-                    <p className="font-semibold">{error}</p>
-                </div>
-            )}
             
-            {/* Contêiner para aplicar o zoom */}
-            <div 
-                style={{ transform: `scale(${zoomLevel})` }} 
-                className={`docx-viewer-container ${loading || error ? 'hidden' : ''}`}
-            >
-                {/* O 'div' que renderiza o conteúdo fica aqui dentro */}
-                <div ref={viewerRef} />
+            {/* Este novo contêiner interno é quem controla a rolagem */}
+            <div className="flex-1 overflow-auto">
+                {loading && (
+                    <div className="flex items-center justify-center h-full text-gray-500">
+                        <Loader2 className="w-8 h-8 animate-spin mr-2" />
+                        Carregando documento...
+                    </div>
+                )}
+                {error && (
+                    <div className="flex flex-col items-center justify-center h-full text-red-600 p-4 text-center">
+                        <FileWarning className="w-12 h-12 mb-4" />
+                        <p className="font-semibold">{error}</p>
+                    </div>
+                )}
+                
+                <div 
+                    style={{ transform: `scale(${zoomLevel})` }} 
+                    className={`docx-viewer-container ${loading || error ? 'hidden' : ''}`}
+                >
+                    <div ref={viewerRef} />
+                </div>
             </div>
             
-            {/* Botão de Tela Cheia */}
+            {/* O botão de tela cheia agora é relativo ao contêiner principal, que não rola */}
             {!emTelaCheia && aoAlternarTelaCheia && !loading && !error && (
                 <button
                     onClick={aoAlternarTelaCheia}

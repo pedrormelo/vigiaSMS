@@ -1,3 +1,4 @@
+// src/components/popups/addContextoModal/previsualizacaoGrafico.tsx
 "use client";
 
 import React from "react";
@@ -61,26 +62,43 @@ export const PrevisualizacaoGrafico: React.FC<PrevisualizacaoGraficoProps> = ({
         )
     ];
 
-    // MUDANÇA: Separamos as opções para aplicar a correção condicionalmente
+    const coresDoGrafico = 
+        conjuntoDeDados.cores && conjuntoDeDados.cores.length > 0
+            ? conjuntoDeDados.cores
+            : ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444'];
+
+    // CORREÇÃO: Gera um objeto de estilo mais explícito para 'slices' ou 'series'.
+    const getEstilosPorTipo = () => {
+        const estilos = coresDoGrafico.reduce((acc, color, index) => {
+            acc[index] = { color };
+            return acc;
+        }, {} as { [key: number]: { color: string } });
+
+        if (tipoGrafico === 'pie') {
+            return { slices: estilos };
+        }
+        // Para gráficos de linha e barras, as cores são aplicadas por série.
+        return { series: estilos };
+    };
+
     const opcoesBase = {
         title: titulo || "Pré-visualização do Gráfico",
         backgroundColor: "transparent",
         legend: { position: "bottom", textStyle: { fontSize: 12 } },
         chartArea: { width: "90%", height: "75%" },
-        colors: ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444'],
     };
 
-    // Adiciona a opção para forçar o eixo a começar em 0 para gráficos de barra e linha
     const opcoesEspecificas =
         (tipoGrafico === 'chart' || tipoGrafico === 'line')
-            ? {
-                vAxis: {
-                    viewWindow: { min: 0 }, // Força o eixo vertical a começar em 0
-                },
-              }
+            ? { vAxis: { viewWindow: { min: 0 } } }
             : {};
 
-    const opcoesFinais = { ...opcoesBase, ...opcoesEspecificas };
+    // CORREÇÃO: Combina as opções base, específicas e os novos estilos de cor.
+    const opcoesFinais = { 
+        ...opcoesBase, 
+        ...opcoesEspecificas,
+        ...getEstilosPorTipo() 
+    };
 
     const obterTipoGrafico = () => {
         switch (tipoGrafico) {
@@ -97,10 +115,10 @@ export const PrevisualizacaoGrafico: React.FC<PrevisualizacaoGraficoProps> = ({
                 key={JSON.stringify(conjuntoDeDados)}
                 chartType={obterTipoGrafico()}
                 data={dadosGrafico}
-                options={opcoesFinais} // Usamos as opções finais aqui
+                options={opcoesFinais}
                 width="100%"
                 height="100%"
-                loader={<div>Carregando gráfico...</div>}
+                loader={<div>A carregar gráfico...</div>}
             />
             {!emTelaCheia && aoAlternarTelaCheia && previsualizacaoGerada && possuiDadosValidos() && (
                 <button

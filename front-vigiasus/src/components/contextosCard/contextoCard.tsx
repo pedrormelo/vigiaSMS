@@ -1,9 +1,10 @@
+// src/components/contextosCard/contextoCard.tsx
 "use client"
 
-import { FileText, FileSpreadsheet, FileSearch, BarChart3, Link, Calendar1 , ChartNetwork  } from "lucide-react"
+import { FileText, FileSpreadsheet, FileSearch, BarChart3, Link, Calendar, ChartNetwork, Gauge } from "lucide-react" // 1. Importar Gauge
 import { cn } from "@/lib/utils"
 
-export type FileType = "pdf" | "doc" | "dashboard" | "excel" | "resolucao" | "link"
+export type FileType = "pdf" | "doc" | "dashboard" | "excel" | "resolucao" | "link" | "leis" | "indicador" // 2. Adicionar 'indicador'
 
 interface FileItemProps {
     title: string
@@ -28,6 +29,12 @@ const fileTypeConfig = {
         color: "bg-[#B329E9] hover:bg-purple-600",
         icon: ChartNetwork,
         label: "Gráfico de Dashboard",
+    },
+    // 3. Adicionar a configuração para o novo tipo 'indicador'
+    indicador: {
+        color: "bg-teal-500 hover:bg-teal-600",
+        icon: Gauge,
+        label: "Indicador",
     },
     excel: {
         color: "bg-[#008C32] hover:bg-[#006B24]",
@@ -73,7 +80,7 @@ export function FileItem({ title, type, insertedDate, className, onClick }: File
             </div>
 
             <div className="flex items-center justify-center gap-2 text-white/90">
-                <Calendar1 className="h-4 w-4" />
+                <Calendar className="h-4 w-4" />
                 <time dateTime={insertedDate} className="text-sm">
                     {new Date(insertedDate).toLocaleDateString("pt-BR")}
                 </time>

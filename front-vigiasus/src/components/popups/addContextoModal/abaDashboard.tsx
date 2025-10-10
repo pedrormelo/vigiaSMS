@@ -1,3 +1,4 @@
+// src/components/popups/addContextoModal/abaDashboard.tsx
 import React, { useState } from 'react';
 import { Database, Upload, BarChart3, Minimize } from 'lucide-react';
 import { useModalAdicionarConteudo } from '@/components/popups/addContextoModal/useAddContentModal'; 
@@ -7,18 +8,16 @@ import { SecaoUploadArquivo } from '@/components/popups/addContextoModal/secaoUp
 import { PrevisualizacaoGrafico } from '@/components/popups/addContextoModal/previsualizacaoGrafico'; 
 import { TipoVersao } from '@/components/popups/addContextoModal/types';
 
-// ✅ TIPO DE PROPS ATUALIZADO PARA INCLUIR TODAS AS PROPS DE VERSIONAMENTO
 type AbaDashboardProps = Pick<
     ReturnType<typeof useModalAdicionarConteudo>,
     | 'tituloGrafico' | 'setTituloGrafico'
     | 'detalhesGrafico' | 'setDetalhesGrafico'
     | 'tipoGrafico' | 'aoMudarTipo'
     | 'abaFonteDeDados' | 'setAbaFonteDeDados'
-    | 'conjuntoDeDados'
+    | 'conjuntoDeDados' | 'definirCoresDoGrafico' // <-- MUDANÇA AQUI
     | 'atualizarCelula' | 'adicionarLinha' | 'removerLinha' | 'adicionarColuna' | 'removerColuna' | 'atualizarNomeColuna'
     | 'arquivoDeDados' | 'setArquivoDeDados' | 'baixarModelo'
     | 'previsualizacaoGerada' | 'setPrevisualizacaoGerada'
-    // Props de versionamento agora incluídas
     | 'isNewVersionMode'
     | 'selectedVersion'
     | 'tipoVersao'
@@ -27,32 +26,45 @@ type AbaDashboardProps = Pick<
     | 'setDescricaoVersao'
 >;
 
+const coresPredefinidas = {
+    blue: '#3B82F6', green: '#22C55E', red: '#EF4444',
+    yellow: '#EAB308', purple: '#A855F7', orange: '#F97316',
+    teal: '#14B8A6', pink: '#EC4899',
+};
+
 export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
     const {
         tituloGrafico, setTituloGrafico, detalhesGrafico, setDetalhesGrafico,
         tipoGrafico, aoMudarTipo, abaFonteDeDados, setAbaFonteDeDados,
-        conjuntoDeDados, atualizarCelula, adicionarLinha, removerLinha, adicionarColuna, removerColuna, atualizarNomeColuna,
+        // CORREÇÃO: Recebe o conjunto de dados completo e a nova função.
+        conjuntoDeDados, definirCoresDoGrafico,
+        atualizarCelula, adicionarLinha, removerLinha, adicionarColuna, removerColuna, atualizarNomeColuna,
         arquivoDeDados, setArquivoDeDados, baixarModelo,
         previsualizacaoGerada, setPrevisualizacaoGerada,
-        // ✅ RECEBE AS PROPS DE VERSIONAMENTO
-        isNewVersionMode,
-        selectedVersion,
-        tipoVersao,
-        setTipoVersao,
-        descricaoVersao,
-        setDescricaoVersao
+        isNewVersionMode, selectedVersion, tipoVersao, setTipoVersao, descricaoVersao, setDescricaoVersao
     } = props;
 
     const [graficoEmTelaCheia, setGraficoEmTelaCheia] = useState(false);
+    const alternarTelaCheia = () => setGraficoEmTelaCheia(!graficoEmTelaCheia);
 
-    const alternarTelaCheia = () => {
-        setGraficoEmTelaCheia(!graficoEmTelaCheia);
+    // CORREÇÃO: A lógica agora usa as novas props.
+    const handleColorClick = (corHex: string) => {
+        const coresAtuais = conjuntoDeDados.cores || [];
+        const novasCores = coresAtuais.includes(corHex)
+            ? coresAtuais.filter(c => c !== corHex)
+            : [...coresAtuais, corHex];
+        
+        if (novasCores.length > 0) {
+            definirCoresDoGrafico(novasCores);
+        }
     };
+
+    const coresAtivas = conjuntoDeDados.cores || [];
 
     return (
         <>
             <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,_1fr)_minmax(0,_1.5fr)_minmax(0,_1fr)] gap-6 h-full animate-fade-in pb-4">
-                {/* Coluna 1: Título, Detalhes e Formulário de Versão */}
+                {/* Coluna 1: Título, Detalhes, Cores e Formulário de Versão */}
                 <div className="flex flex-col space-y-6 pt-1">
                     <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-x-6 gap-y-2 items-end">
                         <div>
@@ -88,13 +100,29 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                             value={detalhesGrafico}
                             onChange={(e) => setDetalhesGrafico(e.target.value)}
                             placeholder="Descreva o contexto, período, fonte dos dados, etc."
-                            rows={isNewVersionMode ? 2 : 4} // Reduz a altura no modo de nova versão
+                            rows={isNewVersionMode ? 2 : 4}
                             className="w-full px-4 py-3 border bg-gray-50/25 border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
                             disabled={isNewVersionMode}
                         />
                     </div>
                     
-                    {/* ✅ FORMULÁRIO DE NOVA VERSÃO PARA DASHBOARD */}
+                    {/* Seletor de Cores */}
+                    <div>
+                        <label className="block text-lg font-medium text-gray-700 mb-2">Paleta de Cores</label>
+                        <div className="flex items-center gap-2 flex-wrap p-2 bg-gray-100 rounded-lg">
+                            {Object.entries(coresPredefinidas).map(([nome, corHex]) => (
+                                <button
+                                    key={nome}
+                                    title={nome}
+                                    onClick={() => handleColorClick(corHex)}
+                                    className={`w-8 h-8 rounded-full transition-transform hover:scale-110 ${coresAtivas.includes(corHex) ? 'ring-2 ring-offset-2 ring-current' : ''}`}
+                                    style={{ backgroundColor: corHex, color: corHex }}
+                                    disabled={isNewVersionMode}
+                                ></button>
+                            ))}
+                        </div>
+                    </div>
+
                     {isNewVersionMode && (
                         <div className="space-y-4 rounded-2xl border border-blue-200 bg-blue-50/50 p-4">
                             <h3 className="text-lg font-semibold text-blue-800">Detalhes da Nova Versão</h3>
@@ -154,9 +182,10 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                 <div className="flex flex-col space-y-4 h-full pt-1">
                     <label className="block text-lg font-medium text-gray-700 flex-shrink-0">Pré-visualização</label>
                     <div className="flex-1 min-h-0">
+                        {/* CORREÇÃO: Passa o objeto `conjuntoDeDados` completo */}
                         <PrevisualizacaoGrafico 
                             tipoGrafico={tipoGrafico} 
-                            conjuntoDeDados={conjuntoDeDados} 
+                            conjuntoDeDados={conjuntoDeDados}
                             titulo={tituloGrafico} 
                             previsualizacaoGerada={previsualizacaoGerada} 
                             aoAlternarTelaCheia={alternarTelaCheia} 
@@ -177,6 +206,7 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                         <button onClick={alternarTelaCheia} className="p-3 bg-gray-100 rounded-full text-gray-700 hover:bg-gray-200 transition-colors" title="Fechar tela cheia"><Minimize className="w-6 h-6" /></button>
                     </div>
                     <div className="flex-1 min-h-0 w-full h-full">
+                        {/* CORREÇÃO: Passa o objeto `conjuntoDeDados` completo */}
                         <PrevisualizacaoGrafico 
                             tipoGrafico={tipoGrafico} 
                             conjuntoDeDados={conjuntoDeDados} 

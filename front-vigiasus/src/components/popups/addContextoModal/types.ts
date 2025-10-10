@@ -30,6 +30,7 @@ export interface Versao {
 export interface ConjuntoDeDadosGrafico {
   colunas: string[];
   linhas: (string | number)[][];
+  cores?: string[];
 }
 
 export interface ModalAdicionarConteudoProps {
@@ -51,6 +52,13 @@ export interface DetalhesContexto {
     autor?: string;
     chartType?: TipoGrafico;
     versoes?: Versao[]; 
+     valorAtual?: string;
+    valorAlvo?: string;
+    unidade?: string;
+    textoComparativo?: string;
+    cor?: string;
+    icone?: NomeIcone;
+    cores?: string[];
 }
 
 

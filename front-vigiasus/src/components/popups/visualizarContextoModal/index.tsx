@@ -1,9 +1,10 @@
+// src/components/popups/visualizarContextoModal/index.tsx
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Info, History, Download, FileText, Plus, User, ChevronDown, FileType as FileIcon, Star, LucideProps, Minimize, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import type { FileType } from '@/components/contextosCard/contextoCard';
-import type { DetalhesContexto } from '@/components/popups/addContextoModal/types'; 
+import type { DetalhesContexto } from '@/components/popups/addContextoModal/types';
 import { VisualizadorDeConteudo } from './visualizadorDeConteudo';
 import IconeDocumento from '@/components/validar/iconeDocumento';
 
@@ -12,12 +13,14 @@ interface VisualizarContextoModalProps {
     aoFechar: () => void;
     dadosDoContexto: DetalhesContexto | null;
     aoCriarNovaVersao?: (dados: DetalhesContexto) => void;
+    perfil: 'diretor' | 'gerente' | 'membro'; // Adicionado
 }
+
 
 type TipoAba = 'detalhes' | 'versoes';
 
 const AbaDetalhes = ({ dados, aoFazerDownload, aoAlternarTelaCheia }: { dados: DetalhesContexto; aoFazerDownload: () => void; aoAlternarTelaCheia: () => void; }) => {
-    
+
     const versoesDisponiveis = dados.versoes || [];
     const versaoMaisRecente = versoesDisponiveis.length > 0 ? versoesDisponiveis.reduce((a, b) => a.id > b.id ? a : b) : null;
     const [versaoSelecionadaId, setVersaoSelecionadaId] = useState<number | null>(versaoMaisRecente?.id || null);
@@ -77,9 +80,9 @@ const AbaDetalhes = ({ dados, aoFazerDownload, aoAlternarTelaCheia }: { dados: D
                      </div>
                 </div>
             </div>
-            
+
             <div className="h-full overflow-y-auto">
-                <VisualizadorDeConteudo 
+                <VisualizadorDeConteudo
                     tipo={dados.type}
                     url={dados.url}
                     titulo={dados.title}
@@ -91,13 +94,20 @@ const AbaDetalhes = ({ dados, aoFazerDownload, aoAlternarTelaCheia }: { dados: D
     );
 };
 
-const AbaVersoes = ({ aoCriarNovaVersao, dados }: { aoCriarNovaVersao?: (dados: DetalhesContexto) => void; dados: DetalhesContexto; }) => {
+const AbaVersoes = ({ aoCriarNovaVersao, dados, perfil }: { aoCriarNovaVersao?: (dados: DetalhesContexto) => void; dados: DetalhesContexto; perfil: VisualizarContextoModalProps['perfil']; }) => {
     const versoesDisponiveis = dados.versoes || [];
+   const temPermissaoParaVersionar = perfil === 'membro'; 
+
     return (
         <div className="animate-fade-in p-4 h-full overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-semibold text-gray-700">Histórico de Versões</h3>
-                {aoCriarNovaVersao && (<button onClick={() => aoCriarNovaVersao(dados)} className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 font-semibold rounded-lg hover:bg-blue-200 transition"><Plus className="w-4 h-4" /> Criar Nova Versão</button>)}
+                {/* 4. Renderização condicional do botão */}
+                {aoCriarNovaVersao && temPermissaoParaVersionar && (
+                    <button onClick={() => aoCriarNovaVersao(dados)} className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 font-semibold rounded-lg hover:bg-blue-200 transition">
+                        <Plus className="w-4 h-4" /> Criar Nova Versão
+                    </button>
+                )}
             </div>
             {versoesDisponiveis.length > 0 ? (
                 <ul className="space-y-3">
@@ -117,7 +127,7 @@ const BotaoAba = ({ id, label, Icon, abaAtiva, setAbaAtiva }: { id: TipoAba; lab
     <button onClick={() => setAbaAtiva(id)} className={`flex-1 py-3 px-6 rounded-2xl font-semibold transition-all flex justify-center items-center ${abaAtiva === id ? "bg-white text-blue-600 shadow-md" : "text-gray-600 hover:bg-gray-50"}`}><Icon className="w-5 h-5 mr-2" /> {label}</button>
 );
 
-export function VisualizarContextoModal({ estaAberto, aoFechar, dadosDoContexto, aoCriarNovaVersao }: VisualizarContextoModalProps) {
+export function VisualizarContextoModal({ estaAberto, aoFechar, dadosDoContexto, aoCriarNovaVersao, perfil }: VisualizarContextoModalProps) {
     const [abaAtiva, setAbaAtiva] = useState<TipoAba>('detalhes');
     const [emTelaCheia, setEmTelaCheia] = useState(false);
     const [zoomLevel, setZoomLevel] = useState(1);
@@ -134,8 +144,8 @@ export function VisualizarContextoModal({ estaAberto, aoFechar, dadosDoContexto,
             setZoomLevel(1);
         }
     }, [estaAberto]);
-    
-        const lidarComDownload = () => {
+
+    const lidarComDownload = () => {
         if (!dadosDoContexto) return;
         if (dadosDoContexto.type === 'dashboard' && chartContainerRef.current) {
             const svg = chartContainerRef.current.querySelector('svg');
@@ -164,7 +174,7 @@ export function VisualizarContextoModal({ estaAberto, aoFechar, dadosDoContexto,
             document.body.removeChild(a);
         }
     };
-    
+
     if (!estaAberto || !dadosDoContexto) return null;
 
     return (
@@ -186,7 +196,8 @@ export function VisualizarContextoModal({ estaAberto, aoFechar, dadosDoContexto,
 
                     <div className="h-[60vh]">
                         {abaAtiva === 'detalhes' && <AbaDetalhes dados={dadosDoContexto} aoFazerDownload={lidarComDownload} aoAlternarTelaCheia={alternarTelaCheia} />}
-                        {abaAtiva === 'versoes' && <AbaVersoes aoCriarNovaVersao={aoCriarNovaVersao} dados={dadosDoContexto}/>}
+                        {/* 5. Passar o perfil para a `AbaVersoes` */}
+                        {abaAtiva === 'versoes' && <AbaVersoes aoCriarNovaVersao={aoCriarNovaVersao} dados={dadosDoContexto} perfil={perfil} />}
                     </div>
                 </div>
             </div>
@@ -203,12 +214,12 @@ export function VisualizarContextoModal({ estaAberto, aoFechar, dadosDoContexto,
                         <button onClick={alternarTelaCheia} className="p-2 rounded-full hover:bg-white/20 transition-colors" title="Fechar Tela Cheia"><Minimize className="w-6 h-6" /></button>
                     </div>
                     <div className="flex-1 min-h-0 w-full h-full overflow-auto">
-                        <VisualizadorDeConteudo 
+                        <VisualizadorDeConteudo
                             tipo={dadosDoContexto.type}
                             titulo={dadosDoContexto.title}
                             payload={dadosDoContexto.payload}
                             url={dadosDoContexto.url}
-                            emTelaCheia={true} 
+                            emTelaCheia={true}
                             zoomLevel={zoomLevel}
                         />
                     </div>

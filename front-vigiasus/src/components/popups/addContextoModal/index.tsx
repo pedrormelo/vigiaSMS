@@ -21,7 +21,7 @@ export function ModalAdicionarConteudo(props: ModalAdicionarConteudoProps) {
         abaAtiva, setAbaAtiva,
         aoCancelar, aoSubmeter,
         submissaoDesativada,
-        isNewVersionMode, // A prop já estava aqui
+        isNewVersionMode,
         ...retornosDoHook
     } = useModalAdicionarConteudo(props);
 
@@ -33,7 +33,6 @@ export function ModalAdicionarConteudo(props: ModalAdicionarConteudoProps) {
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                 <div className={`bg-white rounded-[40px] w-full ${abaAtiva === 'dashboard' || abaAtiva === 'indicador' ? 'max-w-7xl' : 'max-w-4xl'} max-h-[90vh] flex flex-col shadow-2xl transition-all duration-300`}>
                     
-                    {/* ... (cabeçalho do modal sem alterações) ... */}
                     <div className="bg-gradient-to-r from-[#0037C1] to-[#00BDFF] px-8 py-4 flex items-center justify-between rounded-t-[40px] flex-shrink-0">
                         <div className="flex items-center gap-3">
                             <div className="w-8 h-8 bg-opacity-20 rounded-lg flex items-center justify-center">
@@ -61,23 +60,16 @@ export function ModalAdicionarConteudo(props: ModalAdicionarConteudoProps) {
                         
                         <div className="flex-1 min-h-0">
                             {abaAtiva === 'contexto' && <AbaContexto {...retornosDoHook} isNewVersionMode={isNewVersionMode} />}
-                            
-                            {/* AQUI ESTÁ A CORREÇÃO PRINCIPAL */}
-                            {/* Adicionamos a prop 'isNewVersionMode' que estava faltando */}
                             {abaAtiva === 'dashboard' && <AbaDashboard {...retornosDoHook} isNewVersionMode={isNewVersionMode} />}
-                            
                             {abaAtiva === 'indicador' && <AbaIndicador {...retornosDoHook} />}
                         </div>
                     </div>
 
-                    {/* ... (rodapé do modal sem alterações) ... */}
                     <div className="px-6 py-4 bg-gray-50 flex justify-end gap-4 flex-shrink-0 border-t border-gray-200 rounded-b-[40px]">
                         <button onClick={aoCancelar} className="px-8 py-3 bg-gray-200 text-gray-700 rounded-2xl hover:bg-gray-300 transition-colors font-bold">Cancelar</button>
                         <button onClick={aoSubmeter} disabled={submissaoDesativada} className="px-8 py-3 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-colors font-bold disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2">
                             <FileSymlink className="w-5 h-5" />
-                            {abaAtiva === 'contexto' && 'Salvar Contexto'}
-                            {abaAtiva === 'dashboard' && 'Salvar Dashboard'}
-                            {abaAtiva === 'indicador' && 'Salvar Indicador'}
+                            Submeter
                         </button>
                     </div>
                 </div>

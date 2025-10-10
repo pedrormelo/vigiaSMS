@@ -1,11 +1,23 @@
+// src/components/popups/visualizarContextoModal/visualizadorDeConteudo.tsx
 "use client";
 
 import React from 'react';
-import { Link as LinkIcon, Download, FileText } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import { Link as LinkIcon, Download, FileText, Loader2 } from 'lucide-react';
 import { PrevisualizacaoGrafico } from '@/components/popups/addContextoModal/previsualizacaoGrafico';
 import type { FileType } from '@/components/contextosCard/contextoCard';
-import { VisualizadorPdf } from './visualizadorPDF';
 import { VisualizadorDocx } from './visualizadorDocx';
+import { VisualizadorIndicador } from './visualizadorIndicador';
+
+const VisualizadorPdf = dynamic(() => import('./visualizadorPDF').then(mod => mod.VisualizadorPdf), {
+    ssr: false,
+    loading: () => (
+        <div className="flex flex-col items-center justify-center h-full text-gray-500">
+            <Loader2 className="w-8 h-8 animate-spin mr-2" />
+            <p>A carregar visualizador de PDF...</p>
+        </div>
+    ),
+});
 
 interface VisualizadorProps {
     tipo: FileType;
@@ -46,12 +58,16 @@ export const VisualizadorDeConteudo: React.FC<VisualizadorProps> = ({ tipo, url,
             );
         
         case 'dashboard':
+            // CORREÇÃO: A lógica agora procura o objeto `dataset` dentro do payload,
+            // que é a estrutura correta que estamos a salvar.
+            const dadosDoDashboard = payload?.dataset || payload;
+
             return (
                 <div className="animate-fade-in h-full w-full">
-                    {payload ? (
+                    {dadosDoDashboard ? (
                         <PrevisualizacaoGrafico 
-                            tipoGrafico="chart"
-                            conjuntoDeDados={payload}
+                            tipoGrafico={payload.type || 'chart'} // O tipo do gráfico está no payload principal
+                            conjuntoDeDados={dadosDoDashboard} // O dataset (com cores) é passado aqui
                             titulo={titulo}
                             previsualizacaoGerada={true}
                             aoAlternarTelaCheia={aoAlternarTelaCheia}
@@ -59,6 +75,29 @@ export const VisualizadorDeConteudo: React.FC<VisualizadorProps> = ({ tipo, url,
                         />
                     ) : (
                         <p>Dados do dashboard não disponíveis para visualização.</p>
+                    )}
+                </div>
+            );
+
+        case 'indicador':
+            return (
+                <div className="animate-fade-in h-full w-full flex items-center justify-center">
+                    {payload ? (
+                        <VisualizadorIndicador 
+                            title={titulo}
+                            description={payload.description}
+                            valorAtual={payload.valorAtual}
+                            unidade={payload.unidade}
+                            textoComparativo={payload.textoComparativo}
+                            cor={payload.cor}
+                            icone={payload.icone}
+                        />
+                    ) : (
+                         <div className="flex flex-col items-center justify-center p-6 text-center bg-yellow-50 border-2 border-dashed border-yellow-200 rounded-2xl h-full">
+                            <FileText className="w-12 h-12 text-yellow-500 mb-3" />
+                            <h3 className="font-semibold text-yellow-700">Dados do Indicador Indisponíveis</h3>
+                            <p className="text-sm text-yellow-600">Não foi possível carregar os detalhes para este indicador.</p>
+                        </div>
                     )}
                 </div>
             );
