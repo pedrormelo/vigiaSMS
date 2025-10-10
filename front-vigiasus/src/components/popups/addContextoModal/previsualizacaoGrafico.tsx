@@ -67,25 +67,16 @@ export const PrevisualizacaoGrafico: React.FC<PrevisualizacaoGraficoProps> = ({
             ? conjuntoDeDados.cores
             : ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444'];
 
-    // CORREÇÃO: Gera um objeto de estilo mais explícito para 'slices' ou 'series'.
+    // Get color styles - use colors array for all chart types
     const getEstilosPorTipo = () => {
-        const estilos = coresDoGrafico.reduce((acc, color, index) => {
-            acc[index] = { color };
-            return acc;
-        }, {} as { [key: number]: { color: string } });
-
-        if (tipoGrafico === 'pie') {
-            return { slices: estilos };
-        }
-        // Para gráficos de linha e barras, as cores são aplicadas por série.
-        return { series: estilos };
+        return { colors: coresDoGrafico };
     };
 
     const opcoesBase = {
         title: titulo || "Pré-visualização do Gráfico",
         backgroundColor: "transparent",
         legend: { position: "bottom", textStyle: { fontSize: 12 } },
-        chartArea: { width: "90%", height: "75%" },
+        chartArea: { width: "75%", height: "75%" },
     };
 
     const opcoesEspecificas =

@@ -47,19 +47,65 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
     const [graficoEmTelaCheia, setGraficoEmTelaCheia] = useState(false);
     const alternarTelaCheia = () => setGraficoEmTelaCheia(!graficoEmTelaCheia);
 
-    // CORREÇÃO: A lógica agora usa as novas props.
-    const handleColorClick = (corHex: string) => {
-        const coresAtuais = conjuntoDeDados.cores || [];
-        const novasCores = coresAtuais.includes(corHex)
-            ? coresAtuais.filter(c => c !== corHex)
-            : [...coresAtuais, corHex];
+    // Generate a color theme based on the selected base color
+    const generateColorTheme = (baseColor: string): string[] => {
+        // Convert hex to HSL for better color manipulation
+        const hexToHsl = (hex: string) => {
+            const r = parseInt(hex.slice(1, 3), 16) / 255;
+            const g = parseInt(hex.slice(3, 5), 16) / 255;
+            const b = parseInt(hex.slice(5, 7), 16) / 255;
+            
+            const max = Math.max(r, g, b);
+            const min = Math.min(r, g, b);
+            let h, s, l = (max + min) / 2;
+            
+            if (max === min) {
+                h = s = 0;
+            } else {
+                const d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                switch (max) {
+                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                    case g: h = (b - r) / d + 2; break;
+                    case b: h = (r - g) / d + 4; break;
+                    default: h = 0;
+                }
+                h /= 6;
+            }
+            
+            return [h * 360, s * 100, l * 100];
+        };
         
-        if (novasCores.length > 0) {
-            definirCoresDoGrafico(novasCores);
-        }
+        const hslToHex = (h: number, s: number, l: number) => {
+            l /= 100;
+            const a = s * Math.min(l, 1 - l) / 100;
+            const f = (n: number) => {
+                const k = (n + h / 30) % 12;
+                const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+                return Math.round(255 * color).toString(16).padStart(2, '0');
+            };
+            return `#${f(0)}${f(8)}${f(4)}`;
+        };
+        
+        const [h, s, l] = hexToHsl(baseColor);
+        
+        // Generate 5 colors: main color + 4 variations
+        return [
+            baseColor, // Original color
+            hslToHex((h + 60) % 360, Math.max(s - 20, 30), Math.min(l + 10, 80)), // Complementary
+            hslToHex((h + 120) % 360, Math.max(s - 10, 40), Math.max(l - 15, 25)), // Triadic 1
+            hslToHex((h + 180) % 360, Math.max(s - 15, 35), Math.min(l + 5, 75)), // Opposite
+            hslToHex((h + 240) % 360, Math.max(s - 5, 45), Math.max(l - 10, 30)), // Triadic 2
+        ];
     };
 
-    const coresAtivas = conjuntoDeDados.cores || [];
+    const handleColorClick = (corHex: string) => {
+        const novoTema = generateColorTheme(corHex);
+        definirCoresDoGrafico(novoTema);
+    };
+
+    // Get the first color as the active theme indicator
+    const corTemaAtiva = conjuntoDeDados.cores?.[0] || '#3B82F6';
 
     return (
         <>
@@ -106,20 +152,34 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                         />
                     </div>
                     
-                    {/* Seletor de Cores */}
+                    {/* Seletor de Tema de Cores */}
                     <div>
-                        <label className="block text-lg font-medium text-gray-700 mb-2">Paleta de Cores</label>
-                        <div className="flex items-center gap-2 flex-wrap p-2 bg-gray-100 rounded-lg">
-                            {Object.entries(coresPredefinidas).map(([nome, corHex]) => (
-                                <button
-                                    key={nome}
-                                    title={nome}
-                                    onClick={() => handleColorClick(corHex)}
-                                    className={`w-8 h-8 rounded-full transition-transform hover:scale-110 ${coresAtivas.includes(corHex) ? 'ring-2 ring-offset-2 ring-current' : ''}`}
-                                    style={{ backgroundColor: corHex, color: corHex }}
-                                    disabled={isNewVersionMode}
-                                ></button>
-                            ))}
+                        <label className="block text-lg font-medium text-gray-700 mb-2">Tema de Cores</label>
+                        <div className="space-y-2">
+                            <div className="flex items-center gap-2 flex-wrap p-2 bg-gray-100 rounded-lg">
+                                {Object.entries(coresPredefinidas).map(([nome, corHex]) => (
+                                    <button
+                                        key={nome}
+                                        title={`Tema ${nome}`}
+                                        onClick={() => handleColorClick(corHex)}
+                                        className={`w-8 h-8 rounded-full transition-transform hover:scale-110 ${corTemaAtiva === corHex ? 'ring-2 ring-offset-2 ring-gray-500' : ''}`}
+                                        style={{ backgroundColor: corHex }}
+                                        disabled={isNewVersionMode}
+                                    ></button>
+                                ))}
+                            </div>
+                            {/* Preview of current theme */}
+                            <div className="flex items-center gap-1 p-2 bg-white rounded-lg border">
+                                <span className="text-xs text-gray-600 mr-2">Tema atual:</span>
+                                {conjuntoDeDados.cores?.slice(0, 5).map((cor, index) => (
+                                    <div
+                                        key={index}
+                                        className="w-4 h-4 rounded-full border border-gray-200"
+                                        style={{ backgroundColor: cor }}
+                                        title={cor}
+                                    ></div>
+                                ))}
+                            </div>
                         </div>
                     </div>
 
