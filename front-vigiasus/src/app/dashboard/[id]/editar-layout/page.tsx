@@ -62,6 +62,15 @@ export default function DashboardBuilder() {
 
     const handleGraphSelect = (graph: GraphData) => {
         if (selectedPosition !== null) {
+            // Check if graph is already in the layout
+            const isGraphAlreadyInLayout = layoutGraphs.some((layoutGraph) => layoutGraph?.id === graph.id)
+            
+            if (isGraphAlreadyInLayout) {
+                alert("Este gráfico já está presente no layout. Cada gráfico pode ser adicionado apenas uma vez.")
+                setSelectedPosition(null)
+                return
+            }
+
             const newLayoutGraphs = [...layoutGraphs]
             newLayoutGraphs[selectedPosition] = { ...graph, isHighlighted: false }
             setLayoutGraphs(newLayoutGraphs)
@@ -74,7 +83,15 @@ export default function DashboardBuilder() {
     }
 
     const handleGraphRemove = (id: string) => {
-        setLayoutGraphs((prev) => prev.map((graph) => (graph?.id === id ? null : graph)))
+        setLayoutGraphs((prev) => {
+            // Find the first occurrence and remove only that one
+            const updatedGraphs = [...prev]
+            const indexToRemove = updatedGraphs.findIndex((graph) => graph?.id === id)
+            if (indexToRemove !== -1) {
+                updatedGraphs[indexToRemove] = null
+            }
+            return updatedGraphs
+        })
     }
 
     const handleHighlightToggle = (id: string, highlighted: boolean) => {
@@ -168,7 +185,7 @@ export default function DashboardBuilder() {
                     editMode={true}
                 />
 
-                <div className="flex justify-end">
+                <div className="flex justify-end pb-30">
                     <Button
                         onClick={handleSaveDashboard}
                         className="bg-blue-500 hover:bg-blue-600 text-white p-6 rounded-3xl text-md font-medium"
@@ -178,7 +195,7 @@ export default function DashboardBuilder() {
                     </Button>
                 </div>
 
-                <AvailableGraphsPanel graphs={mockGraphs} onGraphSelect={handleGraphSelect} />
+                {/* <AvailableGraphsPanel graphs={mockGraphs} onGraphSelect={handleGraphSelect} /> */}
 
                 <SelecioneGraficoModal
                     open={selectedPosition !== null}
