@@ -29,7 +29,7 @@ const iconMap: Record<NomeIcone, keyof typeof indicatorIcons> = {
     Landmark: "cruz",
     Users: "populacao",
     UserCheck: "medicos",
-    DollarSign: "atividade",
+    DollarSign: "ambulancia",
 };
 
 const PrevisualizacaoIndicador: React.FC<{
@@ -44,47 +44,47 @@ const PrevisualizacaoIndicador: React.FC<{
 }> = ({
     titulo, descricao, valorAtual, unidade, textoComparativo, cor, icone, changeType
 }) => {
-    
-    const corTextoComparativo = 
-        changeType === 'positive' ? 'text-green-600' :
-        changeType === 'negative' ? 'text-red-600' :
-        'text-gray-600';
 
-    const unidadesMonetarias = ["R$", "$", "€"];
-    const eUnidadeMonetaria = unidadesMonetarias.includes(unidade);
+        const corTextoComparativo =
+            changeType === 'positive' ? 'text-green-600' :
+                changeType === 'negative' ? 'text-red-600' :
+                    'text-gray-600';
 
-    const IconeDoCard = indicatorIcons[iconMap[icone]];
+        const unidadesMonetarias = ["R$", "$", "€"];
+        const eUnidadeMonetaria = unidadesMonetarias.includes(unidade);
 
-    return (
-        <div 
-            className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 flex flex-col justify-between min-h-[160px] transition-all"
-            style={{ borderLeft: `4px solid ${cor || '#cccccc'}` }}
-        >
-            <div className="flex justify-between items-start">
-                <p className="font-semibold text-gray-600 break-words pr-2">{titulo || "Título"}</p>
-                <div className="text-gray-400">{IconeDoCard}</div>
+        const IconeDoCard = indicatorIcons[iconMap[icone]];
+
+        return (
+            <div
+                className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 flex flex-col justify-between min-h-[160px] transition-all"
+                style={{ borderLeft: `4px solid ${cor || '#cccccc'}` }}
+            >
+                <div className="flex justify-between items-start">
+                    <p className="font-semibold text-gray-600 break-words pr-2">{titulo || "Título"}</p>
+                    <div className="text-gray-400">{IconeDoCard}</div>
+                </div>
+                <div className="my-2 text-center">
+                    <p className="text-4xl font-bold text-gray-900 leading-none">
+                        {eUnidadeMonetaria && <span className="text-2xl font-medium text-gray-500 mr-1">{unidade}</span>}
+                        {valorAtual || "0"}
+                        {!eUnidadeMonetaria && unidade !== "Nenhum" && <span className="text-2xl font-medium text-gray-500 ml-1">{unidade}</span>}
+                    </p>
+                    <p className="text-sm text-gray-500 mt-1 break-words">{descricao || "Descrição"}</p>
+                </div>
+                <div className="h-5">
+                    {textoComparativo && (
+                        <div className={`text-sm font-semibold flex items-center gap-1 ${corTextoComparativo}`}>
+                            {changeType === "positive" && <span>▲</span>}
+                            {changeType === "negative" && <span>▼</span>}
+                            {changeType === "neutral" && <span className="font-bold">—</span>}
+                            <span>{textoComparativo.replace(/^(\+|-|—)\s*/, "")}</span>
+                        </div>
+                    )}
+                </div>
             </div>
-            <div className="my-2 text-center">
-                <p className="text-4xl font-bold text-gray-900 leading-none">
-                    {eUnidadeMonetaria && <span className="text-2xl font-medium text-gray-500 mr-1">{unidade}</span>}
-                    {valorAtual || "0"}
-                    {!eUnidadeMonetaria && unidade !== "Nenhum" && <span className="text-2xl font-medium text-gray-500 ml-1">{unidade}</span>}
-                </p>
-                <p className="text-sm text-gray-500 mt-1 break-words">{descricao || "Descrição"}</p>
-            </div>
-            <div className="h-5">
-                {textoComparativo && (
-                    <div className={`text-sm font-semibold flex items-center gap-1 ${corTextoComparativo}`}>
-                        {changeType === "positive" && <span>▲</span>}
-                        {changeType === "negative" && <span>▼</span>}
-                        {changeType === "neutral" && <span className="font-bold">—</span>}
-                        <span>{textoComparativo.replace(/^(\+|-|—)\s*/, "")}</span>
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-};
+        );
+    };
 
 
 export const AbaIndicador: React.FC<AbaIndicadorProps> = (props) => {
@@ -111,8 +111,8 @@ export const AbaIndicador: React.FC<AbaIndicadorProps> = (props) => {
         return 'neutral';
     };
 
-    const unidades = ["Nenhum", "%", "R$", "$", "€", "Unidades", "Pessoas", "Atendimentos", "Dias", "Horas", "Minutos", "Mil","Milhares", "Milhões", "Bilhões"];
-    
+    const unidades = ["Nenhum", "%", "R$", "$", "€", "Unidades", "Pessoas", "Atendimentos", "Dias", "Horas", "Minutos", "Mil", "Milhares", "Milhões", "Bilhões"];
+
     // 1. Objeto de cores expandido, com os nomes e códigos hexadecimais correspondentes
     const coresPredefinidas = {
         blue: '#3B82F6',
@@ -129,9 +129,9 @@ export const AbaIndicador: React.FC<AbaIndicadorProps> = (props) => {
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,_1fr)_minmax(0,_1.5fr)_minmax(0,_1fr)] gap-6 h-full animate-fade-in pb-4">
-            
+
             <div className="flex flex-col space-y-6 pt-1">
-                 <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-x-6 gap-y-2 items-end">
+                <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-x-6 gap-y-2 items-end">
                     <div>
                         <label className="block text-lg font-medium text-gray-700 mb-2">
                             Título do Indicador
@@ -141,20 +141,20 @@ export const AbaIndicador: React.FC<AbaIndicadorProps> = (props) => {
                                 </span>
                             )}
                         </label>
-                        <input type="text" value={tituloIndicador} onChange={(e) => setTituloIndicador(e.target.value)} className={estiloInput} placeholder="Ex: População Atendida" disabled={isNewVersionMode}/>
+                        <input type="text" value={tituloIndicador} onChange={(e) => setTituloIndicador(e.target.value)} className={estiloInput} placeholder="Ex: População Atendida" disabled={isNewVersionMode} />
                     </div>
-                     {isNewVersionMode && (
+                    {isNewVersionMode && (
                         <div>
-                             <label className="block text-lg font-medium text-gray-700 mb-2">Versão</label>
-                             <div className="flex items-center justify-center w-full h-[50px] px-4 py-3 border border-transparent rounded-2xl bg-gray-100 text-gray-500 font-semibold">
-                                 {selectedVersion || "Calculando..."}
-                             </div>
+                            <label className="block text-lg font-medium text-gray-700 mb-2">Versão</label>
+                            <div className="flex items-center justify-center w-full h-[50px] px-4 py-3 border border-transparent rounded-2xl bg-gray-100 text-gray-500 font-semibold">
+                                {selectedVersion || "Calculando..."}
+                            </div>
                         </div>
                     )}
                 </div>
                 <div>
                     <label className="block text-lg font-medium text-gray-700 mb-2">Descrição</label>
-                    <input type="text" value={descricaoIndicador} onChange={(e) => setDescricaoIndicador(e.target.value)} className={estiloInput} placeholder="Ex: Atendimento da Rede Municipal" disabled={isNewVersionMode}/>
+                    <input type="text" value={descricaoIndicador} onChange={(e) => setDescricaoIndicador(e.target.value)} className={estiloInput} placeholder="Ex: Atendimento da Rede Municipal" disabled={isNewVersionMode} />
                 </div>
 
                 {isNewVersionMode && (
@@ -189,34 +189,34 @@ export const AbaIndicador: React.FC<AbaIndicadorProps> = (props) => {
                 <div className="grid grid-cols-2 gap-4">
                     <div>
                         <label className="block text-lg font-medium text-gray-700 mb-2">Valor Atual</label>
-                        <input type="text" value={valorAtualIndicador} onChange={(e) => setValorAtualIndicador(e.target.value)} className={estiloInput} placeholder="Ex: 68 milhões"/>
+                        <input type="text" value={valorAtualIndicador} onChange={(e) => setValorAtualIndicador(e.target.value)} className={estiloInput} placeholder="Ex: 68 milhões" />
                     </div>
-                     <div>
+                    <div>
                         <label className="block text-lg font-medium text-gray-700 mb-2">Unidade</label>
                         <select value={unidadeIndicador} onChange={(e) => setUnidadeIndicador(e.target.value)} className={estiloInput}>
                             {unidades.map(u => <option key={u} value={u}>{u}</option>)}
                         </select>
                     </div>
                 </div>
-                 <div>
+                <div>
                     <label className="block text-lg font-medium text-gray-700 mb-2">Valor Alvo (Meta)</label>
-                    <input type="text" value={valorAlvoIndicador} onChange={(e) => setValorAlvoIndicador(e.target.value)} className={estiloInput} placeholder="Opcional"/>
+                    <input type="text" value={valorAlvoIndicador} onChange={(e) => setValorAlvoIndicador(e.target.value)} className={estiloInput} placeholder="Opcional" />
                 </div>
-                 <div>
+                <div>
                     <label className="block text-lg font-medium text-gray-700 mb-2">Texto Comparativo</label>
-                    <input type="text" value={textoComparativoIndicador} onChange={(e) => setTextoComparativoIndicador(e.target.value)} placeholder="Use '+', '-' ou '—' no início" className={estiloInput}/>
+                    <input type="text" value={textoComparativoIndicador} onChange={(e) => setTextoComparativoIndicador(e.target.value)} placeholder="Use '+', '-' ou '—' no início" className={estiloInput} />
                 </div>
-                 <div>
+                <div>
                     <label className="block text-lg font-medium text-gray-700 mb-2">Ícone e Cor</label>
                     <div className="flex items-center gap-6">
                         <div className="flex-1">
                             <label className="block text-sm font-medium text-gray-500 mb-2">Ícone</label>
-                            <div className="grid grid-cols-4 gap-2 p-2 bg-gray-100 rounded-lg">
+                            <div className="grid grid-cols-4 gap-2 p-2 rounded-lg">
                                 {(Object.keys(iconMap) as NomeIcone[]).map(nomeIcone => (
                                     <button
                                         key={nomeIcone}
                                         onClick={() => setIconeIndicador(nomeIcone)}
-                                        className={`flex items-center justify-center p-2 rounded-lg transition-colors ${iconeIndicador === nomeIcone ? 'bg-blue-500 text-white' : 'bg-white text-gray-500 hover:bg-gray-200'}`}
+                                        className={`flex items-center justify-center p-2 rounded-2xl transition-colors ${iconeIndicador === nomeIcone ? 'bg-blue-500 text-white' : 'bg-white text-gray-500 hover:text-blue-500 hover:bg-gray-200'}`}
                                         disabled={isNewVersionMode}
                                         title={nomeIcone}
                                     >
@@ -240,7 +240,7 @@ export const AbaIndicador: React.FC<AbaIndicadorProps> = (props) => {
                                     ></button>
                                 ))}
                                 <div className="relative w-8 h-8">
-                                    <input type="color" value={corIndicador} onChange={(e) => setCorIndicador(e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" title="Escolher cor personalizada" disabled={isNewVersionMode}/>
+                                    <input type="color" value={corIndicador} onChange={(e) => setCorIndicador(e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" title="Escolher cor personalizada" disabled={isNewVersionMode} />
                                     <div className="w-8 h-8 rounded-full border-2 border-dashed pointer-events-none" style={{ borderColor: corIndicador }}></div>
                                 </div>
                             </div>
@@ -250,7 +250,7 @@ export const AbaIndicador: React.FC<AbaIndicadorProps> = (props) => {
             </div>
 
             <div className="flex flex-col h-full pt-1">
-                 <h3 className="text-lg font-medium text-gray-700 mb-2">Pré-visualização</h3>
+                <h3 className="text-lg font-medium text-gray-700 mb-2">Pré-visualização</h3>
                 <div className="w-full max-w-xs mx-auto mt-4">
                     <PrevisualizacaoIndicador
                         titulo={tituloIndicador}

@@ -8,6 +8,7 @@ import { Hospital,
     HeartHandshake,
     ClipboardPlus,
     Stethoscope,
+    Ambulance,
 } from 'lucide-react';
 
 // 1. Adicionar 'export' aqui
@@ -32,7 +33,10 @@ export const icons = {
     ),
     medicos: (
         <Stethoscope className="w-4 h-4" />
-    )
+    ),
+    ambulancia: (
+        <Ambulance className="w-4 h-4" />
+    ),
 }
 
 // E também aqui, para consistência, caso precise no futuro.
