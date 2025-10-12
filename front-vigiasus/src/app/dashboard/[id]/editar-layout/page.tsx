@@ -57,23 +57,40 @@ const mockGraphs: GraphData[] = [
 
 export default function DashboardBuilder() {
     const [selectedLayout, setSelectedLayout] = useState<LayoutType>("asymmetric")
-    const [layoutGraphs, setLayoutGraphs] = useState<(GraphData | null)[]>([])
+    // Keep layoutGraphs as a fixed-length array matching the layout slots to avoid sparse arrays
+    const getMaxGraphsForLayout = (layout: LayoutType) => {
+        switch (layout) {
+            case "asymmetric":
+                return 3
+            case "grid":
+                return 4
+            case "sideBySide":
+                return 2
+            default:
+                return 4
+        }
+    }
+
+    const [layoutGraphs, setLayoutGraphs] = useState<(GraphData | null)[]>(() => Array(getMaxGraphsForLayout(selectedLayout)).fill(null))
     const [selectedPosition, setSelectedPosition] = useState<number | null>(null)
 
     const handleGraphSelect = (graph: GraphData) => {
         if (selectedPosition !== null) {
             // Check if graph is already in the layout
             const isGraphAlreadyInLayout = layoutGraphs.some((layoutGraph) => layoutGraph?.id === graph.id)
-            
+
             if (isGraphAlreadyInLayout) {
                 alert("Este gráfico já está presente no layout. Cada gráfico pode ser adicionado apenas uma vez.")
                 setSelectedPosition(null)
                 return
             }
-
+            // Ensure the array length matches current layout slots
+            const max = getMaxGraphsForLayout(selectedLayout)
             const newLayoutGraphs = [...layoutGraphs]
+            while (newLayoutGraphs.length < max) newLayoutGraphs.push(null)
+
             newLayoutGraphs[selectedPosition] = { ...graph, isHighlighted: false }
-            setLayoutGraphs(newLayoutGraphs)
+            setLayoutGraphs(newLayoutGraphs.slice(0, max))
             setSelectedPosition(null)
         }
     }
@@ -84,7 +101,7 @@ export default function DashboardBuilder() {
 
     const handleGraphRemove = (id: string) => {
         setLayoutGraphs((prev) => {
-            // Find the first occurrence and remove only that one
+            // Find the first occurrence and remove only that one, keep array length unchanged
             const updatedGraphs = [...prev]
             const indexToRemove = updatedGraphs.findIndex((graph) => graph?.id === id)
             if (indexToRemove !== -1) {
@@ -108,7 +125,8 @@ export default function DashboardBuilder() {
 
     const handleLayoutChange = (layout: LayoutType) => {
         setSelectedLayout(layout)
-        setLayoutGraphs([]) // Reset graphs when layout changes
+        // Reset graphs to a fixed-length array matching the new layout
+        setLayoutGraphs(Array(getMaxGraphsForLayout(layout)).fill(null))
         setSelectedPosition(null)
     }
 
