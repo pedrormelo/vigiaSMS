@@ -2,7 +2,8 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Info, History, Download, FileText, Plus, User, ChevronDown, FileType as FileIcon, Star, LucideProps, Minimize, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+import { X, Info, History, Download, FileText, Plus, User, ChevronDown, FileType as FileIcon, Star, LucideProps, Minimize, ZoomIn, ZoomOut, RotateCcw, AlertTriangle, Trash2 } from 'lucide-react';
+import StatusBanner from '@/components/ui/status-banner';
 import type { FileType } from '@/components/contextosCard/contextoCard';
 import type { DetalhesContexto } from '@/components/popups/addContextoModal/types';
 import { VisualizadorDeConteudo } from './visualizadorDeConteudo';
@@ -37,47 +38,57 @@ const AbaDetalhes = ({ dados, aoFazerDownload, aoAlternarTelaCheia }: { dados: D
             {/* Coluna da Esquerda: Informações */}
             <div className="space-y-6 overflow-y-auto pr-4 h-full">
                 {versoesDisponiveis.length > 0 && versaoSelecionada && (
-                    <div className="bg-green-50 border-l-4 border-green-500 text-green-900 p-4 rounded-r-lg shadow-sm space-y-4">
-                        <div className="flex items-center gap-3">
-                            <Star className="w-6 h-6 text-green-600 flex-shrink-0" />
-                            <div>
-                                <p className="font-bold">Versão Selecionada</p>
-                                <p className="text-sm text-green-800">{versaoSelecionada.nome}, por {versaoSelecionada.autor} em {new Date(versaoSelecionada.data).toLocaleDateString('pt-BR')}</p>
-                            </div>
+                    (() => {
+                        // determine which variant to show: success if most recent, warning if older, danger if missing
+                        const isMostRecent = versaoSelecionadaId === (versoesDisponiveis.reduce((a, b) => a.id > b.id ? a : b).id);
+                        const variant = isMostRecent ? 'success' : 'warning';
+                        const title = isMostRecent ? 'Visualizando a versão mais recente desse contexto.' : 'Versão Selecionada (antiga)';
+
+                        return (
+                            <StatusBanner variant={variant} title={title}>
+                                <div className="text-sm pl-3 leading-relaxed">
+                                    <div className="font-medium">{versaoSelecionada.nome}</div>
+                                    <div className="text-xs mt-1">por {versaoSelecionada.autor} em {new Date(versaoSelecionada.data).toLocaleDateString('pt-BR')}</div>
+                                </div>
+                            </StatusBanner>
+                        );
+                    })()
+                )}
+
+                {/* mudei o select da versao p fora */}
+                {versoesDisponiveis.length > 1 && (
+                    <div className="mt-4">
+                        <label htmlFor="version-select" className="block text-sm font-medium text-gray-700 mb-1">Visualizar outra versão:</label>
+                        <div className="relative">
+                            <select id="version-select" value={versaoSelecionadaId || ''} onChange={(e) => setVersaoSelecionadaId(Number(e.target.value))} className="w-full appearance-none bg-white border border-gray-300 rounded-2xl py-2 px-3 pr-8 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                {versoesDisponiveis.sort((a, b) => b.id - a.id).map(versao => (<option key={versao.id} value={versao.id}>{versao.nome}</option>))}
+                            </select>
+                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700"><ChevronDown className="w-4 h-4" /></div>
                         </div>
-                        {versoesDisponiveis.length > 1 && (
-                            <div className="relative">
-                                <label htmlFor="version-select" className="block text-sm font-medium text-gray-700 mb-1">Visualizar outra versão:</label>
-                                <select id="version-select" value={versaoSelecionadaId || ''} onChange={(e) => setVersaoSelecionadaId(Number(e.target.value))} className="w-full appearance-none bg-white border border-gray-300 rounded-lg py-2 px-3 pr-8 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                    {versoesDisponiveis.sort((a, b) => b.id - a.id).map(versao => (<option key={versao.id} value={versao.id}>{versao.nome}</option>))}
-                                </select>
-                                <div className="pointer-events-none absolute inset-y-0 right-0 top-6 flex items-center px-2 text-gray-700"><ChevronDown className="w-4 h-4" /></div>
-                            </div>
-                        )}
                     </div>
                 )}
                 <div className="bg-gray-50 rounded-2xl border border-gray-200 p-4 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <IconeDocumento type={dados.type} />
+                        <IconeDocumento type={dados.type as any} />
                         <div>
                             <p className="font-semibold text-gray-800">{dados.title}</p>
                             <p className="text-sm text-gray-500">{new Date(dados.insertedDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
                         </div>
                     </div>
-                    <button onClick={aoFazerDownload} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"><Download className="w-4 h-4" /> Baixar</button>
+                    <button onClick={aoFazerDownload} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-2xl hover:bg-blue-700 transition-colors"><Download className="w-4 h-4" /> Baixar</button>
                 </div>
                 {dados.description && (
-                     <div className="bg-blue-50/50 border border-blue-200 rounded-2xl p-4 space-y-3">
+                    <div className="bg-blue-50/50 border border-blue-200 rounded-2xl p-4 space-y-3">
                         <div className="flex items-center gap-2"><Info className="w-5 h-5 text-blue-600" /><h3 className="text-lg font-semibold text-blue-800">Descrição</h3></div>
                         <p className="text-gray-700 leading-relaxed pl-1">{dados.description}</p>
                     </div>
                 )}
                 <div className="border-t border-gray-200 pt-4">
-                     <h3 className="text-lg font-semibold text-gray-700 mb-3">Detalhes Adicionais</h3>
-                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                        {dados.solicitante && (<div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg"><User className="w-5 h-5 text-gray-500"/><div><p className="font-semibold text-gray-800">Enviado por</p><p className="text-gray-600">{dados.solicitante}</p></div></div>)}
-                         <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg"><FileIcon className="w-5 h-5 text-gray-500"/><div><p className="font-semibold text-gray-800">Tipo de Arquivo</p><p className="text-gray-600 uppercase">{dados.type}</p></div></div>
-                     </div>
+                    <h3 className="text-lg font-semibold text-gray-700 mb-3">Detalhes Adicionais</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                        {dados.solicitante && (<div className="flex items-center gap-3 p-3 rounded-2xl"><User className="w-5 h-5 text-gray-500" /><div><p className="font-semibold text-gray-800">Enviado por</p><p className="text-gray-600">{dados.solicitante}</p></div></div>)}
+                        <div className="flex items-center gap-3 p-3 rounded-2xl"><FileIcon className="w-5 h-5 text-gray-500" /><div><p className="font-semibold text-gray-800">Tipo de Arquivo</p><p className="text-gray-600 uppercase">{dados.type}</p></div></div>
+                    </div>
                 </div>
             </div>
 
@@ -96,7 +107,7 @@ const AbaDetalhes = ({ dados, aoFazerDownload, aoAlternarTelaCheia }: { dados: D
 
 const AbaVersoes = ({ aoCriarNovaVersao, dados, perfil }: { aoCriarNovaVersao?: (dados: DetalhesContexto) => void; dados: DetalhesContexto; perfil: VisualizarContextoModalProps['perfil']; }) => {
     const versoesDisponiveis = dados.versoes || [];
-   const temPermissaoParaVersionar = perfil === 'membro'; 
+    const temPermissaoParaVersionar = perfil === 'membro';
 
     return (
         <div className="animate-fade-in p-4 h-full overflow-y-auto">
@@ -131,6 +142,8 @@ export function VisualizarContextoModal({ estaAberto, aoFechar, dadosDoContexto,
     const [abaAtiva, setAbaAtiva] = useState<TipoAba>('detalhes');
     const [emTelaCheia, setEmTelaCheia] = useState(false);
     const [zoomLevel, setZoomLevel] = useState(1);
+
+    const chartContainerRef = useRef<HTMLDivElement | null>(null);
 
     const alternarTelaCheia = () => {
         setEmTelaCheia(!emTelaCheia);
@@ -203,7 +216,7 @@ export function VisualizarContextoModal({ estaAberto, aoFechar, dadosDoContexto,
             </div>
 
             {emTelaCheia && (
-                 <div className="fixed inset-0 bg-gray-800 z-[60] flex flex-col animate-fade-in">
+                <div className="fixed inset-0 bg-gray-800 z-[60] flex flex-col animate-fade-in">
                     <div className="flex justify-between items-center p-4 bg-white/10 text-white flex-shrink-0">
                         <h2 className="text-xl font-semibold">{dadosDoContexto.title || "Visualização"}</h2>
                         <div className="flex items-center gap-2">
