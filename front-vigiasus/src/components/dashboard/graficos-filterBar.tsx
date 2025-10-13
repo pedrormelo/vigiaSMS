@@ -79,7 +79,7 @@ export function AvailableGraphsPanel({ graphs, onGraphSelect }: AvailableGraphsP
       </div>
 
       {/* Grid de Gráficos */}
-      <div className="grid p-4 grid-cols-1 md:grid-cols-4 gap-6 max-h-[228px] overflow-y-auto">
+      <div className="grid p-6 grid-cols-1 md:grid-cols-4 gap-6 max-h-[346px] overflow-y-auto">
         {filteredGraphs.map((graph) => (
           <GraphCard
             key={graph.id}

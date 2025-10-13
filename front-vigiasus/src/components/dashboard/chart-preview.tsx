@@ -19,7 +19,7 @@ export function ChartPreview({ type, title, data, isHighlighted, editMode, rende
     // Show error if data is not a valid array
     if (!Array.isArray(data) || data.length === 0) {
         return (
-            <div className="bg-white rounded-lg border shadow-sm p-4 h-full flex items-center justify-center text-gray-400">
+            <div className="bg-red-100 rounded-2xl border-3 text-2xl font-medium border-red-400 shadow-sm p-4 h-full flex items-center justify-center text-red-400">
                 Dados indisponíveis
             </div>
         )
