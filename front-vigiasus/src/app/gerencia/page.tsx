@@ -1,9 +1,10 @@
+// src/app/gerencia/page.tsx
 "use client";
 
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { FileType } from "@/components/contextosCard/contextoCard";
-import type { AbaAtiva, DetalhesContexto, NomeIcone, Versao } from "@/components/popups/addContextoModal/types";
+import type { AbaAtiva, DetalhesContexto, NomeIcone, Versao, SubmitData } from "@/components/popups/addContextoModal/types";
 
 import { FileGrid } from "@/components/contextosCard/contextosGrid";
 import { Button } from "@/components/button";
@@ -11,16 +12,16 @@ import FilterBar from "@/components/gerencia/painel-filterBar";
 import { AddIndicatorButton } from "@/components/indicadores/adicionarIndicador";
 import { IndicatorCard } from "@/components/indicadores/indicadorCard";
 import { AddDashboardButton } from "@/components/gerencia/dashboard-btn1";
-import { Edit, Eye } from 'lucide-react';
+import { Edit, Eye, SearchX } from 'lucide-react';
 import { VisualizarContextoModal } from "@/components/popups/visualizarContextoModal/index";
-
 import { ModalAdicionarConteudo } from "@/components/popups/addContextoModal/index";
+import { useDebounce } from "@/hooks/useDebounce";
 
-// 1. Atualizar o tipo dos indicadores de exemplo para incluir o histórico
 type IndicatorData = Omit<React.ComponentProps<typeof IndicatorCard>, "onClick"> & {
     id: string;
     unidade: string;
     versoes: Versao[];
+    insertedDate: string;
 };
 
 const indicators: IndicatorData[] = [
@@ -34,6 +35,7 @@ const indicators: IndicatorData[] = [
         changeType: "positive",
         borderColor: "border-l-blue-500",
         iconType: "cuidados",
+        insertedDate: new Date().toISOString(),
         versoes: [
             { id: 1, nome: "v1 - População Atendida", data: "2025-08-10", autor: "Carlos" },
             { id: 2, nome: "v2 - População Atendida", data: "2025-09-15", autor: "Ana" },
@@ -49,6 +51,7 @@ const indicators: IndicatorData[] = [
         changeType: "neutral",
         borderColor: "border-l-green-500",
         iconType: "unidades",
+        insertedDate: "2025-09-01",
         versoes: [
             { id: 1, nome: "v1 - Unidades de Saúde", data: "2025-09-01", autor: "Carlos" },
         ]
@@ -63,6 +66,7 @@ const indicators: IndicatorData[] = [
         changeType: "positive",
         borderColor: "border-l-red-500",
         iconType: "servidores",
+        insertedDate: new Date(new Date().setDate(new Date().getDate() - 3)).toISOString(),
         versoes: [
             { id: 1, nome: "v1 - Profissionais Ativos", data: "2025-07-20", autor: "Mariana" },
             { id: 2, nome: "v2 - Profissionais Ativos", data: "2025-08-20", autor: "Mariana" },
@@ -71,7 +75,6 @@ const indicators: IndicatorData[] = [
     },
 ];
 
-// ... (o restante das constantes e do componente continua igual até as funções de clique)
 const dadosDashboardPEC = {
     colunas: ['Status de Implantação', 'Quantidade de Unidades'],
     linhas: [
@@ -128,7 +131,7 @@ const sampleFiles: DetalhesContexto[] = [
         id: "6",
         title: "Link para Dashboard Externo",
         type: "link",
-        insertedDate: "2024-06-23",
+        insertedDate: new Date().toISOString(),
         url: "https://www.google.com",
         description: "Link de acesso ao painel de monitoramento de dados epidemiológicos mantido pelo Ministério da Saúde.",
         solicitante: "João Silva",
@@ -201,7 +204,31 @@ export default function HomePage() {
     const [gerenciaError, setGerenciaError] = useState<string | null>(null);
     const [modalVisualizacaoAberto, setModalVisualizacaoAberto] = useState(false);
     const [ficheiroSelecionado, setFicheiroSelecionado] = useState<DetalhesContexto | null>(null);
-    const [perfil, setPerfil] = useState<'diretor' | 'gerente' | 'membro'>('membro'); // Perfil agora é membro por padrão
+    const [perfil, setPerfil] = useState<'diretor' | 'gerente' | 'membro'>('membro');
+    
+    const [searchValue, setSearchValue] = useState("");
+    const [activeTab, setActiveTab] = useState<'recente' | 'todas'>("todas");
+    const [selectedTypes, setSelectedTypes] = useState<FileType[]>([]);
+    const debouncedSearchValue = useDebounce(searchValue, 300);
+
+    const handleSelectedTypesChange = (type: FileType) => {
+        setSelectedTypes(prev => 
+            prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
+        );
+    };
+
+    const filteredFiles = useMemo(() => {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        return sampleFiles.filter(file => {
+            const matchesSearch = file.title.toLowerCase().includes(debouncedSearchValue.toLowerCase());
+            const matchesTab = activeTab === 'todas' || new Date(file.insertedDate) >= sevenDaysAgo;
+            const matchesType = selectedTypes.length === 0 || selectedTypes.includes(file.type);
+            
+            return matchesSearch && matchesTab && matchesType;
+        });
+    }, [debouncedSearchValue, activeTab, selectedTypes]);
 
     useEffect(() => {
         setGerenciaLoading(true);
@@ -229,28 +256,10 @@ export default function HomePage() {
         setTimeout(() => abrirModal(tabParaAbrir), 50);
     };
 
-    const lidarComEditarIndicador = (indicator: IndicatorData) => {
-        const iconMap: Record<IndicatorData['iconType'], NomeIcone> = {
-            cuidados: "Heart", unidades: "Building", servidores: "ClipboardList",
-            atividade: "TrendingUp", cruz: "Landmark", populacao: "Users", medicos: "UserCheck"
-        };
-        const borderColorMap: { [key: string]: string } = {
-            "border-l-blue-500": "#3B82F6", "border-l-green-500": "#22C55E", "border-l-red-500": "#EF4444",
-        };
-        const dadosFormatados: Partial<DetalhesContexto> = {
-            id: indicator.id, title: indicator.title, type: 'indicador', description: indicator.subtitle,
-            valorAtual: indicator.value, unidade: indicator.unidade, textoComparativo: indicator.change,
-            cor: borderColorMap[indicator.borderColor], icone: iconMap[indicator.iconType],
-        };
-        setDadosParaEditar(dadosFormatados);
-        abrirModal('indicador');
-    };
-
-    // 2. Nova função para VISUALIZAR o indicador
     const lidarComVisualizarIndicador = (indicator: IndicatorData) => {
         const iconMap: Record<IndicatorData['iconType'], NomeIcone> = {
             cuidados: "Heart", unidades: "Building", servidores: "ClipboardList",
-            atividade: "TrendingUp", cruz: "Landmark", populacao: "Users", medicos: "UserCheck"
+            atividade: "TrendingUp", cruz: "Landmark", populacao: "Users", medicos: "UserCheck", ambulancia: "DollarSign"
         };
         const borderColorMap: { [key: string]: string } = {
             "border-l-blue-500": "#3B82F6", "border-l-green-500": "#22C55E", "border-l-red-500": "#EF4444",
@@ -264,6 +273,11 @@ export default function HomePage() {
             description: indicator.subtitle,
             solicitante: indicator.versoes.length > 0 ? indicator.versoes[0].autor : "N/A",
             versoes: indicator.versoes,
+            valorAtual: indicator.value, 
+            unidade: indicator.unidade, 
+            textoComparativo: indicator.change || "",
+            cor: borderColorMap[indicator.borderColor], 
+            icone: iconMap[indicator.iconType],
             payload: {
                 description: indicator.subtitle,
                 valorAtual: indicator.value,
@@ -277,7 +291,7 @@ export default function HomePage() {
         setModalVisualizacaoAberto(true);
     };
 
-    const aoSubmeterConteudo = (dados: { tipo: AbaAtiva; payload: unknown }) => {
+    const aoSubmeterConteudo = (dados: SubmitData) => {
         console.log("Novo conteúdo recebido:", dados);
     };
 
@@ -301,10 +315,10 @@ export default function HomePage() {
                 dadosDoContexto={ficheiroSelecionado}
                 aoCriarNovaVersao={lidarComCriarNovaVersao}
                 perfil={perfil}
+                isEditing={modo === 'edicao'}
             />
 
             <div className="container mx-auto">
-                 {/* ... (cabeçalho da página) ... */}
                 <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center gap-4">
                         <h1 className="text-6xl font-bold text-blue-700">GTI</h1>
@@ -326,31 +340,45 @@ export default function HomePage() {
 
                 <div className="flex justify-center items-center gap-4 mb-16 flex-wrap">
                     {modo === 'edicao' && <AddIndicatorButton onClick={() => abrirModal('indicador')} />}
-                    {/* 3. Lógica de clique atualizada */}
                     {indicators.map((indicator) => (
                         <IndicatorCard
                             key={indicator.id}
                             {...indicator}
-                            onClick={() => {
-                                if (modo === 'edicao') {
-                                    lidarComEditarIndicador(indicator);
-                                } else {
-                                    lidarComVisualizarIndicador(indicator);
-                                }
-                            }}
+                            onClick={() => lidarComVisualizarIndicador(indicator)}
                         />
                     ))}
                 </div>
 
-                <FilterBar />
-                <FileGrid
-                    files={sampleFiles}
-                    onFileClick={aoClicarArquivo}
-                    isEditing={modo === 'edicao'}
-                    onAddContextClick={() => abrirModal('contexto')}
+                <FilterBar 
+                    searchValue={searchValue}
+                    onSearchChange={setSearchValue}
+                    activeTab={activeTab}
+                    onTabChange={setActiveTab}
+                    selectedTypes={selectedTypes}
+                    onSelectedTypesChange={handleSelectedTypesChange}
+                    clearTypeFilter={() => setSelectedTypes([])}
                 />
+                
+                <div className="border-2 border-dashed border-gray-300 rounded-4xl bg-gray-50 min-h-[300px] flex items-center justify-center">
+                    {filteredFiles.length > 0 ? (
+                        <FileGrid
+                            files={filteredFiles}
+                            onFileClick={aoClicarArquivo}
+                            isEditing={modo === 'edicao'}
+                            onAddContextClick={() => abrirModal('contexto')}
+                        />
+                    ) : (
+                        <div className="flex flex-col items-center justify-center text-center p-6">
+                            <SearchX className="w-16 h-16 text-gray-400 mb-4" />
+                            <h3 className="text-xl font-semibold text-gray-700">Nenhum Contexto Encontrado</h3>
+                            <p className="text-gray-500 mt-2 max-w-md">
+                                Tente ajustar sua pesquisa ou limpar os filtros para ver mais resultados.
+                            </p>
+                        </div>
+                    )}
+                </div>
 
-                {/* Secção de Seleção e Detalhes da Gerência */}
+
                 <div className="flex gap-4 mt-18 mb-8">
                     {mockGerencias.map(g => (
                         <Button key={g.id} onClick={() => setSelectedGerenciaId(g.id)} className={`rounded-xl px-6 py-2 text-base font-bold ${selectedGerenciaId === g.id ? 'bg-blue-600 text-white' : 'bg-gray-200 text-blue-700'}`}>

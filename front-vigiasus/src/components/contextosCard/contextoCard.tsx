@@ -1,10 +1,10 @@
 // src/components/contextosCard/contextoCard.tsx
 "use client"
 
-import { FileText, FileSpreadsheet, FileSearch, BarChart3, Link, Calendar, ChartNetwork, Gauge } from "lucide-react" // 1. Importar Gauge
+import { FileText, FileSpreadsheet, FileSearch, Link, Calendar, ChartNetwork, Gauge } from "lucide-react" 
 import { cn } from "@/lib/utils"
 
-export type FileType = "pdf" | "doc" | "dashboard" | "excel" | "resolucao" | "link" | "leis" | "indicador" // 2. Adicionar 'indicador'
+export type FileType = "pdf" | "doc" | "dashboard" | "excel" | "resolucao" | "link" | "leis" | "indicador"
 
 interface FileItemProps {
     title: string
@@ -14,7 +14,7 @@ interface FileItemProps {
     onClick?: () => void
 }
 
-const fileTypeConfig = {
+export const fileTypeConfig = {
     pdf: {
         color: "bg-[#C53131] hover:bg-[#A02020]",
         icon: FileText,
@@ -30,7 +30,7 @@ const fileTypeConfig = {
         icon: ChartNetwork,
         label: "Gráfico de Dashboard",
     },
-    // 3. Adicionar a configuração para o novo tipo 'indicador'
+
     indicador: {
         color: "bg-teal-500 hover:bg-teal-600",
         icon: Gauge,

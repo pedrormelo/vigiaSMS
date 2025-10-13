@@ -41,9 +41,11 @@ export function ModalAdicionarConteudo(props: ModalAdicionarConteudoProps) {
                                 {abaAtiva === 'indicador' && <Gauge className="w-6 h-6 text-white" />}
                             </div>
                             <h2 className="text-2xl font-regular text-white">
-                                {abaAtiva === 'contexto' && 'Adicionar Novo Contexto'}
-                                {abaAtiva === 'dashboard' && 'Criar Novo Dashboard'}
-                                {abaAtiva === 'indicador' && 'Adicionar Novo Indicador'}
+                                {isNewVersionMode ? 'Criar Nova Versão' : (
+                                    abaAtiva === 'contexto' ? 'Adicionar Novo Contexto' :
+                                    abaAtiva === 'dashboard' ? 'Criar Novo Dashboard' :
+                                    'Adicionar Novo Indicador'
+                                )}
                             </h2>
                         </div>
                         <button onClick={aoCancelar} className="w-8 h-8 bg-opacity-20 text-white hover:text-gray-100 cursor-pointer rounded-full flex items-center justify-center transition-colors"><X className="w-6 h-6" /></button>
@@ -61,7 +63,8 @@ export function ModalAdicionarConteudo(props: ModalAdicionarConteudoProps) {
                         <div className="flex-1 min-h-0">
                             {abaAtiva === 'contexto' && <AbaContexto {...retornosDoHook} isNewVersionMode={isNewVersionMode} />}
                             {abaAtiva === 'dashboard' && <AbaDashboard {...retornosDoHook} isNewVersionMode={isNewVersionMode} />}
-                            {abaAtiva === 'indicador' && <AbaIndicador {...retornosDoHook} />}
+                            {/* AQUI ESTAVA O ERRO - A PROP isNewVersionMode agora está sendo passada corretamente */}
+                            {abaAtiva === 'indicador' && <AbaIndicador {...retornosDoHook} isNewVersionMode={isNewVersionMode} />}
                         </div>
                     </div>
 

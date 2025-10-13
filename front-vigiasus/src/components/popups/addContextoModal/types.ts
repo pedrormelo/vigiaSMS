@@ -1,4 +1,4 @@
-// --- TIPOS E INTERFACES ---
+// src/components/popups/addContextoModal/types.ts
 
 import { PieChart, BarChart3, LineChart } from "lucide-react";
 import type { FileType } from '@/components/contextosCard/contextoCard';
@@ -13,10 +13,10 @@ export enum TipoVersao {
   ATUALIZACAO_MENSAL = "Atualização Mensal",
 }
 
-// Define a estrutura para as informações da versão
 export interface VersionInfo {
   type: TipoVersao;
   description: string;
+  versionNumber: string;
 }
 
 export interface Versao {
@@ -26,18 +26,62 @@ export interface Versao {
   autor: string;
 }
 
-
 export interface ConjuntoDeDadosGrafico {
   colunas: string[];
   linhas: (string | number)[][];
   cores?: string[];
 }
 
+
+export interface ContextoPayload {
+  title: string;
+  details: string;
+  file: File | null;
+  url: string;
+  versionInfo: VersionInfo | null;
+}
+
+export interface DashboardPayload {
+  title: string;
+  details: string;
+  type: TipoGrafico;
+  dataFile: File | null;
+  dataset: ConjuntoDeDadosGrafico;
+  versionInfo: VersionInfo | null;
+}
+
+export interface IndicadorPayload {
+  titulo: string;
+  descricao: string;
+  valorAtual: string;
+  valorAlvo: string;
+  unidade: string;
+  textoComparativo: string;
+  cor: string;
+  icone: NomeIcone;
+  versionInfo: VersionInfo | null;
+}
+
+export type SubmitData =
+  | { type: 'contexto'; payload: Partial<ContextoPayload> }
+  | { type: 'dashboard'; payload: Partial<DashboardPayload> }
+  | { type: 'indicador'; payload: Partial<IndicadorPayload> };
+
 export interface ModalAdicionarConteudoProps {
   estaAberto: boolean;
   aoFechar: () => void;
-  aoSubmeter: (dados: { tipo: AbaAtiva; payload: any }) => void;
+  aoSubmeter: (dados: SubmitData) => void;
   abaInicial?: AbaAtiva;
+  dadosIniciais?: Partial<DetalhesContexto> | null;
+}
+
+interface IndicadorDetailsPayload {
+    description: string;
+    valorAtual: string;
+    unidade: string;
+    textoComparativo: string;
+    cor: string;
+    icone: NomeIcone;
 }
 
 export interface DetalhesContexto {
@@ -46,13 +90,13 @@ export interface DetalhesContexto {
     type: FileType;
     insertedDate: string;
     url?: string;
-    payload?: any;
+    payload?: ConjuntoDeDadosGrafico | IndicadorDetailsPayload; // 'any' removido
     description?: string;
     solicitante?: string;
     autor?: string;
     chartType?: TipoGrafico;
-    versoes?: Versao[]; 
-     valorAtual?: string;
+    versoes?: Versao[];
+    valorAtual?: string;
     valorAlvo?: string;
     unidade?: string;
     textoComparativo?: string;
@@ -60,7 +104,6 @@ export interface DetalhesContexto {
     icone?: NomeIcone;
     cores?: string[];
 }
-
 
 export interface SeletorTipoGraficoProps {
   tipoSelecionado: TipoGrafico;

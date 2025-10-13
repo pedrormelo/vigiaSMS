@@ -2,19 +2,20 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Info, History, Download, FileText, Plus, User, ChevronDown, FileType as FileIcon, Star, LucideProps, Minimize, ZoomIn, ZoomOut, RotateCcw, AlertTriangle, Trash2 } from 'lucide-react';
+import { ArrowLeft, Info, History, Download, FileText, Plus, User, ChevronDown, FileType as FileIcon, LucideProps, Minimize, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import StatusBanner from '@/components/ui/status-banner';
-import type { FileType } from '@/components/contextosCard/contextoCard';
 import type { DetalhesContexto } from '@/components/popups/addContextoModal/types';
 import { VisualizadorDeConteudo } from './visualizadorDeConteudo';
 import IconeDocumento from '@/components/validar/iconeDocumento';
+import type { DocType } from '@/components/validar/typesDados'; // Importação adicionada
 
 interface VisualizarContextoModalProps {
     estaAberto: boolean;
     aoFechar: () => void;
     dadosDoContexto: DetalhesContexto | null;
     aoCriarNovaVersao?: (dados: DetalhesContexto) => void;
-    perfil: 'diretor' | 'gerente' | 'membro'; // Adicionado
+    perfil: 'diretor' | 'gerente' | 'membro';
+    isEditing?: boolean;
 }
 
 
@@ -69,7 +70,8 @@ const AbaDetalhes = ({ dados, aoFazerDownload, aoAlternarTelaCheia }: { dados: D
                 )}
                 <div className="bg-gray-50 rounded-2xl border border-gray-200 p-4 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <IconeDocumento type={dados.type as any} />
+                        {/* CORREÇÃO: 'as any' foi substituído por 'as DocType' */}
+                        <IconeDocumento type={dados.type as DocType} />
                         <div>
                             <p className="font-semibold text-gray-800">{dados.title}</p>
                             <p className="text-sm text-gray-500">{new Date(dados.insertedDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
@@ -105,7 +107,7 @@ const AbaDetalhes = ({ dados, aoFazerDownload, aoAlternarTelaCheia }: { dados: D
     );
 };
 
-const AbaVersoes = ({ aoCriarNovaVersao, dados, perfil }: { aoCriarNovaVersao?: (dados: DetalhesContexto) => void; dados: DetalhesContexto; perfil: VisualizarContextoModalProps['perfil']; }) => {
+const AbaVersoes = ({ aoCriarNovaVersao, dados, perfil, isEditing }: { aoCriarNovaVersao?: (dados: DetalhesContexto) => void; dados: DetalhesContexto; perfil: VisualizarContextoModalProps['perfil']; isEditing?: boolean; }) => {
     const versoesDisponiveis = dados.versoes || [];
     const temPermissaoParaVersionar = perfil === 'membro';
 
@@ -113,8 +115,7 @@ const AbaVersoes = ({ aoCriarNovaVersao, dados, perfil }: { aoCriarNovaVersao?: 
         <div className="animate-fade-in p-4 h-full overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-semibold text-gray-700">Histórico de Versões</h3>
-                {/* 4. Renderização condicional do botão */}
-                {aoCriarNovaVersao && temPermissaoParaVersionar && (
+                {aoCriarNovaVersao && temPermissaoParaVersionar && isEditing && (
                     <button onClick={() => aoCriarNovaVersao(dados)} className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 font-semibold rounded-lg hover:bg-blue-200 transition">
                         <Plus className="w-4 h-4" /> Criar Nova Versão
                     </button>
@@ -138,7 +139,7 @@ const BotaoAba = ({ id, label, Icon, abaAtiva, setAbaAtiva }: { id: TipoAba; lab
     <button onClick={() => setAbaAtiva(id)} className={`flex-1 py-3 px-6 rounded-2xl font-semibold transition-all flex justify-center items-center ${abaAtiva === id ? "bg-white text-blue-600 shadow-md" : "text-gray-600 hover:bg-gray-50"}`}><Icon className="w-5 h-5 mr-2" /> {label}</button>
 );
 
-export function VisualizarContextoModal({ estaAberto, aoFechar, dadosDoContexto, aoCriarNovaVersao, perfil }: VisualizarContextoModalProps) {
+export function VisualizarContextoModal({ estaAberto, aoFechar, dadosDoContexto, aoCriarNovaVersao, perfil, isEditing }: VisualizarContextoModalProps) {
     const [abaAtiva, setAbaAtiva] = useState<TipoAba>('detalhes');
     const [emTelaCheia, setEmTelaCheia] = useState(false);
     const [zoomLevel, setZoomLevel] = useState(1);
@@ -198,7 +199,7 @@ export function VisualizarContextoModal({ estaAberto, aoFechar, dadosDoContexto,
                         <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0"><FileText className="w-6 h-6 text-white" /></div>
                         <h2 className="text-2xl font-regular text-white truncate" title={dadosDoContexto.title}>{dadosDoContexto.title}</h2>
                     </div>
-                    <button onClick={aoFechar} className="w-8 h-8 bg-white/20 text-white hover:bg-white/30 cursor-pointer rounded-full flex items-center justify-center transition-colors flex-shrink-0"><X className="w-6 h-6" /></button>
+                    <button onClick={aoFechar} className="w-8 h-8 bg-white/20 text-white hover:bg-white/30 cursor-pointer rounded-full flex items-center justify-center transition-colors flex-shrink-0"><ArrowLeft className="w-6 h-6" /></button>
                 </div>
 
                 <div className="flex-1 px-8 pt-8 pb-4 flex flex-col min-h-0">
@@ -209,8 +210,7 @@ export function VisualizarContextoModal({ estaAberto, aoFechar, dadosDoContexto,
 
                     <div className="h-[60vh]">
                         {abaAtiva === 'detalhes' && <AbaDetalhes dados={dadosDoContexto} aoFazerDownload={lidarComDownload} aoAlternarTelaCheia={alternarTelaCheia} />}
-                        {/* 5. Passar o perfil para a `AbaVersoes` */}
-                        {abaAtiva === 'versoes' && <AbaVersoes aoCriarNovaVersao={aoCriarNovaVersao} dados={dadosDoContexto} perfil={perfil} />}
+                        {abaAtiva === 'versoes' && <AbaVersoes aoCriarNovaVersao={aoCriarNovaVersao} dados={dadosDoContexto} perfil={perfil} isEditing={isEditing} />}
                     </div>
                 </div>
             </div>

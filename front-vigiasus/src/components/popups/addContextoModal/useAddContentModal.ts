@@ -1,11 +1,11 @@
 // src/components/popups/addContextoModal/useAddContentModal.ts
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react"; 
 import { saveAs } from "file-saver";
-import { AbaAtiva, AbaFonteDeDados, TipoGrafico, ConjuntoDeDadosGrafico, ModalAdicionarConteudoProps, NomeIcone, DetalhesContexto, TipoVersao, VersionInfo } from "./types";
+import { AbaAtiva, AbaFonteDeDados, TipoGrafico, ConjuntoDeDadosGrafico, ModalAdicionarConteudoProps, NomeIcone, DetalhesContexto, TipoVersao } from "./types";
 import { showWarningToast, showErrorToast, showDispatchToast } from "@/components/ui/Toasts";
 
 interface PropsDoHook extends ModalAdicionarConteudoProps {
-    dadosIniciais?: Partial<DetalhesContexto> & { description?: string; payload?: any; chartType?: TipoGrafico } | null;
+    dadosIniciais?: Partial<DetalhesContexto> & { description?: string; payload?: Partial<ConjuntoDeDadosGrafico>; chartType?: TipoGrafico } | null;
 }
 
 export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, abaInicial = 'contexto', dadosIniciais }: PropsDoHook) => {
@@ -28,14 +28,12 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
     const [tipoGrafico, setTipoGrafico] = useState<TipoGrafico>("pie");
     const [arquivoDeDados, setArquivoDeDados] = useState<File | null>(null);
     
-    // CORREÇÃO: O estado das cores agora faz parte do conjunto de dados.
     const [conjuntoDeDados, setConjuntoDeDados] = useState<ConjuntoDeDadosGrafico>({
         colunas: ["Categoria", "Valor"],
         linhas: [["Exemplo de Categoria", 100]],
         cores: ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444'],
     });
 
-    // CORREÇÃO: Nova função para atualizar apenas as cores dentro do estado principal.
     const definirCoresDoGrafico = (novasCores: string[]) => {
         setConjuntoDeDados(dadosAtuais => ({ ...dadosAtuais, cores: novasCores }));
     };
@@ -54,7 +52,7 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
     const [tipoVersao, setTipoVersao] = useState<TipoVersao>(TipoVersao.CORRECAO);
     const [descricaoVersao, setDescricaoVersao] = useState("");
 
-    const reiniciarTodoOEstado = () => {
+    const reiniciarTodoOEstado = useCallback(() => {
         setTituloContexto(""); setDetalhesContexto(""); setArquivoContexto(null); setUrlContexto("");
         setIsNewVersionMode(false); setSelectedVersion("");
         setTituloGrafico(""); setDetalhesGrafico(""); setTipoGrafico("pie");
@@ -71,7 +69,7 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
         setPrevisualizacaoGerada(false);
         setTipoVersao(TipoVersao.CORRECAO);
         setDescricaoVersao("");
-    };
+    }, [abaInicial]);
 
     useEffect(() => {
         if (estaAberto) {
@@ -90,7 +88,6 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
                 setDetalhesGrafico(dadosIniciais.description || "");
                 setTipoGrafico(dadosIniciais.chartType || 'pie');
                 
-                // CORREÇÃO: Carrega o payload e as cores para dentro do mesmo estado.
                 if (dadosIniciais.payload) {
                     setConjuntoDeDados({
                         colunas: dadosIniciais.payload.colunas || ["Categoria", "Valor"],
@@ -110,7 +107,7 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
                 setIconeIndicador(dadosIniciais.icone || "Heart");
             }
         }
-    }, [estaAberto, dadosIniciais, abaInicial]);
+    }, [estaAberto, dadosIniciais, abaInicial, reiniciarTodoOEstado]);
 
 
     const aoSubmeterFormulario = () => {
@@ -125,7 +122,6 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
                 break;
 
             case 'dashboard':
-                // CORREÇÃO: O `conjuntoDeDados` já contém as cores.
                 payload = { title: tituloGrafico, details: detalhesGrafico, type: tipoGrafico, dataFile: arquivoDeDados, dataset: conjuntoDeDados, versionInfo };
                 aoSubmeter({ type: 'dashboard', payload });
                 showDispatchToast("Seu dashboard foi enviado para aprovação.");
@@ -140,7 +136,6 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
         aoFechar();
     };
     
-    // ... (O restante das funções como `aoSelecionarArquivo`, `adicionarLinha`, etc., permanecem iguais)
     const aoSelecionarArquivo = (arquivo: File | null) => {
         if (!arquivo) return;
         const LIMITE_TAMANHO_MB = 15;
@@ -275,7 +270,6 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
         isNewVersionMode, selectedVersion, tipoVersao, setTipoVersao, descricaoVersao, setDescricaoVersao,
         abaFonteDeDados, setAbaFonteDeDados, tituloGrafico, setTituloGrafico, detalhesGrafico, setDetalhesGrafico,
         tipoGrafico, aoMudarTipo: aoMudarTipoGrafico, arquivoDeDados, setArquivoDeDados, 
-        // Passa o estado unificado e a nova função de atualização.
         conjuntoDeDados, definirCoresDoGrafico,
         adicionarLinha, removerLinha, atualizarCelula, adicionarColuna, removerColuna, atualizarNomeColuna,
         baixarModelo, previsualizacaoGerada, setPrevisualizacaoGerada,

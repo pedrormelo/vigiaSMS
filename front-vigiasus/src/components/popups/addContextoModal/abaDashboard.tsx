@@ -14,7 +14,7 @@ type AbaDashboardProps = Pick<
     | 'detalhesGrafico' | 'setDetalhesGrafico'
     | 'tipoGrafico' | 'aoMudarTipo'
     | 'abaFonteDeDados' | 'setAbaFonteDeDados'
-    | 'conjuntoDeDados' | 'definirCoresDoGrafico' // <-- MUDANÇA AQUI
+    | 'conjuntoDeDados' | 'definirCoresDoGrafico'
     | 'atualizarCelula' | 'adicionarLinha' | 'removerLinha' | 'adicionarColuna' | 'removerColuna' | 'atualizarNomeColuna'
     | 'arquivoDeDados' | 'setArquivoDeDados' | 'baixarModelo'
     | 'previsualizacaoGerada' | 'setPrevisualizacaoGerada'
@@ -36,7 +36,6 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
     const {
         tituloGrafico, setTituloGrafico, detalhesGrafico, setDetalhesGrafico,
         tipoGrafico, aoMudarTipo, abaFonteDeDados, setAbaFonteDeDados,
-        // CORREÇÃO: Recebe o conjunto de dados completo e a nova função.
         conjuntoDeDados, definirCoresDoGrafico,
         atualizarCelula, adicionarLinha, removerLinha, adicionarColuna, removerColuna, atualizarNomeColuna,
         arquivoDeDados, setArquivoDeDados, baixarModelo,
@@ -47,9 +46,7 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
     const [graficoEmTelaCheia, setGraficoEmTelaCheia] = useState(false);
     const alternarTelaCheia = () => setGraficoEmTelaCheia(!graficoEmTelaCheia);
 
-    // Generate a color theme based on the selected base color
     const generateColorTheme = (baseColor: string): string[] => {
-        // Convert hex to HSL for better color manipulation
         const hexToHsl = (hex: string) => {
             const r = parseInt(hex.slice(1, 3), 16) / 255;
             const g = parseInt(hex.slice(3, 5), 16) / 255;
@@ -57,7 +54,10 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
 
             const max = Math.max(r, g, b);
             const min = Math.min(r, g, b);
-            let h, s, l = (max + min) / 2;
+            
+            // --- CORREÇÃO APLICADA AQUI ---
+            let h: number, s: number;
+            const l = (max + min) / 2;
 
             if (max === min) {
                 h = s = 0;
@@ -89,13 +89,12 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
 
         const [h, s, l] = hexToHsl(baseColor);
 
-        // Generate 5 colors: main color + 4 variations
         return [
-            baseColor, // Original color
-            hslToHex((h + 60) % 360, Math.max(s - 20, 30), Math.min(l + 10, 80)), // Complementary
-            hslToHex((h + 120) % 360, Math.max(s - 10, 40), Math.max(l - 15, 25)), // Triadic 1
-            hslToHex((h + 180) % 360, Math.max(s - 15, 35), Math.min(l + 5, 75)), // Opposite
-            hslToHex((h + 240) % 360, Math.max(s - 5, 45), Math.max(l - 10, 30)), // Triadic 2
+            baseColor,
+            hslToHex((h + 60) % 360, Math.max(s - 20, 30), Math.min(l + 10, 80)),
+            hslToHex((h + 120) % 360, Math.max(s - 10, 40), Math.max(l - 15, 25)),
+            hslToHex((h + 180) % 360, Math.max(s - 15, 35), Math.min(l + 5, 75)),
+            hslToHex((h + 240) % 360, Math.max(s - 5, 45), Math.max(l - 10, 30)),
         ];
     };
 
@@ -104,7 +103,6 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
         definirCoresDoGrafico(novoTema);
     };
 
-    // Get the first color as the active theme indicator
     const corTemaAtiva = conjuntoDeDados.cores?.[0] || '#3B82F6';
 
     return (
@@ -242,7 +240,6 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                 <div className="flex flex-col space-y-4 h-full pt-1">
                     <label className="block text-lg font-medium text-gray-700 flex-shrink-0">Pré-visualização</label>
                     <div className="flex-1 min-h-0">
-                        {/* CORREÇÃO: Passa o objeto `conjuntoDeDados` completo */}
                         <PrevisualizacaoGrafico
                             tipoGrafico={tipoGrafico}
                             conjuntoDeDados={conjuntoDeDados}
@@ -266,7 +263,6 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                         <button onClick={alternarTelaCheia} className="p-3 bg-gray-100 rounded-full text-gray-700 hover:bg-gray-200 transition-colors" title="Fechar tela cheia"><Minimize className="w-6 h-6" /></button>
                     </div>
                     <div className="flex-1 min-h-0 w-full h-full">
-                        {/* CORREÇÃO: Passa o objeto `conjuntoDeDados` completo */}
                         <PrevisualizacaoGrafico
                             tipoGrafico={tipoGrafico}
                             conjuntoDeDados={conjuntoDeDados}
