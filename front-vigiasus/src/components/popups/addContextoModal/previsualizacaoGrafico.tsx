@@ -67,7 +67,6 @@ export const PrevisualizacaoGrafico: React.FC<PrevisualizacaoGraficoProps> = ({
             ? conjuntoDeDados.cores
             : ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444'];
 
-    // Get color styles - use colors array for all chart types
     const getEstilosPorTipo = () => {
         return { colors: coresDoGrafico };
     };
@@ -84,7 +83,6 @@ export const PrevisualizacaoGrafico: React.FC<PrevisualizacaoGraficoProps> = ({
             ? { vAxis: { viewWindow: { min: 0 } } }
             : {};
 
-    // CORREÇÃO: Combina as opções base, específicas e os novos estilos de cor.
     const opcoesFinais = { 
         ...opcoesBase, 
         ...opcoesEspecificas,
@@ -94,7 +92,7 @@ export const PrevisualizacaoGrafico: React.FC<PrevisualizacaoGraficoProps> = ({
     const obterTipoGrafico = () => {
         switch (tipoGrafico) {
             case "pie": return "PieChart";
-            case "line": return "LineChart";
+            case "line": return "AreaChart";
             case "chart": return "ColumnChart";
             default: return "PieChart";
         }

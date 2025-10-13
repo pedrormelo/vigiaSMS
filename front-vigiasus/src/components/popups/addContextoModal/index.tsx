@@ -2,7 +2,7 @@
 "use client";
 
 import React from "react";
-import { X, FilePlus2, LayoutDashboard, FileSymlink, Gauge } from "lucide-react";
+import { FilePlus2, LayoutDashboard, FileSymlink, Gauge, ArrowLeft } from "lucide-react";
 import { ModalAdicionarConteudoProps } from "@/components/popups/addContextoModal/types"; 
 import { useModalAdicionarConteudo } from "@/components/popups/addContextoModal/useAddContentModal";
 import { AbaContexto } from "@/components/popups/addContextoModal/abaContexto"; 
@@ -31,7 +31,8 @@ export function ModalAdicionarConteudo(props: ModalAdicionarConteudoProps) {
         <>
             <EstilosModal />
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                <div className={`bg-white rounded-[40px] w-full ${abaAtiva === 'dashboard' || abaAtiva === 'indicador' ? 'max-w-7xl' : 'max-w-4xl'} max-h-[90vh] flex flex-col shadow-2xl transition-all duration-300`}>
+                {/* CORREÇÃO: Largura e altura consistentes para todas as abas */}
+                <div className={`bg-white rounded-[40px] w-full max-w-7xl h-[90vh] flex flex-col shadow-2xl transition-all duration-300`}>
                     
                     <div className="bg-gradient-to-r from-[#0037C1] to-[#00BDFF] px-8 py-4 flex items-center justify-between rounded-t-[40px] flex-shrink-0">
                         <div className="flex items-center gap-3">
@@ -48,7 +49,7 @@ export function ModalAdicionarConteudo(props: ModalAdicionarConteudoProps) {
                                 )}
                             </h2>
                         </div>
-                        <button onClick={aoCancelar} className="w-8 h-8 bg-opacity-20 text-white hover:text-gray-100 cursor-pointer rounded-full flex items-center justify-center transition-colors"><X className="w-6 h-6" /></button>
+                        <button onClick={aoCancelar} className="w-8 h-8 bg-opacity-20 text-white hover:text-gray-100 cursor-pointer rounded-full flex items-center justify-center transition-colors"><ArrowLeft className="w-6 h-6" /></button>
                     </div>
 
                     <div className="flex-1 p-8 flex flex-col min-h-0 overflow-y-auto">
@@ -63,7 +64,6 @@ export function ModalAdicionarConteudo(props: ModalAdicionarConteudoProps) {
                         <div className="flex-1 min-h-0">
                             {abaAtiva === 'contexto' && <AbaContexto {...retornosDoHook} isNewVersionMode={isNewVersionMode} />}
                             {abaAtiva === 'dashboard' && <AbaDashboard {...retornosDoHook} isNewVersionMode={isNewVersionMode} />}
-                            {/* AQUI ESTAVA O ERRO - A PROP isNewVersionMode agora está sendo passada corretamente */}
                             {abaAtiva === 'indicador' && <AbaIndicador {...retornosDoHook} isNewVersionMode={isNewVersionMode} />}
                         </div>
                     </div>

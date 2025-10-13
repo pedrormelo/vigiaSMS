@@ -1,4 +1,3 @@
-// src/app/gerencia/page.tsx
 "use client";
 
 import Image from 'next/image';
@@ -35,7 +34,8 @@ const indicators: IndicatorData[] = [
         changeType: "positive",
         borderColor: "border-l-blue-500",
         iconType: "cuidados",
-        insertedDate: new Date().toISOString(),
+        // CORREÇÃO: Data estática em vez de new Date()
+        insertedDate: "2025-10-13T12:00:00.000Z",
         versoes: [
             { id: 1, nome: "v1 - População Atendida", data: "2025-08-10", autor: "Carlos" },
             { id: 2, nome: "v2 - População Atendida", data: "2025-09-15", autor: "Ana" },
@@ -66,7 +66,8 @@ const indicators: IndicatorData[] = [
         changeType: "positive",
         borderColor: "border-l-red-500",
         iconType: "servidores",
-        insertedDate: new Date(new Date().setDate(new Date().getDate() - 3)).toISOString(),
+        // CORREÇÃO: Data estática em vez de new Date()
+        insertedDate: "2025-10-10T12:00:00.000Z",
         versoes: [
             { id: 1, nome: "v1 - Profissionais Ativos", data: "2025-07-20", autor: "Mariana" },
             { id: 2, nome: "v2 - Profissionais Ativos", data: "2025-08-20", autor: "Mariana" },
@@ -131,7 +132,8 @@ const sampleFiles: DetalhesContexto[] = [
         id: "6",
         title: "Link para Dashboard Externo",
         type: "link",
-        insertedDate: new Date().toISOString(),
+        // CORREÇÃO: Data estática em vez de new Date()
+        insertedDate: "2025-10-13T12:00:00.000Z",
         url: "https://www.google.com",
         description: "Link de acesso ao painel de monitoramento de dados epidemiológicos mantido pelo Ministério da Saúde.",
         solicitante: "João Silva",
@@ -359,7 +361,7 @@ export default function HomePage() {
                     clearTypeFilter={() => setSelectedTypes([])}
                 />
                 
-                <div className="border-2 border-dashed border-gray-300 rounded-4xl bg-gray-50 min-h-[300px] flex items-center justify-center">
+                <div className="border-2 border-none border-gray-300 rounded-4xl bg-[#ffffff] min-h-[300px] flex items-center justify-center">
                     {filteredFiles.length > 0 ? (
                         <FileGrid
                             files={filteredFiles}

@@ -1,6 +1,6 @@
 // src/components/popups/addContextoModal/types.ts
 
-import { PieChart, BarChart3, LineChart } from "lucide-react";
+import { PieChart, BarChart3, AreaChart } from "lucide-react"; 
 import type { FileType } from '@/components/contextosCard/contextoCard';
 
 export type AbaAtiva = "contexto" | "dashboard" | "indicador";
@@ -16,7 +16,6 @@ export enum TipoVersao {
 export interface VersionInfo {
   type: TipoVersao;
   description: string;
-  versionNumber: string;
 }
 
 export interface Versao {
@@ -26,13 +25,14 @@ export interface Versao {
   autor: string;
 }
 
+
 export interface ConjuntoDeDadosGrafico {
   colunas: string[];
   linhas: (string | number)[][];
   cores?: string[];
 }
 
-
+// Tipos específicos para cada payload de submissão
 export interface ContextoPayload {
   title: string;
   details: string;
@@ -62,6 +62,7 @@ export interface IndicadorPayload {
   versionInfo: VersionInfo | null;
 }
 
+// União discriminada para os dados de submissão
 export type SubmitData =
   | { type: 'contexto'; payload: Partial<ContextoPayload> }
   | { type: 'dashboard'; payload: Partial<DashboardPayload> }
@@ -75,6 +76,7 @@ export interface ModalAdicionarConteudoProps {
   dadosIniciais?: Partial<DetalhesContexto> | null;
 }
 
+// Tipo para o payload de visualização de um indicador
 interface IndicadorDetailsPayload {
     description: string;
     valorAtual: string;
@@ -90,12 +92,12 @@ export interface DetalhesContexto {
     type: FileType;
     insertedDate: string;
     url?: string;
-    payload?: ConjuntoDeDadosGrafico | IndicadorDetailsPayload; // 'any' removido
+    payload?: ConjuntoDeDadosGrafico | IndicadorDetailsPayload;
     description?: string;
     solicitante?: string;
     autor?: string;
     chartType?: TipoGrafico;
-    versoes?: Versao[];
+    versoes?: Versao[]; 
     valorAtual?: string;
     valorAlvo?: string;
     unidade?: string;
@@ -104,6 +106,7 @@ export interface DetalhesContexto {
     icone?: NomeIcone;
     cores?: string[];
 }
+
 
 export interface SeletorTipoGraficoProps {
   tipoSelecionado: TipoGrafico;
@@ -148,5 +151,5 @@ export interface AbaIndicadorProps {
 export const TIPOS_GRAFICOS = {
   pie: { Icon: PieChart, rotulo: "Pizza" },
   chart: { Icon: BarChart3, rotulo: "Barras" },
-  line: { Icon: LineChart, rotulo: "Linha" },
+  line: { Icon: AreaChart, rotulo: "Área" },
 };

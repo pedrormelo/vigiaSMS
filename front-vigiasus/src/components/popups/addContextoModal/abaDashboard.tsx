@@ -55,7 +55,6 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
             const max = Math.max(r, g, b);
             const min = Math.min(r, g, b);
             
-            // --- CORREÇÃO APLICADA AQUI ---
             let h: number, s: number;
             const l = (max + min) / 2;
 
@@ -108,7 +107,6 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
     return (
         <>
             <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,_1fr)_minmax(0,_1.5fr)_minmax(0,_1fr)] gap-6 h-full animate-fade-in pb-4">
-                {/* Coluna 1: Título, Detalhes, Cores e Formulário de Versão */}
                 <div className="flex flex-col space-y-6 pt-1">
                     <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-x-6 gap-y-2 items-end">
                         <div>
@@ -138,19 +136,21 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                             </div>
                         )}
                     </div>
-                    <div>
-                        <label className="block text-lg font-medium text-gray-700 mb-2">Detalhes do Gráfico</label>
-                        <textarea
-                            value={detalhesGrafico}
-                            onChange={(e) => setDetalhesGrafico(e.target.value)}
-                            placeholder="Descreva o contexto, período, fonte dos dados, etc."
-                            rows={isNewVersionMode ? 2 : 4}
-                            className="w-full px-4 py-3 border bg-gray-50/25 border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
-                            disabled={isNewVersionMode}
-                        />
-                    </div>
 
-                    {/* Seletor de Tema de Cores */}
+                    {!isNewVersionMode && (
+                        <div>
+                            <label className="block text-lg font-medium text-gray-700 mb-2">Detalhes do Gráfico</label>
+                            <textarea
+                                value={detalhesGrafico}
+                                onChange={(e) => setDetalhesGrafico(e.target.value)}
+                                placeholder="Descreva o contexto, período, fonte dos dados, etc."
+                                rows={4}
+                                className="w-full px-4 py-3 border bg-gray-50/25 border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
+                                disabled={isNewVersionMode}
+                            />
+                        </div>
+                    )}
+
                     <div>
                         <label className="block text-lg font-medium text-gray-700 mb-2">Tema de Cores</label>
                         <div className="space-y-2">
@@ -166,7 +166,6 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                                     ></button>
                                 ))}
                             </div>
-                            {/* Preview of current theme */}
                             <div className="flex items-center gap-1 p-2 bg-white rounded-2xl border border-gray-200">
                                 <span className="text-xs text-gray-600 mr-2">Tema atual:</span>
                                 {conjuntoDeDados.cores?.slice(0, 5).map((cor, index) => (
@@ -209,7 +208,6 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                     )}
                 </div>
 
-                {/* Coluna 2: Configurações do Gráfico e Dados */}
                 <div className="flex flex-col space-y-6 border-x-0 lg:border-x border-gray-200 px-0 lg:px-6">
                     <SeletorTipoGrafico tipoSelecionado={tipoGrafico} aoMudarTipo={aoMudarTipo} />
                     <div className="pt-4">
@@ -236,7 +234,6 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                     </div>
                 </div>
 
-                {/* Coluna 3: Pré-visualização */}
                 <div className="flex flex-col space-y-4 h-full pt-1">
                     <label className="block text-lg font-medium text-gray-700 flex-shrink-0">Pré-visualização</label>
                     <div className="flex-1 min-h-0">
@@ -255,7 +252,6 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                 </div>
             </div>
 
-            {/* Modal de Tela Cheia */}
             {graficoEmTelaCheia && (
                 <div className="fixed inset-0 bg-white z-[60] p-4 lg:p-8 flex flex-col animate-fade-in">
                     <div className="flex justify-between items-center mb-4 flex-shrink-0">

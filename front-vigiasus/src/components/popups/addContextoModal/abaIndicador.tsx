@@ -1,3 +1,4 @@
+// src/components/popups/addContextoModal/abaIndicador.tsx
 import React from 'react';
 import { useModalAdicionarConteudo } from './useAddContentModal';
 import { NomeIcone, TipoVersao } from './types';
@@ -113,7 +114,6 @@ export const AbaIndicador: React.FC<AbaIndicadorProps> = (props) => {
 
     const unidades = ["Nenhum", "%", "R$", "$", "€", "Unidades", "Pessoas", "Atendimentos", "Dias", "Horas", "Minutos", "Mil", "Milhares", "Milhões", "Bilhões"];
 
-    // 1. Objeto de cores expandido, com os nomes e códigos hexadecimais correspondentes
     const coresPredefinidas = {
         blue: '#3B82F6',
         green: '#22C55E',
@@ -152,10 +152,14 @@ export const AbaIndicador: React.FC<AbaIndicadorProps> = (props) => {
                         </div>
                     )}
                 </div>
-                <div>
-                    <label className="block text-lg font-medium text-gray-700 mb-2">Descrição</label>
-                    <input type="text" value={descricaoIndicador} onChange={(e) => setDescricaoIndicador(e.target.value)} className={estiloInput} placeholder="Ex: Atendimento da Rede Municipal" disabled={isNewVersionMode} />
-                </div>
+                
+                {!isNewVersionMode && (
+                    <div>
+                        <label className="block text-lg font-medium text-gray-700 mb-2">Descrição</label>
+                        <input type="text" value={descricaoIndicador} onChange={(e) => setDescricaoIndicador(e.target.value)} className={estiloInput} placeholder="Ex: Atendimento da Rede Municipal" disabled={isNewVersionMode} />
+                    </div>
+                )}
+
 
                 {isNewVersionMode && (
                     <div className="space-y-4 rounded-2xl border border-blue-200 bg-blue-50/50 p-4">
@@ -227,7 +231,6 @@ export const AbaIndicador: React.FC<AbaIndicadorProps> = (props) => {
                         </div>
                         <div className="flex-1">
                             <label className="block text-sm font-medium text-gray-500 mb-2">Cor</label>
-                            {/* 2. Renderização dinâmica dos botões de cor */}
                             <div className="flex items-center gap-2 flex-wrap">
                                 {Object.entries(coresPredefinidas).map(([nome, corHex]) => (
                                     <button

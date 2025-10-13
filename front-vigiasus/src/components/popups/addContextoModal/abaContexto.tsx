@@ -70,12 +70,10 @@ export const AbaContexto: React.FC<AbaContextoProps> = ({
                     )}
                 </div>
 
-                {/* Formulário de Nova Versão (renderização condicional) */}
                 {isNewVersionMode && (
                     <div className="space-y-4 rounded-2xl border border-blue-200 bg-blue-50/50 p-4">
                         <h3 className="text-lg font-semibold text-blue-800">Detalhes da Nova Versão</h3>
                         
-                        {/* Seletor de Tipo de Versão */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Motivo da Alteração</label>
                             <select
@@ -83,13 +81,11 @@ export const AbaContexto: React.FC<AbaContextoProps> = ({
                                 onChange={(e) => setTipoVersao(e.target.value as TipoVersao)}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500"
                             >
-                                <option selected>Selecione uma opção</option>
                                 <option value={TipoVersao.CORRECAO}>Correção de Informação Incorreta</option>
                                 <option value={TipoVersao.ATUALIZACAO_MENSAL}>Atualização Mensal</option>
                             </select>
                         </div>
 
-                        {/* Descrição das Alterações */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Descrição das Alterações (Obrigatório)</label>
                             <textarea
@@ -103,10 +99,9 @@ export const AbaContexto: React.FC<AbaContextoProps> = ({
                     </div>
                 )}
 
-                {/* Seção de Anexar Fonte */}
                 <div>
                     <label className="block text-lg font-medium text-gray-700 mb-2">
-                        {isNewVersionMode ? "Anexar Novo Ficheiro (Obrigatório)" : "Anexar Fonte (Obrigatório)"}
+                        {isNewVersionMode ? "Anexar Novo Arquivo (Obrigatório)" : "Anexar Fonte"}
                     </label>
                     <div className="flex gap-2 items-stretch">
                         <div onDrop={aoSoltarArquivo} onDragOver={aoArrastarSobre} onDragEnter={aoEntrarNaArea} onDragLeave={aoSairDaArea} className={`flex-1 border-2 border-dashed rounded-2xl p-6 text-center transition-all cursor-pointer flex flex-col justify-center items-center ${arrastandoSobre ? 'border-blue-500 bg-blue-50 animate-pulse-border' : 'border-gray-300 bg-gray-50/50 hover:border-gray-400'}`}>
@@ -122,7 +117,7 @@ export const AbaContexto: React.FC<AbaContextoProps> = ({
                                 ) : (
                                     <>
                                         <UploadCloud className="w-10 h-10 text-gray-400 mb-3" />
-                                        <p className="font-semibold text-gray-700">Arraste e solte o ficheiro</p>
+                                        <p className="font-semibold text-gray-700">Arraste e solte o arquivo</p>
                                         <p className="text-sm text-gray-500">ou <span className="text-blue-600 font-semibold">clique para selecionar</span></p>
                                     </>
                                 )}
@@ -142,11 +137,12 @@ export const AbaContexto: React.FC<AbaContextoProps> = ({
                     </div>
                 </div>
                 
-                {/* Campo de Detalhes */}
-                <div>
-                    <label className="block text-lg font-medium text-gray-700 mb-2">Detalhes do Contexto</label>
-                    <textarea value={detalhesContexto} onChange={(e) => setDetalhesContexto(e.target.value)} placeholder="Descreva aqui o contexto e sua relevância." rows={4} className="w-full px-4 py-3 border bg-gray-50/25 border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"/>
-                </div>
+                {!isNewVersionMode && (
+                    <div>
+                        <label className="block text-lg font-medium text-gray-700 mb-2">Detalhes do Contexto</label>
+                        <textarea value={detalhesContexto} onChange={(e) => setDetalhesContexto(e.target.value)} placeholder="Descreva aqui o contexto e sua relevância." rows={4} className="w-full px-4 py-3 border bg-gray-50/25 border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"/>
+                    </div>
+                )}
             </div>
         </div>
     );
