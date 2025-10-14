@@ -152,7 +152,7 @@ const sampleFiles: DetalhesContexto[] = [
         solicitante: "Conselho Municipal",
         autor: "Conselho Municipal",
         versoes: [
-             { id: 1, nome: "Resolução 20/07/2025 (v1)", data: "2024-07-20", autor: "CMS" }
+            { id: 1, nome: "Resolução 20/07/2025 (v1)", data: "2024-07-20", autor: "CMS" }
         ]
     },
     {
@@ -207,14 +207,14 @@ export default function HomePage() {
     const [modalVisualizacaoAberto, setModalVisualizacaoAberto] = useState(false);
     const [ficheiroSelecionado, setFicheiroSelecionado] = useState<DetalhesContexto | null>(null);
     const [perfil, setPerfil] = useState<'diretor' | 'gerente' | 'membro'>('membro');
-    
+
     const [searchValue, setSearchValue] = useState("");
     const [activeTab, setActiveTab] = useState<'recente' | 'todas'>("todas");
     const [selectedTypes, setSelectedTypes] = useState<FileType[]>([]);
     const debouncedSearchValue = useDebounce(searchValue, 300);
 
     const handleSelectedTypesChange = (type: FileType) => {
-        setSelectedTypes(prev => 
+        setSelectedTypes(prev =>
             prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
         );
     };
@@ -227,7 +227,7 @@ export default function HomePage() {
             const matchesSearch = file.title.toLowerCase().includes(debouncedSearchValue.toLowerCase());
             const matchesTab = activeTab === 'todas' || new Date(file.insertedDate) >= sevenDaysAgo;
             const matchesType = selectedTypes.length === 0 || selectedTypes.includes(file.type);
-            
+
             return matchesSearch && matchesTab && matchesType;
         });
     }, [debouncedSearchValue, activeTab, selectedTypes]);
@@ -237,7 +237,7 @@ export default function HomePage() {
         setGerenciaError(null);
         setTimeout(() => {
             const found = mockGerencias.find(g => g.id === selectedGerenciaId);
-            if (found) { setGerenciaDetails(found); } 
+            if (found) { setGerenciaDetails(found); }
             else { setGerenciaDetails(null); setGerenciaError('Gerência não encontrada'); }
             setGerenciaLoading(false);
         }, 400);
@@ -251,10 +251,10 @@ export default function HomePage() {
     const lidarComCriarNovaVersao = (dadosDoContextoAntigo: DetalhesContexto) => {
         setDadosParaEditar(dadosDoContextoAntigo);
         setModalVisualizacaoAberto(false);
-        const tabParaAbrir: AbaAtiva = 
+        const tabParaAbrir: AbaAtiva =
             dadosDoContextoAntigo.type === 'dashboard' ? 'dashboard' :
-            dadosDoContextoAntigo.type === 'indicador' ? 'indicador' :
-            'contexto';
+                dadosDoContextoAntigo.type === 'indicador' ? 'indicador' :
+                    'contexto';
         setTimeout(() => abrirModal(tabParaAbrir), 50);
     };
 
@@ -275,10 +275,10 @@ export default function HomePage() {
             description: indicator.subtitle,
             solicitante: indicator.versoes.length > 0 ? indicator.versoes[0].autor : "N/A",
             versoes: indicator.versoes,
-            valorAtual: indicator.value, 
-            unidade: indicator.unidade, 
+            valorAtual: indicator.value,
+            unidade: indicator.unidade,
             textoComparativo: indicator.change || "",
-            cor: borderColorMap[indicator.borderColor], 
+            cor: borderColorMap[indicator.borderColor],
             icone: iconMap[indicator.iconType],
             payload: {
                 description: indicator.subtitle,
@@ -351,7 +351,7 @@ export default function HomePage() {
                     ))}
                 </div>
 
-                <FilterBar 
+                <FilterBar
                     searchValue={searchValue}
                     onSearchChange={setSearchValue}
                     activeTab={activeTab}
@@ -360,8 +360,8 @@ export default function HomePage() {
                     onSelectedTypesChange={handleSelectedTypesChange}
                     clearTypeFilter={() => setSelectedTypes([])}
                 />
-                
-                <div className="border-2 border-none border-gray-300 rounded-4xl bg-[#ffffff] min-h-[300px] flex items-center justify-center">
+
+                <div className="border-2 border-none border-gray-300 rounded-4xl bg-[#FDFDFD] min-h-[300px] flex items-center justify-center">
                     {filteredFiles.length > 0 ? (
                         <FileGrid
                             files={filteredFiles}
