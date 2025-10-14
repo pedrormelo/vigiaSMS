@@ -34,7 +34,7 @@ export function AvailableGraphsPanel({ graphs, onGraphSelect }: AvailableGraphsP
   });
 
   return (
-    <div className="pb-16">
+    <div className="">
       {/* Título e Barra de Pesquisa */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-3xl font-extralight text-[#1745FF]">Gráficos Disponíveis</h2>
@@ -79,7 +79,7 @@ export function AvailableGraphsPanel({ graphs, onGraphSelect }: AvailableGraphsP
       </div>
 
       {/* Grid de Gráficos */}
-      <div className="grid p-6 grid-cols-1 md:grid-cols-4 gap-6 max-h-[346px] overflow-y-auto">
+      <div className="grid p-6 grid-cols-1 md:grid-cols-4 gap-6 max-h-[410px] overflow-y-auto">
         {filteredGraphs.map((graph) => (
           <GraphCard
             key={graph.id}
