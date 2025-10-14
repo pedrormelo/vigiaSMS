@@ -2,13 +2,27 @@
 
 import React, { useState } from "react";
 
-import { 
+import {
     ArrowLeft, FileX2, Download, FileSymlink, ChartPie, ChartBar, ChartLine
 } from "lucide-react";
 
 import { Button } from "@/components/button";
 import { saveAs } from "file-saver";
 import { useRouter } from "next/navigation";
+
+import {
+    ConfirmButton,
+    CancelButton,
+    CommentButton,
+    DangerButton,
+    WarningButton,
+    SuccessButton,
+    InfoButton,
+    PurpleButton,
+    EditButton,
+    SaveButton,
+} from "@/components/ui/action-buttons"
+
 
 type GraphType = "pie" | "chart" | "line";
 
@@ -214,7 +228,7 @@ export default function NovoGraficoPage({ onSubmit }: NovoGraficoPageProps) {
                                                         className={`p-4 rounded-3xl border-2 flex flex-col items-center justify-center transition-all hover:scale-105 ${type === g.key
                                                             ? "bg-blue-500 text-white border-blue-500 shadow-lg"
                                                             : "border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-gray-400"
-                                                        }`}
+                                                            }`}
                                                         title={g.label}
                                                     >
                                                         <Icon className="w-7 h-7 mb-1" />
@@ -380,10 +394,48 @@ export default function NovoGraficoPage({ onSubmit }: NovoGraficoPageProps) {
                             >
                                 Salvar Gráfico
                             </Button>
+
+                            {/* Example Usage Scenarios */}
+                            <div className=" gap-6">
+                                {/* Form Example */}
+                                <div className="bg-white/40 backdrop-blur-2xl rounded-2xl shadow-lg border border-white/50 p-6 space-y-4">
+                                    <h3 className="text-xl font-bold text-gray-900">Exemplo: Formulário</h3>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Nome do Paciente</label>
+                                            <input
+                                                type="text"
+                                                className="w-full px-4 py-2 bg-white/50 backdrop-blur-sm border border-gray-300/50 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                placeholder="Digite o nome"
+                                            />
+                                        </div>
+                                        <div className="flex gap-3 justify-end">
+                                            <CancelButton size="sm">Cancelar</CancelButton>
+                                            <SaveButton size="sm">Salvar</SaveButton>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Action Bar Example */}
+                                <div className="bg-white/40 backdrop-blur-2xl rounded-2xl shadow-lg border border-white/50 p-6 space-y-4">
+                                    <h3 className="text-xl font-bold text-gray-900">Exemplo: Barra de Ações</h3>
+                                    <div className="flex flex-wrap gap-3">
+                                        <EditButton size="sm">Editar</EditButton>
+                                        <InfoButton size="sm">Detalhes</InfoButton>
+                                        <CommentButton size="sm">Comentar</CommentButton>
+                                        <WarningButton size="sm">Alertar</WarningButton>
+                                        <DangerButton size="sm">Excluir</DangerButton>
+                                        <ConfirmButton size="sm">Confirmar</ConfirmButton>
+                                        <SuccessButton size="sm">Aprovar</SuccessButton>
+                                        <PurpleButton size="sm">Custom</PurpleButton>
+
+                                    </div>
+                                </div>
+                            </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
         </main>
     );
 }
