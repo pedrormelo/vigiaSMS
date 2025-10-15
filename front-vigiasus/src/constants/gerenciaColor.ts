@@ -26,7 +26,7 @@ export const getGerenciaColor = (gerenciaName: string): string => {
     for (const diretoria of gerenciasHierarquia) {
         const gerenciaIndex = diretoria.gerencias.findIndex(g => g.name === gerenciaName);
         if (gerenciaIndex !== -1) {
-            const shade = gerenciaIndex * 0.099; 
+            const shade = gerenciaIndex * 0.1099; 
             return shadeColor(diretoria.color, shade);
         }
     }

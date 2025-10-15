@@ -25,10 +25,18 @@ export default function GerenciasPage() {
       {/* Header com gradiente dinâmico via 'style' */}
       <div
         className="relative p-8 text-white shadow-lg"
-        //  Aqui, meu nobre, temos a aplicação do gradiente com as cores hexadecimais
-        style={{
-          background: `linear-gradient(to right, ${diretoria.cores.from}, ${diretoria.cores.to})`
-        }}
+        //  Usa banner da diretoria quando disponível, senão aplica gradiente
+        style={
+          diretoria.bannerImage
+            ? {
+                backgroundImage: `url(${diretoria.bannerImage})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }
+            : {
+                background: `linear-gradient(to right, ${diretoria.cores.from}, ${diretoria.cores.to})`
+              }
+        }
       >
         <div className="flex justify-between items-center">
           {/* Títulos */}

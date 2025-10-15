@@ -21,25 +21,26 @@ function chunk<T>(array: T[], size: number): T[][] {
 }
 
 interface Gerencia {
+  id: number;
   label: string;
   color: string;
 }
 
 const gerencias: Gerencia[] = [
-    { label: "Gerência de Fluxos Assistenciais", color: "#2563EB" },
-    { label: "Gerência de Tecnologia da Informação", color: "#16A34A" },
-    { label: "Gerência de Atenção Primária", color: "#00B5E2" },
-    { label: "Gerência de Saúde Bucal", color: "#F59E0B" },
-    { label: "Gerência de Urgência e Emergência", color: "#EF4444" },
-    { label: "Gerência de Vigilância em Saúde", color: "#DC2626" },
-    { label: "Gerência de Saúde Mental", color: "#9333EA" },
-    { label: "Gerência Administrativa", color: "#F59E0B" },
-    { label: "Gerência Financeira", color: "#16A34A" },
-    { label: "Gerência de Urgência e Emergência", color: "#EF4444" },
-    { label: "Gerência de Vigilância em Saúde", color: "#DC2626" },
-    { label: "Gerência de Saúde Mental", color: "#9333EA" },
-    { label: "Gerência Administrativa", color: "#F59E0B" },
-    { label: "Gerência Financeira", color: "#16A34A" },
+    { id: 1, label: "Gerência de Fluxos Assistenciais", color: "#2563EB" },
+    { id: 2, label: "Gerência de Tecnologia da Informação", color: "#16A34A" },
+    { id: 3, label: "Gerência de Atenção Primária", color: "#00B5E2" },
+    { id: 4, label: "Gerência de Saúde Bucal", color: "#F59E0B" },
+    { id: 5, label: "Gerência de Urgência e Emergência", color: "#EF4444" },
+    { id: 6, label: "Gerência de Vigilância em Saúde", color: "#DC2626" },
+    { id: 7, label: "Gerência de Saúde Mental", color: "#9333EA" },
+    { id: 8, label: "Gerência Administrativa", color: "#F59E0B" },
+    { id: 9, label: "Gerência Financeira", color: "#16A34A" },
+    { id: 10, label: "Gerência de Urgência e Emergência", color: "#EF4444" },
+    { id: 11, label: "Gerência de Vigilância em Saúde", color: "#DC2626" },
+    { id: 12, label: "Gerência de Saúde Mental", color: "#9333EA" },
+    { id: 13, label: "Gerência Administrativa", color: "#F59E0B" },
+    { id: 14, label: "Gerência Financeira", color: "#16A34A" },
 ];
 
 export default function GerenciasCarousel() {
