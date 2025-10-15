@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+// src/components/popups/addContextoModal/previsualizacaoGrafico.tsx
+>>>>>>> consertando-gerencia
 "use client";
 
 import React from "react";
@@ -61,11 +65,24 @@ export const PrevisualizacaoGrafico: React.FC<PrevisualizacaoGraficoProps> = ({
         )
     ];
 
+<<<<<<< HEAD
     // MUDANÇA: Separamos as opções para aplicar a correção condicionalmente
+=======
+    const coresDoGrafico = 
+        conjuntoDeDados.cores && conjuntoDeDados.cores.length > 0
+            ? conjuntoDeDados.cores
+            : ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444'];
+
+    const getEstilosPorTipo = () => {
+        return { colors: coresDoGrafico };
+    };
+
+>>>>>>> consertando-gerencia
     const opcoesBase = {
         title: titulo || "Pré-visualização do Gráfico",
         backgroundColor: "transparent",
         legend: { position: "bottom", textStyle: { fontSize: 12 } },
+<<<<<<< HEAD
         chartArea: { width: "90%", height: "75%" },
         colors: ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444'],
     };
@@ -81,11 +98,30 @@ export const PrevisualizacaoGrafico: React.FC<PrevisualizacaoGraficoProps> = ({
             : {};
 
     const opcoesFinais = { ...opcoesBase, ...opcoesEspecificas };
+=======
+        chartArea: { width: "75%", height: "75%" },
+    };
+
+    const opcoesEspecificas =
+        (tipoGrafico === 'chart' || tipoGrafico === 'line')
+            ? { vAxis: { viewWindow: { min: 0 } } }
+            : {};
+
+    const opcoesFinais = { 
+        ...opcoesBase, 
+        ...opcoesEspecificas,
+        ...getEstilosPorTipo() 
+    };
+>>>>>>> consertando-gerencia
 
     const obterTipoGrafico = () => {
         switch (tipoGrafico) {
             case "pie": return "PieChart";
+<<<<<<< HEAD
             case "line": return "LineChart";
+=======
+            case "line": return "AreaChart";
+>>>>>>> consertando-gerencia
             case "chart": return "ColumnChart";
             default: return "PieChart";
         }
@@ -97,10 +133,17 @@ export const PrevisualizacaoGrafico: React.FC<PrevisualizacaoGraficoProps> = ({
                 key={JSON.stringify(conjuntoDeDados)}
                 chartType={obterTipoGrafico()}
                 data={dadosGrafico}
+<<<<<<< HEAD
                 options={opcoesFinais} // Usamos as opções finais aqui
                 width="100%"
                 height="100%"
                 loader={<div>Carregando gráfico...</div>}
+=======
+                options={opcoesFinais}
+                width="100%"
+                height="100%"
+                loader={<div>A carregar gráfico...</div>}
+>>>>>>> consertando-gerencia
             />
             {!emTelaCheia && aoAlternarTelaCheia && previsualizacaoGerada && possuiDadosValidos() && (
                 <button

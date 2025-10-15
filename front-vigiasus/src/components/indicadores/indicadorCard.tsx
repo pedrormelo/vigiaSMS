@@ -8,9 +8,11 @@ import { Hospital,
     HeartHandshake,
     ClipboardPlus,
     Stethoscope,
+    Ambulance,
 } from 'lucide-react';
 
-const icons = {
+// 1. Adicionar 'export' aqui
+export const icons = {
     unidades: (
         <Hospital className="w-4 h-4" />
     ),
@@ -31,10 +33,14 @@ const icons = {
     ),
     medicos: (
         <Stethoscope className="w-4 h-4" />
-    )
+    ),
+    ambulancia: (
+        <Ambulance className="w-4 h-4" />
+    ),
 }
 
-const borderColors = {
+// E também aqui, para consistência, caso precise no futuro.
+export const borderColors = {
     blue: "border-l-blue-500",
     green: "border-l-green-500",
     red: "border-l-red-500",
@@ -55,7 +61,9 @@ interface IndicatorCardProps {
     iconType: keyof typeof icons
     valuePrefix?: string
     valueSuffix?: string
+    onClick?: () => void
 }
+
 
 export function IndicatorCard({
     title,
@@ -67,14 +75,18 @@ export function IndicatorCard({
     iconType,
     valuePrefix = "",
     valueSuffix = "",
+    onClick,
 }: IndicatorCardProps) {
     const borderClass = borderColor in borderColors ? borderColors[borderColor as keyof typeof borderColors] : borderColor
 
     return (
         <Card className={cn(
             "relative p-3 min-w-[240px] h-24 border-l-4 border-gray-200 rounded-[5px] bg-white shadow-sm overflow-hidden transition-transform duration-200 hover:scale-105",
-            borderClass
-        )}>
+            borderClass,
+            onClick && "cursor-pointer"
+        )}
+        onClick={onClick}
+        >
             <div className="flex items-start justify-between h-full">
                 <div className="flex flex-col justify-between h-full flex-1 min-w-0 pr-2">
                     <div>
@@ -96,7 +108,8 @@ export function IndicatorCard({
                             >
                                 {changeType === "positive" && <span>▲</span>}
                                 {changeType === "negative" && <span>▼</span>}
-                                <span>{change}</span>
+                                {changeType === "neutral" && <span className="font-bold">—</span>}
+                                <span>{change.replace("— ", "")}</span>
                             </div>
                         )}
                     </div>

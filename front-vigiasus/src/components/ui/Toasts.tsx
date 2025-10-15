@@ -1,9 +1,9 @@
 "use client";
 
 import { toast } from "sonner";
-import { CheckCircle2, XCircle, AlertCircle, Info } from "lucide-react";
+import { CheckCircle2, XCircle, AlertCircle, Info, Send } from "lucide-react"; // 1. Importar o ícone 'Send'
 
-type ToastType = "success" | "error" | "warning" | "info";
+type ToastType = "success" | "error" | "warning" | "info" | "dispatch"; // 2. Adicionar o novo tipo 'dispatch'
 
 interface ToastComponentProps {
   type: ToastType;
@@ -48,6 +48,14 @@ const ToastComponent = ({ type, title, message }: ToastComponentProps) => {
       bgColor = "bg-blue-50";
       borderColor = "border-blue-200";
       break;
+    // 3. Adicionar o estilo para o 'dispatch'
+    case "dispatch":
+      icon = <Send size={24} />;
+      iconBgColor = "bg-cyan-200";
+      iconColor = "text-cyan-600";
+      bgColor = "bg-cyan-50";
+      borderColor = "border-cyan-200";
+      break;
   }
 
   return (
@@ -78,4 +86,9 @@ export const showWarningToast = (message: string, title = "Atenção") => {
 
 export const showInfoToast = (message: string, title = "Informação") => {
   toast.custom(() => <ToastComponent type="info" title={title} message={message} />);
+};
+
+// 4. Nova função para chamar o toast de 'dispatch'
+export const showDispatchToast = (message: string, title = "Enviado para Análise!") => {
+  toast.custom(() => <ToastComponent type="dispatch" title={title} message={message} />);
 };
