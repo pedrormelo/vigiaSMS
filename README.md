@@ -56,8 +56,8 @@ Para executar o VigiaSUS em seu ambiente de desenvolvimento, siga os passos abai
 ### 1\. Clonar o Repositório
 
 ```bash
-git clone <URL_DO_SEU_REPOSITORIO>
-cd <NOME_DO_SEU_PROJETO>
+git clone https://github.com/pedrormelo/vigiaSMS.git
+cd front-vigiasus
 ```
 
 ### 2\. Instalar as Dependências
