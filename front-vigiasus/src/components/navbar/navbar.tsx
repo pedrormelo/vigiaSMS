@@ -3,29 +3,28 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Sidebar from "./Sidebar";
-import { Link as LucideLink, Menu } from 'lucide-react';
-//import { Button } from "../button";
-//import { h1 } from "framer-motion/client";
+import { Menu } from 'lucide-react';
+import NotificationsModal from "@/components/notifications/notificationsModal";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(3);
   
-  // SIMULAÇÃO: Estado para o contador de notificações.
-  // Em uma aplicação real, este valor viria de uma API.
-  const [unreadNotifications, setUnreadNotifications] = useState(3); 
+  // Novo estado para controlar a visibilidade do modal de notificações
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
-  // Esse role futuramente vem do AuthContext
   const role: "secretario" | "diretor" | "gerente" | "membro" = "diretor";
 
   const handleNotificationsClick = () => {
-    // Ao clicar no ícone, o contador é zerado
-    // (Simulando que as notificações foram visualizadas)
+    // Abre o modal
+    setIsNotificationsOpen(true);
+    // Ao abrir, o contador é zerado (simulando que foram lidas)
     setUnreadNotifications(0);
   };
 
   return (
     <>
-      <header className="bg-white w-full drop-shadow-md">
+      <header className="bg-white w-full drop-shadow-md sticky top-0 z-30">
         <div className="container flex min-w-full min-h-[64px] justify-between items-center py-2 px-18">
           {/* Botão Menu (mobile e desktop) */}
           <button onClick={() => setOpen(true)} className="text-blue-700 hover:text-blue-500 cursor-pointer">
@@ -34,13 +33,11 @@ export default function Navbar() {
 
           {/* Bloco central com VigiaSUS e Logo Jaboatão juntos */}
           <div className="flex items-center gap-22">
-            {/* Texto VigiaSUS (visível apenas em desktop) */}
             <Link href="/" className="block">
               <h1 className="text-2xl text-blue-700 hover:text-blue-500 cursor-pointer transition-transform">
                 Vigia<b>SUS</b>
               </h1>
             </Link>
-            {/* Logo Prefeitura (visível em mobile e desktop) */}
             <Image
               src="/logos/logo-jaboatao.png"
               alt="Prefeitura de Jaboatão"
@@ -64,7 +61,7 @@ export default function Navbar() {
             
             {/* Ícone de Notificações com sinal de alerta */}
             <div className="relative">
-              <Link href="/notifications" onClick={handleNotificationsClick} className="hover:opacity-70">
+              <button onClick={handleNotificationsClick} className="hover:opacity-70">
                 <Image
                   src="/icons/sininho.svg"
                   alt="Notificações"
@@ -72,7 +69,7 @@ export default function Navbar() {
                   height={24}
                   className="w-6 h-6"
                 />
-              </Link>
+              </button>
               {unreadNotifications > 0 && (
                 <div className="absolute top-0 right-0 h-3 w-3 bg-red-500 rounded-full border-2 border-white animate-pulse" />
               )}
@@ -83,6 +80,12 @@ export default function Navbar() {
 
       {/* Sidebar */}
       <Sidebar role={role} isOpen={open} onClose={() => setOpen(false)} />
+
+      {/* O modal de notificações é renderizado aqui e controlado pelo estado `isNotificationsOpen` */}
+      <NotificationsModal 
+        isOpen={isNotificationsOpen}
+        onClose={() => setIsNotificationsOpen(false)}
+      />
     </>
   );
 }
