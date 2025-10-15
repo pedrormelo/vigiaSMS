@@ -8,6 +8,7 @@ import { PrevisualizacaoGrafico } from '@/components/popups/addContextoModal/pre
 import type { FileType } from '@/components/contextosCard/contextoCard';
 import { VisualizadorDocx } from './visualizadorDocx';
 import { VisualizadorIndicador } from './visualizadorIndicador';
+import { DetalhesContexto, ConjuntoDeDadosGrafico } from '@/components/popups/addContextoModal/types';
 
 const VisualizadorPdf = dynamic(() => import('./visualizadorPDF').then(mod => mod.VisualizadorPdf), {
     ssr: false,
@@ -23,13 +24,14 @@ interface VisualizadorProps {
     tipo: FileType;
     url?: string;
     titulo: string;
-    payload?: any;
+    payload?: any; 
+    chartType?: DetalhesContexto['chartType'];
     aoAlternarTelaCheia?: () => void;
     emTelaCheia?: boolean;
     zoomLevel?: number;
 }
 
-export const VisualizadorDeConteudo: React.FC<VisualizadorProps> = ({ tipo, url, titulo, payload, aoAlternarTelaCheia, emTelaCheia = false, zoomLevel = 1 }) => {
+export const VisualizadorDeConteudo: React.FC<VisualizadorProps> = ({ tipo, url, titulo, payload, chartType, aoAlternarTelaCheia, emTelaCheia = false, zoomLevel = 1 }) => {
     
     const renderFallback = () => (
         <div className="animate-fade-in h-full flex flex-col items-center justify-center bg-gray-50 rounded-2xl p-6 text-center">
@@ -58,16 +60,14 @@ export const VisualizadorDeConteudo: React.FC<VisualizadorProps> = ({ tipo, url,
             );
         
         case 'dashboard':
-            // CORREÇÃO: A lógica agora procura o objeto `dataset` dentro do payload,
-            // que é a estrutura correta que estamos a salvar.
-            const dadosDoDashboard = payload?.dataset || payload;
+            const dadosDoDashboard = payload as ConjuntoDeDadosGrafico;
 
             return (
                 <div className="animate-fade-in h-full w-full">
                     {dadosDoDashboard ? (
                         <PrevisualizacaoGrafico 
-                            tipoGrafico={payload.type || 'chart'} // O tipo do gráfico está no payload principal
-                            conjuntoDeDados={dadosDoDashboard} // O dataset (com cores) é passado aqui
+                            tipoGrafico={chartType || 'chart'} 
+                            conjuntoDeDados={dadosDoDashboard} 
                             titulo={titulo}
                             previsualizacaoGerada={true}
                             aoAlternarTelaCheia={aoAlternarTelaCheia}

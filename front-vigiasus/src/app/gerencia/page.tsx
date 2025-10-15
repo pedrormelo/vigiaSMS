@@ -34,7 +34,6 @@ const indicators: IndicatorData[] = [
         changeType: "positive",
         borderColor: "border-l-blue-500",
         iconType: "cuidados",
-        // CORREÇÃO: Data estática em vez de new Date()
         insertedDate: "2025-10-13T12:00:00.000Z",
         versoes: [
             { id: 1, nome: "v1 - População Atendida", data: "2025-08-10", autor: "Carlos" },
@@ -66,7 +65,6 @@ const indicators: IndicatorData[] = [
         changeType: "positive",
         borderColor: "border-l-red-500",
         iconType: "servidores",
-        // CORREÇÃO: Data estática em vez de new Date()
         insertedDate: "2025-10-10T12:00:00.000Z",
         versoes: [
             { id: 1, nome: "v1 - Profissionais Ativos", data: "2025-07-20", autor: "Mariana" },
@@ -83,6 +81,7 @@ const dadosDashboardPEC = {
         ['Em Implantação', 25],
         ['Não Iniciado', 25],
     ],
+    cores: ['#3B82F6', '#F97316', '#EF4444'] 
 };
 
 const sampleFiles: DetalhesContexto[] = [
