@@ -5,11 +5,11 @@ import Image from 'next/image';
 import { DocType } from './typesDados';
 
 const docTypeConfig = {
-  excel: { src: "/icons/planilha-icon-4.svg", alt: "Ícone Excel" },
-  pdf: { src: "/icons/pdf-icon-2.svg", alt: "Ícone PDF" },
-  doc: { src: "/icons/doc-icon.svg", alt: "Ícone Word" },
-  dashboard: { src: "/icons/doc-icon.svg", alt: "Ícone Dashboard" },
-  money: { src: "/icons/doc-icon.svg", alt: "Ícone Financeiro" },
+  excel: { src: "/icons/CONTEXTOS/PLA.svg", alt: "Ícone Excel" },
+  pdf: { src: "/icons/CONTEXTOS/PDF.svg", alt: "Ícone PDF" },
+  doc: { src: "/icons/CONTEXTOS/DOC.svg", alt: "Ícone Word" },
+  dashboard: { src: "/icons/CONTEXTOS/GRA.svg", alt: "Ícone Dashboard" },
+  resolucao: { src: "/icons/CONTEXTOS/RES.svg", alt: "Ícone Resolução" },
 };
 
 interface Props {
@@ -21,7 +21,7 @@ export default function IconeDocumento({ type }: Props) {
 
   return (
 
-    <div className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center bg-gray-100">
+    <div className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-cente">
 
       <Image
         src={config.src}

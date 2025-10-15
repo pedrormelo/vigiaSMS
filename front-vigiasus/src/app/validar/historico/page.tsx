@@ -76,7 +76,7 @@ export default function HistoricoPage() {
   }
 
   return (
-    <div className="p-8 bg-white">
+    <div className="p-8 bg-white min-h-screen">
       <div className="flex gap-2 mb-4 bg-yellow-100 p-2 rounded-md text-sm">
         <p className="font-bold my-auto">Simulação de Perfil:</p>
         <button onClick={() => setPerfil("diretor")} className={`px-3 py-1 rounded-md ${perfil === 'diretor' && 'bg-blue-200 font-semibold'}`}>Diretor</button>
@@ -87,14 +87,14 @@ export default function HistoricoPage() {
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-[#1745FF]">Histórico de Contextos</h1>
         <Link href="/validar">
-          <Button variant="outline" className="bg-white rounded-full border border-gray-200 shadow-sm">
+          <Button className="bg-white rounded-full border border-gray-300 shadow-sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Voltar
           </Button>
         </Link>
       </div>
 
-      <div className="bg-gray-50 rounded-[2rem] p-6 shadow-sm">
+      <div className="bg-gray-100/25 rounded-[2rem] p-6 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
           <SearchBar
             value={searchQuery}

@@ -16,7 +16,7 @@ export default function Paginacao({ currentPage, totalPages, onPageChange }: Pro
   }
 
   return (
-    <div className="flex items-center justify-center gap-4 mt-6">
+    <div className="flex items-center justify-center text-gray-600 gap-4 mt-6">
       <Button
         variant="outline"
         size="icon"
