@@ -1,36 +1,100 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+VigiaSUS - Painel de Monitoramento Estratégico
+🎯 Sobre o Projeto
+O VigiaSUS é uma plataforma digital desenvolvida para a Secretaria Municipal de Saúde de Jaboatão dos Guararapes. Seu principal objetivo é centralizar dados, relatórios e informações estratégicas para apoiar a tomada de decisões e a gestão da saúde pública no município.
 
-## Getting Started
+A aplicação permite que diferentes níveis hierárquicos (membros de equipe, gerentes e diretores) interajam com os dados, submetam novos "contextos" para aprovação e visualizem indicadores e dashboards de forma clara e intuitiva.
 
-First, run the development server:
+✨ Principais Funcionalidades
+O sistema foi construído com um conjunto robusto de funcionalidades para atender às necessidades da gestão:
 
-```bash
+📤 Submissão de Conteúdo: Um modal unificado permite que os usuários adicionem três tipos de conteúdo:
+
+Contextos: Envio de arquivos (PDF, DOCX, etc.) ou links externos.
+
+Dashboards: Criação de gráficos (Pizza, Barras, Linhas) a partir de inserção manual de dados ou upload de arquivos .csv.
+
+Indicadores: Criação de cartões de métricas (KPIs) com valores, metas e comparações.
+
+🔄 Fluxo de Aprovação: Os conteúdos submetidos por membros de equipe passam por um fluxo de validação de dois níveis (Gerente → Diretor) antes de serem publicados.
+
+📜 Versionamento de Conteúdo: Todos os tipos de conteúdo possuem um sistema de histórico de versões, permitindo que alterações sejam rastreadas e documentadas.
+
+🎨 Personalização Visual:
+
+Gráficos: Os usuários podem personalizar a paleta de cores associada a cada série de dados de seus gráficos.
+
+Indicadores: É possível escolher uma cor de destaque e um ícone temático para cada indicador.
+
+👥 Controle de Acesso por Perfil: A interface se adapta ao perfil do usuário (membro, gerente, diretor), exibindo ou ocultando funcionalidades com base em suas permissões.
+
+📊 Visualização de Dados:
+
+Um modal de visualização permite inspecionar detalhes, pré-visualizar o conteúdo (PDFs, DOCX, gráficos, indicadores) e navegar pelo histórico de versões.
+
+Painéis de gerência exibem os contextos e indicadores de forma organizada.
+
+💬 Sistema de Comentários e Notificações: Uma central de notificações e uma seção de comentários integrada permitem a comunicação e o feedback sobre os contextos submetidos.
+
+🚀 Tecnologias Utilizadas
+Este projeto foi construído com as seguintes tecnologias:
+
+Framework: Next.js
+
+Linguagem: TypeScript
+
+Estilização: Tailwind CSS
+
+Componentes UI: Shadcn/ui
+
+Ícones: Lucide React
+
+Visualização de Gráficos: React Google Charts
+
+Visualização de Documentos: react-pdf, docx-preview
+
+Animações: Framer Motion
+
+🛠️ Como Rodar o Projeto Localmente
+Para executar o VigiaSUS em seu ambiente de desenvolvimento, siga os passos abaixo.
+
+Pré-requisitos
+Node.js (versão 18 ou superior)
+
+Yarn ou npm
+
+1. Clonar o Repositório
+Bash
+
+git clone <URL_DO_SEU_REPOSITORIO>
+cd <NOME_DO_SEU_PROJETO>
+2. Instalar as Dependências
+Instale todas as dependências do projeto com o seu gerenciador de pacotes preferido:
+
+Bash
+
+npm install
+# ou
+yarn
+3. Executar o Servidor de Desenvolvimento
+Inicie o servidor de desenvolvimento. A aplicação estará disponível em http://localhost:3000.
+
+Bash
+
 npm run dev
-# or
+# ou
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+📁 Estrutura do Projeto
+A arquitetura do projeto está organizada da seguinte forma dentro da pasta src/:
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+src/
+├── app/                  # Rotas e páginas da aplicação (App Router)
+├── components/           # Componentes React reutilizáveis
+│   ├── ui/               # Componentes de UI base (shadcn)
+│   ├── popups/           # Modais da aplicação
+│   ├── dashboard/        # Componentes específicos para dashboards
+│   ├── indicadores/      # Componentes para os cards de indicadores
+│   └── ...
+├── constants/            # Dados estáticos, mocks e configurações
+├── hooks/                # Hooks customizados (ex: useDebounce)
+├── lib/                  # Funções utilitárias (ex: cn)
+└── services/             # Lógica de busca de dados (simula uma API)
