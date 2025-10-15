@@ -1,12 +1,3 @@
-<<<<<<< HEAD
-import React from 'react';
-import { UploadCloud, FileText, Link, Eye, Trash2 } from 'lucide-react';
-import {  useModalAdicionarConteudo } from '@/components/popups/addContextoModal/useAddContentModal'; 
-
-// --- TRADUÇÃO DAS PROPS ---
-type AbaContextoProps = Pick<
-    ReturnType<typeof  useModalAdicionarConteudo>,
-=======
 // src/components/popups/addContextoModal/abaContexto.tsx
 import React from 'react';
 import { UploadCloud, FileText, Link as LinkIcon, Eye, Trash2 } from 'lucide-react';
@@ -15,7 +6,6 @@ import { TipoVersao } from '@/components/popups/addContextoModal/types';
 
 type AbaContextoProps = Pick<
     ReturnType<typeof useModalAdicionarConteudo>,
->>>>>>> consertando-gerencia
     | 'tituloContexto' | 'setTituloContexto'
     | 'detalhesContexto' | 'setDetalhesContexto'
     | 'arquivoContexto' | 'setArquivoContexto'
@@ -23,11 +13,6 @@ type AbaContextoProps = Pick<
     | 'arrastandoSobre' | 'aoSoltarArquivo' | 'aoArrastarSobre' | 'aoEntrarNaArea' | 'aoSairDaArea'
     | 'aoSelecionarArquivo' | 'aoClicarBotaoUrl'
     | 'obterNomeFonteContexto' | 'formatarTamanhoArquivo'
-<<<<<<< HEAD
->;
-
-// --- TRADUÇÃO DO NOME DO COMPONENTE E VARIÁVEIS INTERNAS ---
-=======
     | 'isNewVersionMode'
     | 'selectedVersion'
     | 'tipoVersao'
@@ -36,7 +21,6 @@ type AbaContextoProps = Pick<
     | 'setDescricaoVersao'
 >;
 
->>>>>>> consertando-gerencia
 export const AbaContexto: React.FC<AbaContextoProps> = ({
     tituloContexto, setTituloContexto,
     detalhesContexto, setDetalhesContexto,
@@ -44,9 +28,6 @@ export const AbaContexto: React.FC<AbaContextoProps> = ({
     urlContexto, setUrlContexto,
     arrastandoSobre, aoSoltarArquivo, aoArrastarSobre, aoEntrarNaArea, aoSairDaArea,
     aoSelecionarArquivo, aoClicarBotaoUrl,
-<<<<<<< HEAD
-    obterNomeFonteContexto, formatarTamanhoArquivo
-=======
     obterNomeFonteContexto, formatarTamanhoArquivo,
     isNewVersionMode,
     selectedVersion,
@@ -54,23 +35,10 @@ export const AbaContexto: React.FC<AbaContextoProps> = ({
     setTipoVersao,
     descricaoVersao,
     setDescricaoVersao,
->>>>>>> consertando-gerencia
 }) => {
     return (
         <div className="h-full overflow-y-auto pr-4">
             <div className="space-y-6 animate-fade-in">
-<<<<<<< HEAD
-                <div>
-                    <label className="block text-lg font-medium text-gray-700 mb-2">Título do Contexto</label>
-                    <input type="text" value={tituloContexto} onChange={(e) => setTituloContexto(e.target.value)} placeholder="Título para descrever o contexto (Ex: Relatório de Metas 2025)" className="w-full px-4 py-3 border border-gray-200 rounded-2xl bg-gray-50/25 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"/>
-                </div>
-                
-                <div>
-                    <label className="block text-lg font-medium text-gray-700 mb-2">Anexar Fonte</label>
-                    <div className="flex gap-2 items-stretch">
-                        <div onDrop={aoSoltarArquivo} onDragOver={aoArrastarSobre} onDragEnter={aoEntrarNaArea} onDragLeave={aoSairDaArea} className={`flex-1 border-2 border-dashed rounded-2xl p-6 text-center transition-all cursor-pointer flex flex-col justify-center items-center ${arrastandoSobre ? 'border-blue-500 bg-blue-50 animate-pulse-border' : 'border-gray-300 bg-gray-50/50 hover:border-gray-400'}`}>
-                            <input id="context-file-input" type="file" onChange={(e) => aoSelecionarArquivo(e.target.files ? e.target.files[0] : null)} className="hidden"/>
-=======
 
                 <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-x-6 gap-y-2 items-end">
                     <div>
@@ -138,16 +106,11 @@ export const AbaContexto: React.FC<AbaContextoProps> = ({
                     <div className="flex gap-2 items-stretch">
                         <div onDrop={aoSoltarArquivo} onDragOver={aoArrastarSobre} onDragEnter={aoEntrarNaArea} onDragLeave={aoSairDaArea} className={`flex-1 border-2 border-dashed rounded-2xl p-6 text-center transition-all cursor-pointer flex flex-col justify-center items-center ${arrastandoSobre ? 'border-blue-500 bg-blue-50 animate-pulse-border' : 'border-gray-300 bg-gray-50/50 hover:border-gray-400'}`}>
                             <input id="context-file-input" type="file" onChange={(e) => aoSelecionarArquivo(e.target.files ? e.target.files[0] : null)} className="hidden" />
->>>>>>> consertando-gerencia
                             <label htmlFor="context-file-input" className="cursor-pointer w-full flex flex-col items-center justify-center">
                                 {(arquivoContexto || urlContexto) ? (
                                     <>
                                         {arquivoContexto && <FileText className="w-10 h-10 text-blue-600 mb-3" />}
-<<<<<<< HEAD
-                                        {urlContexto && <Link className="w-10 h-10 text-green-600 mb-3" />}
-=======
                                         {urlContexto && <LinkIcon className="w-10 h-10 text-green-600 mb-3" />}
->>>>>>> consertando-gerencia
                                         <p className="font-semibold text-gray-800 break-all">{obterNomeFonteContexto()}</p>
                                         {arquivoContexto && <p className="text-sm text-gray-500">{formatarTamanhoArquivo(arquivoContexto.size)}</p>}
                                     </>
@@ -160,16 +123,9 @@ export const AbaContexto: React.FC<AbaContextoProps> = ({
                                 )}
                             </label>
                         </div>
-<<<<<<< HEAD
-
-                        <div className="flex flex-col gap-2">
-                            <button onClick={aoClicarBotaoUrl} className="px-4 py-3 border border-gray-200 cursor-pointer rounded-2xl hover:bg-gray-100 transition-colors h-full flex items-center" title="Adicionar link">
-                                <Link className="w-5 h-5 text-gray-600" />
-=======
                         <div className="flex flex-col gap-2">
                             <button onClick={aoClicarBotaoUrl} className="px-4 py-3 border border-gray-200 cursor-pointer rounded-2xl hover:bg-gray-100 transition-colors h-full flex items-center" title="Adicionar link">
                                 <LinkIcon className="w-5 h-5 text-gray-600" />
->>>>>>> consertando-gerencia
                             </button>
                             <button disabled={!urlContexto} onClick={() => window.open(urlContexto, '_blank')} className="px-4 py-3 border border-gray-200 cursor-pointer rounded-2xl hover:bg-gray-100 transition-colors h-full flex items-center disabled:opacity-50 disabled:cursor-not-allowed" title="Visualizar Link">
                                 <Eye className="w-5 h-5 text-gray-600" />
@@ -180,13 +136,6 @@ export const AbaContexto: React.FC<AbaContextoProps> = ({
                         </div>
                     </div>
                 </div>
-<<<<<<< HEAD
-                
-                <div>
-                    <label className="block text-lg font-medium text-gray-700 mb-2">Detalhes do Contexto</label>
-                    <textarea value={detalhesContexto} onChange={(e) => setDetalhesContexto(e.target.value)} placeholder="Descreva aqui o contexto e sua relevância." rows={4} className="w-full px-4 py-3 border bg-gray-50/25 border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"/>
-                </div>
-=======
 
                 {!isNewVersionMode && (
                     <div>
@@ -194,7 +143,6 @@ export const AbaContexto: React.FC<AbaContextoProps> = ({
                         <textarea value={detalhesContexto} onChange={(e) => setDetalhesContexto(e.target.value)} placeholder="Descreva aqui o contexto e sua relevância." rows={4} className="w-full px-4 py-3 border bg-gray-50/25 border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none" />
                     </div>
                 )}
->>>>>>> consertando-gerencia
             </div>
         </div>
     );

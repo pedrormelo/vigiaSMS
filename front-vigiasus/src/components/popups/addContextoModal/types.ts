@@ -1,12 +1,6 @@
-<<<<<<< HEAD
-// --- TIPOS E INTERFACES ---
-
-import { PieChart, BarChart3, LineChart } from "lucide-react";
-=======
 // src/components/popups/addContextoModal/types.ts
 
 import { PieChart, BarChart3, AreaChart } from "lucide-react"; 
->>>>>>> consertando-gerencia
 import type { FileType } from '@/components/contextosCard/contextoCard';
 
 export type AbaAtiva = "contexto" | "dashboard" | "indicador";
@@ -14,18 +8,6 @@ export type AbaFonteDeDados = "manual" | "upload";
 export type TipoGrafico = "pie" | "chart" | "line";
 export type NomeIcone = "Heart" | "Landmark" | "ClipboardList" | "Users" | "TrendingUp" | "DollarSign" | "Building" | "UserCheck";
 
-<<<<<<< HEAD
-export interface ConjuntoDeDadosGrafico {
-  colunas: string[];
-  linhas: (string | number)[][];
-}
-
-export interface ModalAdicionarConteudoProps {
-  estaAberto: boolean;
-  aoFechar: () => void;
-  aoSubmeter: (dados: { tipo: AbaAtiva; payload: any }) => void;
-  abaInicial?: AbaAtiva;
-=======
 export enum TipoVersao {
   CORRECAO = "Correção de Informação Incorreta",
   ATUALIZACAO_MENSAL = "Atualização Mensal",
@@ -102,7 +84,6 @@ interface IndicadorDetailsPayload {
     textoComparativo: string;
     cor: string;
     icone: NomeIcone;
->>>>>>> consertando-gerencia
 }
 
 export interface DetalhesContexto {
@@ -111,9 +92,6 @@ export interface DetalhesContexto {
     type: FileType;
     insertedDate: string;
     url?: string;
-<<<<<<< HEAD
-    payload?: ConjuntoDeDadosGrafico; // Tipo corrigido de 'any' para 'ConjuntoDeDadosGrafico'
-=======
     payload?: ConjuntoDeDadosGrafico | IndicadorDetailsPayload;
     description?: string;
     solicitante?: string;
@@ -127,7 +105,6 @@ export interface DetalhesContexto {
     cor?: string;
     icone?: NomeIcone;
     cores?: string[];
->>>>>>> consertando-gerencia
 }
 
 
@@ -174,9 +151,5 @@ export interface AbaIndicadorProps {
 export const TIPOS_GRAFICOS = {
   pie: { Icon: PieChart, rotulo: "Pizza" },
   chart: { Icon: BarChart3, rotulo: "Barras" },
-<<<<<<< HEAD
-  line: { Icon: LineChart, rotulo: "Linha" },
-=======
   line: { Icon: AreaChart, rotulo: "Área" },
->>>>>>> consertando-gerencia
 };

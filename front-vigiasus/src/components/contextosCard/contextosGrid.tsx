@@ -19,13 +19,8 @@ interface FileGridProps {
     isEditing?: boolean 
 }
 
-<<<<<<< HEAD
 export function FileGrid({ files, onFileClick, onAddContextClick, className, isEditing }: FileGridProps) {
     //  O botão de adicionar só é incluído na lista se 'isEditing' for verdadeiro
-=======
-export function FileGrid({ files, onFileClick, onAddContextClick, isEditing }: FileGridProps) {
-
->>>>>>> consertando-gerencia
     const gridItems = [
         ...(isEditing ? [<AddContextButton key="add-context" onClick={() => onAddContextClick?.()} />] : []),
         ...files.map((file) => (

@@ -1,12 +1,9 @@
-<<<<<<< HEAD
-=======
 // src/components/popups/addContextoModal/previsualizacaoGrafico.tsx
->>>>>>> consertando-gerencia
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Chart } from "react-google-charts";
-import { Eye, BarChart3, Expand } from "lucide-react";
+import { Eye, BarChart3, Expand, Loader2 } from "lucide-react";
 import { TipoGrafico, ConjuntoDeDadosGrafico } from "./types";
 
 interface PrevisualizacaoGraficoProps {
@@ -26,7 +23,6 @@ export const PrevisualizacaoGrafico: React.FC<PrevisualizacaoGraficoProps> = ({
     aoAlternarTelaCheia,
     emTelaCheia = false
 }) => {
-
     const possuiDadosValidos = () => {
         if (!conjuntoDeDados || conjuntoDeDados.linhas.length === 0) return false;
         return conjuntoDeDados.linhas.some(linha => linha.some(celula => celula !== "" && celula !== null));
@@ -65,67 +61,35 @@ export const PrevisualizacaoGrafico: React.FC<PrevisualizacaoGraficoProps> = ({
         )
     ];
 
-<<<<<<< HEAD
-    // MUDANÇA: Separamos as opções para aplicar a correção condicionalmente
-=======
     const coresDoGrafico = 
         conjuntoDeDados.cores && conjuntoDeDados.cores.length > 0
             ? conjuntoDeDados.cores
             : ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444'];
 
-    const getEstilosPorTipo = () => {
-        return { colors: coresDoGrafico };
-    };
-
->>>>>>> consertando-gerencia
-    const opcoesBase = {
+    const opcoesFinais = {
         title: titulo || "Pré-visualização do Gráfico",
         backgroundColor: "transparent",
         legend: { position: "bottom", textStyle: { fontSize: 12 } },
-<<<<<<< HEAD
-        chartArea: { width: "90%", height: "75%" },
-        colors: ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444'],
-    };
-
-    // Adiciona a opção para forçar o eixo a começar em 0 para gráficos de barra e linha
-    const opcoesEspecificas =
-        (tipoGrafico === 'chart' || tipoGrafico === 'line')
-            ? {
-                vAxis: {
-                    viewWindow: { min: 0 }, // Força o eixo vertical a começar em 0
-                },
-              }
-            : {};
-
-    const opcoesFinais = { ...opcoesBase, ...opcoesEspecificas };
-=======
         chartArea: { width: "75%", height: "75%" },
+        vAxis: (tipoGrafico === 'chart' || tipoGrafico === 'line') ? { viewWindow: { min: 0 } } : {},
+        colors: coresDoGrafico,
     };
-
-    const opcoesEspecificas =
-        (tipoGrafico === 'chart' || tipoGrafico === 'line')
-            ? { vAxis: { viewWindow: { min: 0 } } }
-            : {};
-
-    const opcoesFinais = { 
-        ...opcoesBase, 
-        ...opcoesEspecificas,
-        ...getEstilosPorTipo() 
-    };
->>>>>>> consertando-gerencia
 
     const obterTipoGrafico = () => {
         switch (tipoGrafico) {
             case "pie": return "PieChart";
-<<<<<<< HEAD
-            case "line": return "LineChart";
-=======
             case "line": return "AreaChart";
->>>>>>> consertando-gerencia
             case "chart": return "ColumnChart";
             default: return "PieChart";
         }
     };
+    
+    const LoaderPersonalizado = () => (
+        <div className="flex flex-col items-center justify-center h-full text-gray-500">
+            <Loader2 className="w-8 h-8 animate-spin mr-2" />
+            <p>A carregar biblioteca de gráficos...</p>
+        </div>
+    );
 
     return (
         <div className="w-full h-full p-4 bg-white border border-gray-200 rounded-2xl shadow-inner relative group">
@@ -133,18 +97,12 @@ export const PrevisualizacaoGrafico: React.FC<PrevisualizacaoGraficoProps> = ({
                 key={JSON.stringify(conjuntoDeDados)}
                 chartType={obterTipoGrafico()}
                 data={dadosGrafico}
-<<<<<<< HEAD
-                options={opcoesFinais} // Usamos as opções finais aqui
-                width="100%"
-                height="100%"
-                loader={<div>Carregando gráfico...</div>}
-=======
                 options={opcoesFinais}
                 width="100%"
                 height="100%"
-                loader={<div>A carregar gráfico...</div>}
->>>>>>> consertando-gerencia
+                loader={<LoaderPersonalizado />}
             />
+            
             {!emTelaCheia && aoAlternarTelaCheia && previsualizacaoGerada && possuiDadosValidos() && (
                 <button
                     onClick={aoAlternarTelaCheia}
