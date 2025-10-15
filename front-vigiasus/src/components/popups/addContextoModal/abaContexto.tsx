@@ -59,13 +59,13 @@ export const AbaContexto: React.FC<AbaContextoProps> = ({
                             disabled={isNewVersionMode}
                         />
                     </div>
-                    
+
                     {isNewVersionMode && (
                         <div>
-                             <label className="block text-lg font-medium text-gray-700 mb-2">Versão</label>
-                             <div className="flex items-center justify-center w-full h-[50px] px-4 py-3 border border-transparent rounded-2xl bg-gray-100 text-gray-500 font-semibold">
-                                 {selectedVersion || "Calculando..."}
-                             </div>
+                            <label className="block text-lg font-medium text-gray-700 mb-2">Versão</label>
+                            <div className="flex items-center justify-center w-full h-[50px] px-4 py-3 border border-transparent rounded-2xl bg-gray-100 text-gray-500 font-semibold">
+                                {selectedVersion || "Calculando..."}
+                            </div>
                         </div>
                     )}
                 </div>
@@ -73,7 +73,7 @@ export const AbaContexto: React.FC<AbaContextoProps> = ({
                 {isNewVersionMode && (
                     <div className="space-y-4 rounded-2xl border border-blue-200 bg-blue-50/50 p-4">
                         <h3 className="text-lg font-semibold text-blue-800">Detalhes da Nova Versão</h3>
-                        
+
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Motivo da Alteração</label>
                             <select
@@ -105,7 +105,7 @@ export const AbaContexto: React.FC<AbaContextoProps> = ({
                     </label>
                     <div className="flex gap-2 items-stretch">
                         <div onDrop={aoSoltarArquivo} onDragOver={aoArrastarSobre} onDragEnter={aoEntrarNaArea} onDragLeave={aoSairDaArea} className={`flex-1 border-2 border-dashed rounded-2xl p-6 text-center transition-all cursor-pointer flex flex-col justify-center items-center ${arrastandoSobre ? 'border-blue-500 bg-blue-50 animate-pulse-border' : 'border-gray-300 bg-gray-50/50 hover:border-gray-400'}`}>
-                            <input id="context-file-input" type="file" onChange={(e) => aoSelecionarArquivo(e.target.files ? e.target.files[0] : null)} className="hidden"/>
+                            <input id="context-file-input" type="file" onChange={(e) => aoSelecionarArquivo(e.target.files ? e.target.files[0] : null)} className="hidden" />
                             <label htmlFor="context-file-input" className="cursor-pointer w-full flex flex-col items-center justify-center">
                                 {(arquivoContexto || urlContexto) ? (
                                     <>
@@ -136,11 +136,11 @@ export const AbaContexto: React.FC<AbaContextoProps> = ({
                         </div>
                     </div>
                 </div>
-                
+
                 {!isNewVersionMode && (
                     <div>
                         <label className="block text-lg font-medium text-gray-700 mb-2">Detalhes do Contexto</label>
-                        <textarea value={detalhesContexto} onChange={(e) => setDetalhesContexto(e.target.value)} placeholder="Descreva aqui o contexto e sua relevância." rows={4} className="w-full px-4 py-3 border bg-gray-50/25 border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"/>
+                        <textarea value={detalhesContexto} onChange={(e) => setDetalhesContexto(e.target.value)} placeholder="Descreva aqui o contexto e sua relevância." rows={4} className="w-full px-4 py-3 border bg-gray-50/25 border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none" />
                     </div>
                 )}
             </div>
