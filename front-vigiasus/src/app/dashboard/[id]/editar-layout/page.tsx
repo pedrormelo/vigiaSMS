@@ -53,18 +53,127 @@ const mockGraphs: GraphData[] = [
             ["Mar", 130, 90, 60],
         ],
     },
+    {
+        id: "4",
+        title: "Cobertura Vacinal por Faixa Etária",
+        type: "chart",
+        gerencia: "GTI",
+        insertedDate: "2024-02-01",
+        data: [
+            ["Faixa etária", "Cobertura Atual", "Meta"],
+            ["0-1", 80, 90],
+            ["1-5", 85, 95],
+            ["6-10", 90, 98],
+            ["11-15", 88, 97],
+        ],
+    },
+    {
+        id: "5",
+        title: "Motivo de Alta - Top 5",
+        type: "pie",
+        gerencia: "GERAL",
+        insertedDate: "2024-03-10",
+        data: [
+            ["Motivo", "Qtd"],
+            ["Cura", 120],
+            ["Transferência", 45],
+            ["Óbito", 5],
+            ["Alta Voluntária", 10],
+            ["Outro", 20],
+        ],
+    },
+    {
+        id: "6",
+        title: "Série Temporal - Vacina A",
+        type: "line",
+        gerencia: "VAC",
+        insertedDate: "2024-04-12",
+        data: [
+            ["Mês", "Dose 1", "Dose 2"],
+            ["Jan", 500, 450],
+            ["Fev", 600, 480],
+            ["Mar", 700, 520],
+            ["Abr", 800, 600],
+        ],
+    },
+    {
+        id: "7",
+        title: "Pequeno - 1 linha",
+        type: "chart",
+        gerencia: "TEST",
+        insertedDate: "2024-05-01",
+        data: [["Categoria", "Valor"], ["A", 10]],
+    },
+    {
+        id: "8",
+        title: "Muitos Pontos",
+        type: "line",
+        gerencia: "ANALYTICS",
+        insertedDate: "2024-06-15",
+        data: [
+            ["X", "Y"],
+            ...Array.from({ length: 20 }, (_, i) => [`P${i + 1}`, Math.round(Math.random() * 1000)])
+        ],
+    },
+    {
+        id: "9",
+        title: "Dados Inválidos (teste)",
+        type: "pie",
+        gerencia: "TEST",
+        insertedDate: "2024-06-01",
+        data: [], // should show 'Dados indisponíveis' in preview
+    },
+    {
+        id: "10",
+        title: "Comparativo Mensal - Serviços",
+        type: "chart",
+        gerencia: "SERV",
+        insertedDate: "2024-07-20",
+        data: [
+            ["Mês", "Serv1", "Serv2", "Serv3"],
+            ["Jan", 120, 80, 60],
+            ["Feb", 150, 90, 70],
+            ["Mar", 170, 110, 80],
+        ],
+    },
 ]
 
 export default function DashboardBuilder() {
     const [selectedLayout, setSelectedLayout] = useState<LayoutType>("asymmetric")
-    const [layoutGraphs, setLayoutGraphs] = useState<(GraphData | null)[]>([])
+    // Keep layoutGraphs as a fixed-length array matching the layout slots to avoid sparse arrays
+    const getMaxGraphsForLayout = (layout: LayoutType) => {
+        switch (layout) {
+            case "asymmetric":
+                return 3
+            case "grid":
+                return 4
+            case "sideBySide":
+                return 2
+            default:
+                return 4
+        }
+    }
+
+    const [layoutGraphs, setLayoutGraphs] = useState<(GraphData | null)[]>(() => Array(getMaxGraphsForLayout(selectedLayout)).fill(null))
     const [selectedPosition, setSelectedPosition] = useState<number | null>(null)
 
     const handleGraphSelect = (graph: GraphData) => {
         if (selectedPosition !== null) {
+            // Check if graph is already in the layout
+            const isGraphAlreadyInLayout = layoutGraphs.some((layoutGraph) => layoutGraph?.id === graph.id)
+
+            if (isGraphAlreadyInLayout) {
+                alert("Este gráfico já está presente no layout. Cada gráfico pode ser adicionado apenas uma vez.")
+                setSelectedPosition(null)
+                return
+            }
+            // Ensure the array length matches current layout slots
+            const max = getMaxGraphsForLayout(selectedLayout)
             const newLayoutGraphs = [...layoutGraphs]
+            while (newLayoutGraphs.length < max) newLayoutGraphs.push(null)
+
             newLayoutGraphs[selectedPosition] = { ...graph, isHighlighted: false }
-            setLayoutGraphs(newLayoutGraphs)
+            setLayoutGraphs(newLayoutGraphs.slice(0, max))
             setSelectedPosition(null)
         }
     }
@@ -74,7 +183,15 @@ export default function DashboardBuilder() {
     }
 
     const handleGraphRemove = (id: string) => {
-        setLayoutGraphs((prev) => prev.map((graph) => (graph?.id === id ? null : graph)))
+        setLayoutGraphs((prev) => {
+            // Find the first occurrence and remove only that one, keep array length unchanged
+            const updatedGraphs = [...prev]
+            const indexToRemove = updatedGraphs.findIndex((graph) => graph?.id === id)
+            if (indexToRemove !== -1) {
+                updatedGraphs[indexToRemove] = null
+            }
+            return updatedGraphs
+        })
     }
 
     const handleHighlightToggle = (id: string, highlighted: boolean) => {
@@ -91,7 +208,8 @@ export default function DashboardBuilder() {
 
     const handleLayoutChange = (layout: LayoutType) => {
         setSelectedLayout(layout)
-        setLayoutGraphs([]) // Reset graphs when layout changes
+        // Reset graphs to a fixed-length array matching the new layout
+        setLayoutGraphs(Array(getMaxGraphsForLayout(layout)).fill(null))
         setSelectedPosition(null)
     }
 
@@ -168,7 +286,7 @@ export default function DashboardBuilder() {
                     editMode={true}
                 />
 
-                <div className="flex justify-end">
+                <div className="flex justify-end pb-30">
                     <Button
                         onClick={handleSaveDashboard}
                         className="bg-blue-500 hover:bg-blue-600 text-white p-6 rounded-3xl text-md font-medium"
@@ -178,7 +296,7 @@ export default function DashboardBuilder() {
                     </Button>
                 </div>
 
-                <AvailableGraphsPanel graphs={mockGraphs} onGraphSelect={handleGraphSelect} />
+                {/* <AvailableGraphsPanel graphs={mockGraphs} onGraphSelect={handleGraphSelect} /> */}
 
                 <SelecioneGraficoModal
                     open={selectedPosition !== null}

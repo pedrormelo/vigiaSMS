@@ -19,7 +19,7 @@ export function ChartPreview({ type, title, data, isHighlighted, editMode, rende
     // Show error if data is not a valid array
     if (!Array.isArray(data) || data.length === 0) {
         return (
-            <div className="bg-white rounded-lg border shadow-sm p-4 h-full flex items-center justify-center text-gray-400">
+            <div className="bg-red-100 rounded-2xl border-3 text-2xl font-medium border-red-400 shadow-sm p-4 h-full flex items-center justify-center text-red-400">
                 Dados indisponíveis
             </div>
         )
@@ -91,7 +91,11 @@ export function ChartPreview({ type, title, data, isHighlighted, editMode, rende
 
     return (
         <div
-            className={`bg-white rounded-2xl border border-gray-200 shadow-md p-4 h-full flex flex-col ${isHighlighted && editMode ? "ring-3 ring-blue-400 shadow-lg shadow-blue-400 ring-opacity-100 ring-offset-2" : ""}`}
+            className={`bg-white rounded-2xl border p-4 h-full flex flex-col transition-all duration-200 ${
+                isHighlighted && editMode 
+                    ? "border-blue-400 ring-2 ring-blue-400 ring-opacity-50 shadow-lg shadow-blue-400/25" 
+                    : "border-gray-200 shadow-md"
+            }`}
         >
             <div className="flex-1">
                 <div ref={chartRef} style={{ width: "100%", height: "100%" }} />

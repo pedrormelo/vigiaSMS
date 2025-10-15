@@ -74,7 +74,7 @@ export function FileItem({ title, type, insertedDate, className, onClick }: File
             </div>
 
             <div className="text-center mb-4">
-                <h3 className="flex items-center justify-center font-medium text-white text-lg leading-tight">{title}</h3>
+                <h3 className="font-medium text-white text-lg leading-tight truncate px-2" title={title}>{title}</h3>
             </div>
 
             <div className="flex items-center justify-center gap-2 text-white/90">
