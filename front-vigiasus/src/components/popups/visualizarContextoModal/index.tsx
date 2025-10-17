@@ -196,7 +196,7 @@ export function VisualizarContextoModal({ estaAberto, aoFechar, dadosDoContexto,
             <div className="bg-white rounded-[40px] w-full max-w-6xl max-h-[90vh] flex flex-col shadow-2xl">
                 <div className="bg-gradient-to-r from-[#0037C1] to-[#00BDFF] px-8 py-4 flex items-center justify-between rounded-t-[40px] flex-shrink-0">
                     <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0"><FileText className="w-6 h-6 text-white" /></div>
+                        <div className="w-8 h-8 flex items-center justify-center flex-shrink-0"><FileText className="w-6 h-6 text-white" /></div>
                         <h2 className="text-2xl font-regular text-white truncate" title={dadosDoContexto.title}>{dadosDoContexto.title}</h2>
                     </div>
                     <button onClick={aoFechar} className="w-8 h-8 bg-white/20 text-white hover:bg-white/30 cursor-pointer rounded-full flex items-center justify-center transition-colors flex-shrink-0"><ArrowLeft className="w-6 h-6" /></button>
