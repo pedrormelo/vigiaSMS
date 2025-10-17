@@ -14,7 +14,8 @@ export interface GraphData {
     type: GraphType
     gerencia: string
     insertedDate: string
-    data: any[]        // <-- novo campo
+    data: any[]        
+    colors?: string[]  // Add colors support
     isHighlighted?: boolean
     editMode?: boolean
 }
@@ -97,6 +98,7 @@ export function DashboardPreview({
                                         title={graph.title}
                                         isHighlighted={graph.isHighlighted}
                                         data={graph.data}
+                                        colors={graph.colors}
                                         editMode={editMode}
                                         renderVersion={renderVersion}
                                     />

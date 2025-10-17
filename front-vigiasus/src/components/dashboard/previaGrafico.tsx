@@ -1,7 +1,9 @@
 // components/chart-preview.tsx
-import React from "react";
-import { Chart as GoogleChart } from "react-google-charts";
+"use client";
+
+import React, { useEffect, useRef } from "react";
 import { PieChart, BarChart3, TrendingUp, Eye } from "lucide-react";
+import { loadGoogleCharts } from "@/lib/googleCharts";
 
 interface ChartPreviewProps {
     graphType: "pie" | "chart" | "line";
@@ -13,6 +15,8 @@ interface ChartPreviewProps {
 }
 
 export function ChartPreview({ graphType, dataset, title }: ChartPreviewProps) {
+    const chartRef = useRef<HTMLDivElement | null>(null);
+
     const getChartIcon = () => {
         switch (graphType) {
             case "pie": return <PieChart className="w-5 h-5" />;
@@ -21,47 +25,80 @@ export function ChartPreview({ graphType, dataset, title }: ChartPreviewProps) {
         }
     };
 
-    // Converter dados para formato do Google Charts
     const getChartData = () => {
-        if (!dataset.rows.length || !dataset.rows[0].some(cell => cell !== "")) {
-            return null;
-        }
+        if (!dataset || !Array.isArray(dataset.rows) || dataset.rows.length === 0) return null;
+        if (!dataset.rows[0].some((cell) => cell !== "")) return null;
 
         const header = dataset.columns;
         const data = dataset.rows
-            .filter(row => row.some(cell => cell !== ""))
-            .map(row => 
-                row.map(cell => {
-                    const num = Number(cell);
-                    return isNaN(num) ? cell : num;
-                })
-            );
+            .filter((row) => row.some((cell) => cell !== ""))
+            .map((row) => row.map((cell) => {
+                const num = Number(cell);
+                return isNaN(num) ? cell : num;
+            }));
 
         return [header, ...data];
     };
 
     const chartData = getChartData();
-    const hasValidData = chartData && chartData.length > 1;
+    const hasValidData = !!(chartData && chartData.length > 1);
 
-    const chartOptions = {
-        title,
-        titleTextStyle: {
-            fontSize: 18,
-            bold: true
-        },
-        backgroundColor: 'transparent',
-        legend: { 
-            position: graphType === 'pie' ? 'labeled' : 'right',
-            textStyle: { fontSize: 12 }
-        },
-        chartArea: { 
-            width: '80%', 
-            height: '70%' 
-        },
-        hAxis: { title: dataset.columns[0] },
-        vAxis: { title: 'Valores' },
-        colors: ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444']
-    };
+    useEffect(() => {
+        let resizeObserver: ResizeObserver | null = null;
+        let chartInstance: any = null;
+
+        const draw = async () => {
+            if (!chartRef.current) return;
+            if (!hasValidData) return;
+            try {
+                const google = await loadGoogleCharts(['corechart', 'bar']);
+                if (!google || !google.visualization) return;
+
+                const dataTable = google.visualization.arrayToDataTable(chartData as any);
+
+                const options = {
+                    title,
+                    backgroundColor: 'transparent',
+                    legend: { position: graphType === 'pie' ? 'labeled' : 'right', textStyle: { fontSize: 12 } },
+                    chartArea: { width: '80%', height: '70%' },
+                    colors: ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444']
+                };
+
+                switch (graphType) {
+                    case 'pie':
+                        chartInstance = new google.visualization.PieChart(chartRef.current);
+                        break;
+                    case 'chart':
+                        chartInstance = new google.visualization.ColumnChart(chartRef.current);
+                        break;
+                    case 'line':
+                        chartInstance = new google.visualization.LineChart(chartRef.current);
+                        break;
+                    default:
+                        chartInstance = new google.visualization.ColumnChart(chartRef.current);
+                }
+
+                chartInstance.draw(dataTable, options);
+            } catch (err) {
+                // silently ignore draw errors for now
+            }
+        };
+
+        draw();
+
+        if (chartRef.current && (window as any).ResizeObserver) {
+            resizeObserver = new ResizeObserver(() => draw());
+            resizeObserver.observe(chartRef.current);
+        }
+
+        return () => {
+            if (resizeObserver && chartRef.current) {
+                resizeObserver.unobserve(chartRef.current);
+                resizeObserver.disconnect();
+            }
+            chartInstance = null;
+        };
+    }, [graphType, JSON.stringify(chartData), title]);
 
     if (!hasValidData) {
         return (
@@ -79,39 +116,13 @@ export function ChartPreview({ graphType, dataset, title }: ChartPreviewProps) {
                 {getChartIcon()}
                 <h3 className="text-lg font-semibold text-gray-800">Preview do Gráfico</h3>
             </div>
-            
+
             <div className="h-64">
-                {graphType === "pie" && (
-                    <GoogleChart
-                        chartType="PieChart"
-                        data={chartData}
-                        options={chartOptions}
-                        width="100%"
-                        height="100%"
-                    />
-                )}
-                {graphType === "chart" && (
-                    <GoogleChart
-                        chartType="ColumnChart"
-                        data={chartData}
-                        options={chartOptions}
-                        width="100%"
-                        height="100%"
-                    />
-                )}
-                {graphType === "line" && (
-                    <GoogleChart
-                        chartType="LineChart"
-                        data={chartData}
-                        options={chartOptions}
-                        width="100%"
-                        height="100%"
-                    />
-                )}
+                <div ref={chartRef} style={{ width: '100%', height: '100%' }} />
             </div>
-            
+
             <div className="mt-3 text-xs text-gray-500 text-center">
-                Preview baseado em {chartData.length - 1} ponto(s) de dados
+                Preview baseado em {(chartData as any).length - 1} ponto(s) de dados
             </div>
         </div>
     );

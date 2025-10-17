@@ -9,7 +9,7 @@ export const SeletorTipoGrafico: React.FC<SeletorTipoGraficoProps> = ({ tipoSele
             {(Object.keys(TIPOS_GRAFICOS) as TipoGrafico[]).map((tipo) => {
                 const { Icon, rotulo } = TIPOS_GRAFICOS[tipo];
                 return (
-                    <button key={tipo} onClick={() => aoMudarTipo(tipo)} className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all ${tipoSelecionado === tipo ? "border-blue-500 bg-blue-50 text-blue-600 shadow-sm" : "border-gray-200 bg-gray-50/50 hover:border-blue-400"}`}>
+                    <button key={tipo} onClick={() => aoMudarTipo(tipo)} className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all ${tipoSelecionado === tipo ? "border-blue-500 bg-blue-50 text-blue-600 shadow-sm" : "border-gray-200 text-gray-600 bg-gray-50/50 hover:text-blue-400 hover:border-blue-400"}`}>
                         <Icon className="w-8 h-8 mb-2" />
                         <span className="font-semibold">{rotulo}</span>
                     </button>

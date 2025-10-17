@@ -15,6 +15,7 @@ export const mockGraphs: GraphData[] = [
             ["UBS Sul", 6, 28],
             ["UBS Leste", 10, 42],
         ],
+        colors: ["#3B82F6", "#60A5FA", "#93C5FD", "#C3DAFE", "#DBEAFE"], // Blue theme
     },
     {
         id: "2",
@@ -28,6 +29,7 @@ export const mockGraphs: GraphData[] = [
             ["Em Implementação", 15],
             ["Planejado", 10],
         ],
+        colors: ["#22C55E", "#86EFAC", "#FEF3C7"], // Green theme
     },
     {
         id: "3",
@@ -43,6 +45,7 @@ export const mockGraphs: GraphData[] = [
             ["Abr", 190, 185, 25],
             ["Mai", 175, 170, 30],
         ],
+        colors: ["#A855F7", "#C084FC", "#DDD6FE"], // Purple theme
     },
     {
         id: "4",

@@ -54,7 +54,7 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
 
             const max = Math.max(r, g, b);
             const min = Math.min(r, g, b);
-            
+
             let h: number, s: number;
             const l = (max + min) / 2;
 
@@ -112,11 +112,6 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                         <div>
                             <label className="block text-lg font-medium text-gray-700 mb-2">
                                 Título do Gráfico
-                                {isNewVersionMode && (
-                                    <span className="ml-2 text-xs font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-md align-middle">
-                                        NOVA VERSÃO
-                                    </span>
-                                )}
                             </label>
                             <input
                                 type="text"
@@ -130,12 +125,18 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                         {isNewVersionMode && (
                             <div>
                                 <label className="block text-lg font-medium text-gray-700 mb-2">Versão</label>
-                                <div className="flex items-center justify-center w-full h-[50px] px-4 py-3 border border-transparent rounded-2xl bg-gray-100 text-gray-500 font-semibold">
+                                <div className="flex items-center justify-center w-full h-[50px] px-4 py-3 border border-gray-200 rounded-2xl bg-gray-100 text-gray-500 font-semibold">
                                     {selectedVersion || "Calculando..."}
                                 </div>
                             </div>
                         )}
                     </div>
+
+                    {isNewVersionMode && (
+                        <span className="ml-2 text-xs text-center font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-2xl">
+                            NOVA VERSÃO
+                        </span>
+                    )}
 
                     {!isNewVersionMode && (
                         <div>
@@ -162,7 +163,8 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                                         onClick={() => handleColorClick(corHex)}
                                         className={`w-8 h-8 rounded-full transition-transform hover:scale-110 ${corTemaAtiva === corHex ? 'ring-2 ring-offset-2 ring-gray-300' : ''}`}
                                         style={{ backgroundColor: corHex }}
-                                        disabled={isNewVersionMode}
+                                        // allow changing theme in new version mode too
+                                        disabled={false}
                                     ></button>
                                 ))}
                             </div>
@@ -188,7 +190,7 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                                 <select
                                     value={tipoVersao}
                                     onChange={(e) => setTipoVersao(e.target.value as TipoVersao)}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-2xl bg-white focus:ring-2 focus:ring-blue-500"
                                 >
                                     <option value={TipoVersao.CORRECAO}>Correção de Informação Incorreta</option>
                                     <option value={TipoVersao.ATUALIZACAO_MENSAL}>Atualização Mensal</option>
