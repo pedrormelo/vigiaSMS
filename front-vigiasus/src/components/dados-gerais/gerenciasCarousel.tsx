@@ -1,4 +1,5 @@
-// components/dados-gerais/GerenciasCarousel.tsx
+// src/components/dados-gerais/gerenciasCarousel.tsx
+"use client"; // Add this if not already present
 
 import GerenciaCard from "@/components/dados-gerais/gerenciaCard";
 import {
@@ -9,8 +10,26 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 
-// Função auxiliar para agrupar o array 'gerencias' em colunas de um tamanho definido.
+// --- INTERFACE FOR PROPS ---
+// Define the structure of the gerencia object expected from the parent
+interface GerenciaParaFiltrar {
+  id: string;
+  label: string;
+  color: string;
+  // diretoriaId is not needed by this component itself, but is part of the type passed
+}
+
+interface GerenciasCarouselProps {
+  gerencias: GerenciaParaFiltrar[]; // Accept the filtered list as a prop
+}
+// --- END INTERFACE ---
+
+// Função auxiliar para agrupar (mantida)
 function chunk<T>(array: T[], size: number): T[][] {
+  if (!Array.isArray(array)) { // Add a check for array type
+      console.error("chunk function received non-array:", array);
+      return [];
+  }
   const chunked_arr = [];
   let index = 0;
   while (index < array.length) {
@@ -20,58 +39,46 @@ function chunk<T>(array: T[], size: number): T[][] {
   return chunked_arr;
 }
 
-interface Gerencia {
-  id: number;
-  label: string;
-  color: string;
-}
+// --- UPDATE COMPONENT SIGNATURE ---
+export default function GerenciasCarousel({ gerencias }: GerenciasCarouselProps) {
+  // REMOVED: Internal hardcoded 'gerencias' array
 
-const gerencias: Gerencia[] = [
-    { id: 1, label: "Gerência de Fluxos Assistenciais", color: "#2563EB" },
-    { id: 2, label: "Gerência de Tecnologia da Informação", color: "#16A34A" },
-    { id: 3, label: "Gerência de Atenção Primária", color: "#00B5E2" },
-    { id: 4, label: "Gerência de Saúde Bucal", color: "#F59E0B" },
-    { id: 5, label: "Gerência de Urgência e Emergência", color: "#EF4444" },
-    { id: 6, label: "Gerência de Vigilância em Saúde", color: "#DC2626" },
-    { id: 7, label: "Gerência de Saúde Mental", color: "#9333EA" },
-    { id: 8, label: "Gerência Administrativa", color: "#F59E0B" },
-    { id: 9, label: "Gerência Financeira", color: "#16A34A" },
-    { id: 10, label: "Gerência de Urgência e Emergência", color: "#EF4444" },
-    { id: 11, label: "Gerência de Vigilância em Saúde", color: "#DC2626" },
-    { id: 12, label: "Gerência de Saúde Mental", color: "#9333EA" },
-    { id: 13, label: "Gerência Administrativa", color: "#F59E0B" },
-    { id: 14, label: "Gerência Financeira", color: "#16A34A" },
-];
-
-export default function GerenciasCarousel() {
-  // Transforma a lista única de gerências em colunas com 3 cards cada.
+  // --- USE THE PROP ---
+  // Transforma a lista RECEBIDA de gerências em colunas com 3 cards cada.
   const groupedGerencias = chunk(gerencias, 3);
+  // --- END PROP USAGE ---
+
+  // Handle empty state if no gerencias match the filter
+  if (!gerencias || gerencias.length === 0) {
+    return (
+        <div className="text-center py-10 px-6 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+            <p className="text-gray-500">Nenhuma gerência encontrada com os filtros aplicados.</p>
+        </div>
+    );
+  }
 
   return (
     <Carousel
       opts={{
         align: "start",
-        loop: true,
+        // loop: true, // Consider disabling loop if filtered list is small
       }}
       className="w-full max-w-6xl mx-auto"
     >
-      {/* A margem negativa '-ml-4' compensa o padding 'pl-4' dos itens, alinhando o carrossel. */}
       <CarouselContent className="-ml-4">
-        {/* O map exterior itera sobre as colunas, e o map interior itera sobre os cards de cada coluna. */}
         {groupedGerencias.map((group, index) => (
           <CarouselItem
             key={index}
-            // 'py-4' adiciona espaço vertical para a sombra do card inferior não ser cortada.
-            // 'basis' controla quantas colunas são visíveis por breakpoint.
             className="pl-4 py-4 md:basis-1/2 lg:basis-1/3"
           >
-            {/* Este div empilha os cards de cada grupo na vertical. */}
             <div className="flex flex-col gap-4">
               {group.map((gerencia) => (
                 <GerenciaCard
-                  key={gerencia.label}
+                  // Use gerencia.id which should be unique, fallback to label
+                  key={gerencia.id || gerencia.label}
                   label={gerencia.label}
                   color={gerencia.color}
+                  // Add onClick if needed later
                 />
               ))}
             </div>
@@ -79,8 +86,13 @@ export default function GerenciasCarousel() {
         ))}
       </CarouselContent>
 
-      <CarouselPrevious className="hidden cursor-pointer sm:flex bg-gray-50/25 hover:bg-gray-200 text-gray-400 hover:text-gray-500" />
-      <CarouselNext className="hidden cursor-pointer sm:flex bg-gray-50/25 hover:bg-gray-200 text-gray-400 hover:text-gray-500" />
+      {/* Only show arrows if there's more content than fits */}
+       {groupedGerencias.length > 3 && ( // Adjust '3' based on lg:basis-1/3
+         <>
+           <CarouselPrevious className="hidden cursor-pointer sm:flex bg-gray-50/25 hover:bg-gray-200 text-gray-400 hover:text-gray-500" />
+           <CarouselNext className="hidden cursor-pointer sm:flex bg-gray-50/25 hover:bg-gray-200 text-gray-400 hover:text-gray-500" />
+         </>
+       )}
     </Carousel>
   );
 }

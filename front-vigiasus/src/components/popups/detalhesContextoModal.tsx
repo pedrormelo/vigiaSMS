@@ -9,14 +9,15 @@ import {
     CheckCircle, Clock, XCircle, FileWarning, Send, UserCheck, UserCog, Building // Ícones adicionados para o timeline
 } from 'lucide-react';
 import StatusBanner from '@/components/ui/status-banner';
-import { Button } from "@/components/ui/button";
-import { Contexto, DocType, StatusContexto, HistoricoEvento } from "@/components/validar/typesDados";
+import { Button } from "@/components/ui/button"; // Usar o Button padrão
+import { Contexto, DocType, StatusContexto, HistoricoEvento } from "@/components/validar/typesDados"; // Ajustar importações
 import { VisualizadorDeConteudo } from '@/components/popups/visualizarContextoModal/visualizadorDeConteudo';
 import IconeDocumento from '@/components/validar/iconeDocumento';
 import { cn } from '@/lib/utils';
+// Importar Versao simulada (pode ser removido se não usar explicitamente)
 import { DetalhesContexto, Versao } from '@/components/popups/addContextoModal/types';
 import { showDispatchToast, showErrorToast } from '@/components/ui/Toasts';
-import { statusConfig } from '@/components/validar/colunasTable/statusConfig';
+import { statusConfig } from '@/components/validar/colunasTable/statusConfig'; // Importar statusConfig
 
 interface DetalhesContextoModalProps {
   contexto: Contexto | null;
