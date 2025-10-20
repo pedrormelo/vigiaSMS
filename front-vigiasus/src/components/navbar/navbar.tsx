@@ -1,37 +1,82 @@
+// src/components/navbar/navbar.tsx
 "use client";
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Sidebar from "./Sidebar";
-import { Menu } from 'lucide-react';
+import { Menu, Loader2} from 'lucide-react';
 import NotificationsModal from "@/components/notifications/notificationsModal";
+import DetalhesContextoModal from "@/components/popups/detalhesContextoModal"; // <-- Importar
+import { getContextoById } from "@/services/contextoService"; // <-- Importar serviço
+import { Contexto } from "@/components/validar/typesDados"; // <-- Importar tipo
+import { Notification } from "@/constants/notificationsData"; // <-- Importar tipo
 
 export default function Navbar() {
-  const [open, setOpen] = useState(false);
-  const [unreadNotifications, setUnreadNotifications] = useState(3);
-  
-  // Novo estado para controlar a visibilidade do modal de notificações
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(5); // Exemplo inicial
+
+  // Estado para o modal de notificações
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
-  const role: "secretario" | "diretor" | "gerente" | "membro" = "diretor";
+  // --- Estados para o modal de Detalhes do Contexto ---
+  const [isDetalhesContextoOpen, setIsDetalhesContextoOpen] = useState(false);
+  const [selectedContexto, setSelectedContexto] = useState<Contexto | null>(null);
+  const [isLoadingContexto, setIsLoadingContexto] = useState(false);
+  // Simulação do perfil do usuário (poderia vir de autenticação)
+  const userProfile: "diretor" | "gerente" | "membro" = "gerente";
+  // --- Fim dos estados de Detalhes do Contexto ---
 
   const handleNotificationsClick = () => {
-    // Abre o modal
     setIsNotificationsOpen(true);
-    // Ao abrir, o contador é zerado (simulando que foram lidas)
-    setUnreadNotifications(0);
+    // Poderia zerar o contador aqui ou ao fechar o modal
   };
+
+  const handleCloseNotifications = () => {
+    setIsNotificationsOpen(false);
+    setUnreadNotifications(0); // Zerar contador ao fechar
+  };
+
+  // --- Função para abrir Detalhes do Contexto a partir de uma Notificação ---
+  const handleOpenContextoDetails = async (notification: Notification) => {
+    if (!notification.contextoId) return;
+
+    setIsLoadingContexto(true);
+    setIsNotificationsOpen(false); // Fecha modal de notificações
+
+    const contextoDetails = await getContextoById(notification.contextoId);
+    setIsLoadingContexto(false);
+
+    if (contextoDetails) {
+      setSelectedContexto(contextoDetails);
+      setIsDetalhesContextoOpen(true);
+    } else {
+      // Tratar erro - talvez mostrar um toast
+      alert(`Erro: Contexto com ID ${notification.contextoId} não encontrado.`);
+    }
+  };
+
+  const handleCloseDetalhesContexto = () => {
+    setIsDetalhesContextoOpen(false);
+    setSelectedContexto(null);
+    // Opcional: Reabrir notificações se desejar voltar para a lista
+    // setIsNotificationsOpen(true);
+  };
+  // --- Fim da lógica de Detalhes do Contexto ---
+
+
+  // Simulação do role (deve vir do sistema de autenticação)
+  const role: "secretario" | "diretor" | "gerente" | "membro" = "diretor";
 
   return (
     <>
       <header className="bg-white w-full drop-shadow-md sticky top-0 z-30">
         <div className="container flex min-w-full min-h-[64px] justify-between items-center py-2 px-18">
-          {/* Botão Menu (mobile e desktop) */}
-          <button onClick={() => setOpen(true)} className="text-blue-700 hover:text-blue-500 cursor-pointer">
+          {/* Botão Menu */}
+          <button onClick={() => setIsSidebarOpen(true)} className="text-blue-700 hover:text-blue-500 cursor-pointer">
             <Menu strokeWidth={2.5} className="w-9 h-9" />
           </button>
 
-          {/* Bloco central com VigiaSUS e Logo Jaboatão juntos */}
+          {/* Bloco central */}
           <div className="flex items-center gap-22">
             <Link href="/" className="block">
               <h1 className="text-2xl text-blue-700 hover:text-blue-500 cursor-pointer transition-transform">
@@ -58,8 +103,8 @@ export default function Navbar() {
                 className="w-6 h-6"
               />
             </button>
-            
-            {/* Ícone de Notificações com sinal de alerta */}
+
+            {/* Ícone de Notificações */}
             <div className="relative">
               <button onClick={handleNotificationsClick} className="hover:opacity-70">
                 <Image
@@ -71,7 +116,10 @@ export default function Navbar() {
                 />
               </button>
               {unreadNotifications > 0 && (
-                <div className="absolute top-0 right-0 h-3 w-3 bg-red-500 rounded-full border-2 border-white animate-pulse" />
+                // Indicador de notificações não lidas
+                <div className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full border-2 border-white text-white text-[10px] flex items-center justify-center font-bold">
+                  {unreadNotifications}
+                </div>
               )}
             </div>
           </div>
@@ -79,13 +127,32 @@ export default function Navbar() {
       </header>
 
       {/* Sidebar */}
-      <Sidebar role={role} isOpen={open} onClose={() => setOpen(false)} />
+      <Sidebar role={role} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
-      {/* O modal de notificações é renderizado aqui e controlado pelo estado `isNotificationsOpen` */}
-      <NotificationsModal 
+      {/* Modal de Notificações */}
+      <NotificationsModal
         isOpen={isNotificationsOpen}
-        onClose={() => setIsNotificationsOpen(false)}
+        onClose={handleCloseNotifications}
+        onOpenContextoDetails={handleOpenContextoDetails} // <-- Passar a função
       />
+
+      {/* --- Modal de Detalhes do Contexto --- */}
+      {/* Renderiza condicionalmente */}
+      <DetalhesContextoModal
+        isOpen={isDetalhesContextoOpen}
+        onClose={handleCloseDetalhesContexto}
+        contexto={selectedContexto}
+        perfil={userProfile} // Passa o perfil do usuário
+        // isFromHistory é opcional, mas podemos determinar se o contexto veio do histórico
+        isFromHistory={selectedContexto?.historico && selectedContexto.historico.length > 0}
+      />
+      {/* Indicador de Loading (opcional) */}
+      {isLoadingContexto && (
+         <div className="fixed inset-0 bg-white/70 backdrop-blur-sm z-[60] flex items-center justify-center">
+            <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
+         </div>
+      )}
+      {/* --- Fim do Modal de Detalhes do Contexto --- */}
     </>
   );
 }

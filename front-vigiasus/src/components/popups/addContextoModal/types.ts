@@ -7,7 +7,7 @@ export type AbaAtiva = "contexto" | "dashboard" | "indicador";
 export type AbaFonteDeDados = "manual" | "upload";
 export type TipoGrafico = "pie" | "chart" | "line";
 export type NomeIcone = "Heart" | "Landmark" | "ClipboardList" | "Users" | "TrendingUp" | "DollarSign" | "Building" | "UserCheck";
-
+export type FormatoColuna = 'number' | 'percent' | 'currency' | 'text';
 export enum TipoVersao {
   CORRECAO = "Correção de Informação Incorreta",
   ATUALIZACAO_MENSAL = "Atualização Mensal",
@@ -30,6 +30,7 @@ export interface ConjuntoDeDadosGrafico {
   colunas: string[];
   linhas: (string | number)[][];
   cores?: string[];
+ formatos?: FormatoColuna[];
 }
 
 // Tipos específicos para cada payload de submissão
@@ -121,6 +122,7 @@ export interface SecaoDadosManuaisProps {
   aoAdicionarColuna: () => void;
   aoRemoverColuna: (indiceColuna: number) => void;
   aoAtualizarNomeColuna: (index: number, novoNome: string) => void;
+  aoAtualizarFormatoColuna: (indiceSerie: number, novoFormato: FormatoColuna) => void;
 }
 
 export interface SecaoUploadArquivoProps {

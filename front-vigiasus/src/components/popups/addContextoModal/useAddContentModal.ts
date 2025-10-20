@@ -1,7 +1,7 @@
 // src/components/popups/addContextoModal/useAddContentModal.ts
 import { useState, useEffect, useCallback } from "react"; 
 import { saveAs } from "file-saver";
-import { AbaAtiva, AbaFonteDeDados, TipoGrafico, ConjuntoDeDadosGrafico, ModalAdicionarConteudoProps, NomeIcone, DetalhesContexto, TipoVersao } from "./types";
+import { AbaAtiva, AbaFonteDeDados, TipoGrafico, ConjuntoDeDadosGrafico, ModalAdicionarConteudoProps, NomeIcone, DetalhesContexto, TipoVersao, FormatoColuna } from "./types";
 import { showWarningToast, showErrorToast, showDispatchToast } from "@/components/ui/Toasts";
 
 interface PropsDoHook extends ModalAdicionarConteudoProps {
@@ -32,6 +32,7 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
         colunas: ["Categoria", "Valor"],
         linhas: [["Exemplo de Categoria", 100]],
         cores: ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444'],
+        formatos: ['text', 'number'],
     });
 
     const definirCoresDoGrafico = (novasCores: string[]) => {
@@ -61,6 +62,7 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
             colunas: ["Categoria", "Valor"],
             linhas: [["Exemplo de Categoria", 100]],
             cores: ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444'],
+            formatos: ['text', 'number'], 
         });
         setTituloIndicador(""); setDescricaoIndicador(""); setValorAtualIndicador("");
         setValorAlvoIndicador(""); setUnidadeIndicador("Nenhum"); setTextoComparativoIndicador("");
@@ -93,8 +95,12 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
                         colunas: dadosIniciais.payload.colunas || ["Categoria", "Valor"],
                         linhas: dadosIniciais.payload.linhas || [],
                         cores: dadosIniciais.payload.cores || ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444'],
+                        formatos: dadosIniciais.payload.formatos || [
+                            'text' as FormatoColuna, 
+                            ...(dadosIniciais.payload.colunas?.slice(1).map(() => 'number' as FormatoColuna) || ['number' as FormatoColuna]) // Resto como número
+                        ],
                     });
-                    setPrevisualizacaoGerada(true);
+                 setPrevisualizacaoGerada(true);
                 }
 
                 setTituloIndicador(dadosIniciais.title || "");
@@ -192,25 +198,40 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
         setConjuntoDeDados((d) => ({ ...d, linhas: d.linhas.map((l, i) => i === linha ? l.map((c, j) => (j === coluna ? valor : c)) : l) }));
     };
 
-    const adicionarColuna = () => {
+   const adicionarColuna = () => {
         if (conjuntoDeDados.colunas.length >= 30) {
             showWarningToast("Limite de 30 colunas atingido.");
             return;
         }
-        setConjuntoDeDados((d) => ({ ...d, colunas: [...d.colunas, `Série ${d.colunas.length}`], linhas: d.linhas.map(linha => [...linha, ""]) }));
+        setConjuntoDeDados((d) => ({
+            ...d,
+            colunas: [...d.colunas, `Série ${d.colunas.length}`],
+            linhas: d.linhas.map(linha => [...linha, ""]),
+            formatos: [...(d.formatos || []), 'number'] 
+        }));
     };
-
-    const removerColuna = (indiceColuna: number) => {
+   const removerColuna = (indiceColuna: number) => {
         if (indiceColuna === 0) {
             showErrorToast("Ação não permitida", "A coluna de categorias não pode ser removida."); return;
         }
         if (conjuntoDeDados.colunas.length <= 2) {
             showErrorToast("Ação não permitida", "O gráfico precisa de pelo menos uma coluna de valores."); return;
         }
-        setConjuntoDeDados((d) => ({ colunas: d.colunas.filter((_, i) => i !== indiceColuna), linhas: d.linhas.map(linha => linha.filter((_, i) => i !== indiceColuna)) }));
+        setConjuntoDeDados((d) => ({
+            colunas: d.colunas.filter((_, i) => i !== indiceColuna),
+            linhas: d.linhas.map(linha => linha.filter((_, i) => i !== indiceColuna)),
+            formatos: d.formatos?.filter((_, i) => i !== indiceColuna) 
+        }));
     };
 
     const atualizarNomeColuna = (index: number, novoNome: string) => setConjuntoDeDados((d) => ({ ...d, colunas: d.colunas.map((col, i) => (i === index ? novoNome : col)) }));
+
+    const atualizarFormatoColuna = (indiceColuna: number, novoFormato: FormatoColuna) => {
+        setConjuntoDeDados(d => ({
+            ...d,
+            formatos: d.formatos?.map((formato, i) => i === indiceColuna ? novoFormato : formato)
+        }));
+    };
 
     const baixarModelo = () => {
         const cabecalho = conjuntoDeDados.colunas.join(",") + "\n";
@@ -269,7 +290,7 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
         aoSairDaArea, aoArrastarSobre, aoSoltarArquivo, obterNomeFonteContexto, formatarTamanhoArquivo,
         isNewVersionMode, selectedVersion, tipoVersao, setTipoVersao, descricaoVersao, setDescricaoVersao,
         abaFonteDeDados, setAbaFonteDeDados, tituloGrafico, setTituloGrafico, detalhesGrafico, setDetalhesGrafico,
-        tipoGrafico, aoMudarTipo: aoMudarTipoGrafico, arquivoDeDados, setArquivoDeDados, 
+        tipoGrafico, aoMudarTipo: aoMudarTipoGrafico, arquivoDeDados, setArquivoDeDados, atualizarFormatoColuna,
         conjuntoDeDados, definirCoresDoGrafico,
         adicionarLinha, removerLinha, atualizarCelula, adicionarColuna, removerColuna, atualizarNomeColuna,
         baixarModelo, previsualizacaoGerada, setPrevisualizacaoGerada,

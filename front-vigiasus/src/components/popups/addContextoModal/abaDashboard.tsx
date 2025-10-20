@@ -6,8 +6,10 @@ import { SeletorTipoGrafico } from '@/components/popups/addContextoModal/seletor
 import { SecaoDadosManuais } from '@/components/popups/addContextoModal/secaoDadosManuais';
 import { SecaoUploadArquivo } from '@/components/popups/addContextoModal/secaoUploadArquivo';
 import { PrevisualizacaoGrafico } from '@/components/popups/addContextoModal/previsualizacaoGrafico';
-import { TipoVersao } from '@/components/popups/addContextoModal/types';
+// Importar FormatoColuna aqui também
+import { TipoVersao, FormatoColuna } from '@/components/popups/addContextoModal/types';
 
+// CORREÇÃO: Adicionar 'atualizarFormatoColuna' ao Pick
 type AbaDashboardProps = Pick<
     ReturnType<typeof useModalAdicionarConteudo>,
     | 'tituloGrafico' | 'setTituloGrafico'
@@ -24,6 +26,7 @@ type AbaDashboardProps = Pick<
     | 'setTipoVersao'
     | 'descricaoVersao'
     | 'setDescricaoVersao'
+    | 'atualizarFormatoColuna' // <-- ADICIONADO AQUI
 >;
 
 const coresPredefinidas = {
@@ -33,6 +36,7 @@ const coresPredefinidas = {
 };
 
 export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
+    // CORREÇÃO: Desestruturar 'atualizarFormatoColuna'
     const {
         tituloGrafico, setTituloGrafico, detalhesGrafico, setDetalhesGrafico,
         tipoGrafico, aoMudarTipo, abaFonteDeDados, setAbaFonteDeDados,
@@ -40,44 +44,35 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
         atualizarCelula, adicionarLinha, removerLinha, adicionarColuna, removerColuna, atualizarNomeColuna,
         arquivoDeDados, setArquivoDeDados, baixarModelo,
         previsualizacaoGerada, setPrevisualizacaoGerada,
-        isNewVersionMode, selectedVersion, tipoVersao, setTipoVersao, descricaoVersao, setDescricaoVersao
+        isNewVersionMode, selectedVersion, tipoVersao, setTipoVersao, descricaoVersao, setDescricaoVersao,
+        atualizarFormatoColuna // <-- Adicionado na desestruturação
     } = props;
 
     const [graficoEmTelaCheia, setGraficoEmTelaCheia] = useState(false);
     const alternarTelaCheia = () => setGraficoEmTelaCheia(!graficoEmTelaCheia);
 
-    const generateColorTheme = (baseColor: string): string[] => {
+    // Funções generateColorTheme, handleColorClick e variável corTemaAtiva (sem alterações)
+     const generateColorTheme = (baseColor: string): string[] => {
         const hexToHsl = (hex: string) => {
             const r = parseInt(hex.slice(1, 3), 16) / 255;
             const g = parseInt(hex.slice(3, 5), 16) / 255;
             const b = parseInt(hex.slice(5, 7), 16) / 255;
-
-            const max = Math.max(r, g, b);
-            const min = Math.min(r, g, b);
-
-            let h: number, s: number;
-            const l = (max + min) / 2;
-
-            if (max === min) {
-                h = s = 0;
-            } else {
+            const max = Math.max(r, g, b); const min = Math.min(r, g, b);
+            let h: number = 0, s: number; const l = (max + min) / 2;
+            if (max !== min) {
                 const d = max - min;
                 s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
                 switch (max) {
                     case r: h = (g - b) / d + (g < b ? 6 : 0); break;
                     case g: h = (b - r) / d + 2; break;
                     case b: h = (r - g) / d + 4; break;
-                    default: h = 0;
                 }
                 h /= 6;
-            }
-
+            } else { h = s = 0; }
             return [h * 360, s * 100, l * 100];
         };
-
         const hslToHex = (h: number, s: number, l: number) => {
-            l /= 100;
-            const a = s * Math.min(l, 1 - l) / 100;
+            l /= 100; const a = s * Math.min(l, 1 - l) / 100;
             const f = (n: number) => {
                 const k = (n + h / 30) % 12;
                 const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
@@ -85,38 +80,30 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
             };
             return `#${f(0)}${f(8)}${f(4)}`;
         };
-
         const [h, s, l] = hexToHsl(baseColor);
-
-        return [
-            baseColor,
-            hslToHex((h + 60) % 360, Math.max(s - 20, 30), Math.min(l + 10, 80)),
-            hslToHex((h + 120) % 360, Math.max(s - 10, 40), Math.max(l - 15, 25)),
-            hslToHex((h + 180) % 360, Math.max(s - 15, 35), Math.min(l + 5, 75)),
-            hslToHex((h + 240) % 360, Math.max(s - 5, 45), Math.max(l - 10, 30)),
-        ];
+        return [ baseColor, hslToHex((h + 60) % 360, Math.max(s - 20, 30), Math.min(l + 10, 80)), hslToHex((h + 120) % 360, Math.max(s - 10, 40), Math.max(l - 15, 25)), hslToHex((h + 180) % 360, Math.max(s - 15, 35), Math.min(l + 5, 75)), hslToHex((h + 240) % 360, Math.max(s - 5, 45), Math.max(l - 10, 30)), ];
     };
-
-    const handleColorClick = (corHex: string) => {
-        const novoTema = generateColorTheme(corHex);
-        definirCoresDoGrafico(novoTema);
-    };
-
+    const handleColorClick = (corHex: string) => { const novoTema = generateColorTheme(corHex); definirCoresDoGrafico(novoTema); };
     const corTemaAtiva = conjuntoDeDados.cores?.[0] || '#3B82F6';
 
     return (
         <>
             <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,_1fr)_minmax(0,_1.5fr)_minmax(0,_1fr)] gap-6 h-full animate-fade-in pb-4">
+                {/* Coluna Esquerda */}
                 <div className="flex flex-col space-y-6 pt-1">
-                    <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-x-6 gap-y-2 items-end">
+                    {/* ... (Título, Detalhes, Tema de Cores, Detalhes Nova Versão - permanecem iguais) ... */}
+                     <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-x-6 gap-y-2 items-end">
                         <div>
                             <label className="block text-lg font-medium text-gray-700 mb-2">
                                 Título do Gráfico
+                                {isNewVersionMode && (
+                                    <span className="ml-2 text-xs font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-md align-middle">
+                                        NOVA VERSÃO
+                                    </span>
+                                )}
                             </label>
                             <input
-                                type="text"
-                                value={tituloGrafico}
-                                onChange={(e) => setTituloGrafico(e.target.value)}
+                                type="text" value={tituloGrafico} onChange={(e) => setTituloGrafico(e.target.value)}
                                 placeholder="Ex.: Atendimentos por Complexidade"
                                 className="w-full px-4 py-3 border border-gray-200 rounded-2xl bg-gray-50/25 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
                                 disabled={isNewVersionMode}
@@ -132,18 +119,11 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                         )}
                     </div>
 
-                    {isNewVersionMode && (
-                        <span className="ml-2 text-xs text-center font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-2xl">
-                            NOVA VERSÃO
-                        </span>
-                    )}
-
                     {!isNewVersionMode && (
                         <div>
                             <label className="block text-lg font-medium text-gray-700 mb-2">Detalhes do Gráfico</label>
                             <textarea
-                                value={detalhesGrafico}
-                                onChange={(e) => setDetalhesGrafico(e.target.value)}
+                                value={detalhesGrafico} onChange={(e) => setDetalhesGrafico(e.target.value)}
                                 placeholder="Descreva o contexto, período, fonte dos dados, etc."
                                 rows={4}
                                 className="w-full px-4 py-3 border bg-gray-50/25 border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
@@ -152,44 +132,34 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                         </div>
                     )}
 
-                    <div>
+                     <div>
                         <label className="block text-lg font-medium text-gray-700 mb-2">Tema de Cores</label>
                         <div className="space-y-2">
                             <div className="flex items-center gap-2 flex-wrap p-2 rounded-2xl">
                                 {Object.entries(coresPredefinidas).map(([nome, corHex]) => (
                                     <button
-                                        key={nome}
-                                        title={`Tema ${nome}`}
-                                        onClick={() => handleColorClick(corHex)}
+                                        key={nome} title={`Tema ${nome}`} onClick={() => handleColorClick(corHex)}
                                         className={`w-8 h-8 rounded-full transition-transform hover:scale-110 ${corTemaAtiva === corHex ? 'ring-2 ring-offset-2 ring-gray-300' : ''}`}
-                                        style={{ backgroundColor: corHex }}
-                                        // allow changing theme in new version mode too
-                                        disabled={false}
+                                        style={{ backgroundColor: corHex }} disabled={false}
                                     ></button>
                                 ))}
                             </div>
                             <div className="flex items-center gap-1 p-2 bg-white rounded-2xl border border-gray-200">
                                 <span className="text-xs text-gray-600 mr-2">Tema atual:</span>
                                 {conjuntoDeDados.cores?.slice(0, 5).map((cor, index) => (
-                                    <div
-                                        key={index}
-                                        className="w-4 h-4 rounded-full border border-gray-200"
-                                        style={{ backgroundColor: cor }}
-                                        title={cor}
-                                    ></div>
+                                    <div key={index} className="w-4 h-4 rounded-full border border-gray-200" style={{ backgroundColor: cor }} title={cor}></div>
                                 ))}
                             </div>
                         </div>
                     </div>
 
-                    {isNewVersionMode && (
+                     {isNewVersionMode && (
                         <div className="space-y-4 rounded-2xl border border-blue-200 bg-blue-50/50 p-4">
                             <h3 className="text-lg font-semibold text-blue-800">Detalhes da Nova Versão</h3>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">Motivo da Alteração</label>
                                 <select
-                                    value={tipoVersao}
-                                    onChange={(e) => setTipoVersao(e.target.value as TipoVersao)}
+                                    value={tipoVersao} onChange={(e) => setTipoVersao(e.target.value as TipoVersao)}
                                     className="w-full px-4 py-3 border border-gray-300 rounded-2xl bg-white focus:ring-2 focus:ring-blue-500"
                                 >
                                     <option value={TipoVersao.CORRECAO}>Correção de Informação Incorreta</option>
@@ -199,8 +169,7 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">Descrição das Alterações (Obrigatório)</label>
                                 <textarea
-                                    value={descricaoVersao}
-                                    onChange={(e) => setDescricaoVersao(e.target.value)}
+                                    value={descricaoVersao} onChange={(e) => setDescricaoVersao(e.target.value)}
                                     placeholder="Ex: Atualização dos dados para o mês de Setembro."
                                     rows={3}
                                     className="w-full px-4 py-3 border border-gray-300 rounded-2xl bg-white focus:ring-2 focus:ring-blue-500 resize-none"
@@ -210,6 +179,7 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                     )}
                 </div>
 
+                {/* Coluna Central */}
                 <div className="flex flex-col space-y-6 border-x-0 lg:border-x border-gray-200 px-0 lg:px-6">
                     <SeletorTipoGrafico tipoSelecionado={tipoGrafico} aoMudarTipo={aoMudarTipo} />
                     <div className="pt-4">
@@ -221,6 +191,7 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                             <button onClick={() => setAbaFonteDeDados("upload")} className={`flex-1 text-sm py-2 px-4 rounded-2xl font-semibold transition-all flex justify-center items-center gap-2 ${abaFonteDeDados === "upload" ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:bg-gray-200"}`}><Upload className="w-4 h-4" /> Upload de Arquivo</button>
                         </div>
                         {abaFonteDeDados === 'manual' ? (
+                            // Passar todas as props necessárias para SecaoDadosManuais
                             <SecaoDadosManuais
                                 conjuntoDeDados={conjuntoDeDados}
                                 aoAtualizarCelula={atualizarCelula}
@@ -229,6 +200,7 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                                 aoAdicionarColuna={adicionarColuna}
                                 aoRemoverColuna={removerColuna}
                                 aoAtualizarNomeColuna={atualizarNomeColuna}
+                                aoAtualizarFormatoColuna={atualizarFormatoColuna} // <-- Passando aqui
                             />
                         ) : (
                             <SecaoUploadArquivo arquivoDeDados={arquivoDeDados} setArquivoDeDados={setArquivoDeDados} aoBaixarModelo={baixarModelo} />
@@ -236,36 +208,34 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                     </div>
                 </div>
 
+                {/* Coluna Direita */}
                 <div className="flex flex-col space-y-4 h-full pt-1">
-                    <label className="block text-lg font-medium text-gray-700 flex-shrink-0">Pré-visualização</label>
-                    <div className="flex-1 min-h-0">
+                     <label className="block text-lg font-medium text-gray-700 flex-shrink-0">Pré-visualização</label>
+                     <div className="flex-1 min-h-0">
                         <PrevisualizacaoGrafico
-                            tipoGrafico={tipoGrafico}
-                            conjuntoDeDados={conjuntoDeDados}
-                            titulo={tituloGrafico}
-                            previsualizacaoGerada={previsualizacaoGerada}
+                            tipoGrafico={tipoGrafico} conjuntoDeDados={conjuntoDeDados}
+                            titulo={tituloGrafico} previsualizacaoGerada={previsualizacaoGerada}
                             aoAlternarTelaCheia={alternarTelaCheia}
                         />
                     </div>
-                    <button onClick={() => setPrevisualizacaoGerada(true)} className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white font-semibold rounded-2xl hover:bg-blue-700 transition shadow flex-shrink-0">
+                     <button onClick={() => setPrevisualizacaoGerada(true)} className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white font-semibold rounded-2xl hover:bg-blue-700 transition shadow flex-shrink-0">
                         <BarChart3 className="w-5 h-5" />
                         {previsualizacaoGerada ? "Atualizar Gráfico" : "Gerar Gráfico"}
                     </button>
                 </div>
             </div>
 
+            {/* Modal Tela Cheia */}
             {graficoEmTelaCheia && (
-                <div className="fixed inset-0 bg-white z-[60] p-4 lg:p-8 flex flex-col animate-fade-in">
+                 <div className="fixed inset-0 bg-white z-[60] p-4 lg:p-8 flex flex-col animate-fade-in">
                     <div className="flex justify-between items-center mb-4 flex-shrink-0">
                         <h2 className="text-2xl font-semibold text-gray-800">{tituloGrafico || "Gráfico em Tela Cheia"}</h2>
                         <button onClick={alternarTelaCheia} className="p-3 bg-gray-100 rounded-full text-gray-700 hover:bg-gray-200 transition-colors" title="Fechar tela cheia"><Minimize className="w-6 h-6" /></button>
                     </div>
                     <div className="flex-1 min-h-0 w-full h-full">
                         <PrevisualizacaoGrafico
-                            tipoGrafico={tipoGrafico}
-                            conjuntoDeDados={conjuntoDeDados}
-                            titulo={tituloGrafico}
-                            previsualizacaoGerada={previsualizacaoGerada}
+                            tipoGrafico={tipoGrafico} conjuntoDeDados={conjuntoDeDados}
+                            titulo={tituloGrafico} previsualizacaoGerada={previsualizacaoGerada}
                             emTelaCheia={true}
                         />
                     </div>

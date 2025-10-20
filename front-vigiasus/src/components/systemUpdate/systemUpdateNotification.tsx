@@ -1,59 +1,59 @@
+// src/components/systemUpdate/systemUpdateNotification.tsx
 "use client";
 
 import { Notification } from "@/constants/notificationsData";
 import { toast } from "sonner";
 import Image from "next/image";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Info } from "lucide-react"; // Usar Info para o ícone principal
+import { Button } from "@/components/ui/button"; // Usar Button
+import { showSuccessToast } from "@/components/ui/Toasts"; // Usar o Toast padrão
 
 interface NotificationProps {
   notification: Notification;
 }
 
-// Componente de Toast Personalizado
-const ReadToast = () => {
-  return (
-    <div className="flex w-full items-center gap-4 rounded-xl border border-green-200 bg-green-50 p-4 shadow-lg transition-all duration-300">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-200">
-        <CheckCircle2 className="text-green-600" size={24} />
-      </div>
-      <div className="flex-1">
-        <h3 className="text-sm font-semibold text-gray-800">Sucesso!</h3>
-        <p className="mt-1 text-xs text-gray-600">Notificação marcada como lida.</p>
-      </div>
-    </div>
-  );
-};
-
 export default function SystemUpdateView({ notification }: NotificationProps) {
   const handleUnderstood = () => {
-    // Lógica para marcar como entendido
-    toast.custom(ReadToast);
+    // Lógica para marcar como entendido (pode ser enviada para o backend no futuro)
+    showSuccessToast("Atualização marcada como entendida.");
+    // Aqui você pode querer chamar uma função passada por props para atualizar o estado global
   };
 
   return (
-    <div className="p-6 flex flex-col items-center text-center gap-4">
-      <Image
-        src="/icons/system.svg"
-        alt="Atualização do Sistema"
-        width={60}
-        height={60}
-      />
-      <h3 className="text-xl font-bold text-blue-700">{notification.title}</h3>
-      <p className="text-gray-600 leading-relaxed max-w-md">{notification.description}</p>
-      <div className="w-full mt-4 p-4 border border-gray-300/80 rounded-3xl bg-gray-50 text-left">
-        <p className="font-semibold mb-2">O que há de novo:</p>
-        <ul className="list-disc list-inside text-sm text-gray-700">
-          <li>Novas funcionalidades de filtro de dados.</li>
-          <li>Melhorias de performance na busca de gerências.</li>
-          <li>Correção de bug na exibição de documentos.</li>
-        </ul>
-      </div>
-      <button
-        onClick={handleUnderstood}
-        className="self-end cursor-pointer px-4 py-2 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition"
-      >
-        Entendido
-      </button>
+    // Adicionado padding, flex layout, e scroll se necessário
+    <div className="flex flex-col h-full p-6 gap-4 overflow-y-auto scrollbar-custom bg-white">
+        {/* Conteúdo centralizado */}
+        <div className="flex flex-col items-center text-center gap-4 flex-1 justify-center">
+            {/* Ícone maior */}
+            <div className="p-3 bg-blue-100 rounded-full mb-2">
+                <Info className="w-10 h-10 text-blue-600" />
+            </div>
+            {/* Título e Descrição */}
+            <h3 className="text-xl font-bold text-blue-700">{notification.title}</h3>
+            <p className="text-gray-600 leading-relaxed max-w-md">{notification.description}</p>
+
+            {/* Caixa de Novidades */}
+            <div className="w-full mt-4 p-4 border border-blue-200 rounded-xl bg-blue-50/50 text-left">
+                <p className="font-semibold mb-2 text-blue-800">O que há de novo:</p>
+                {/* Exemplo de lista, pode vir do backend */}
+                <ul className="list-disc list-inside text-sm text-blue-700 space-y-1">
+                <li>Novas funcionalidades de filtro de dados.</li>
+                <li>Melhorias de performance na busca de gerências.</li>
+                <li>Correção de bug na exibição de documentos PDF.</li>
+                <li>Interface da Central de Notificações atualizada.</li>
+                </ul>
+            </div>
+        </div>
+
+        {/* Rodapé com botão */}
+        <div className="flex justify-end pt-4 border-t border-gray-200">
+            <Button
+                onClick={handleUnderstood}
+                className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold"
+            >
+                Entendido
+            </Button>
+        </div>
     </div>
   );
 }
