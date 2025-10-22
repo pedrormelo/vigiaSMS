@@ -165,6 +165,35 @@ export const getContextoById = async (id: string): Promise<Contexto | null> => {
   }
 };
 
+/**
+ * Obtém a data/hora do último contexto inserido no sistema (mock ou API real).
+ * Considera tanto os contextos em aberto quanto o histórico e retorna o mais recente por campo `data`.
+ */
+export const getUltimaAtualizacao = async (): Promise<{
+  id: string;
+  nome: string;
+  data: string; // ISO string
+} | null> => {
+  if (USE_MOCKS) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        try {
+          const todos: Contexto[] = [...mockData, ...mockDataHistorico];
+          if (todos.length === 0) return resolve(null);
+          const ordenados = [...todos].sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
+          const ultimo = ordenados[0];
+          resolve({ id: ultimo.id, nome: ultimo.nome, data: ultimo.data });
+        } catch {
+          resolve(null);
+        }
+      }, 200);
+    });
+  } else {
+    // TODO: implementar chamada real à API quando disponível
+    return null;
+  }
+};
+
 // Você pode adicionar mais funções aqui conforme necessário, como:
 // - updateContextoStatus(id: string, newStatus: StatusContexto, comentario?: string): Promise<boolean>
 // - createContexto(data: Omit<Contexto, 'id' | 'data' | 'historico'>): Promise<Contexto | null>

@@ -31,33 +31,27 @@ export default function GerenciasFilterBar({
   );
 
   return (
-    <div className="mb-10 mt-10"> {/* Adicionado margem superior */}
+    <div className="mb-10 mt-4"> {/* Adicionado margem superior */}
       {/* Container Principal da Barra de Filtros */}
+      <h1 className="mb-4 text-4xl text-blue-600 font-light">Painel de Gerências</h1>
       <div className="flex items-center gap-4">
-
-        {/* Barra de Pesquisa (Ocupa a maior parte do espaço) */}
-        <div className="flex-1">
-          <SearchBar
-            value={searchValue}
-            onChange={onSearchChange}
-            placeholder="Pesquise pelo nome da Gerência..."
-          />
-        </div>
 
         {/* Popover para Filtro de Diretoria */}
         <Popover>
           <PopoverTrigger asChild>
             <Button
+              // size="default"
               // variant="outline" // REMOVER esta linha
               className={cn(
                 // Estilos base copiados da página de gerência:
-                "p-2 bg-blue-600 hover:bg-blue-500 border-blue-500 text-white hover:text-blue-50 rounded-2xl shadow-sm cursor-pointer transition-transform duration-200 ease-in-out hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2",
+                "h-11 p-2 bg-blue-600 hover:bg-blue-500 border-blue-500 text-white hover:text-blue-50 rounded-2xl shadow-sm cursor-pointer transition-transform duration-200 ease-in-out hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-200",
                 // Adicionar lógica para indicador de filtro ativo (mantida do código anterior):
                 "relative" // Necessário para posicionar o indicador
               )}
               aria-label="Filtrar por Diretoria"
             >
-              <Funnel className="h-5 w-5" />
+              {/* TEM QUE MELHORAR E TIRAR ESSE FORCE "!!" PARA FUNCIONAR EM TODAS SEM PRECISAR FORÇAR USANDO ! */}
+              <Funnel className="!h-5 !w-5" />
               {/* Indicador de filtro ativo (mantido) */}
               {selectedDiretorias.length > 0 && (
                 <span className="absolute -top-1 -right-1 block h-3 w-3 rounded-full bg-red-500 ring-2 ring-white" /> // Mudado para vermelho para mais destaque, como na navbar
@@ -109,6 +103,18 @@ export default function GerenciasFilterBar({
             </div>
           </PopoverContent>
         </Popover>
+
+        {/* Barra de Pesquisa (Ocupa a maior parte do espaço) */}
+        <div className="flex-1">
+          <SearchBar
+            value={searchValue}
+            onChange={onSearchChange}
+            placeholder="Pesquise pelo nome da Gerência..."
+            className="!max-w-[85%]"
+          />
+        </div>
+
+
       </div>
     </div>
   );

@@ -9,6 +9,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import { useRouter } from "next/navigation";
 
 // --- INTERFACE FOR PROPS ---
 // Define the structure of the gerencia object expected from the parent
@@ -42,6 +43,7 @@ function chunk<T>(array: T[], size: number): T[][] {
 // --- UPDATE COMPONENT SIGNATURE ---
 export default function GerenciasCarousel({ gerencias }: GerenciasCarouselProps) {
   // REMOVED: Internal hardcoded 'gerencias' array
+  const router = useRouter();
 
   // --- USE THE PROP ---
   // Transforma a lista RECEBIDA de gerências em colunas com 3 cards cada.
@@ -78,7 +80,7 @@ export default function GerenciasCarousel({ gerencias }: GerenciasCarouselProps)
                   key={gerencia.id || gerencia.label}
                   label={gerencia.label}
                   color={gerencia.color}
-                  // Add onClick if needed later
+                  onClick={() => router.push(`/gerencia/${gerencia.id}`)}
                 />
               ))}
             </div>

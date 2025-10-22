@@ -65,10 +65,10 @@ export default function GerenciasFilterBar({
           <PopoverTrigger asChild>
         {/* Botão de filtro */}
         <Button
-          className="p-2 bg-blue-600 hover:bg-blue-500 border-blue-500 text-white hover:text-blue-50 rounded-2xl shadow-sm cursor-pointer transition-transform duration-200 ease-in-out hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2"
+          className="h-10 p-2 bg-blue-600 hover:bg-blue-500 border-blue-500 text-white hover:text-blue-50 rounded-2xl shadow-sm cursor-pointer transition-transform duration-200 ease-in-out hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-200"
           aria-label="Abrir filtros"
         >
-          <Funnel className="h-5 w-5" />
+          <Funnel className="!h-5 !w-5" />
         </Button>
           </PopoverTrigger>
           <PopoverContent className="w-64 bg-white/80 backdrop-blur-md border-gray-200 shadow-xl rounded-2xl" align="start">
