@@ -5,7 +5,8 @@ import { FileText, FileSpreadsheet, FileSearch, Link, Calendar, ChartNetwork, Ga
 import { cn } from "@/lib/utils"
 import Image from "next/image"
 
-export type FileType = "pdf" | "doc" | "dashboard" | "excel" | "resolucao" | "link" | "leis" | "indicador"
+// export type FileType = "pdf" | "doc" | "dashboard" | "excel" | "resolucao" | "link" | "leis" | "indicador"
+export type FileType = "pdf" | "doc" | "dashboard" | "excel" | "resolucao" | "link" | "indicador"
 
 interface FileItemProps {
     title: string

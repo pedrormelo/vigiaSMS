@@ -1,12 +1,13 @@
 "use client"
 
-import { useParams, useRouter } from "next/dist/client/components/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { DashboardPreview, type GraphData } from "@/components/dashboard/dasboard-preview"
 import { SecretariaDashboardPreview } from "@/components/dashboard/secretaria-dashboard-preview"
 import { SecretariaMetricsSection } from "@/components/dashboard/secretaria/metrics-section"
 
 import { diretoriasConfig } from "@/constants/diretorias"
 import { Info, Pen } from "lucide-react"
+import InfoPopover from "@/components/dashboard/InfoPopover"
 import React from "react"
 
 // Mock indicator data
@@ -221,9 +222,24 @@ export default function DashboardView() {
 
                     {/* Botões do canto direito */}
                     <div className="flex flex-col items-center gap-3">
-                        <button className="flex items-center justify-center mb-9 w-8 h-8 cursor-pointer bg-[#ffffff] text-[#1745FF] rounded-full border-none hover:bg-white/80 transition-all duration-200 shadow-sm">
-                            <Info size={20} />
-                        </button>
+                        <InfoPopover
+                            trigger={
+                                <button
+                                    className="flex items-center justify-center mb-9 w-8 h-8 cursor-pointer bg-[#ffffff] text-[#1745FF] rounded-full border-none hover:bg-white/80 transition-all duration-200 shadow-sm"
+                                    aria-label="Sobre esta página"
+                                >
+                                    <Info size={20} />
+                                </button>
+                            }
+                            heading="Sobre"
+                            title={diretoria.nome}
+                            description={diretoria.sobre ?? "Esta página apresenta informações e gráficos relevantes desta diretoria."}
+                            side="left"
+                            align="center"
+                            sideOffset={12}
+                            alignOffset={0}
+                            showTail={false}
+                        />
                         {id !== "secretaria" && (
                             <button
                                 onClick={() => router.push(`/dashboard/${id}/editar-layout`)}
