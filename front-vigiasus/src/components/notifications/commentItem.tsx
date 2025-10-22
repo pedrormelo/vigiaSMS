@@ -23,7 +23,7 @@ export default function CommentItem({ comment }: CommentItemProps) {
       roleStyle = "bg-green-100 border-green-300 text-gray-700";
       break;
     case "user":
-      roleStyle = "bg-blue-50 border-blue-100 text-gray-700";
+      roleStyle = "bg-sky-50 border-blue-100 text-gray-700";
       break;
     case "zelma":
       roleStyle = "bg-blue-200 border-blue-300 text-gray-700";

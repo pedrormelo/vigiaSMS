@@ -4,7 +4,7 @@ import EventsSection from "@/components/conselho/eventSection";
 //import DatasImportantes from "@/components/conselho/datasImportantes";
 //import Galeria from "@/components/conselho/galeria";
 import HeroCMS from "@/components/conselho/heroCMS";
-import { ContextModal as AddContextoModal } from "@/components/popups/addContexto-modal";
+import { ContextModal } from "@/components/popups/addContexto-modal";
 //import Resolutions from "@/components/conselho/resolutions";
 import { FileGrid } from "@/components/contextosCard/contextosGrid";
 import FilterBar from "@/components/gerencia/painel-filterBar";

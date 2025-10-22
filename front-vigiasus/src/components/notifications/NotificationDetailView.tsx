@@ -62,7 +62,7 @@ const ContextNotificationDetails: React.FC<Props> = ({
     <div className="flex flex-col h-full bg-white">
       {/* Cabeçalho da Notificação (semelhante ao estilo do item da lista) */}
       <div className="p-4 border-b border-gray-200 flex items-start gap-4 flex-shrink-0 bg-gray-50/50">
-         <div className="w-10 h-10 flex items-center justify-center rounded-full bg-blue-100 flex-shrink-0">
+         <div className="w-10 h-10 flex items-center justify-center rounded-full bg-blue-100/75 flex-shrink-0">
              {/* Usa IconeDocumento para consistência */}
              <IconeDocumento type={docTypeForIcon as any} />
          </div>
@@ -79,7 +79,7 @@ const ContextNotificationDetails: React.FC<Props> = ({
             <Button
                 onClick={() => onOpenContexto(notification)}
                 size="sm"
-                className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 flex items-center gap-1.5 flex-shrink-0 ml-auto"
+                className="bg-blue-600 hover:bg-blue-700 text-white rounded-2xl px-4 py-2 flex items-center gap-1.5 flex-shrink-0 ml-auto"
             >
                 <Eye className="w-4 h-4" />
                 Abrir
@@ -101,7 +101,7 @@ const ContextNotificationDetails: React.FC<Props> = ({
                     onClick={handleConfirmAndMarkAsRead}
                     disabled={isRead}
                     className={cn(
-                        "px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-1.5",
+                        "px-4 py-2 text-sm font-semibold rounded-2xl flex items-center gap-1.5",
                         isRead
                             ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                             : "bg-green-500 text-white hover:bg-green-600 transition"

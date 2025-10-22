@@ -122,7 +122,7 @@ export default function NotificationsModal({ isOpen, onClose, onOpenContextoDeta
              <div className="bg-gradient-to-r from-[#0037C1] to-[#00BDFF] px-8 py-4 flex items-center justify-between rounded-t-[40px] flex-shrink-0">
                 {/* ... (código do cabeçalho) ... */}
                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center">
                         <Bell className="w-5 h-5 text-white" />
                     </div>
                     <h2 className="text-2xl font-regular text-white">
@@ -133,7 +133,7 @@ export default function NotificationsModal({ isOpen, onClose, onOpenContextoDeta
                     size="icon"
                     variant="ghost"
                     onClick={onClose}
-                    className="w-8 h-8 bg-white/20 text-white hover:bg-white/30 rounded-full flex-shrink-0"
+                    className="w-8 h-8 bg-white/20 text-white hover:text-white/50 hover:bg-gray-100/50 rounded-full flex-shrink-0"
                 >
                     <ArrowLeft className="w-5 h-5" />
                 </Button>
@@ -144,8 +144,13 @@ export default function NotificationsModal({ isOpen, onClose, onOpenContextoDeta
             </div>
         </div>
         <style>{`
-            /* ... (estilos) ... */
-            @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+            /* ... (outros estilos) ... */
+            @keyframes fadeIn {
+                /* REMOVIDO: transform: scale(0.95); */
+                from { opacity: 0; }
+                /* REMOVIDO: transform: scale(1); */
+                to { opacity: 1; }
+            }
             .animate-fade-in { animation: fadeIn 0.2s ease-out forwards; }
             .scrollbar-custom::-webkit-scrollbar { width: 8px; }
             .scrollbar-custom::-webkit-scrollbar-thumb { background: linear-gradient(to bottom, #60a5fa, #2563eb); border-radius: 8px; }

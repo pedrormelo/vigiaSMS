@@ -70,7 +70,7 @@ export default function CommentSection({ notification, isRead, onMarkAsRead }: N
                 disabled={isRead}
                 // Estilo do botão ligeiramente ajustado usando variantes e cn
                 className={cn(
-                    "px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-1.5", // Espaçamento e tamanho
+                    "px-4 py-2 text-sm font-semibold rounded-3xl flex items-center gap-1.5", // Espaçamento e tamanho
                     isRead
                         ? "bg-gray-300 text-gray-500 cursor-not-allowed" // Estilo desabilitado
                         : "bg-green-500 text-white hover:bg-green-600 transition" // Estilo habilitado

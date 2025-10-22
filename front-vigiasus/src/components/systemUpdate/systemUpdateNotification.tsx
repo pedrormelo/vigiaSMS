@@ -33,7 +33,7 @@ export default function SystemUpdateView({ notification }: NotificationProps) {
             <p className="text-gray-600 leading-relaxed max-w-md">{notification.description}</p>
 
             {/* Caixa de Novidades */}
-            <div className="w-full mt-4 p-4 border border-blue-200 rounded-xl bg-blue-50/50 text-left">
+            <div className="w-full mt-4 p-4 border border-blue-200 rounded-3xl bg-blue-50/50 text-left">
                 <p className="font-semibold mb-2 text-blue-800">O que há de novo:</p>
                 {/* Exemplo de lista, pode vir do backend */}
                 <ul className="list-disc list-inside text-sm text-blue-700 space-y-1">
@@ -49,9 +49,9 @@ export default function SystemUpdateView({ notification }: NotificationProps) {
         <div className="flex justify-end pt-4 border-t border-gray-200">
             <Button
                 onClick={handleUnderstood}
-                className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold"
+                className="px-6 py-2.5 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition font-semibold"
             >
-                Entendido
+                Marcar como Lido
             </Button>
         </div>
     </div>
