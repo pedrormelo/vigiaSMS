@@ -78,7 +78,11 @@ const AbaDetalhes = ({ dados, aoFazerDownload, aoAlternarTelaCheia }: { dados: D
                             <p className="text-sm text-gray-500">{new Date(dados.insertedDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
                         </div>
                     </div>
-                    <button onClick={aoFazerDownload} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-2xl hover:bg-blue-700 transition-colors"><Download className="w-4 h-4" /> Baixar</button>
+                    {dados.url && dados.type !== 'indicador' && (
+                        <button onClick={aoFazerDownload} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-2xl hover:bg-blue-700 transition-colors">
+                            <Download className="w-4 h-4" /> Baixar
+                        </button>
+                    )}
                 </div>
                 {dados.description && (
                     <div className="bg-blue-50/50 border border-blue-200 rounded-2xl p-4 space-y-3">
