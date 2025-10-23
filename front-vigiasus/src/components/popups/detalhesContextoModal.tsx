@@ -5,7 +5,8 @@ import React, { useState, useEffect } from 'react';
 import {
     ArrowLeft, Info, History, Download, FileText, User, MessageSquare,
     FileIcon, LucideProps, Minimize, ZoomIn, ZoomOut, RotateCcw, FileCheck2, FileX,
-    CheckCircle, Clock, FileWarning, Send, UserCheck, UserCog, Building, Edit // Adicionado Edit
+    CheckCircle, Clock, FileWarning, Send, UserCheck, UserCog, Building, Edit, // Adicionado Edit
+    CircleCheckBig
 } from 'lucide-react';
 import StatusBanner from '@/components/ui/status-banner';
 import { Button } from "@/components/ui/button";
@@ -19,14 +20,14 @@ import CommentItem from '@/components/notifications/commentItem';
 import { notificationsData } from '@/constants/notificationsData'; // Para buscar mocks
 
 interface DetalhesContextoModalProps {
-  contexto: Contexto | null;
-  isOpen: boolean;
-  onClose: () => void;
-  perfil: "diretor" | "gerente" | "membro";
-  isFromHistory?: boolean;
-  onDeferir?: (contextoId: string, comentario?: string) => void;
-  onIndeferir?: (contextoId: string, comentario: string) => void;
-  onCorrigir?: (contextoParaCorrigir: Contexto) => void; // Prop para correção
+    contexto: Contexto | null;
+    isOpen: boolean;
+    onClose: () => void;
+    perfil: "diretor" | "gerente" | "membro";
+    isFromHistory?: boolean;
+    onDeferir?: (contextoId: string, comentario?: string) => void;
+    onIndeferir?: (contextoId: string, comentario: string) => void;
+    onCorrigir?: (contextoParaCorrigir: Contexto) => void; // Prop para correção
 }
 
 type TipoAba = 'detalhes' | 'historico';
@@ -47,7 +48,7 @@ const AbaDetalhes = ({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full animate-fade-in p-1">
             <div className="space-y-6 overflow-y-auto pr-4 h-full pb-4 scrollbar-custom">
                 {/* ... (Banner, Descrição, Detalhes Adicionais) ... */}
-                 <StatusBanner variant="info" title="Visualizando Detalhes Atuais">
+                <StatusBanner variant="info" title="Visualizando Detalhes Atuais">
                     <div className="text-sm pl-3 leading-relaxed">
                         Estas são as informações mais recentes do contexto.
                     </div>
@@ -62,11 +63,11 @@ const AbaDetalhes = ({
                     </div>
                     {dados.url && (
                         <Button onClick={aoFazerDownload} variant="default" size="sm" className="rounded-2xl bg-blue-600 hover:bg-blue-700 text-white flex-shrink-0"> {/* Alterado para rounded-2xl */}
-                             <Download className="w-4 h-4 mr-1.5" /> Baixar
+                            <Download className="w-4 h-4 mr-1.5" /> Baixar
                         </Button>
                     )}
                 </div>
-                 {dados.detalhes && (
+                {dados.detalhes && (
                     <div className="bg-blue-50/50 border border-blue-200 rounded-2xl p-4 space-y-3">
                         <div className="flex items-center gap-2"><Info className="w-5 h-5 text-blue-600 flex-shrink-0" /><h3 className="text-base font-semibold text-blue-800">Descrição</h3></div>
                         <p className="text-gray-700 text-sm leading-relaxed pl-1">{dados.detalhes}</p>
@@ -75,33 +76,33 @@ const AbaDetalhes = ({
                 <div className="border-t border-gray-200 pt-6">
                     <h3 className="text-base font-semibold text-gray-700 mb-4">Detalhes Adicionais</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                        <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100">
-                             <User className="w-5 h-5 text-gray-500 flex-shrink-0" />
-                             <div>
+                        <div className="flex items-center gap-3 p-3 rounded-2xl hover:bg-gray-50 border border-gray-100">
+                            <User className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                            <div>
                                 <p className="font-medium text-gray-800">Enviado por</p>
                                 <p className="text-gray-600 truncate" title={dados.solicitante}>{dados.solicitante}</p>
-                             </div>
+                            </div>
                         </div>
-                         <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100">
+                        <div className="flex items-center gap-3 p-3 rounded-2xl hover:bg-gray-50 border border-gray-100">
                             <FileIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
-                             <div>
+                            <div>
                                 <p className="font-medium text-gray-800">Tipo</p>
                                 <p className="text-gray-600 uppercase">{dados.docType}</p>
                             </div>
                         </div>
-                         <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100 sm:col-span-2">
-                             <Building className="w-5 h-5 text-gray-500 flex-shrink-0" />
-                             <div>
-                                 <p className="font-medium text-gray-800">Gerência Solicitante</p>
-                                 <p className="text-gray-600 truncate" title={dados.gerencia}>{dados.gerencia}</p>
-                             </div>
-                         </div>
+                        <div className="flex items-center gap-3 p-3 rounded-2xl hover:bg-gray-50 border border-gray-100 sm:col-span-2">
+                            <Building className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                            <div>
+                                <p className="font-medium text-gray-800">Gerência Solicitante</p>
+                                <p className="text-gray-600 truncate" title={dados.gerencia}>{dados.gerencia}</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
             {/* Coluna Direita: Visualizador */}
             <div className="h-full min-h-0">
-                 <VisualizadorDeConteudo
+                <VisualizadorDeConteudo
                     tipo={dados.docType as any} url={dados.url} titulo={dados.nome} payload={dados.payload as any}
                     aoAlternarTelaCheia={aoAlternarTelaCheia} emTelaCheia={emTelaCheia} zoomLevel={zoomLevel}
                 />
@@ -117,7 +118,7 @@ const AbaHistorico = ({ dados }: { dados: Contexto }) => {
         { nome: "Submetido", status: [StatusContexto.AguardandoGerente, StatusContexto.AguardandoDiretor, StatusContexto.Publicado, StatusContexto.Deferido, StatusContexto.Indeferido, StatusContexto.AguardandoCorrecao], icon: Send },
         { nome: "Análise Gerente", status: [StatusContexto.AguardandoDiretor, StatusContexto.Publicado, StatusContexto.Deferido, StatusContexto.Indeferido, StatusContexto.AguardandoCorrecao], icon: UserCog },
         { nome: "Análise Diretor", status: [StatusContexto.Publicado, StatusContexto.Deferido, StatusContexto.Indeferido, StatusContexto.AguardandoCorrecao], icon: UserCheck },
-        { nome: "Finalizado", status: [StatusContexto.Publicado, StatusContexto.Indeferido], icon: Building }
+        { nome: "Finalizado", status: [StatusContexto.Publicado, StatusContexto.Indeferido], icon: CircleCheckBig}
     ];
     const historicoEventos = dados.historico || [];
     const statusAtual = dados.situacao;
@@ -176,11 +177,11 @@ const AbaHistorico = ({ dados }: { dados: Contexto }) => {
                         return (
                             <React.Fragment key={etapa.nome}>
                                 <div className="flex flex-col items-center text-center w-32 flex-shrink-0">
-                                    <div className={cn("h-10 w-10 rounded-2xl border-2 flex items-center justify-center mb-2 transition-colors", corFundoIcone, isConcluida || isFinalizada ? "border-green-200" : isAtual ? "border-blue-200" : isDevolvida ? "border-orange-200" : "border-gray-200" )}>
+                                    <div className={cn("h-10 w-10 rounded-2xl border-2 flex items-center justify-center mb-2 transition-colors", corFundoIcone, isConcluida || isFinalizada ? "border-green-200" : isAtual ? "border-blue-200" : isDevolvida ? "border-orange-200" : "border-gray-200")}>
                                         <IconeStatus size={20} className={cn("transition-colors", corIcone)} />
                                     </div>
                                     <p className={cn("text-sm font-semibold transition-colors", corTexto)}>{etapa.nome}</p>
-                                    {evento && !isPendente && ( <> <p className="mt-1 text-xs text-gray-500"> {new Date(evento.data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} {' às '} {new Date(evento.data).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} </p> <p className="text-xs text-gray-500 truncate w-full" title={evento.autor}>por {evento.autor}</p> </> )}
+                                    {evento && !isPendente && (<> <p className="mt-1 text-xs text-gray-500"> {new Date(evento.data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} {' às '} {new Date(evento.data).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} </p> <p className="text-xs text-gray-500 truncate w-full" title={evento.autor}>por {evento.autor}</p> </>)}
                                     {isDevolvida && (<p className="text-xs font-medium text-orange-600 mt-1">Devolvido</p>)}
                                 </div>
                                 {index < etapasWorkflow.length - 1 && (<div className={`flex-1 mt-[19px] h-0.5 transition-colors ${isConcluida || isFinalizada ? 'bg-green-300' : 'bg-gray-200'} min-w-[10px]`}></div>)}
@@ -191,10 +192,10 @@ const AbaHistorico = ({ dados }: { dados: Contexto }) => {
                 {/* Seção de Comentários Existentes */}
                 <div className="px-3">
                     <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
-                        <MessageSquare size={20}/> Comentários e Justificativas ({comentariosParaExibir.length})
+                        <MessageSquare size={20} /> Comentários e Justificativas ({comentariosParaExibir.length})
                     </h3>
                     {comentariosParaExibir.length > 0 ? (
-                        <div className="space-y-4 max-h-60 overflow-y-auto scrollbar-custom border border-gray-200 rounded-xl p-4 bg-gray-50/50">
+                        <div className="space-y-4 max-h-60 overflow-y-auto scrollbar-custom border shadow-inner border-gray-200 rounded-2xl p-4 bg-gray-50/25">
                             {comentariosParaExibir.map((comment) => (
                                 <CommentItem key={comment.id} comment={comment} />
                             ))}
@@ -205,11 +206,11 @@ const AbaHistorico = ({ dados }: { dados: Contexto }) => {
                 </div>
                 {/* Histórico Detalhado (Lista) */}
                 <div className="px-3">
-                    <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2"><History size={20}/> Histórico de Ações</h3>
+                    <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2"><History size={20} /> Histórico de Ações</h3>
                     {historicoEventos.length > 0 ? (
                         <ul className="space-y-3">
                             {[...historicoEventos].reverse().map((evento, index) => (
-                                <li key={index} className="p-4 bg-gray-50 rounded-xl border border-gray-200 hover:bg-gray-100 transition-colors text-sm">
+                                <li key={index} className="p-4 bg-gray-50 rounded-2xl border border-gray-200 hover:bg-gray-100 transition-colors text-sm">
                                     <p className="font-medium text-gray-800">{evento.acao}</p>
                                     <p className="text-xs text-gray-500 mt-1">{evento.autor} em {new Date(evento.data).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</p>
                                 </li>
@@ -308,15 +309,15 @@ export default function DetalhesContextoModal({
 
         // Lógica para Gerente e Diretor agirem
         if (perfil === "gerente" || perfil === "diretor") {
-             const podeAgir = (perfil === "gerente" && contexto.situacao === StatusContexto.AguardandoGerente) || (perfil === "diretor" && contexto.situacao === StatusContexto.AguardandoDiretor);
-             if (!podeAgir) {
-                 const statusTexto = statusConfig[contexto.situacao]?.text || contexto.situacao;
-                 return <p className="text-base text-gray-500 italic w-full text-center">Status atual: {statusTexto}. Nenhuma ação pendente.</p>;
-             }
+            const podeAgir = (perfil === "gerente" && contexto.situacao === StatusContexto.AguardandoGerente) || (perfil === "diretor" && contexto.situacao === StatusContexto.AguardandoDiretor);
+            if (!podeAgir) {
+                const statusTexto = statusConfig[contexto.situacao]?.text || contexto.situacao;
+                return <p className="text-base text-gray-500 italic w-full text-center">Status atual: {statusTexto}. Nenhuma ação pendente.</p>;
+            }
             return (
                 <div className="flex flex-col md:flex-row items-center gap-4 w-full">
                     <div className="flex-1 w-full">
-                         <label htmlFor="justificativa-acao" className="sr-only">Justificativa (obrigatório para Indeferir)</label>
+                        <label htmlFor="justificativa-acao" className="sr-only">Justificativa (obrigatório para Indeferir)</label>
                         <textarea id="justificativa-acao" placeholder="Justificativa (obrigatório para Indeferir)..." rows={1}
                             className="w-full border border-gray-300 rounded-xl py-2 px-4 text-sm focus:ring-1 focus:ring-blue-500 focus:outline-none resize-y leading-tight bg-white shadow-sm"
                             value={comentarioAcao} onChange={(e) => setComentarioAcao(e.target.value)}
@@ -324,25 +325,25 @@ export default function DetalhesContextoModal({
                     </div>
                     {/* Botões Deferir/Indeferir - Alterado para rounded-2xl */}
                     <div className="flex items-center gap-3 flex-shrink-0">
-                         <Button onClick={handleIndeferirClick} variant="outline" size="sm"
-                                className="bg-red-50 border-red-300 text-red-700 hover:bg-red-100 rounded-2xl px-4 py-2 font-bold" // Alterado para rounded-2xl
-                                disabled={!comentarioAcao.trim()}
-                         >
-                             <FileX className="mr-1.5 h-4 w-4" /> Indeferir
-                         </Button>
-                         <Button onClick={handleDeferirClick} variant="default" size="sm"
-                                className="bg-green-600 hover:bg-green-700 text-white rounded-2xl px-4 py-2 font-bold" // Alterado para rounded-2xl
-                         >
+                        <Button onClick={handleIndeferirClick} variant="outline" size="sm"
+                            className="bg-red-50 border-red-300 text-red-700 hover:bg-red-100 rounded-2xl px-4 py-2 font-bold" // Alterado para rounded-2xl
+                            disabled={!comentarioAcao.trim()}
+                        >
+                            <FileX className="mr-1.5 h-4 w-4" /> Indeferir
+                        </Button>
+                        <Button onClick={handleDeferirClick} variant="default" size="sm"
+                            className="bg-green-600 hover:bg-green-700 text-white rounded-2xl px-4 py-2 font-bold" // Alterado para rounded-2xl
+                        >
                             <FileCheck2 className="mr-1.5 h-4 w-4" /> Deferir
-                         </Button>
+                        </Button>
                     </div>
-                 </div>
+                </div>
             );
         }
 
         // Se for membro e status não for 'AguardandoCorrecao'
         if (perfil === "membro") {
-             return (<p className="text-base text-gray-500 w-full text-center">Visualizando detalhes do contexto.</p>);
+            return (<p className="text-base text-gray-500 w-full text-center">Visualizando detalhes do contexto.</p>);
         }
 
         return null;
@@ -350,57 +351,57 @@ export default function DetalhesContextoModal({
 
     return (
         <>
-        {/* Estrutura Principal do Modal */}
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
-             <div className="bg-white rounded-[40px] w-full max-w-7xl h-[90vh] flex flex-col shadow-2xl overflow-hidden">
-                {/* Cabeçalho */}
-                 <div className="bg-gradient-to-r from-[#0037C1] to-[#00BDFF] px-8 py-4 flex items-center justify-between rounded-t-[40px] flex-shrink-0">
-                     {/* ... (sem alterações) ... */}
-                    <div className="flex items-center gap-4 min-w-0">
-                        <div className="w-8 h-8 flex items-center justify-center flex-shrink-0 rounded-lg"> <FileText className="w-6 h-6 text-white" /> </div>
-                        <h2 className="text-2xl font-semibold text-white truncate" title={contexto.nome}> {isFromHistory ? 'Detalhes Históricos' : 'Análise de Contexto'} - {contexto.nome} </h2>
+            {/* Estrutura Principal do Modal */}
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+                <div className="bg-white rounded-[40px] w-full max-w-7xl h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+                    {/* Cabeçalho */}
+                    <div className="bg-gradient-to-r from-[#0037C1] to-[#00BDFF] px-8 py-4 flex items-center justify-between rounded-t-[40px] flex-shrink-0">
+                        {/* ... (sem alterações) ... */}
+                        <div className="flex items-center gap-4 min-w-0">
+                            <div className="w-8 h-8 flex items-center justify-center flex-shrink-0 rounded-lg"> <FileText className="w-6 h-6 text-white" /> </div>
+                            <h2 className="text-2xl font-semibold text-white truncate" title={contexto.nome}> {isFromHistory ? 'Detalhes Históricos' : 'Análise de Contexto'} - {contexto.nome} </h2>
+                        </div>
+                        <Button size="icon" variant="ghost" onClick={onClose} className="w-9 h-9 bg-white/15 text-white hover:bg-white/30 hover:text-white/50 rounded-2xl flex-shrink-0"> <ArrowLeft className="w-6 h-6" /> </Button>
                     </div>
-                    <Button size="icon" variant="ghost" onClick={onClose} className="w-9 h-9 bg-white/15 text-white hover:bg-white/30 hover:text-white/50 rounded-2xl flex-shrink-0"> <ArrowLeft className="w-6 h-6" /> </Button>
-                 </div>
-                 {/* Corpo Principal */}
-                 <div className="flex-1 px-8 pt-6 pb-4 flex flex-col min-h-0 overflow-hidden">
-                     {/* Abas */}
-                     <div className="flex space-x-2 bg-gray-100 rounded-2xl p-2 flex-shrink-0 mb-6">
-                        <BotaoAba id="detalhes" label="Detalhes" Icon={Info} abaAtiva={abaAtiva} setAbaAtiva={setAbaAtiva} />
-                        <BotaoAba id="historico" label="Histórico" Icon={History} abaAtiva={abaAtiva} setAbaAtiva={setAbaAtiva} />
+                    {/* Corpo Principal */}
+                    <div className="flex-1 px-8 pt-6 pb-4 flex flex-col min-h-0 overflow-hidden">
+                        {/* Abas */}
+                        <div className="flex space-x-2 bg-gray-100 rounded-2xl p-2 flex-shrink-0 mb-6">
+                            <BotaoAba id="detalhes" label="Detalhes" Icon={Info} abaAtiva={abaAtiva} setAbaAtiva={setAbaAtiva} />
+                            <BotaoAba id="historico" label="Histórico" Icon={History} abaAtiva={abaAtiva} setAbaAtiva={setAbaAtiva} />
+                        </div>
+                        {/* Conteúdo da Aba */}
+                        <div className="flex-1 min-h-0 overflow-hidden">
+                            {abaAtiva === 'detalhes' && (<AbaDetalhes dados={contexto} aoFazerDownload={lidarComDownload} aoAlternarTelaCheia={alternarTelaCheia} emTelaCheia={emTelaCheia} zoomLevel={zoomLevel} />)}
+                            {/* AbaHistorico não precisa mais da prop onAddComentario */}
+                            {abaAtiva === 'historico' && <AbaHistorico dados={contexto} />}
+                        </div>
                     </div>
-                    {/* Conteúdo da Aba */}
-                    <div className="flex-1 min-h-0 overflow-hidden">
-                        {abaAtiva === 'detalhes' && (<AbaDetalhes dados={contexto} aoFazerDownload={lidarComDownload} aoAlternarTelaCheia={alternarTelaCheia} emTelaCheia={emTelaCheia} zoomLevel={zoomLevel} />)}
-                        {/* AbaHistorico não precisa mais da prop onAddComentario */}
-                        {abaAtiva === 'historico' && <AbaHistorico dados={contexto} />}
-                    </div>
+                    {/* Rodapé */}
+                    {renderFooter() && (<div className="px-8 py-4 bg-gray-50 flex justify-end items-center gap-4 flex-shrink-0 border-t border-gray-200 rounded-b-[40px]"> {renderFooter()} </div>)}
                 </div>
-                 {/* Rodapé */}
-                 {renderFooter() && ( <div className="px-8 py-4 bg-gray-50 flex justify-end items-center gap-4 flex-shrink-0 border-t border-gray-200 rounded-b-[40px]"> {renderFooter()} </div> )}
             </div>
-        </div>
 
             {/* Modal Tela Cheia - Botões com rounded-2xl */}
             {emTelaCheia && (
-                 <div className="fixed inset-0 bg-gray-900/95 backdrop-blur-sm z-[60] flex flex-col animate-fade-in">
+                <div className="fixed inset-0 bg-gray-900/95 backdrop-blur-sm z-[60] flex flex-col animate-fade-in">
                     <div className="flex justify-between items-center p-3 bg-black/30 text-white flex-shrink-0">
                         <h2 className="text-lg font-semibold truncate px-2" title={contexto.nome}>{contexto.nome || "Visualização"}</h2>
                         <div className="flex items-center gap-1">
                             {(contexto.docType === 'pdf' || contexto.docType === 'doc') && (
                                 <>
-                                {/* Alterado para rounded-2xl */}
-                                <Button onClick={() => setZoomLevel(prev => Math.max(0.2, prev - 0.2))} variant="ghost" size="icon" className="text-white hover:bg-white/20 rounded-2xl" title="Diminuir Zoom"><ZoomOut className="w-5 h-5" /></Button>
-                                <Button onClick={() => setZoomLevel(1)} variant="ghost" size="icon" className="text-white hover:bg-white/20 rounded-2xl" title="Resetar Zoom"><RotateCcw className="w-4 h-4" /></Button>
-                                <Button onClick={() => setZoomLevel(prev => prev + 0.2)} variant="ghost" size="icon" className="text-white hover:bg-white/20 rounded-2xl" title="Aumentar Zoom"><ZoomIn className="w-5 h-5" /></Button>
+                                    {/* Alterado para rounded-2xl */}
+                                    <Button onClick={() => setZoomLevel(prev => Math.max(0.2, prev - 0.2))} variant="ghost" size="icon" className="text-white hover:bg-white/20 rounded-2xl" title="Diminuir Zoom"><ZoomOut className="w-5 h-5" /></Button>
+                                    <Button onClick={() => setZoomLevel(1)} variant="ghost" size="icon" className="text-white hover:bg-white/20 rounded-2xl" title="Resetar Zoom"><RotateCcw className="w-4 h-4" /></Button>
+                                    <Button onClick={() => setZoomLevel(prev => prev + 0.2)} variant="ghost" size="icon" className="text-white hover:bg-white/20 rounded-2xl" title="Aumentar Zoom"><ZoomIn className="w-5 h-5" /></Button>
                                 </>
                             )}
                             {/* Alterado para rounded-2xl */}
                             <Button onClick={alternarTelaCheia} variant="ghost" size="icon" className="text-white hover:bg-white/20 rounded-2xl" title="Fechar Tela Cheia"><Minimize className="w-5 h-5" /></Button>
                         </div>
                     </div>
-                     <div className="flex-1 min-h-0 w-full h-full overflow-auto p-4">
-                         <VisualizadorDeConteudo tipo={contexto.docType as any} titulo={contexto.nome} payload={contexto.payload as any} url={contexto.url} emTelaCheia={true} zoomLevel={zoomLevel} />
+                    <div className="flex-1 min-h-0 w-full h-full overflow-auto p-4">
+                        <VisualizadorDeConteudo tipo={contexto.docType as any} titulo={contexto.nome} payload={contexto.payload as any} url={contexto.url} emTelaCheia={true} zoomLevel={zoomLevel} />
                     </div>
                 </div>
             )}
@@ -409,6 +410,6 @@ export default function DetalhesContextoModal({
                  /* ... */
                  @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } } .animate-fade-in { animation: fadeIn 0.2s ease-out forwards; } .scrollbar-custom::-webkit-scrollbar { width: 6px; } .scrollbar-custom::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 6px; } .scrollbar-custom::-webkit-scrollbar-track { background: transparent; } .scrollbar-custom { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
              `}</style>
-         </>
+        </>
     );
 }
