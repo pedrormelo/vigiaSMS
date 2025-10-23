@@ -34,7 +34,7 @@ export const fileTypeConfig = {
 
     indicador: {
         color: "bg-teal-500 hover:bg-teal-600",
-        icon: Gauge,
+        svg: "/icons/CONTEXTOS/INDC.svg",
         label: "Indicador",
     },
     excel: {

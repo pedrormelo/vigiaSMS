@@ -10,6 +10,7 @@ const docTypeConfig = {
   doc: { src: "/icons/CONTEXTOS/DOC.svg", alt: "Ícone Word" },
   dashboard: { src: "/icons/CONTEXTOS/GRA.svg", alt: "Ícone Dashboard" },
   resolucao: { src: "/icons/CONTEXTOS/RES.svg", alt: "Ícone Resolução" },
+  indicador: { src: "/icons/CONTEXTOS/INDC.svg", alt: "Ícone Indicador" },
 };
 
 interface Props {
