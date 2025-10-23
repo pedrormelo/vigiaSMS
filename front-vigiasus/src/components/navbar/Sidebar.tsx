@@ -59,7 +59,7 @@ const menuOptions = {
     { label: "Minhas Gerências", icon: icons.minhasGerencias, href: "/diretorias" },
     { label: "Validar Contextos", icon: icons.contextos, href: "/validar" },
     { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
-    { label: "Meus Comentários", icon: icons.comentarios, href: "/comentarios" },
+//{ label: "Meus Comentários", icon: icons.comentarios, href: "/comentarios" },
     { label: "Sair do Sistema", icon: icons.logout, href: "/logout" },
   ],
   gerente: [
@@ -67,14 +67,14 @@ const menuOptions = {
     { label: "Dashboard da Gerência", icon: icons.dashboard, href: "/dashboard" },
     { label: "Validar Contextos", icon: icons.contextos, href: "/validar" },
     { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
-    { label: "Meus Comentários", icon: icons.comentarios, href: "/comentarios" },
+   // { label: "Meus Comentários", icon: icons.comentarios, href: "/comentarios" },
     { label: "Sair do Sistema", icon: icons.logout, href: "/logout" },
   ],
   membro: [
     { label: "Página Inicial", icon: icons.home, href: "/" },
     { label: "Contextos Enviados", icon: icons.dashboard, href: "/validar" },
     { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
-    { label: "Meus Comentários", icon: icons.comentarios, href: "/comentarios" },
+    //{ label: "Meus Comentários", icon: icons.comentarios, href: "/comentarios" },
     { label: "Sair do Sistema", icon: icons.logout, href: "/logout" },
   ],
 };

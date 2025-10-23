@@ -8,6 +8,7 @@ import type { DetalhesContexto } from '@/components/popups/addContextoModal/type
 import { VisualizadorDeConteudo } from './visualizadorDeConteudo';
 import IconeDocumento from '@/components/validar/iconeDocumento';
 import type { DocType } from '@/components/validar/typesDados'; // Importação adicionada
+import { Button } from '@/components/button';
 
 interface VisualizarContextoModalProps {
     estaAberto: boolean;
@@ -197,9 +198,10 @@ export function VisualizarContextoModal({ estaAberto, aoFechar, dadosDoContexto,
                 <div className="bg-gradient-to-r from-[#0037C1] to-[#00BDFF] px-8 py-4 flex items-center justify-between rounded-t-[40px] flex-shrink-0">
                     <div className="flex items-center gap-3 min-w-0">
                         <div className="w-8 h-8 flex items-center justify-center flex-shrink-0"><FileText className="w-6 h-6 text-white" /></div>
-                        <h2 className="text-2xl font-regular text-white truncate" title={dadosDoContexto.title}>{dadosDoContexto.title}</h2>
+                        <h2 className="text-2xl font-semibold text-white truncate" title={dadosDoContexto.title}>{dadosDoContexto.title}</h2>
                     </div>
-                    <button onClick={aoFechar} className="w-8 h-8 bg-white/20 text-white hover:bg-white/30 cursor-pointer rounded-full flex items-center justify-center transition-colors flex-shrink-0"><ArrowLeft className="w-6 h-6" /></button>
+                    <Button size="icon" variant="ghost" onClick={aoFechar} className="w-9 h-9 bg-white/15 text-white hover:bg-white/30 hover:text-white/50 rounded-2xl flex-shrink-0"> <ArrowLeft className="w-6 h-6" /> </Button>
+
                 </div>
 
                 <div className="flex-1 px-8 pt-8 pb-4 flex flex-col min-h-0">

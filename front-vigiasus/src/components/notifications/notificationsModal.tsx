@@ -123,20 +123,19 @@ export default function NotificationsModal({ isOpen, onClose, onOpenContextoDeta
                 {/* ... (código do cabeçalho) ... */}
                  <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center">
-                        <Bell className="w-5 h-5 text-white" />
+                        <Bell className="w-6 h-6 text-white" />
                     </div>
-                    <h2 className="text-2xl font-regular text-white">
+                    <h2 className="text-2xl font-semibold text-white">
                         Central de Notificações
                     </h2>
                 </div>
-                <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={onClose}
-                    className="w-8 h-8 bg-white/20 text-white hover:text-white/50 hover:bg-gray-100/50 rounded-full flex-shrink-0"
-                >
-                    <ArrowLeft className="w-5 h-5" />
-                </Button>
+                <Button 
+                size="icon" 
+                variant="ghost"
+                onClick={onClose} 
+                className="w-9 h-9 bg-white/15 text-white hover:bg-white/30 hover:text-white/50 rounded-2xl flex-shrink-0"> <ArrowLeft 
+                className="w-6 h-6" /> </Button>
+               
             </div>
             {/* Conteúdo */}
             <div className="flex-1 overflow-hidden">
