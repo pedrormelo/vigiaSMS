@@ -10,7 +10,8 @@ import {
 } from 'lucide-react';
 import StatusBanner from '@/components/ui/status-banner';
 import { Button } from "@/components/ui/button";
-import { Contexto, DocType, StatusContexto, HistoricoEvento, Comment } from "@/components/validar/typesDados";
+import { Contexto, DocType, StatusContexto, HistoricoEvento } from "@/components/validar/typesDados";
+import type { Comment } from "@/constants/types";
 import { VisualizadorDeConteudo } from '@/components/popups/visualizarContextoModal/visualizadorDeConteudo';
 import IconeDocumento from '@/components/validar/iconeDocumento';
 import { cn } from '@/lib/utils';
@@ -18,6 +19,7 @@ import { showDispatchToast, showErrorToast, showSuccessToast } from '@/component
 import { statusConfig } from '@/components/validar/colunasTable/statusConfig';
 import CommentItem from '@/components/notifications/commentItem';
 import { notificationsData } from '@/constants/notificationsData'; // Para buscar mocks
+import IndeferirContextoModal from '@/components/popups/IndeferirContextoModal';
 
 interface DetalhesContextoModalProps {
     contexto: Contexto | null;
@@ -61,7 +63,7 @@ const AbaDetalhes = ({
                             <p className="text-sm text-gray-500">{new Date(dados.data).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
                         </div>
                     </div>
-                    {dados.url && (
+                    {(dados as any).url && (
                         <Button onClick={aoFazerDownload} variant="default" size="sm" className="rounded-2xl bg-blue-600 hover:bg-blue-700 text-white flex-shrink-0"> {/* Alterado para rounded-2xl */}
                             <Download className="w-4 h-4 mr-1.5" /> Baixar
                         </Button>
@@ -76,21 +78,21 @@ const AbaDetalhes = ({
                 <div className="border-t border-gray-200 pt-6">
                     <h3 className="text-base font-semibold text-gray-700 mb-4">Detalhes Adicionais</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                        <div className="flex items-center gap-3 p-3 rounded-2xl hover:bg-gray-50 border border-gray-100">
+                        <div className="flex items-center gap-3 p-3 rounded-2xl">
                             <User className="w-5 h-5 text-gray-500 flex-shrink-0" />
                             <div>
                                 <p className="font-medium text-gray-800">Enviado por</p>
                                 <p className="text-gray-600 truncate" title={dados.solicitante}>{dados.solicitante}</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-3 p-3 rounded-2xl hover:bg-gray-50 border border-gray-100">
+                        <div className="flex items-center gap-3 p-3 rounded-2xl">
                             <FileIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
                             <div>
                                 <p className="font-medium text-gray-800">Tipo</p>
                                 <p className="text-gray-600 uppercase">{dados.docType}</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-3 p-3 rounded-2xl hover:bg-gray-50 border border-gray-100 sm:col-span-2">
+                        <div className="flex items-center gap-3 p-3 rounded-2xl sm:col-span-2">
                             <Building className="w-5 h-5 text-gray-500 flex-shrink-0" />
                             <div>
                                 <p className="font-medium text-gray-800">Gerência Solicitante</p>
@@ -103,7 +105,7 @@ const AbaDetalhes = ({
             {/* Coluna Direita: Visualizador */}
             <div className="h-full min-h-0">
                 <VisualizadorDeConteudo
-                    tipo={dados.docType as any} url={dados.url} titulo={dados.nome} payload={dados.payload as any}
+                    tipo={dados.docType as any} url={(dados as any).url} titulo={dados.nome} payload={(dados as any).payload}
                     aoAlternarTelaCheia={aoAlternarTelaCheia} emTelaCheia={emTelaCheia} zoomLevel={zoomLevel}
                 />
             </div>
@@ -243,7 +245,8 @@ export default function DetalhesContextoModal({
     const [abaAtiva, setAbaAtiva] = useState<TipoAba>('detalhes');
     const [emTelaCheia, setEmTelaCheia] = useState(false);
     const [zoomLevel, setZoomLevel] = useState(1);
-    const [comentarioAcao, setComentarioAcao] = useState(""); // Justificativa para Deferir/Indeferir
+    // Removido campo de justificativa no rodapé; comentário para indeferir será coletado em modal dedicado
+    const [indeferirOpen, setIndeferirOpen] = useState(false);
 
     const alternarTelaCheia = () => { /* ... */ setEmTelaCheia(!emTelaCheia); setZoomLevel(1); };
 
@@ -252,28 +255,33 @@ export default function DetalhesContextoModal({
             setAbaAtiva('detalhes');
             setEmTelaCheia(false);
             setZoomLevel(1);
-            setComentarioAcao("");
+            setIndeferirOpen(false);
         }
     }, [isOpen]);
 
     const lidarComDownload = () => { /* ... */
-        if (!contexto?.url) { showErrorToast("Download não disponível", "Não há URL de arquivo associada."); return; }
-        const a = document.createElement('a'); a.href = contexto.url;
-        const nomeArquivo = contexto.url.substring(contexto.url.lastIndexOf('/') + 1) || contexto.nome || 'arquivo';
+    const url = (contexto as any)?.url as string | undefined;
+    if (!url) { showErrorToast("Download não disponível", "Não há URL de arquivo associada."); return; }
+    const a = document.createElement('a'); a.href = url;
+    const nomeArquivo = url.substring(url.lastIndexOf('/') + 1) || contexto?.nome || 'arquivo';
         a.download = nomeArquivo; document.body.appendChild(a); a.click(); document.body.removeChild(a);
     };
     const handleDeferirClick = () => { /* ... */
         if (contexto && onDeferir) {
-            onDeferir(contexto.id, comentarioAcao || undefined);
+            // Deferir sem comentário, já que o campo foi removido
+            onDeferir(contexto.id, undefined);
             showSuccessToast("Contexto deferido com sucesso!");
             onClose();
         }
     };
-    const handleIndeferirClick = () => { /* ... */
-        if (!comentarioAcao.trim()) { showErrorToast("Justificativa obrigatória", "É necessário inserir uma justificativa para indeferir."); return; }
+    const openIndeferirModal = () => setIndeferirOpen(true);
+    const cancelIndeferir = () => setIndeferirOpen(false);
+    const confirmIndeferir = (comentario: string) => {
+        if (!comentario.trim()) { showErrorToast("Justificativa obrigatória", "É necessário inserir uma justificativa para indeferir."); return; }
         if (contexto && onIndeferir) {
-            onIndeferir(contexto.id, comentarioAcao);
+            onIndeferir(contexto.id, comentario.trim());
             showSuccessToast("Contexto indeferido.");
+            setIndeferirOpen(false);
             onClose();
         }
     };
@@ -315,24 +323,16 @@ export default function DetalhesContextoModal({
                 return <p className="text-base text-gray-500 italic w-full text-center">Status atual: {statusTexto}. Nenhuma ação pendente.</p>;
             }
             return (
-                <div className="flex flex-col md:flex-row items-center gap-4 w-full">
-                    <div className="flex-1 w-full">
-                        <label htmlFor="justificativa-acao" className="sr-only">Justificativa (obrigatório para Indeferir)</label>
-                        <textarea id="justificativa-acao" placeholder="Justificativa (obrigatório para Indeferir)..." rows={1}
-                            className="w-full border border-gray-300 rounded-xl py-2 px-4 text-sm focus:ring-1 focus:ring-blue-500 focus:outline-none resize-y leading-tight bg-white shadow-sm"
-                            value={comentarioAcao} onChange={(e) => setComentarioAcao(e.target.value)}
-                        />
-                    </div>
-                    {/* Botões Deferir/Indeferir - Alterado para rounded-2xl */}
+                <div className="flex items-center justify-between w-full gap-4">
+                    <p className="text-sm text-gray-500">Selecione uma ação para este contexto.</p>
                     <div className="flex items-center gap-3 flex-shrink-0">
-                        <Button onClick={handleIndeferirClick} variant="outline" size="sm"
-                            className="bg-red-50 border-red-300 text-red-700 hover:bg-red-100 rounded-2xl px-4 py-2 font-bold" // Alterado para rounded-2xl
-                            disabled={!comentarioAcao.trim()}
+                        <Button onClick={openIndeferirModal} variant="outline" size="default"
+                            className="bg-red-400 border-red-300 text-white hover:text-white hover:bg-red-500 rounded-2xl px-4 py-2 font-bold"
                         >
                             <FileX className="mr-1.5 h-4 w-4" /> Indeferir
                         </Button>
-                        <Button onClick={handleDeferirClick} variant="default" size="sm"
-                            className="bg-green-600 hover:bg-green-700 text-white rounded-2xl px-4 py-2 font-bold" // Alterado para rounded-2xl
+                        <Button onClick={handleDeferirClick} variant="default" size="default"
+                            className="bg-green-600 hover:bg-green-700 text-white rounded-2xl px-4 py-2 font-bold"
                         >
                             <FileCheck2 className="mr-1.5 h-4 w-4" /> Deferir
                         </Button>
@@ -401,7 +401,7 @@ export default function DetalhesContextoModal({
                         </div>
                     </div>
                     <div className="flex-1 min-h-0 w-full h-full overflow-auto p-4">
-                        <VisualizadorDeConteudo tipo={contexto.docType as any} titulo={contexto.nome} payload={contexto.payload as any} url={contexto.url} emTelaCheia={true} zoomLevel={zoomLevel} />
+                        <VisualizadorDeConteudo tipo={contexto.docType as any} titulo={contexto.nome} payload={(contexto as any).payload} url={(contexto as any).url} emTelaCheia={true} zoomLevel={zoomLevel} />
                     </div>
                 </div>
             )}
@@ -410,6 +410,16 @@ export default function DetalhesContextoModal({
                  /* ... */
                  @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } } .animate-fade-in { animation: fadeIn 0.2s ease-out forwards; } .scrollbar-custom::-webkit-scrollbar { width: 6px; } .scrollbar-custom::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 6px; } .scrollbar-custom::-webkit-scrollbar-track { background: transparent; } .scrollbar-custom { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
              `}</style>
+
+            {/* Modal Indeferir */}
+            <IndeferirContextoModal
+                open={indeferirOpen}
+                onOpenChange={setIndeferirOpen}
+                onCancel={cancelIndeferir}
+                onConfirm={confirmIndeferir}
+                contextoNome={contexto.nome}
+                requireComment
+            />
         </>
     );
 }
