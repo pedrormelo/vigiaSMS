@@ -1,11 +1,294 @@
-// src/app/ajuda/primeiros-passos/page.tsx
+// page.tsx (ajuda/primeiros-passos)
 
-import Link from 'next/link';
-import { ArrowLeft, BookOpen, ChevronRight, Navigation, Users, HelpCircle, LayoutDashboard } from 'lucide-react';
-import { Button } from '@/components/ui/button'; //
-import { cn } from '@/lib/utils'; //
+"use client";
 
-// Mapear ícones para os tópicos
+import React, { useState } from "react";
+import Link from "next/link";
+import {
+  ArrowLeft,
+  BookOpen,
+  ChevronRight,
+  Navigation,
+  Users,
+  HelpCircle,
+  LayoutDashboard,
+  Menu,
+  Bell,
+  Home,
+  BookCheck,
+  GalleryVerticalEnd,
+  Layers,
+  MessageSquareMore,
+  FolderClock,
+  UserCog,
+  UserCheck as UserCheckIcon,
+  User as UserIcon,
+} from "lucide-react";
+import { HiOutlineLogout } from "react-icons/hi";
+import Image from 'next/image';
+import { Button } from "@/components/ui/button"; //
+import { cn } from "@/lib/utils"; //
+
+// --- (Componentes de Conteúdo OMITIDOS para brevidade - manter como estavam) ---
+const OQueEContent = () => (
+  // ... Conteúdo ...
+    <div className="space-y-10">
+    <div>
+      <h1 className="text-4xl font-bold text-gray-900 mb-3 flex items-center gap-3">
+        <HelpCircle className="w-9 h-9 text-blue-600"/> O que é o VigiaSUS?
+      </h1>
+      <p className="text-xl text-gray-600">
+        Plataforma digital oficial da Secretaria Municipal de Saúde de Jaboatão dos Guararapes.
+      </p>
+    </div>
+
+    <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed">
+      <p>
+        O <strong>VigiaSUS</strong> centraliza e organiza informações cruciais para a gestão da saúde pública no município, transformando dados em conhecimento estratégico para apoiar a tomada de decisões. Ele reúne diversos tipos de  &ldquo;Contextos &rdquo; – como relatórios, links, dashboards e indicadores – em um único local.
+      </p>
+    </div>
+
+    <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
+      <h3 className="font-semibold text-blue-800 mb-2 text-lg">Objetivo Principal</h3>
+      <p className="text-blue-700">
+        Otimizar o fluxo de informações dentro da Secretaria de Saúde, tornando os dados mais acessíveis, confiáveis e úteis para melhorar a gestão e a saúde da população.
+      </p>
+    </div>
+
+    <div>
+      <h2 className="text-2xl font-bold text-gray-900 mb-6">Principais Recursos:</h2>
+      <div className="space-y-3 text-gray-700">
+        <div className="flex gap-3 items-start">
+          <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2.5 flex-shrink-0" />
+          <p><strong>Coleta e Centralização de Dados:</strong> Informações das gerências e diretorias em um só lugar (Contextos).</p>
+        </div>
+        <div className="flex gap-3 items-start">
+          <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2.5 flex-shrink-0" />
+          <p><strong>Análise e Visualização:</strong> Relatórios, gráficos interativos (Dashboards) e indicadores (KPIs) para análises rápidas.</p>
+        </div>
+         <div className="flex gap-3 items-start">
+          <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2.5 flex-shrink-0" />
+          <p><strong>Fluxo de Validação:</strong> Processo definido para submissão, revisão (Gerente/Diretor) e publicação de contextos.</p>
+        </div>
+        <div className="flex gap-3 items-start">
+          <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2.5 flex-shrink-0" />
+          <p><strong>Apoio à Decisão:</strong> Informações transformadas em conhecimento para embasar decisões e políticas públicas.</p>
+        </div>
+         <div className="flex gap-3 items-start">
+          <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2.5 flex-shrink-0" />
+          <p><strong>Notificações e Colaboração:</strong> Central de notificações e sistema de comentários para acompanhamento e comunicação.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const NavbarContent = () => (
+    <div className="space-y-10">
+        <div>
+            <h1 className="text-4xl font-bold text-gray-900 mb-3 flex items-center gap-3">
+                <Navigation className="w-9 h-9 text-blue-600"/> Barra de Navegação (Navbar)
+            </h1>
+            <p className="text-xl text-gray-600">Menu superior fixo para acesso rápido às funcionalidades.</p>
+        </div>
+
+        <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed">
+            <p>
+                A barra de navegação (Navbar) fica sempre visível no topo da tela, permitindo acesso rápido aos principais recursos e informações do sistema, independentemente de onde você esteja.
+            </p>
+        </div>
+
+        <div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Componentes Principais:</h2>
+            <div className="space-y-4">
+                <div className="flex gap-4 items-start p-4 border border-gray-200 rounded-lg bg-gray-50/50">
+                    <Menu className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1"/>
+                    <div>
+                        <h3 className="font-semibold text-gray-800">Botão Menu (☰)</h3>
+                        <p className="text-sm text-gray-600">Abre o Menu Lateral (Sidebar) com links para todas as seções do sistema.</p>
+                    </div>
+                </div>
+                 <div className="flex gap-4 items-start p-4 border border-gray-200 rounded-lg bg-gray-50/50">
+                     <span className="font-bold text-blue-700 text-lg mt-0.5 flex-shrink-0">VigiaSUS</span>
+                    <div>
+                        <h3 className="font-semibold text-gray-800">Logo VigiaSUS</h3>
+                        <p className="text-sm text-gray-600">Clicar aqui retorna sempre à Página Inicial da plataforma.</p>
+                    </div>
+                </div>
+                 <div className="flex gap-4 items-start p-4 border border-gray-200 rounded-lg bg-gray-50/50">
+                    <Image src="/logos/logo-jaboatao.png" alt="Logo Jaboatão" width={100} height={24} className="h-6 w-auto mt-1 flex-shrink-0"/>
+                    <div>
+                        <h3 className="font-semibold text-gray-800">Logo da Prefeitura</h3>
+                        <p className="text-sm text-gray-600">Logotipo oficial da Prefeitura de Jaboatão dos Guararapes (visual).</p>
+                    </div>
+                </div>
+                 <div className="flex gap-4 items-start p-4 border border-gray-200 rounded-lg bg-gray-50/50">
+                    <Image src="/icons/online.svg" alt="Status" width={24} height={24} className="h-6 w-6 mt-1 flex-shrink-0"/>
+                    <div>
+                        <h3 className="font-semibold text-gray-800">Ícone de Status do Sistema</h3>
+                        <p className="text-sm text-gray-600">Indica se há atualizações ou informações importantes sobre o sistema (clicável).</p>
+                    </div>
+                </div>
+                <div className="flex gap-4 items-start p-4 border border-gray-200 rounded-lg bg-gray-50/50">
+                     <div className="relative mt-1 flex-shrink-0">
+                         <Bell className="w-6 h-6 text-blue-600"/>
+                         <div className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full border-2 border-white text-white text-[10px] flex items-center justify-center font-bold">5</div>
+                     </div>
+                    <div>
+                        <h3 className="font-semibold text-gray-800">Ícone de Notificações (🔔)</h3>
+                        <p className="text-sm text-gray-600">Abre a Central de Notificações. O número vermelho indica notificações não lidas sobre status de contextos, comentários ou avisos do sistema.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+);
+
+
+const SidebarContent = () => (
+  <div className="space-y-10">
+    <div>
+        <h1 className="text-4xl font-bold text-gray-900 mb-3 flex items-center gap-3">
+            <LayoutDashboard className="w-9 h-9 text-blue-600"/> Menu Lateral (Sidebar)
+        </h1>
+        <p className="text-xl text-gray-600">Navegação principal organizada por perfil de usuário.</p>
+    </div>
+
+    <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed">
+      <p>
+        O menu lateral (Sidebar), acessado pelo botão (☰) na Navbar, agrupa os links para todas as seções do VigiaSUS. Ele se adapta automaticamente ao seu perfil, mostrando apenas as áreas relevantes para sua função.
+      </p>
+    </div>
+
+    <div>
+      <h2 className="text-2xl font-bold text-gray-900 mb-6">Estrutura Comum:</h2>
+      <div className="space-y-4">
+        <div className="border border-gray-200 rounded-lg p-4 bg-gray-50/50">
+           <h3 className="font-semibold text-gray-800 mb-2 flex items-center gap-2"><UserIcon className="w-5 h-5 text-blue-600"/> Informações do Usuário</h3>
+           <p className="text-sm text-gray-600">Exibe seu nome e perfil de acesso (Membro, Gerente, etc.).</p>
+        </div>
+        <div className="border border-gray-200 rounded-lg p-4 bg-gray-50/50">
+           <h3 className="font-semibold text-gray-800 mb-2">Links de Navegação</h3>
+           <p className="text-sm text-gray-600 mb-3">Botões que levam diretamente às seções. Os itens exatos variam:</p>
+            <div className="space-y-2">
+                <div className="flex gap-3 items-start">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" />
+                  <p className="text-sm text-gray-700"><strong>Página Inicial (<Home className="inline h-4 w-4"/>):</strong> Retorna à tela principal.</p>
+                </div>
+                <div className="flex gap-3 items-start">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" />
+                  <p className="text-sm text-gray-700"><strong>Dashboard (<LayoutDashboard className="inline h-4 w-4"/>):</strong> Painel de gráficos da sua Gerência/Diretoria/Secretaria.</p>
+                </div>
+                 <div className="flex gap-3 items-start">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" />
+                  <p className="text-sm text-gray-700"><strong>Dados Gerais (<GalleryVerticalEnd className="inline h-4 w-4"/>):</strong> Visão de todas as Diretorias e Gerências.</p>
+                </div>
+                 <div className="flex gap-3 items-start">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" />
+                  <p className="text-sm text-gray-700"><strong>Validar Contextos / Contextos Enviados (<BookCheck className="inline h-4 w-4"/> / <FolderClock className="inline h-4 w-4"/>):</strong> Acompanhamento e/ou aprovação de contextos.</p>
+                </div>
+                 <div className="flex gap-3 items-start">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" />
+                  <p className="text-sm text-gray-700"><strong>Minhas Gerências (<Layers className="inline h-4 w-4"/>):</strong> (Diretor) Acesso às gerências da sua diretoria.</p>
+                </div>
+                <div className="flex gap-3 items-start">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" />
+                  <p className="text-sm text-gray-700"><strong>Meus Comentários (<MessageSquareMore className="inline h-4 w-4"/>):</strong> Lista dos seus comentários no sistema.</p>
+                </div>
+                 <div className="flex gap-3 items-start">
+                  <div className="w-1.5 h-1.5 rounded-full bg-gray-600 mt-1.5 flex-shrink-0" />
+                  <p className="text-sm text-gray-700"><strong>Sair do Sistema (<HiOutlineLogout className="inline h-4 w-4"/>):</strong> Desconecta sua sessão.</p>
+                </div>
+            </div>
+             <p className="text-xs text-gray-500 mt-3 italic"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+
+const PerfisContent = () => (
+    <div className="space-y-10">
+        <div>
+            <h1 className="text-4xl font-bold text-gray-900 mb-3 flex items-center gap-3">
+                <Users className="w-9 h-9 text-blue-600"/> Perfis de Usuário
+            </h1>
+            <p className="text-xl text-gray-600">Níveis de acesso e permissões no VigiaSUS.</p>
+        </div>
+
+        <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed">
+            <p>
+                O VigiaSUS utiliza diferentes perfis para garantir que cada usuário tenha acesso às informações e funcionalidades adequadas à sua função. As permissões são geralmente cumulativas.
+            </p>
+        </div>
+
+        <div className="space-y-6">
+            <div className="border border-gray-200 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2"><UserIcon className="w-5 h-5 text-blue-600"/> Membro</h3>
+                <p className="text-gray-600 mb-4 text-sm">
+                    <strong>Função Principal:</strong> Adicionar e gerenciar os &ldquo;Contextos&rdquo; de sua gerência.
+                </p>
+                <strong className="text-sm text-gray-800">Principais Permissões:</strong>
+                <div className="space-y-2 text-sm text-gray-600 mt-2">
+                    <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" /> Visualizar Dados Gerais e página da Gerência.</div>
+                    <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" /> Adicionar novos contextos (arquivos, links, gráficos, indicadores).</div>
+                    <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" /> Criar novas versões de contextos submetidos.</div>
+                    <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" /> Acompanhar status em &ldquo;Contextos Enviados&rdquo;.</div>
+                </div>
+            </div>
+
+            <div className="border border-gray-200 rounded-lg p-6">
+                 <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2"><UserCog className="w-5 h-5 text-green-600"/> Gerente</h3>
+                <p className="text-gray-600 mb-4 text-sm">
+                    <strong>Função Principal:</strong> Validar contextos enviados pelos membros de sua gerência.
+                </p>
+                 <strong className="text-sm text-gray-800">Principais Permissões (além das de Membro):</strong>
+                <div className="space-y-2 text-sm text-gray-600 mt-2">
+                    <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-green-600 mt-1.5 flex-shrink-0" /> Acessar &ldquo;Validar Contextos&rdquo; para revisar envios.</div>
+                    <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-green-600 mt-1.5 flex-shrink-0" /> <strong>Deferir:</strong> Aprovar e enviar para o Diretor.</div>
+                    <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-green-600 mt-1.5 flex-shrink-0" /> <strong>Indeferir / Pedir Correção:</strong> Reprovar ou devolver ao Membro com justificativa.</div>
+                </div>
+            </div>
+
+             <div className="border border-gray-200 rounded-lg p-6">
+                 <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2"><UserCheckIcon className="w-5 h-5 text-purple-600"/> Diretor(a)</h3>
+                <p className="text-gray-600 mb-4 text-sm">
+                    <strong>Função Principal:</strong> Validar contextos aprovados pelos Gerentes e gerenciar dashboard da diretoria.
+                </p>
+                 <strong className="text-sm text-gray-800">Principais Permissões (além das de Gerente):</strong>
+                <div className="space-y-2 text-sm text-gray-600 mt-2">
+                    <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-purple-600 mt-1.5 flex-shrink-0" /> Validar contextos aprovados pelo Gerente.</div>
+                    <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-purple-600 mt-1.5 flex-shrink-0" /> Visualizar dados de todas as gerências da diretoria/page.tsx].</div>
+                    <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-purple-600 mt-1.5 flex-shrink-0" /> Acessar e Editar Layout do Dashboard da Diretoria/editar-layout/page.tsx].</div>
+                </div>
+            </div>
+
+            <div className="border border-gray-200 rounded-lg p-6">
+                 <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2"><UserIcon className="w-5 h-5 text-yellow-600"/> Secretário(a)</h3>
+                <p className="text-gray-600 mb-4 text-sm">
+                    <strong>Função Principal:</strong> Visão geral e consolidada das informações estratégicas.
+                </p>
+                 <strong className="text-sm text-gray-800">Principais Permissões:</strong>
+                <div className="space-y-2 text-sm text-gray-600 mt-2">
+                    <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-yellow-600 mt-1.5 flex-shrink-0" /> Visualizar Dados Gerais.</div>
+                    <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-yellow-600 mt-1.5 flex-shrink-0" /> Acessar Dashboard da Secretaria (gráficos destacados).</div>
+                    <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-yellow-600 mt-1.5 flex-shrink-0" /> Visualizar Métricas Globais.</div>
+                     <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-yellow-600 mt-1.5 flex-shrink-0" /> Foco na visualização estratégica, geralmente não valida contextos.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+);
+// --- Fim dos Componentes de Conteúdo ---
+
+const contentComponents: { [key: string]: React.FC } = {
+  "/ajuda/primeiros-passos/o-que-e": OQueEContent,
+  "/ajuda/primeiros-passos/navbar": NavbarContent,
+  "/ajuda/primeiros-passos/sidebar": SidebarContent,
+  "/ajuda/primeiros-passos/perfis": PerfisContent,
+};
+
 const iconMap: { [key: string]: React.ElementType } = {
   "/ajuda/primeiros-passos/o-que-e": HelpCircle,
   "/ajuda/primeiros-passos/navbar": Navigation,
@@ -14,121 +297,91 @@ const iconMap: { [key: string]: React.ElementType } = {
 };
 
 const topicos = [
-  // ... (definição dos tópicos)
-  {
-    titulo: "O que é o VigiaSUS?",
-    href: "/ajuda/primeiros-passos/o-que-e",
-    descricao: "Entenda o propósito e os objetivos da plataforma VigiaSUS."
-  },
-  {
-    titulo: "Entendendo a Barra de Navegação Superior (Navbar)",
-    href: "/ajuda/primeiros-passos/navbar",
-    descricao: "Conheça os elementos da barra no topo da página: menu, logos, notificações e mais."
-  },
-  {
-    titulo: "Navegando pelo Menu Lateral (Sidebar)",
-    href: "/ajuda/primeiros-passos/sidebar",
-    descricao: "Saiba como usar o menu lateral para acessar as diferentes seções do sistema."
-  },
-  {
-    titulo: "Quais são os Perfis de Usuário?",
-    href: "/ajuda/primeiros-passos/perfis",
-    descricao: "Descubra as permissões e funcionalidades de cada tipo de usuário: Membro, Gerente, Diretor e Secretário."
-  }
+  { titulo: "O que é o VigiaSUS?", href: "/ajuda/primeiros-passos/o-que-e" },
+  { titulo: "Barra de Navegação", href: "/ajuda/primeiros-passos/navbar" },
+  { titulo: "Menu Lateral", href: "/ajuda/primeiros-passos/sidebar" },
+  { titulo: "Perfis de Usuário", href: "/ajuda/primeiros-passos/perfis" },
 ];
 
 export default function PrimeirosPassosPage() {
+  const [activeTopicHref, setActiveTopicHref] = useState(topicos[0].href);
+  const ActiveContentComponent = contentComponents[activeTopicHref] || OQueEContent;
+
   return (
-    // Fundo geral da página, ocupa toda a altura e adiciona padding geral
-    <div className="min-h-screen bg-gray-100 p-6 md:p-8">
-
-      {/* Container Centralizado com Largura Máxima Aumentada */}
-      <div className="max-w-6xl mx-auto">
-
-        {/* Bloco Branco Unificado para Cabeçalho e Conteúdo */}
-        <div className="bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden">
-
-          {/* Cabeçalho */}
-          <div className="p-4 px-6 md:p-6 md:px-8 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              {/* Breadcrumb e Título da Área */}
-              <div className='flex flex-col'>
-                  <nav aria-label="Breadcrumb" className="flex items-center space-x-1 text-xs text-gray-500 mb-1">
-                    <Link href="/ajuda" className="hover:text-blue-600 hover:underline">
-                      Ajuda
-                    </Link>
-                    <ChevronRight className="h-3 w-3 flex-shrink-0" />
-                    <span className="font-medium text-gray-700" aria-current="page">
-                      Primeiros Passos
-                    </span>
-                  </nav>
-                   <div className="flex items-center gap-2">
-                      <BookOpen className="w-6 h-6 text-blue-600" />
-                      <h1 className="text-xl md:text-2xl font-semibold text-blue-700">
-                        Primeiros Passos e Navegação
-                      </h1>
-                   </div>
-              </div>
-              {/* Botão Voltar */}
-              <Link href="/ajuda">
-                <Button variant="outline" size="sm" className="rounded-full bg-white shadow-sm flex-shrink-0 border-gray-300 hover:bg-gray-50"> {/* Estilo sutil */}
-                   <ArrowLeft className="mr-1.5 h-4 w-4" /> Voltar
-                </Button>
-              </Link>
-            </div>
+    <div className="min-h-screen bg-white">
+      {/* Cabeçalho Fixo da Área */}
+      {/* **** CORREÇÃO AQUI: Mudado top-0 para top-16 **** */}
+      <div className="border-b border-gray-200 bg-white sticky top-16 z-10"> {/* Era top-0, z-20 */}
+        <div className="max-w-6xl mx-auto px-6 py-4">
+          <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
+            <Link href="/ajuda" className="hover:text-blue-600 transition-colors">
+              Ajuda
+            </Link>
+            <ChevronRight className="h-4 w-4" />
+            <span>Primeiros Passos</span>
           </div>
-
-          {/* Container Principal do Conteúdo */}
-          <div className="p-6 md:p-8">
-
-            {/* Descrição da Área */}
-            <div className="mb-8 p-4 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg text-blue-800 text-sm">
-               <p>
-                 Bem-vindo(a) ao VigiaSUS! Comece por aqui para entender como o sistema funciona e como navegar por ele. Selecione um tópico abaixo:
-               </p>
-            </div>
-
-            {/* Lista de Tópicos */}
-            <div className="space-y-3">
-              {topicos.map((topico, index) => {
-                 const Icon = iconMap[topico.href] || ChevronRight;
-                 const backgroundClass = index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50';
-                 return (
-                    // *** MUDANÇAS AQUI ***
-                    <Link
-                      href={topico.href}
-                      key={topico.titulo}
-                      // REMOVIDO: legacyBehavior
-                      // MOVIDAS classes da tag <a> para aqui
-                      className={cn(
-                        "block group transition-all duration-150 rounded-lg hover:shadow-sm hover:border-blue-200 border border-transparent",
-                        backgroundClass
-                      )}
-                    >
-                      {/* REMOVIDA a tag <a> */}
-                      {/* O conteúdo agora é filho direto do Link */}
-                      <div className="flex items-center p-3 sm:p-4">
-                          <div className="mr-4 ml-1 flex-shrink-0 p-2 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors">
-                             <Icon className="w-5 h-5 text-blue-600 group-hover:text-blue-700" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="text-base sm:text-lg font-medium text-gray-800 group-hover:text-blue-700 truncate" title={topico.titulo}>
-                              {topico.titulo}
-                            </h3>
-                            <p className="text-xs sm:text-sm text-gray-500 mt-0.5 truncate">
-                              {topico.descricao}
-                            </p>
-                          </div>
-                          <ChevronRight className="ml-4 w-5 h-5 text-gray-300 group-hover:text-blue-500 transition-colors flex-shrink-0" />
-                      </div>
-                      {/* REMOVIDA a tag <a> */}
-                    </Link>
-                    // *** FIM DAS MUDANÇAS ***
-                 )
-              })}
-            </div>
+          <div className="flex items-center gap-3">
+            <BookOpen className="w-7 h-7 text-blue-600" />
+            <h1 className="text-2xl font-bold text-gray-900">Primeiros Passos</h1>
           </div>
         </div>
+      </div>
+
+       {/* Conteúdo Principal com Sidebar */}
+      {/* Ajustado padding top para compensar o cabeçalho fixo */}
+      <div className="max-w-6xl mx-auto px-6 py-8 md:py-12 flex flex-col md:flex-row gap-8 lg:gap-12 relative"> {/* Adicionado relative */}
+
+         {/* Sidebar Esquerda (Navegação) */}
+        <aside className="w-full md:w-64 flex-shrink-0 order-last md:order-first">
+          {/* **** CORREÇÃO AQUI: Mudado top-28 para top-[calc(4rem+4rem+1.5rem)] (aprox navbar+header+gap) ou valor fixo top-40 **** */}
+          <div className="sticky top-40"> {/* Era top-28. top-40 = 10rem = 160px */}
+            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
+              Nesta Seção
+            </h2>
+            <nav className="space-y-1">
+              {topicos.map((topico) => {
+                const isActive = activeTopicHref === topico.href;
+                const Icon = iconMap[topico.href] || ChevronRight;
+
+                return (
+                  <button
+                    key={topico.href}
+                    onClick={() => {
+                      setActiveTopicHref(topico.href);
+                       // Tentar scrollar a janela principal, não mais a 'main' interna
+                       window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-left transition-colors",
+                      isActive
+                        ? "bg-blue-50 text-blue-700 font-medium"
+                        : "text-gray-700 hover:bg-gray-100"
+                    )}
+                  >
+                    <Icon className={cn("w-4 h-4 flex-shrink-0", isActive ? "text-blue-600" : "text-gray-400")} />
+                    {topico.titulo}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+        </aside>
+
+        {/* Conteúdo Principal (Direita) */}
+        {/* REMOVIDO: id e overflow-y-auto daqui */}
+        <main className="flex-1 min-w-0">
+          <ActiveContentComponent />
+
+           {/* Botão Voltar no final */}
+          <div className="mt-16 pt-8 border-t border-gray-200">
+            <Link href="/ajuda">
+              <Button variant="ghost" className="text-sm text-gray-600 hover:text-gray-900 gap-1.5">
+                <ArrowLeft className="h-4 w-4" />
+                Voltar para Central de Ajuda
+              </Button>
+            </Link>
+          </div>
+        </main>
       </div>
     </div>
   );
