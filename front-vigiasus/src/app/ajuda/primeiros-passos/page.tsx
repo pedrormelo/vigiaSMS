@@ -1,4 +1,4 @@
-// page.tsx (ajuda/primeiros-passos)
+// src/app/ajuda/primeiros-passos/page.tsx
 
 "use client";
 
@@ -23,64 +23,79 @@ import {
   UserCog,
   UserCheck as UserCheckIcon,
   User as UserIcon,
+  History,
+  FilePlus,
+  FileSymlink,
+  UploadCloud,
+  FileText as FileTextIcon,
+  Link as LinkIcon,
+  Eye,
+  Trash2,
+  Database,
+  Upload,
+  PieChart,
+  BarChart3,
+  AreaChart,
+  Gauge,
+  CopyPlus
 } from "lucide-react";
 import { HiOutlineLogout } from "react-icons/hi";
 import Image from 'next/image';
 import { Button } from "@/components/ui/button"; //
 import { cn } from "@/lib/utils"; //
+import { SearchBar } from "@/components/ui/search-bar-faq"; 
 
-// --- (Componentes de Conteúdo OMITIDOS para brevidade - manter como estavam) ---
+
 const OQueEContent = () => (
-  // ... Conteúdo ...
     <div className="space-y-10">
-    <div>
-      <h1 className="text-4xl font-bold text-gray-900 mb-3 flex items-center gap-3">
-        <HelpCircle className="w-9 h-9 text-blue-600"/> O que é o VigiaSUS?
-      </h1>
-      <p className="text-xl text-gray-600">
-        Plataforma digital oficial da Secretaria Municipal de Saúde de Jaboatão dos Guararapes.
-      </p>
-    </div>
+      <div>
+        <h1 className="text-4xl font-bold text-gray-900 mb-3 flex items-center gap-3">
+          <HelpCircle className="w-9 h-9 text-blue-600"/> O que é o VigiaSUS?
+        </h1>
+        <p className="text-xl text-gray-600">
+          Plataforma digital oficial da Secretaria Municipal de Saúde de Jaboatão dos Guararapes.
+        </p>
+      </div>
 
-    <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed">
-      <p>
-        O <strong>VigiaSUS</strong> centraliza e organiza informações cruciais para a gestão da saúde pública no município, transformando dados em conhecimento estratégico para apoiar a tomada de decisões. Ele reúne diversos tipos de  &ldquo;Contextos &rdquo; – como relatórios, links, dashboards e indicadores – em um único local.
-      </p>
-    </div>
+      <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed">
+        <p>
+          O <strong>VigiaSUS</strong> centraliza e organiza informações cruciais para a gestão da saúde pública no município, transformando dados em conhecimento estratégico para apoiar a tomada de decisões. Ele reúne diversos tipos de <strong>&ldquo;Contextos&rdquo;</strong> – como relatórios, links, dashboards e indicadores – em um único local.
+        </p>
+      </div>
 
-    <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
-      <h3 className="font-semibold text-blue-800 mb-2 text-lg">Objetivo Principal</h3>
-      <p className="text-blue-700">
-        Otimizar o fluxo de informações dentro da Secretaria de Saúde, tornando os dados mais acessíveis, confiáveis e úteis para melhorar a gestão e a saúde da população.
-      </p>
-    </div>
+      <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
+        <h3 className="font-semibold text-blue-800 mb-2 text-lg">Objetivo Principal</h3>
+        <p className="text-blue-700">
+          Otimizar o fluxo de informações dentro da Secretaria de Saúde, tornando os dados mais acessíveis, confiáveis e úteis para melhorar a gestão e a saúde da população.
+        </p>
+      </div>
 
-    <div>
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">Principais Recursos:</h2>
-      <div className="space-y-3 text-gray-700">
-        <div className="flex gap-3 items-start">
-          <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2.5 flex-shrink-0" />
-          <p><strong>Coleta e Centralização de Dados:</strong> Informações das gerências e diretorias em um só lugar (Contextos).</p>
-        </div>
-        <div className="flex gap-3 items-start">
-          <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2.5 flex-shrink-0" />
-          <p><strong>Análise e Visualização:</strong> Relatórios, gráficos interativos (Dashboards) e indicadores (KPIs) para análises rápidas.</p>
-        </div>
-         <div className="flex gap-3 items-start">
-          <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2.5 flex-shrink-0" />
-          <p><strong>Fluxo de Validação:</strong> Processo definido para submissão, revisão (Gerente/Diretor) e publicação de contextos.</p>
-        </div>
-        <div className="flex gap-3 items-start">
-          <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2.5 flex-shrink-0" />
-          <p><strong>Apoio à Decisão:</strong> Informações transformadas em conhecimento para embasar decisões e políticas públicas.</p>
-        </div>
-         <div className="flex gap-3 items-start">
-          <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2.5 flex-shrink-0" />
-          <p><strong>Notificações e Colaboração:</strong> Central de notificações e sistema de comentários para acompanhamento e comunicação.</p>
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">Principais Recursos:</h2>
+        <div className="space-y-3 text-gray-700">
+          <div className="flex gap-3 items-start">
+            <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2.5 flex-shrink-0" />
+            <p><strong>Coleta e Centralização de Dados:</strong> Reúne informações das gerências e diretorias (Contextos).</p>
+          </div>
+          <div className="flex gap-3 items-start">
+            <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2.5 flex-shrink-0" />
+            <p><strong>Análise e Visualização:</strong> Oferece relatórios, gráficos interativos (Dashboards) e indicadores (KPIs).</p>
+          </div>
+           <div className="flex gap-3 items-start">
+            <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2.5 flex-shrink-0" />
+            <p><strong>Fluxo de Validação:</strong> Garante a qualidade da informação com um processo de submissão, revisão e publicação.</p>
+          </div>
+          <div className="flex gap-3 items-start">
+            <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2.5 flex-shrink-0" />
+            <p><strong>Apoio à Decisão:</strong> Transforma dados em insights para embasar decisões e políticas públicas.</p>
+          </div>
+           <div className="flex gap-3 items-start">
+            <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2.5 flex-shrink-0" />
+            <p><strong>Notificações e Colaboração:</strong> Mantém os usuários informados através da Central de Notificações e comentários.</p>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 );
 
 const NavbarContent = () => (
@@ -94,9 +109,12 @@ const NavbarContent = () => (
 
         <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed">
             <p>
-                A barra de navegação (Navbar) fica sempre visível no topo da tela, permitindo acesso rápido aos principais recursos e informações do sistema, independentemente de onde você esteja.
+                A barra de navegação (Navbar) fica sempre visível no topo da tela, com altura padrão de 64px (`min-h-[64px]`), permitindo acesso rápido aos principais recursos e informações do sistema.
             </p>
         </div>
+
+        {/* Adicionar imagem aqui se disponível */}
+        {/* <Image src="/docs/images/navbar_example.png" ... /> */}
 
         <div>
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Componentes Principais:</h2>
@@ -105,28 +123,28 @@ const NavbarContent = () => (
                     <Menu className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1"/>
                     <div>
                         <h3 className="font-semibold text-gray-800">Botão Menu (☰)</h3>
-                        <p className="text-sm text-gray-600">Abre o Menu Lateral (Sidebar) com links para todas as seções do sistema.</p>
+                        <p className="text-sm text-gray-600">Abre o Menu Lateral (Sidebar) com links específicos para seu perfil.</p>
                     </div>
                 </div>
                  <div className="flex gap-4 items-start p-4 border border-gray-200 rounded-lg bg-gray-50/50">
                      <span className="font-bold text-blue-700 text-lg mt-0.5 flex-shrink-0">VigiaSUS</span>
                     <div>
                         <h3 className="font-semibold text-gray-800">Logo VigiaSUS</h3>
-                        <p className="text-sm text-gray-600">Clicar aqui retorna sempre à Página Inicial da plataforma.</p>
+                        <p className="text-sm text-gray-600">Leva você de volta para a Página Inicial da plataforma.</p>
                     </div>
                 </div>
                  <div className="flex gap-4 items-start p-4 border border-gray-200 rounded-lg bg-gray-50/50">
                     <Image src="/logos/logo-jaboatao.png" alt="Logo Jaboatão" width={100} height={24} className="h-6 w-auto mt-1 flex-shrink-0"/>
                     <div>
                         <h3 className="font-semibold text-gray-800">Logo da Prefeitura</h3>
-                        <p className="text-sm text-gray-600">Logotipo oficial da Prefeitura de Jaboatão dos Guararapes (visual).</p>
+                        <p className="text-sm text-gray-600">Logotipo oficial da Prefeitura de Jaboatão dos Guararapes.</p>
                     </div>
                 </div>
                  <div className="flex gap-4 items-start p-4 border border-gray-200 rounded-lg bg-gray-50/50">
                     <Image src="/icons/online.svg" alt="Status" width={24} height={24} className="h-6 w-6 mt-1 flex-shrink-0"/>
                     <div>
                         <h3 className="font-semibold text-gray-800">Ícone de Status do Sistema</h3>
-                        <p className="text-sm text-gray-600">Indica se há atualizações ou informações importantes sobre o sistema (clicável).</p>
+                        <p className="text-sm text-gray-600">Indica atualizações ou informações importantes sobre o sistema (clicável para ver detalhes, como em `SystemUpdateView`).</p>
                     </div>
                 </div>
                 <div className="flex gap-4 items-start p-4 border border-gray-200 rounded-lg bg-gray-50/50">
@@ -136,7 +154,7 @@ const NavbarContent = () => (
                      </div>
                     <div>
                         <h3 className="font-semibold text-gray-800">Ícone de Notificações (🔔)</h3>
-                        <p className="text-sm text-gray-600">Abre a Central de Notificações. O número vermelho indica notificações não lidas sobre status de contextos, comentários ou avisos do sistema.</p>
+                        <p className="text-sm text-gray-600">Abre a Central de Notificações, mostrando atualizações sobre status de contextos, comentários e avisos do sistema. O número indica notificações não lidas.</p>
                     </div>
                 </div>
             </div>
@@ -156,20 +174,23 @@ const SidebarContent = () => (
 
     <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed">
       <p>
-        O menu lateral (Sidebar), acessado pelo botão (☰) na Navbar, agrupa os links para todas as seções do VigiaSUS. Ele se adapta automaticamente ao seu perfil, mostrando apenas as áreas relevantes para sua função.
+        O menu lateral (Sidebar), acessado pelo botão (☰) na Navbar, agrupa os links para todas as seções do VigiaSUS. Ele é dinâmico e mostra apenas as opções relevantes para o seu perfil de acesso.
       </p>
     </div>
+
+    {/* Adicionar imagem aqui se disponível */}
+    {/* <Image src="/docs/images/sidebar_example.png" ... /> */}
 
     <div>
       <h2 className="text-2xl font-bold text-gray-900 mb-6">Estrutura Comum:</h2>
       <div className="space-y-4">
         <div className="border border-gray-200 rounded-lg p-4 bg-gray-50/50">
            <h3 className="font-semibold text-gray-800 mb-2 flex items-center gap-2"><UserIcon className="w-5 h-5 text-blue-600"/> Informações do Usuário</h3>
-           <p className="text-sm text-gray-600">Exibe seu nome e perfil de acesso (Membro, Gerente, etc.).</p>
+           <p className="text-sm text-gray-600">Mostra seu nome e perfil (Membro, Gerente, etc.).</p>
         </div>
         <div className="border border-gray-200 rounded-lg p-4 bg-gray-50/50">
            <h3 className="font-semibold text-gray-800 mb-2">Links de Navegação</h3>
-           <p className="text-sm text-gray-600 mb-3">Botões que levam diretamente às seções. Os itens exatos variam:</p>
+           <p className="text-sm text-gray-600 mb-3">A lista exata depende do seu perfil, mas geralmente inclui:</p>
             <div className="space-y-2">
                 <div className="flex gap-3 items-start">
                   <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" />
@@ -177,7 +198,7 @@ const SidebarContent = () => (
                 </div>
                 <div className="flex gap-3 items-start">
                   <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" />
-                  <p className="text-sm text-gray-700"><strong>Dashboard (<LayoutDashboard className="inline h-4 w-4"/>):</strong> Painel de gráficos da sua Gerência/Diretoria/Secretaria.</p>
+                  <p className="text-sm text-gray-700"><strong>Dashboard (<LayoutDashboard className="inline h-4 w-4"/>):</strong> Painel de gráficos (varia por perfil)/page.tsx].</p>
                 </div>
                  <div className="flex gap-3 items-start">
                   <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" />
@@ -185,11 +206,11 @@ const SidebarContent = () => (
                 </div>
                  <div className="flex gap-3 items-start">
                   <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" />
-                  <p className="text-sm text-gray-700"><strong>Validar Contextos / Contextos Enviados (<BookCheck className="inline h-4 w-4"/> / <FolderClock className="inline h-4 w-4"/>):</strong> Acompanhamento e/ou aprovação de contextos.</p>
+                  <p className="text-sm text-gray-700"><strong>Validar Contextos / Contextos Enviados (<BookCheck className="inline h-4 w-4"/> / <FolderClock className="inline h-4 w-4"/>):</strong> Acompanhamento e/ou aprovação de contextos (varia por perfil).</p>
                 </div>
                  <div className="flex gap-3 items-start">
                   <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" />
-                  <p className="text-sm text-gray-700"><strong>Minhas Gerências (<Layers className="inline h-4 w-4"/>):</strong> (Diretor) Acesso às gerências da sua diretoria.</p>
+                  <p className="text-sm text-gray-700"><strong>Minhas Gerências (<Layers className="inline h-4 w-4"/>):</strong> (Visível para Diretor) Acesso rápido às gerências da sua diretoria/page.tsx].</p>
                 </div>
                 <div className="flex gap-3 items-start">
                   <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" />
@@ -306,35 +327,43 @@ const topicos = [
 export default function PrimeirosPassosPage() {
   const [activeTopicHref, setActiveTopicHref] = useState(topicos[0].href);
   const ActiveContentComponent = contentComponents[activeTopicHref] || OQueEContent;
+  const [searchValue, setSearchValue] = useState("");
 
   return (
     <div className="min-h-screen bg-white">
       {/* Cabeçalho Fixo da Área */}
-      {/* **** CORREÇÃO AQUI: Mudado top-0 para top-16 **** */}
-      <div className="border-b border-gray-200 bg-white sticky top-16 z-10"> {/* Era top-0, z-20 */}
+      <div className="border-b border-gray-200 bg-blue-50 sticky top-16 z-10">
         <div className="max-w-6xl mx-auto px-6 py-4">
-          <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-            <Link href="/ajuda" className="hover:text-blue-600 transition-colors">
-              Ajuda
-            </Link>
-            <ChevronRight className="h-4 w-4" />
-            <span>Primeiros Passos</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <BookOpen className="w-7 h-7 text-blue-600" />
-            <h1 className="text-2xl font-bold text-gray-900">Primeiros Passos</h1>
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 text-sm text-blue-700/80 mb-2">
+                <Link href="/ajuda" className="hover:text-blue-900 transition-colors">
+                  Ajuda
+                </Link>
+                <ChevronRight className="h-4 w-4" />
+                <span className="font-medium text-blue-900">Primeiros Passos</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <BookOpen className="w-7 h-7 text-blue-700" />
+                <h1 className="text-2xl font-bold text-blue-900">Primeiros Passos</h1>
+              </div>
+            </div>
+            <div className="w-full md:w-auto md:max-w-md lg:max-w-lg">
+               <SearchBar
+                 placeholder="Buscar nesta seção..."
+                 value={searchValue}
+                 onChange={setSearchValue}
+                 className="shadow-sm"
+               />
+            </div>
           </div>
         </div>
       </div>
 
-       {/* Conteúdo Principal com Sidebar */}
-      {/* Ajustado padding top para compensar o cabeçalho fixo */}
-      <div className="max-w-6xl mx-auto px-6 py-8 md:py-12 flex flex-col md:flex-row gap-8 lg:gap-12 relative"> {/* Adicionado relative */}
-
-         {/* Sidebar Esquerda (Navegação) */}
+      {/* Conteúdo Principal com Sidebar */}
+      <div className="max-w-6xl mx-auto px-6 py-8 md:py-12 flex flex-col md:flex-row gap-8 lg:gap-42 relative">
         <aside className="w-full md:w-64 flex-shrink-0 order-last md:order-first">
-          {/* **** CORREÇÃO AQUI: Mudado top-28 para top-[calc(4rem+4rem+1.5rem)] (aprox navbar+header+gap) ou valor fixo top-40 **** */}
-          <div className="sticky top-40"> {/* Era top-28. top-40 = 10rem = 160px */}
+          <div className="sticky top-45">
             <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
               Nesta Seção
             </h2>
@@ -342,13 +371,11 @@ export default function PrimeirosPassosPage() {
               {topicos.map((topico) => {
                 const isActive = activeTopicHref === topico.href;
                 const Icon = iconMap[topico.href] || ChevronRight;
-
                 return (
                   <button
                     key={topico.href}
                     onClick={() => {
                       setActiveTopicHref(topico.href);
-                       // Tentar scrollar a janela principal, não mais a 'main' interna
                        window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
                     className={cn(
@@ -359,7 +386,7 @@ export default function PrimeirosPassosPage() {
                     )}
                   >
                     <Icon className={cn("w-4 h-4 flex-shrink-0", isActive ? "text-blue-600" : "text-gray-400")} />
-                    {topico.titulo}
+                    <span className="truncate">{topico.titulo.replace(/"/g, '&quot;')}</span>
                   </button>
                 );
               })}
@@ -367,12 +394,8 @@ export default function PrimeirosPassosPage() {
           </div>
         </aside>
 
-        {/* Conteúdo Principal (Direita) */}
-        {/* REMOVIDO: id e overflow-y-auto daqui */}
-        <main className="flex-1 min-w-0">
+        <main id="main-content-area" className="flex-1 min-w-0">
           <ActiveContentComponent />
-
-           {/* Botão Voltar no final */}
           <div className="mt-16 pt-8 border-t border-gray-200">
             <Link href="/ajuda">
               <Button variant="ghost" className="text-sm text-gray-600 hover:text-gray-900 gap-1.5">
