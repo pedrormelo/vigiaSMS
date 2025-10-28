@@ -348,7 +348,7 @@ export default function PrimeirosPassosPage() {
                 <h1 className="text-2xl font-bold text-blue-900">Primeiros Passos</h1>
               </div>
             </div>
-            <div className="w-full md:w-auto md:max-w-md lg:max-w-lg">
+            <div className="w-full md:w-full lg:max-w-3xl rounded-3xl">
                <SearchBar
                  placeholder="Buscar nesta seção..."
                  value={searchValue}

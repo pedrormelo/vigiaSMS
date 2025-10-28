@@ -113,7 +113,7 @@ export default function LoginPage() {
 
                         {/* Demo creds hint */}
                         <div className="text-[11px] text-gray-500 mt-2">
-                            Use: diretor@vigia.sus, gerente@vigia.sus, membro@vigia.sus (senha 123456)
+                            Use seu CPF e sua senha.
                         </div>
                     </form>
                 </div>
