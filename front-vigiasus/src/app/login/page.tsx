@@ -26,7 +26,7 @@ export default function LoginPage() {
     const onSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!email.trim() || !password.trim()) {
-            showErrorToast("Preencha e-mail e senha");
+            showErrorToast("Preencha seu CPF e senha");
             return;
         }
         setLoading(true);
@@ -63,8 +63,19 @@ export default function LoginPage() {
                 </div>
 
                 {/* Card (right side) */}
-                <div className="rounded-3xl bg-white/85 backdrop-blur-sm border border-white/40 shadow-2xl p-6 md:p-8">
-                    <form onSubmit={onSubmit} className="space-y-4">
+                <div className="relative group ">
+                    {/* Tailwind-only glow layers (adjust colors easily) */}
+                    <div aria-hidden className="pointer-events-none absolute -inset-8 rounded-[32px]">
+                        {/* Core soft halo */}
+                        <div className="absolute inset-0 rounded-[32px] bg-teal-500/80 blur-3xl opacity-80 transition-opacity duration-500 group-hover:opacity-100" />
+                        {/* Accents: top-left and bottom-right orbs */}
+                        <div className="absolute -top-10 -left-10 h-56 w-56 rounded-full bg-sky-400 blur-3xl" />
+                        <div className="absolute -bottom-12 -right-12 h-64 w-64 rounded-full bg-cyan-400 blur-3xl" />
+                    </div>
+
+                    {/* Card */}
+                    <div className="relative z-10 rounded-3xl bg-white backdrop-blur-sm border border-white/40 shadow-lg p-6 md:p-8">
+                        <form onSubmit={onSubmit} className="space-y-4">
                         <div>
                             <h1 className="text-2xl mb-2 font-bold text-blue-600">Entrar</h1>
                             <p className="text-sm mb-4 font-medium text-gray-600">Use suas credenciais VigiaSUS para entrar</p>
@@ -75,7 +86,7 @@ export default function LoginPage() {
                                 placeholder="000.000.000-00"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="rounded-2xl border border-gray-400"
+                                className="rounded-2xl border border-gray-400/80 focus:ring-blue-400 focus:border-blue-300 focus:ring-3 ring-offset-1"
                                 autoComplete="cpf"
                             />
                         </div>
@@ -87,7 +98,7 @@ export default function LoginPage() {
                                 placeholder="••••••••"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="rounded-2xl border border-gray-400 focus:ring-blue-400 ring-1 ring-offset-1"
+                                className="rounded-2xl border border-gray-400/80 focus:ring-blue-400 focus:border-blue-300 focus:ring-3 ring-offset-1"
                                 autoComplete="current-password"
                             />
                         </div>
@@ -107,7 +118,7 @@ export default function LoginPage() {
                             </button>
                         </div>
 
-                        <Button type="submit" className="w-full rounded-xl" disabled={loading}>
+                        <Button type="submit" className="w-full hover:bg-gradient-to-b from-white to-gray-200/20 hover:delay-5000" disabled={loading}>
                             {loading ? "Entrando..." : "Entrar"}
                         </Button>
 
@@ -115,7 +126,8 @@ export default function LoginPage() {
                         <div className="text-[11px] text-gray-500 mt-2">
                             Use seu CPF e sua senha.
                         </div>
-                    </form>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
