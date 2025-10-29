@@ -4,6 +4,7 @@
 import React, { useEffect, useRef, useState } from "react"
 import { loadGoogleCharts } from "@/lib/googleCharts"
 import type { GraphType } from "./graficoCard"
+import { Info } from "lucide-react"
 
 interface ChartPreviewProps {
     type: GraphType
@@ -14,9 +15,10 @@ interface ChartPreviewProps {
     editMode?: boolean
     // quando mudar, força redesenho do gráfico (ex.: troca de layout/página)
     renderVersion?: number
+    onShowDetails?: () => void
 }
 
-export function ChartPreview({ type, title, data, colors, isHighlighted, editMode, renderVersion }: ChartPreviewProps) {
+export function ChartPreview({ type, title, data, colors, isHighlighted, editMode, renderVersion, onShowDetails }: ChartPreviewProps) {
     const chartRef = useRef<HTMLDivElement>(null)
     const [isLoading, setIsLoading] = useState<boolean>(true)
 
@@ -128,6 +130,21 @@ export function ChartPreview({ type, title, data, colors, isHighlighted, editMod
                         <span className="text-xs font-medium text-gray-600">Carregando gráfico…</span>
                     </div>
                 </div>
+            )}
+
+            {/* Details button (visible when not editing) */}
+            {onShowDetails && !editMode && (
+                <button
+                    type="button"
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        onShowDetails()
+                    }}
+                    className="absolute top-2 right-2 inline-flex items-center gap-1.5 rounded-xl text-gray-700 hover:bg-gradient-to-b from-white to-gray-100 hover:text-blue-500 px-2.5 py-1.5 text-xs font-medium"
+                    title="Ver detalhes"
+                >
+                    <Info className="h-4 w-4" />
+                </button>
             )}
         </div>
     )

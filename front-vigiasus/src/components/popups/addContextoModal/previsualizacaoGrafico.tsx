@@ -114,10 +114,19 @@ export const PrevisualizacaoGrafico: React.FC<PrevisualizacaoGraficoProps> = ({
 
             try {
                 console.debug('[previsualizacaoGrafico] Carregando Google Charts...');
-                const google = await loadGoogleCharts(['corechart']); // Apenas corechart deve bastar
-                googleVisualization = google.visualization; // Guarda a referência
-                if (!googleVisualization || !isMounted) {
-                    throw new Error("Biblioteca Google Charts (visualization) não carregada ou componente desmontado.");
+                // Carrega corechart e bar (consistente com outros usos) e evita lançar erro duro
+                const google = await loadGoogleCharts(['corechart', 'bar']);
+                googleVisualization = google?.visualization; // Guarda a referência
+                if (!isMounted) {
+                    // Componente desmontou durante o carregamento
+                    setIsLoadingLibs(false);
+                    return;
+                }
+                if (!googleVisualization) {
+                    console.error('[previsualizacaoGrafico] google.visualization indisponível após load.');
+                    setDrawError('Falha ao inicializar biblioteca de gráficos.');
+                    setIsLoadingLibs(false);
+                    return;
                 }
                 console.debug('[previsualizacaoGrafico] Biblioteca carregada.');
 

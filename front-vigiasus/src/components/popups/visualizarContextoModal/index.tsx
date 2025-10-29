@@ -171,6 +171,7 @@ const AbaDetalhes = ({ dados, aoFazerDownload, aoAlternarTelaCheia }: { dados: D
                     url={dados.url}
                     titulo={dados.title}
                     payload={dados.payload}
+                        chartType={dados.chartType}
                     aoAlternarTelaCheia={aoAlternarTelaCheia}
                 />
             </div>
@@ -304,6 +305,7 @@ export function VisualizarContextoModal({ estaAberto, aoFechar, dadosDoContexto,
                             titulo={dadosDoContexto.title}
                             payload={dadosDoContexto.payload}
                             url={dadosDoContexto.url}
+                            chartType={dadosDoContexto.chartType}
                             emTelaCheia={true}
                             zoomLevel={zoomLevel}
                         />
