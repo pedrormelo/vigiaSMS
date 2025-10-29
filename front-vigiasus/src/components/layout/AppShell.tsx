@@ -6,8 +6,8 @@ import Navbar from "@/components/navbar/navbar";
 import Footer from "@/components/footer/footer";
 
 type Props = {
-  children: React.ReactNode;
-  navbarClassName?: string;
+    children: React.ReactNode;
+    navbarClassName?: string;
 };
 
 /**
@@ -15,18 +15,18 @@ type Props = {
  * Hides chrome on auth pages like /login.
  */
 export default function AppShell({ children }: Props) {
-  const pathname = usePathname();
-  const hideChrome = pathname === "/login" || pathname?.startsWith("/login/") || pathname === "/logout";
+    const pathname = usePathname();
+    const hideChrome = pathname === "/login" || pathname?.startsWith("/login/") || pathname === "/logout";
 
-  if (hideChrome) {
-    return <main className="flex-1">{children}</main>;
-  }
+    if (hideChrome) {
+        return <main className="flex-1">{children}</main>;
+    }
 
-  return (
-    <>
-      <Navbar />
-      <main className="flex-1">{children}</main>
-      <Footer />
-    </>
-  );
+    return (
+        <>
+            <Navbar />
+            <main className="flex-1">{children}</main>
+            <Footer />
+        </>
+    );
 }

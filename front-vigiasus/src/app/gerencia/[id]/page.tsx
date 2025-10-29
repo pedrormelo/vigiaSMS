@@ -19,6 +19,9 @@ import { AddDashboardButton } from "@/components/gerencia/dashboard-btn1";
 import GerenciaDashboardPreview from "@/components/gerencia/dashboard/gerencia-dashboard-preview";
 import { VisualizarContextoModal } from "@/components/popups/visualizarContextoModal/index";
 import { ModalAdicionarConteudo } from "@/components/popups/addContextoModal/index";
+import StatusBadge from "@/components/alerts/statusBadge";
+import StatusBanner from "@/components/ui/status-banner";
+import { useStaleness } from "@/hooks/useStaleness";
 
 // Tipos e Dados
 import type { FileType } from "@/components/contextosCard/contextoCard";
@@ -84,6 +87,30 @@ export default function GerenciaPage() {
     const [activeTab, setActiveTab] = useState<'recente' | 'todas'>("todas");
     const [selectedTypes, setSelectedTypes] = useState<FileType[]>([]);
     const debouncedSearchValue = useDebounce(searchValue, 300);
+
+    // --- ATUALIZAÇÃO / STALENESS (via hook reutilizável) ---
+    const { variant: stalenessVariant, label: stalenessLabel, lastUpdatedAt } = useStaleness({
+        extractors: [
+            () => {
+                const arr: Array<string> = [];
+                for (const f of sampleFiles) {
+                    if (f.insertedDate) arr.push(f.insertedDate);
+                    if (Array.isArray(f.versoes)) for (const v of f.versoes) if (v.data) arr.push(v.data);
+                }
+                return arr;
+            },
+            () => {
+                const arr: Array<string> = [];
+                for (const ind of indicators) {
+                    if (ind.insertedDate) arr.push(ind.insertedDate);
+                    if (Array.isArray(ind.versoes)) for (const v of ind.versoes) if (v.data) arr.push(v.data);
+                }
+                return arr;
+            }
+        ],
+        thresholds: { recentDays: 7, staleDays: 30 },
+        locale: 'pt-BR'
+    });
 
     // --- LÓGICA DE FILTRAGEM ---
     const handleSelectedTypesChange = (type: FileType) => {
@@ -160,8 +187,25 @@ export default function GerenciaPage() {
             <div className="relative p-8 mb-6 text-white shadow-lg" style={{ background: `linear-gradient(to right, ${diretoria.cores.from}, ${diretoria.cores.to})` }}>
                 <h2 className="text-3xl font-regular mt-1">{diretoria.nome}</h2>
             </div>
+
             
             <div className="container mx-auto p-6">
+
+                {/* Optional banner when stale or inactive */}
+                {(stalenessVariant === 'stale' || stalenessVariant === 'error') && (
+                    <div className="mb-6">
+                        <StatusBanner
+                            variant={stalenessVariant === 'stale' ? 'warning' : 'danger'}
+                            title={stalenessVariant === 'stale' ? 'Esta gerência está sem atualizações recentes.' : 'Esta gerência parece inativa.'}
+                        >
+                            <p className="pl-9 text-sm">
+                                Última atualização em {lastUpdatedAt?.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}. 
+                                Considere solicitar novos dados ou publicar um contexto para manter o acompanhamento em dia.
+                            </p>
+                        </StatusBanner>
+                    </div>
+                )}
+
                 {/* Título Dinâmico da Gerência */}
                 <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center gap-4">
@@ -173,6 +217,7 @@ export default function GerenciaPage() {
                         {modo === 'visualizacao' ? 'Modo de Edição' : 'Modo de Visualização'}
                     </button>
                 </div>
+
 
                 <div className="flex items-center gap-1 mb-7">
                     <h1 className="text-3xl mr-2 text-blue-600">Dashboard</h1>
@@ -188,6 +233,11 @@ export default function GerenciaPage() {
                     {indicators.map((indicator) => (
                         <IndicatorCard key={indicator.id} {...indicator} onClick={() => lidarComVisualizarIndicador(indicator)} />
                     ))}
+                </div>
+
+                {/* Staleness indicator */}
+                <div className="mb-3">
+                    <StatusBadge variant={stalenessVariant as any} label={stalenessLabel} />
                 </div>
 
                 <FilterBar searchValue={searchValue} onSearchChange={setSearchValue} activeTab={activeTab} onTabChange={setActiveTab} selectedTypes={selectedTypes} onSelectedTypesChange={handleSelectedTypesChange} clearTypeFilter={() => setSelectedTypes([])} />

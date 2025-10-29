@@ -2,13 +2,14 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Info, History, Download, FileText, Plus, User, ChevronDown, FileType as FileIcon, LucideProps, Minimize, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Info, History, Download, FileText, Plus, User, ChevronDown, FileType as FileIcon, LucideProps, Minimize, ZoomIn, ZoomOut, RotateCcw, MessageCircle } from 'lucide-react';
 import StatusBanner from '@/components/ui/status-banner';
 import type { DetalhesContexto } from '@/components/popups/addContextoModal/types';
 import { VisualizadorDeConteudo } from './visualizadorDeConteudo';
 import IconeDocumento from '@/components/validar/iconeDocumento';
 import type { DocType } from '@/components/validar/typesDados'; // Importação adicionada
 import { Button } from '@/components/button';
+import { cn } from '@/lib/utils';
 
 interface VisualizarContextoModalProps {
     estaAberto: boolean;
@@ -29,11 +30,22 @@ const AbaDetalhes = ({ dados, aoFazerDownload, aoAlternarTelaCheia }: { dados: D
     const [versaoSelecionadaId, setVersaoSelecionadaId] = useState<number | null>(versaoMaisRecente?.id || null);
     const versaoSelecionada = versoesDisponiveis.find(v => v.id === versaoSelecionadaId);
 
+    const [mostrarComentario, setMostrarComentario] = useState(false);
+    const [comentario, setComentario] = useState("");
+
     useEffect(() => {
         if (versaoMaisRecente) {
             setVersaoSelecionadaId(versaoMaisRecente.id);
         }
     }, [versaoMaisRecente, dados]);
+
+    const enviarComentario = () => {
+        if (!comentario.trim()) return;
+        // Aqui poderíamos chamar um serviço/API. Por enquanto, apenas feedback simples.
+        alert("Comentário enviado!");
+        setComentario("");
+        setMostrarComentario(false);
+    };
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full animate-fade-in p-1">
@@ -78,12 +90,66 @@ const AbaDetalhes = ({ dados, aoFazerDownload, aoAlternarTelaCheia }: { dados: D
                             <p className="text-sm text-gray-500">{new Date(dados.insertedDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
                         </div>
                     </div>
-                    {dados.url && dados.type !== 'indicador' && (
-                        <button onClick={aoFazerDownload} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-2xl hover:bg-blue-700 transition-colors">
-                            <Download className="w-4 h-4" /> Baixar
+                    <div className="flex items-center gap-1">
+                        {dados.url && dados.type !== 'indicador' && (
+                            <button onClick={aoFazerDownload} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-2xl hover:bg-blue-700 transition-colors">
+                                <Download className="w-4 h-4" /> Baixar
+                            </button>
+                        )}
+                        <button
+                            type="button"
+                            onClick={() => setMostrarComentario(v => !v)}
+                            aria-pressed={mostrarComentario}
+                            aria-controls="comentario-panel"
+                            aria-expanded={mostrarComentario}
+                            className={cn(
+                                "relative flex items-center gap-2 px-3 py-2 font-semibold rounded-2xl transition-all",
+                                mostrarComentario
+                                    ? "bg-white text-blue-700 border border-blue-300 shadow-sm ring-2 ring-blue-300"
+                                    : "bg-blue-600 text-white hover:bg-blue-700"
+                            )}
+                            title={mostrarComentario ? "Fechar comentários" : "Comentar"}
+                        >
+                            <MessageCircle className='w-4 h-4' />
+                            <span className="hidden sm:inline">{mostrarComentario ? 'Comentando' : 'Comentar'}</span>
+                            {mostrarComentario && (
+                                <span
+                                    aria-hidden
+                                    className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-blue-500 ring-2 ring-white shadow"
+                                />
+                            )}
                         </button>
-                    )}
+                    </div>
                 </div>
+                {mostrarComentario && (
+                    <div id="comentario-panel" className="mt-3 rounded-2xl border border-blue-200 bg-blue-50/50 p-3 animate-fade-in ring-1 ring-blue-200">
+                        <label className="block text-md font-medium text-blue-500 mb-1">Seu comentário</label>
+                        <textarea
+                            value={comentario}
+                            onChange={(e) => setComentario(e.target.value)}
+                            rows={3}
+                            placeholder="Escreva um comentário..."
+                            className="w-full resize-none rounded-md border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <div className="mt-2 flex items-center gap-2 justify-end">
+                            <button
+                                type="button"
+                                onClick={() => setMostrarComentario(false)}
+                                className="px-3 py-2 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="button"
+                                onClick={enviarComentario}
+                                disabled={!comentario.trim()}
+                                className="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Enviar
+                            </button>
+                        </div>
+                    </div>
+                )}
                 {dados.description && (
                     <div className="bg-blue-50/50 border border-blue-200 rounded-2xl p-4 space-y-3">
                         <div className="flex items-center gap-2"><Info className="w-5 h-5 text-blue-600" /><h3 className="text-lg font-semibold text-blue-800">Descrição</h3></div>
