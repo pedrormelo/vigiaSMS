@@ -185,7 +185,7 @@ export default function GerenciaPage() {
 
             {/* Header Dinâmico */}
             <div className="relative p-8 mb-6 text-white shadow-lg" style={{ background: `linear-gradient(to right, ${diretoria.cores.from}, ${diretoria.cores.to})` }}>
-                <h2 className="text-3xl font-regular mt-1">{diretoria.nome}</h2>
+                <h2 className="text-3xl font-regular mt-1 pl-25">{diretoria.nome}</h2>
             </div>
 
             
