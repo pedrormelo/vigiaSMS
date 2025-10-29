@@ -123,10 +123,19 @@ export const PrevisualizacaoGrafico: React.FC<PrevisualizacaoGraficoProps> = ({
                     return;
                 }
                 if (!googleVisualization) {
-                    console.error('[previsualizacaoGrafico] google.visualization indisponível após load.');
-                    setDrawError('Falha ao inicializar biblioteca de gráficos.');
-                    setIsLoadingLibs(false);
-                    return;
+                    // Tenta aguardar mais um pouco para casos de corrida
+                    let attempts = 0;
+                    while (attempts < 50 && isMounted && !(window as any).google?.visualization) {
+                        await new Promise(r => setTimeout(r, 200));
+                        attempts++;
+                    }
+                    googleVisualization = (window as any).google?.visualization;
+                    if (!googleVisualization) {
+                        console.error('[previsualizacaoGrafico] google.visualization indisponível após tentativas.');
+                        setDrawError('A biblioteca de gráficos (visualization) não carregou corretamente.');
+                        setIsLoadingLibs(false);
+                        return;
+                    }
                 }
                 console.debug('[previsualizacaoGrafico] Biblioteca carregada.');
 

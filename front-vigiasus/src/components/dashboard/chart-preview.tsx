@@ -22,6 +22,7 @@ export function ChartPreview({ type, title, data, colors, isHighlighted, editMod
     const chartRef = useRef<HTMLDivElement>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [drawError, setDrawError] = useState<string | null>(null); // Estado para erros
+    const retryRef = useRef<number>(0); // tentativas de aguardar visualization
 
     // Verifica se os dados são minimamente válidos (array com pelo menos cabeçalho)
     const hasValidDataStructure = Array.isArray(data) && data.length > 0 && Array.isArray(data[0]);
@@ -58,12 +59,19 @@ export function ChartPreview({ type, title, data, colors, isHighlighted, editMod
                 // Verifica se carregou, se o componente ainda está montado,
                 // e se o módulo 'visualization' e a função 'arrayToDataTable' existem.
                 if (!google || !google.visualization || typeof google.visualization.arrayToDataTable !== 'function') {
-                     if (isMounted) {
-                        console.error('[ChartPreview] google.visualization.arrayToDataTable não está disponível.'); // Log
-                        throw new Error("A biblioteca de gráficos (visualization) não carregou corretamente.");
-                     }
-                    return; // Sai se desmontado durante o await
+                    if (!isMounted) return;
+                    // Aguarda a disponibilidade com pequenas re-tentativas sem considerar erro imediatamente
+                    if (retryRef.current < 50) { // ~10s com 200ms
+                        retryRef.current += 1;
+                        setTimeout(() => { if (isMounted) draw(); }, 200);
+                        return;
+                    }
+                    console.error('[ChartPreview] google.visualization.arrayToDataTable não está disponível após várias tentativas.');
+                    setDrawError("A biblioteca de gráficos (visualization) não carregou corretamente.");
+                    setIsLoading(false);
+                    return;
                 }
+                retryRef.current = 0;
                 console.debug('[ChartPreview] Biblioteca carregada, google.visualization.arrayToDataTable está disponível.'); // Log
                 // ----- FIM DA VERIFICAÇÃO -----
 
@@ -95,9 +103,10 @@ export function ChartPreview({ type, title, data, colors, isHighlighted, editMod
                 switch (type) {
                     case "pie":
                         ChartClass = google.visualization.PieChart;
+                        // Match modal style: percentages inside slices and legend at the bottom (no leader lines)
                         (options as any).pieSliceText = 'percentage';
-                        (options as any).legend.position = 'labeled';
-                        (options as any).chartArea = { width: "90%", height: "85%" };
+                        (options as any).legend = { position: 'bottom', alignment: 'center', textStyle: { fontSize: 12 } };
+                        (options as any).chartArea = { width: "90%", height: "80%" };
                         delete (options as any).vAxis;
                         delete (options as any).hAxis;
                         break;

@@ -91,7 +91,8 @@ const AbaDetalhes = ({ dados, aoFazerDownload, aoAlternarTelaCheia }: { dados: D
                         </div>
                     </div>
                     <div className="flex items-center gap-1">
-                        {dados.url && dados.type !== 'indicador' && (
+                        {/* tirei o baixar de link tambem */}
+                        {dados.url && dados.type !== 'indicador' && dados.type !== 'link' && (
                             <button onClick={aoFazerDownload} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-2xl hover:bg-blue-700 transition-colors">
                                 <Download className="w-4 h-4" /> Baixar
                             </button>
