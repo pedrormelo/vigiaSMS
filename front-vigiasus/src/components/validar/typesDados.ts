@@ -1,9 +1,10 @@
 // src/components/validar/typesDados.ts
 
 import { ReactNode } from "react";
+import type { ConjuntoDeDadosGrafico, NomeIcone } from "@/components/popups/addContextoModal/types";
 
 export interface HistoricoEvento {
-  data: string; 
+  data: string;
   autor: string;
   acao: string;
 }
@@ -21,6 +22,16 @@ export enum StatusContexto {
   Publicado = "Publicado",
 }
 
+// (Baseado em 'IndicadorDetailsPayload' de types.ts, que não é exportado)
+export interface IndicadorPayloadDetalhes {
+  description: string;
+  valorAtual: string;
+  unidade: string;
+  textoComparativo: string;
+  cor: string;
+  icone: NomeIcone;
+}
+
 /** Tipo principal para os dados da tabela */
 export interface Contexto {
   id: string;
@@ -29,11 +40,16 @@ export interface Contexto {
   gerencia: string;
   nome: string;
   situacao: StatusContexto;
-//  icone: string;
-  docType: DocType; 
+  //  icone: string;
+  docType: DocType;
   detalhes: string;
   data: string;
   historico?: HistoricoEvento[];
+  
+  /** A URL direta para o recurso, se aplicável (PDF, DOC, Link Externo) */
+  url?: string;
+  /** Os dados brutos para dashboards ou indicadores */
+  payload?: ConjuntoDeDadosGrafico | IndicadorPayloadDetalhes;
 }
 
 /** Tipo Column genérico para a tabela */

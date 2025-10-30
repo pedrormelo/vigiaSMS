@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react"; // Importamos o useCallback
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useHistoricoContextos } from "@/hooks/useHistoricoContextos";
@@ -10,13 +10,15 @@ import DetalhesContextoModal from "@/components/popups/detalhesContextoModal";
 import { Button } from "@/components/ui/button";
 import Paginacao from "@/components/ui/paginacao";
 import { SearchBar } from "@/components/ui/search-bar";
+// 1. Importar o DateInputFilter
+import DateInputFilter from "@/components/validar/dateInputFilter"; 
+// 2. Importar ícones para os novos estados
+import { ArrowLeft, Eye, Loader2, SearchX } from "lucide-react"; 
 
 import { membroColumns } from "@/components/validar/colunasTable/membroColumns";
 import { gerenteColumns } from "@/components/validar/colunasTable/gerenteColumns";
 import { diretorColumns } from "@/components/validar/colunasTable/diretorColumns";
 import { Contexto } from "@/components/validar/typesDados";
-
-import { ArrowLeft, Eye } from "lucide-react";
 
 export default function HistoricoPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -27,8 +29,11 @@ export default function HistoricoPage() {
     to: undefined,
   });
 
-  // No futuro, o hook receberá também o dateRange
-  const { data, error, currentPage, totalPages, setCurrentPage } = useHistoricoContextos(debouncedSearchQuery);
+  // 3. Passar o dateRange para o hook e receber o isLoading
+  const { data, error, isLoading, currentPage, totalPages, setCurrentPage } = useHistoricoContextos(
+    debouncedSearchQuery,
+    dateRange // Passando o estado do filtro de data
+  );
 
   const [perfil, setPerfil] = useState<"diretor" | "gerente" | "membro">("gerente");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -39,8 +44,6 @@ export default function HistoricoPage() {
     setIsModalOpen(true);
   };
 
-  // A função agora está "memorizada" pelo useCallback.
-  // Ela só será recriada se as suas dependências (que estão vazias []) mudarem.
   const handleDateFilterChange = useCallback((range: { from: Date | undefined; to: Date | undefined }) => {
     setDateRange(range);
     console.log("Novo filtro de datas selecionado:", range);
@@ -75,6 +78,28 @@ export default function HistoricoPage() {
     return <div className="p-8 text-red-500">{error}</div>;
   }
 
+  // 4. Componente auxiliar para renderizar o conteúdo da tabela
+  const renderTableContent = () => {
+    if (isLoading) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[200px] text-gray-500">
+          <Loader2 className="w-8 h-8 animate-spin" />
+          <p className="mt-2 font-medium">A carregar histórico...</p>
+        </div>
+      );
+    }
+    if (data.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[200px] text-gray-500 border-2 border-dashed border-gray-300 rounded-2xl bg-gray-50/50">
+          <SearchX className="w-12 h-12" />
+          <p className="mt-2 font-semibold">Nenhum resultado encontrado</p>
+          <p className="text-sm">Tente ajustar os filtros de pesquisa ou data.</p>
+        </div>
+      );
+    }
+    return <ContextoTable data={data} columns={getColumns()} />;
+  };
+
   return (
     <div className="p-8 bg-white min-h-screen">
       <div className="flex gap-2 mb-4 bg-yellow-100 p-2 rounded-md text-sm">
@@ -99,18 +124,24 @@ export default function HistoricoPage() {
           <SearchBar
             value={searchQuery}
             onChange={setSearchQuery}
-            placeholder="Pesquise por nome do contexto ou solicitante..."
+            placeholder="Pesquise por nome ou solicitante..."
             className="w-full md:w-auto md:flex-1"
           />
+          {/* 5. Adicionar o seletor de data ao JSX */}
+          <DateInputFilter onDateChange={handleDateFilterChange} />
         </div>
         
-        <ContextoTable data={data} columns={getColumns()} />
+        {/* 6. Chamar o novo renderizador */}
+        {renderTableContent()}
 
-        <Paginacao 
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-        />
+        {/* 7. Só mostrar paginação se houver dados e mais de uma página */}
+        {!isLoading && data.length > 0 && totalPages > 1 && (
+          <Paginacao 
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        )}
       </div>
 
       <DetalhesContextoModal

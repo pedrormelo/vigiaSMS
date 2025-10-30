@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/input";
 import { Button } from "@/components/ui/button";
@@ -30,13 +29,21 @@ export default function LoginPage() {
             return;
         }
         setLoading(true);
-        try {
+       try {
             const user = await authService.login(email, password);
             authService.saveUser(user, remember);
             showSuccessToast(`Bem-vindo(a), ${user.name}!`);
             router.push("/");
-        } catch (err: any) {
-            showErrorToast(err?.message || "Falha no login");
+        } catch (err) { 
+            //  verificação
+            let errorMessage = "Falha no login";
+            if (err instanceof Error) {
+                errorMessage = err.message;
+            }
+            
+            // a variável segura
+            showErrorToast(errorMessage);
+            
         } finally {
             setLoading(false);
         }

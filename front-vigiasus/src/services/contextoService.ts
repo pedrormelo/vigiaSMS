@@ -54,63 +54,72 @@ export const getContextos = async (): Promise<Contexto[]> => {
  */
 export const getHistoricoContextos = async (
   searchQuery?: string,
+  // 1. Receber o dateRange como argumento
+  dateRange?: { from: Date | undefined; to: Date | undefined },
   page: number = 1,
   limit: number = 10
 ): Promise<HistoricoResponse> => {
-  console.log(`Service: buscando HISTÓRICO - Página: ${page}, Limite: ${limit}, Termo: "${searchQuery || ''}"`);
+  console.log(`Service: buscando HISTÓRICO - Página: ${page}, Limite: ${limit}, Termo: "${searchQuery || ''}", Datas:`, dateRange);
 
   if (USE_MOCKS) {
-    // Simula delay e lógica de filtro/paginação com dados mockados
     return new Promise(resolve => {
       setTimeout(() => {
-        let dadosFiltrados = mockDataHistorico; // Começa com todos os dados do histórico
+        let dadosFiltrados = mockDataHistorico;
 
-        // Aplica o filtro de pesquisa se houver um termo
+        // 2. Aplicar filtro de pesquisa (lógica existente)
         if (searchQuery && searchQuery.trim() !== "") {
           const lowercasedQuery = searchQuery.toLowerCase().trim();
           dadosFiltrados = mockDataHistorico.filter((contexto: Contexto) =>
             contexto.nome.toLowerCase().includes(lowercasedQuery) ||
             contexto.solicitante.toLowerCase().includes(lowercasedQuery)
-            // Adicione mais campos para busca se necessário (ex: gerencia)
-            // || contexto.gerencia.toLowerCase().includes(lowercasedQuery)
           );
-          console.log(`Service: ${dadosFiltrados.length} resultados após filtro por "${searchQuery}".`);
         }
 
-        // Calcula o total de registros *antes* de paginar
+        // 3. Aplicar filtro de data
+        if (dateRange?.from || dateRange?.to) {
+          dadosFiltrados = dadosFiltrados.filter((contexto: Contexto) => {
+            try {
+              const dataContexto = new Date(contexto.data);
+              if (isNaN(dataContexto.getTime())) return false; // Ignora datas inválidas
+
+              // Se 'de' (from) foi definido, a data do contexto deve ser >= a ela
+              if (dateRange.from) {
+                // Zera a hora da data 'from' para pegar desde o início do dia
+                const dataInicio = new Date(dateRange.from);
+                dataInicio.setHours(0, 0, 0, 0); 
+                if (dataContexto < dataInicio) {
+                  return false;
+                }
+              }
+
+              // Se 'até' (to) foi definido, a data do contexto deve ser <= a ela
+              if (dateRange.to) {
+                // Define a hora da data 'to' para o fim do dia
+                const dataFim = new Date(dateRange.to);
+                dataFim.setHours(23, 59, 59, 999); 
+                if (dataContexto > dataFim) {
+                  return false;
+                }
+              }
+
+              return true; // Passou em ambos os testes (ou nos que foram definidos)
+            } catch (e) {
+              return false; // Ignora se houver erro na conversão da data
+            }
+          });
+          console.log(`Service: ${dadosFiltrados.length} resultados após filtro de data.`);
+        }
+
         const total = dadosFiltrados.length;
-
-        // Calcula os índices para a paginação
         const startIndex = (page - 1) * limit;
-        const endIndex = page * limit; // slice não inclui o endIndex
-
-        // Pega apenas a "fatia" correspondente à página atual
+        const endIndex = page * limit;
         const dataPaginada = dadosFiltrados.slice(startIndex, endIndex);
 
-        console.log(`Service: retornando ${dataPaginada.length} de ${total} registros históricos (página ${page}).`);
-
-        // Resolve a promessa com os dados paginados e o total
         resolve({ data: dataPaginada, total: total });
-      }, 500); // Simula 500ms de espera
+      }, 500);
     });
   } else {
-    // Implementação real da API (exemplo)
-    // try {
-    //   const params = new URLSearchParams();
-    //   if (searchQuery) params.append('search', searchQuery);
-    //   params.append('page', page.toString());
-    //   params.append('limit', limit.toString());
-    //
-    //   const response = await fetch(`/api/contextos/historico?${params.toString()}`); // Endpoint da API
-    //   if (!response.ok) {
-    //     throw new Error('Falha ao buscar histórico de contextos');
-    //   }
-    //   const data: HistoricoResponse = await response.json(); // API deve retornar { data: [...], total: ... }
-    //   return data;
-    // } catch (error) {
-    //   console.error("Erro na API getHistoricoContextos:", error);
-    //   return { data: [], total: 0 }; // Retorna vazio em caso de erro
-    // }
+    // ... (lógica de API real iria aqui) ...
     console.warn("API real não implementada para getHistoricoContextos");
     return { data: [], total: 0 };
   }

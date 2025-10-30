@@ -2,7 +2,7 @@
 "use client";
 
 import Image from 'next/image';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams } from 'next/navigation'; // Importado para obter o ID da URL
 import { Edit, Eye, SearchX } from 'lucide-react';
 
@@ -11,7 +11,6 @@ import { useDebounce } from "@/hooks/useDebounce";
 
 // Componentes da UI e Popups
 import { FileGrid } from "@/components/contextosCard/contextosGrid";
-import { Button } from "@/components/button";
 import FilterBar from "@/components/gerencia/painel-filterBar";
 import { AddIndicatorButton } from "@/components/indicadores/adicionarIndicador";
 import { IndicatorCard } from "@/components/indicadores/indicadorCard";
@@ -82,7 +81,7 @@ export default function GerenciaPage() {
     const [dadosParaEditar, setDadosParaEditar] = useState<Partial<DetalhesContexto> | null>(null);
     const [modalVisualizacaoAberto, setModalVisualizacaoAberto] = useState(false);
     const [ficheiroSelecionado, setFicheiroSelecionado] = useState<DetalhesContexto | null>(null);
-    const [perfil, setPerfil] = useState<'diretor' | 'gerente' | 'membro'>('membro');
+    const [perfil] = useState<'diretor' | 'gerente' | 'membro'>('membro');
     const [searchValue, setSearchValue] = useState("");
     const [activeTab, setActiveTab] = useState<'recente' | 'todas'>("todas");
     const [selectedTypes, setSelectedTypes] = useState<FileType[]>([]);
@@ -174,7 +173,7 @@ export default function GerenciaPage() {
 
     // --- RENDERIZAÇÃO ---
     if (!id) return <div className="p-8 text-center text-gray-500">Carregando...</div>;
-    if (!resolved) return <div className="p-8 text-center text-red-500">Gerência com ID '{id}' não encontrada.</div>;
+    if (!resolved) return <div className="p-8 text-center text-red-500">Gerência com ID &ldquo;{id}&rdquo; não encontrada.</div>;
 
     const { diretoria, gerencia } = resolved;
 
@@ -237,7 +236,7 @@ export default function GerenciaPage() {
 
                 {/* Staleness indicator */}
                 <div className="mb-3">
-                    <StatusBadge variant={stalenessVariant as any} label={stalenessLabel} />
+                    <StatusBadge variant={stalenessVariant} label={stalenessLabel} />
                 </div>
 
                 <FilterBar searchValue={searchValue} onSearchChange={setSearchValue} activeTab={activeTab} onTabChange={setActiveTab} selectedTypes={selectedTypes} onSelectedTypesChange={handleSelectedTypesChange} clearTypeFilter={() => setSelectedTypes([])} />

@@ -14,6 +14,9 @@ interface SearchBarProps {
     expandable?: boolean;
     /** Autofocus the input when it expands */
     autoFocusOnExpand?: boolean;
+    
+    // 1. ADICIONAR A PROP onFocus AQUI
+    onFocus?: (event: React.FocusEvent<HTMLInputElement>) => void;
 }
 
 export function SearchBar({
@@ -24,6 +27,7 @@ export function SearchBar({
     className = "",
     expandable = true,
     autoFocusOnExpand = true,
+    onFocus, 
 }: SearchBarProps) {
     const [expanded, setExpanded] = React.useState(!expandable);
     const inputRef = React.useRef<HTMLInputElement>(null);
@@ -50,7 +54,7 @@ export function SearchBar({
         return () => document.removeEventListener("mousedown", handleDocMouseDown);
     }, [expandable, value]);
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         onChange?.(e.target.value);
     };
 
@@ -67,7 +71,6 @@ export function SearchBar({
             setExpanded(true);
             return;
         }
-        // If already expanded, treat as search trigger
         onSearch?.(value);
     };
 
@@ -81,9 +84,7 @@ export function SearchBar({
             ref={wrapperRef}
             className={cn(
                 "relative flex items-center",
-                // Smoothly animate width/padding/border/shadow
                 "transition-all duration-300 ease-in-out",
-                // Collapsed: small round icon button footprint
                 expandable && !expanded
                     ? "w-10 h-10 sm:w-11 sm:h-11 rounded-full"
                     : "w-full h-11 rounded-full",
@@ -91,23 +92,21 @@ export function SearchBar({
             )}
             aria-expanded={expandable ? expanded : true}
         >
-            {/* Icon button (left) */}
+            {/* ... (botão de ícone) ... */}
             <button
                 type="button"
                 aria-label={expanded ? "Buscar" : "Abrir busca"}
                 onClick={handleIconClick}
                 className={cn(
                     "z-10 grid place-items-center rounded-full",
-                    // Size matches the container height
-                    "h-10 w-10 sm:h-11 sm:w-11",
-                    // Visuals
+                    "h-10 w-10 sm:h-11 sm:h-11",
                     "text-blue-600 hover:text-blue-500",
-                    // When expanded, position absolute so the input can use the full width
                     expanded ? "absolute left-2" : "relative bg-white shadow-sm border border-gray-200"
                 )}
             >
                 <Search className="h-4 w-4" strokeWidth={2.5} />
             </button>
+            
 
             {/* Input container */}
             <div
@@ -118,7 +117,6 @@ export function SearchBar({
                         ? "w-0 opacity-0 pointer-events-none"
                         : "w-full opacity-100 bg-white border border-gray-200 shadow-sm"
                 )}
-                // Rounded only when expanded (collapsed uses the icon button's circle)
                 style={{ borderRadius: expanded ? 9999 : 0 }}
             >
                 <input
@@ -128,18 +126,17 @@ export function SearchBar({
                     onChange={handleInputChange}
                     onKeyDown={handleInputKeyDown}
                     placeholder={placeholder}
+                    // 3. ADICIONAR O onFocus AO INPUT
+                    onFocus={onFocus} 
                     className={cn(
                         "w-full pl-12 pr-10 text-sm text-gray-700 placeholder-gray-400",
                         "bg-transparent outline-none",
-                        // Strong, visible focus style independent of theme tokens
                         "focus:ring-2 focus:ring-blue-500 focus:border-transparent rounded-full py-2.5"
                     )}
                     onBlur={() => {
-                        // Collapse only if empty to avoid hiding user's input
                         if (expandable && !value) setExpanded(false);
                     }}
                 />
-
                 {/* Clear button when there is text */}
                 {value && (
                     <button
