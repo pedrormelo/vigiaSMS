@@ -9,7 +9,8 @@ export interface HistoricoEvento {
 }
 
 //Tipos para os diferentes formatos de documento
-export type DocType = "excel" | "pdf" | "doc" | "dashboard" | "resolucao" | "indicador";
+// ATUALIZADO: Adicionado "apresentacao"
+export type DocType = "excel" | "pdf" | "doc" | "dashboard" | "resolucao" | "indicador" | "apresentacao";
 
 /** Estados possíveis do contexto */
 export enum StatusContexto {
@@ -34,6 +35,8 @@ export interface Contexto {
   detalhes: string;
   data: string;
   historico?: HistoricoEvento[];
+  url?: string; // Adicionando URL opcional
+  payload?: any; // Adicionando payload opcional
 }
 
 /** Tipo Column genérico para a tabela */

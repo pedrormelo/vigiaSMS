@@ -2,7 +2,7 @@
 
 import Hero from "@/components/landingPage/hero"
 import WelcomeBar from "@/components/landingPage/welcomeBar";
-import Destaques from "@/components/landingPage/destaques"
+//import Destaques from "@/components/landingPage/destaques"
 import ComoFunciona from "@/components/landingPage/comoFunciona"
 import Contato from "@/components/landingPage/contato"
 

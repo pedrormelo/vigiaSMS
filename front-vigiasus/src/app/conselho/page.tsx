@@ -1,14 +1,15 @@
+// src/app/conselho/page.tsx
 "use client";
 
 import EventsSection from "@/components/conselho/eventSection";
-//import DatasImportantes from "@/components/conselho/datasImportantes";
-//import Galeria from "@/components/conselho/galeria";
 import HeroCMS from "@/components/conselho/heroCMS";
 import { AddContentModal } from "@/components/popups/addContexto-modal";
 //import Resolutions from "@/components/conselho/resolutions";
 import { FileGrid } from "@/components/contextosCard/contextosGrid";
 import FilterBar from "@/components/gerencia/painel-filterBar";
 import { FileType } from "@/components/contextosCard/contextoCard";
+
+// 1. IMPORTAÇÕES ADICIONADAS
 import * as React from "react"
 import { useState } from "react";
 // import AgendaLeis from "@/components/conselho/cardLeis";
@@ -111,6 +112,7 @@ export default function CMSpage() {
     return (
 
         <main className="flex-1 bg-white mx-auto min-h-screen">
+            <AddContentModal
             <AddContentModal
                 isOpen={showAddContexto}
                 onClose={() => setShowAddContexto(false)}

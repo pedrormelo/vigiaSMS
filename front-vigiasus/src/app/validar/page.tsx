@@ -15,8 +15,8 @@ import { membroColumns } from "@/components/validar/colunasTable/membroColumns";
 import { gerenteColumns } from "@/components/validar/colunasTable/gerenteColumns";
 import { diretorColumns } from "@/components/validar/colunasTable/diretorColumns";
 import { Contexto } from "@/components/validar/typesDados";
-import { DetalhesContexto } from '@/components/popups/addContextoModal/types';
-
+import { FileType } from "@/components/contextosCard/contextoCard";
+import { DetalhesContexto, SubmitData } from '@/components/popups/addContextoModal/types';
 // Ícones
 import { RefreshCw, Eye, Trash } from "lucide-react";
 
@@ -42,13 +42,13 @@ export default function ValidacaoContextos() {
     setIsDetalhesModalOpen(false); // Fecha o modal de detalhes
 
     // Prepara os dados para o modal de edição
-    const dadosParaEdicao: Partial<DetalhesContexto> = {
+   const dadosParaEdicao: Partial<DetalhesContexto> = {
       id: contextoParaCorrigir.id,
       title: contextoParaCorrigir.nome,
-      type: contextoParaCorrigir.docType as any,
+      type: contextoParaCorrigir.docType as FileType, // Cast seguro
       insertedDate: contextoParaCorrigir.data,
       url: contextoParaCorrigir.url,
-      payload: contextoParaCorrigir.payload as any,
+      payload: contextoParaCorrigir.payload, 
       description: contextoParaCorrigir.detalhes,
       solicitante: contextoParaCorrigir.solicitante,
       versoes: contextoParaCorrigir.historico?.map((h, i) => ({ id: i + 1, nome: `Versão ${i + 1}`, data: h.data, autor: h.autor })),
@@ -59,7 +59,7 @@ export default function ValidacaoContextos() {
   };
 
   // Lida com o envio dos dados corrigidos
-  const handleSubmeterCorrecao = (dados: any) => {
+ const handleSubmeterCorrecao = (dados: SubmitData) => {
     console.log("Dados corrigidos submetidos:", dados);
     // TODO: Implementar chamada API para salvar a correção/nova versão
     setIsCorrecaoModalOpen(false);

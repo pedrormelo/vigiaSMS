@@ -23,14 +23,17 @@ export interface Versao {
   nome: string;
   data: string;
   autor: string;
+  estaOculta?: boolean;
 }
 
 
 export interface ConjuntoDeDadosGrafico {
   colunas: string[];
-  linhas: (string | number)[][];
+  // --- A CORREÇÃO ESTÁ AQUI ---
+  linhas: (string | number | null)[][]; // <-- Adicionado | null
+  // --- FIM DA CORREÇÃO ---
   cores?: string[];
- formatos?: FormatoColuna[];
+  formatos?: FormatoColuna[];
 }
 
 // Tipos específicos para cada payload de submissão
@@ -40,6 +43,7 @@ export interface ContextoPayload {
   file: File | null;
   url: string;
   versionInfo: VersionInfo | null;
+  fileType: FileType | null; 
 }
 
 export interface DashboardPayload {

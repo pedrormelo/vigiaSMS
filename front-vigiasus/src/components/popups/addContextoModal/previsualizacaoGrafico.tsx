@@ -1,17 +1,15 @@
 // src/components/popups/addContextoModal/previsualizacaoGrafico.tsx
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo } from "react"; // Adicionado useMemo
-import { Eye, BarChart3, Expand, Loader2, AlertTriangle } from "lucide-react"; // Adicionado AlertTriangle
-// Importar FormatoColuna
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import { Eye, Expand, Loader2, AlertTriangle } from "lucide-react";
 import { TipoGrafico, ConjuntoDeDadosGrafico, FormatoColuna } from "./types";
-import { loadGoogleCharts } from '@/lib/googleCharts';
+import { loadGoogleCharts } from "@/lib/googleCharts";
 
 interface PrevisualizacaoGraficoProps {
     tipoGrafico: TipoGrafico;
     conjuntoDeDados: ConjuntoDeDadosGrafico | null;
     titulo: string;
-    previsualizacaoGerada: boolean;
     aoAlternarTelaCheia?: () => void;
     emTelaCheia?: boolean;
 }
@@ -20,317 +18,238 @@ export const PrevisualizacaoGrafico: React.FC<PrevisualizacaoGraficoProps> = ({
     tipoGrafico,
     conjuntoDeDados,
     titulo,
-    previsualizacaoGerada,
     aoAlternarTelaCheia,
-    emTelaCheia = false
+    emTelaCheia = false,
 }) => {
     const chartRef = useRef<HTMLDivElement>(null);
-    // Estados adicionados para melhor feedback
     const [isLoadingLibs, setIsLoadingLibs] = useState(false);
     const [drawError, setDrawError] = useState<string | null>(null);
 
-    // Memoized data preparation (similar ao original, mas com useMemo)
+    // 🔧 --- Preparação e saneamento de dados ---
     const dadosGrafico = useMemo(() => {
-        if (!conjuntoDeDados) return null; // Retorna null se não houver dados
+        if (!conjuntoDeDados) return null;
+
         try {
-            return [
-                conjuntoDeDados.colunas,
-                ...conjuntoDeDados.linhas.map(linha =>
-                    linha.map((celula, index) => {
-                        if (index > 0) { // Colunas numéricas
-                            // Trata vírgula como decimal, remove R$, % e espaços
-                            const valorString = String(celula ?? "").trim().replace('.', '').replace(',', '.').replace(/R\$|\s|%/g, '');
-                            if (valorString === "") return null; // Célula vazia vira null
-                            const num = parseFloat(valorString);
-                            if (isNaN(num)) return null;
+            const linhasFormatadas = conjuntoDeDados.linhas.map((linha, linhaIndex) =>
+                linha.map((celula, colIndex) => {
+                    // Primeira coluna: categorias (mantém texto)
+                    if (colIndex === 0) return celula;
 
-                            // Normalização para percentuais: se o formato da coluna for 'percent',
-                            // Google Charts espera valores decimais (1 = 100%).
-                            // Regra: se |num| > 1, assume escala 0..100 e divide por 100; caso contrário mantém.
-                            const formatoColuna = conjuntoDeDados.formatos?.[index];
-                            if (formatoColuna === 'percent') {
-                                const normalizado = Math.abs(num) > 1 ? num / 100 : num;
-                                return normalizado;
-                            }
+                    let valor = celula;
 
-                            return num; // Retorna número normal
+                    // Converte string numérica (ex: "12,5") → number
+                    if (typeof valor === "string" && valor.trim() !== "") {
+                        const num = Number(valor.replace(",", "."));
+                        if (!isNaN(num)) valor = num;
+                    }
+
+                    // Inicializa valores vazios
+                    if (valor === "" || valor === undefined || valor === null) {
+                        // Primeira linha recebe null (mantém tipo numérico sem alterar o gráfico)
+                        valor = linhaIndex === 0 ? null : 0;
+                    }
+
+                    // Normaliza percentuais
+                    if (typeof valor === "number") {
+                        const formatoColuna = conjuntoDeDados.formatos?.[colIndex];
+                        if (formatoColuna === "percent") {
+                            const normalizado = Math.abs(valor) >= 1 ? valor / 100 : valor;
+                            return normalizado;
                         }
-                        return celula; // Coluna de categoria
-                    })
-                )
-            ];
+                    }
+
+                    return valor;
+                })
+            );
+
+            const resultado = [conjuntoDeDados.colunas, ...linhasFormatadas];
+
+            // 🧠 Depuração opcional (detecção automática de tipos mistos)
+            for (let i = 1; i < resultado[0].length; i++) {
+                const tipos = new Set(resultado.slice(1).map(l => typeof l[i]));
+                if (tipos.size > 1) {
+                    console.warn(`[previsualizacaoGrafico] Coluna ${i} tem tipos mistos:`, [...tipos]);
+                }
+            }
+
+            return resultado;
         } catch (e) {
             console.error("Erro ao preparar dadosGrafico:", e);
             setDrawError("Erro ao processar os dados da tabela.");
-            return null; // Retorna null em caso de erro
+            return null;
         }
-    }, [conjuntoDeDados]); // Recalcula apenas se conjuntoDeDados mudar
+    }, [conjuntoDeDados]);
 
+    const coresDoGrafico = useMemo(
+        () =>
+            conjuntoDeDados?.cores?.length
+                ? conjuntoDeDados.cores
+                : ["#3B82F6", "#10B981", "#8B5CF6", "#F59E0B", "#EF4444"],
+        [conjuntoDeDados?.cores]
+    );
 
-    const coresDoGrafico = useMemo(() => // useMemo para cores
-        conjuntoDeDados?.cores?.length ? conjuntoDeDados.cores : ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444'],
-        [conjuntoDeDados?.cores]);
-
-    // Opções básicas do gráfico (useMemo)
-    const opcoesFinais = useMemo(() => ({
-        title: titulo || "Pré-visualização do Gráfico",
-        backgroundColor: "transparent",
-        legend: { position: "bottom", textStyle: { fontSize: 12 } },
-        chartArea: { width: "75%", height: "70%" }, // Ajustado height
-        vAxis: (tipoGrafico === 'chart' || tipoGrafico === 'line') ? { viewWindow: { min: 0 }, format: '###,##0.##' } : {}, // Formato numérico base para eixo Y
-        hAxis: (tipoGrafico === 'chart' && dadosGrafico && dadosGrafico.length > 2 && dadosGrafico[1].length === 2) ? { format: '###,##0.##' } : {}, // Formato para eixo X em BarChart (horizontal)
-        colors: coresDoGrafico,
-        tooltip: { isHtml: true } // Mantido para caso precise no futuro
-    }), [titulo, tipoGrafico, coresDoGrafico, dadosGrafico]); // Adicionado dadosGrafico como dep. para hAxis
-
+    const opcoesFinais = useMemo(
+        () => ({
+            title: titulo || "Pré-visualização do Gráfico",
+            backgroundColor: "transparent",
+            legend: { position: "bottom", textStyle: { fontSize: 12 } },
+            chartArea: { width: "75%", height: "70%" },
+            vAxis:
+                tipoGrafico === "chart" || tipoGrafico === "line"
+                    ? { viewWindow: { min: 0 }, format: "###,##0.##" }
+                    : {},
+            colors: coresDoGrafico,
+            tooltip: { isHtml: true },
+        }),
+        [titulo, tipoGrafico, coresDoGrafico]
+    );
 
     const possuiDadosValidos = () => {
-        if (!dadosGrafico || dadosGrafico.length < 2) return false; // Precisa cabeçalho + 1 linha
-        // Verifica se existe algum valor não nulo/vazio nas colunas de dados
-        return dadosGrafico.slice(1).some(linha => linha.slice(1).some(celula => celula !== null && celula !== undefined && String(celula).trim() !== ""));
+        if (!dadosGrafico || dadosGrafico.length < 2) return false;
+        const primeiraLinhaDeDados = dadosGrafico[1];
+        if (!primeiraLinhaDeDados) return false;
+        return primeiraLinhaDeDados.slice(1).some(c => c !== null && c !== undefined);
     };
 
+    // 🎨 --- Renderização do gráfico ---
     useEffect(() => {
         let resizeObserver: ResizeObserver | null = null;
         let chartInstance: any = null;
         let isMounted = true;
-        let googleVisualization: any = null; // Guardar referência
+        let googleVisualization: any = null;
 
         const draw = async () => {
-            // Verificações iniciais
-            if (!chartRef.current || !previsualizacaoGerada || !isMounted) {
-                if (!previsualizacaoGerada && drawError) setDrawError(null);
-                if (isLoadingLibs) setIsLoadingLibs(false);
-                return;
-            }
+            if (!chartRef.current || !isMounted) return;
             if (!possuiDadosValidos()) {
-                setDrawError("Não há dados válidos suficientes para gerar o gráfico.");
+                setDrawError(null);
                 setIsLoadingLibs(false);
+                chartRef.current.innerHTML = "";
                 return;
             }
 
-            setDrawError(null);
             setIsLoadingLibs(true);
+            setDrawError(null);
 
             try {
-                console.debug('[previsualizacaoGrafico] Carregando Google Charts...');
-                // Carrega corechart e bar (consistente com outros usos) e evita lançar erro duro
-                const google = await loadGoogleCharts(['corechart', 'bar']);
-                googleVisualization = google?.visualization; // Guarda a referência
-                if (!isMounted) {
-                    // Componente desmontou durante o carregamento
-                    setIsLoadingLibs(false);
-                    return;
-                }
-                if (!googleVisualization) {
-                    // Tenta aguardar mais um pouco para casos de corrida
-                    let attempts = 0;
-                    while (attempts < 50 && isMounted && !(window as any).google?.visualization) {
-                        await new Promise(r => setTimeout(r, 200));
-                        attempts++;
-                    }
-                    googleVisualization = (window as any).google?.visualization;
-                    if (!googleVisualization) {
-                        console.error('[previsualizacaoGrafico] google.visualization indisponível após tentativas.');
-                        setDrawError('A biblioteca de gráficos (visualization) não carregou corretamente.');
-                        setIsLoadingLibs(false);
-                        return;
-                    }
-                }
-                console.debug('[previsualizacaoGrafico] Biblioteca carregada.');
+                const google = await loadGoogleCharts(["corechart"]);
+                googleVisualization = google.visualization;
 
-                if (!chartRef.current || !dadosGrafico) return; // Re-check
+                if (!isMounted) return;
+                if (!googleVisualization) throw new Error("Biblioteca Google Charts não carregada.");
 
-                console.debug('[previsualizacaoGrafico] Criando DataTable...');
-                let chartData;
-                try {
-                    chartData = googleVisualization.arrayToDataTable(dadosGrafico);
-                    console.debug('[previsualizacaoGrafico] DataTable criada.');
-                } catch (dataTableError: any) {
-                    console.error('[previsualizacaoGrafico] Erro ao criar DataTable:', dataTableError);
-                    throw new Error(`Falha ao processar os dados: ${dataTableError.message}`);
-                }
+                const chartData = googleVisualization.arrayToDataTable(dadosGrafico);
 
-
-                // --- INÍCIO DA LÓGICA DE FORMATAÇÃO ---
+                // Aplicar formatações (%, R$, etc.)
                 if (conjuntoDeDados?.formatos && chartData) {
-                    console.debug('[previsualizacaoGrafico] Aplicando formatos:', conjuntoDeDados.formatos);
                     conjuntoDeDados.formatos.forEach((formato: FormatoColuna, index: number) => {
-                        // Aplica apenas às colunas de dados (índice > 0)
                         if (index > 0 && index < chartData.getNumberOfColumns()) {
                             const columnType = chartData.getColumnType(index);
-                            // Aplica formatação apenas se a coluna for numérica
-                            if (columnType === 'number') {
+                            if (columnType === "number") {
                                 let formatter;
                                 try {
-                                    if (formato === 'percent') {
-                                        // Google Charts espera que 0.5 seja formatado como 50%
-                                        // Se os seus dados já estão como 50, divida por 100 ANTES de passar para arrayToDataTable
-                                        // OU use um pattern que não multiplique por 100 (mas isso é menos comum)
-                                        // Assumindo que os dados estão como decimais (ex: 0.15 para 15%):
-                                        formatter = new googleVisualization.NumberFormat({ pattern: '#,##0.##%' });
-                                        console.debug(`[previsualizacaoGrafico] Aplicando formato 'percent' à coluna ${index}`);
-                                    } else if (formato === 'currency') {
+                                    if (formato === "percent") {
+                                        formatter = new googleVisualization.NumberFormat({ pattern: "#,##0.##%" });
+                                    } else if (formato === "currency") {
                                         formatter = new googleVisualization.NumberFormat({
-                                            prefix: 'R$ ',
-                                            decimalSymbol: ',',
-                                            groupingSymbol: '.',
-                                            pattern: '#,##0.00' // Força duas casas decimais
+                                            prefix: "R$ ",
+                                            decimalSymbol: ",",
+                                            groupingSymbol: ".",
+                                            pattern: "#,##0.00",
                                         });
-                                        console.debug(`[previsualizacaoGrafico] Aplicando formato 'currency' à coluna ${index}`);
-                                    } else if (formato === 'number') {
-                                        // Formato numérico padrão pt-BR
+                                    } else if (formato === "number") {
                                         formatter = new googleVisualization.NumberFormat({
-                                            decimalSymbol: ',',
-                                            groupingSymbol: '.',
-                                            pattern: '#,##0.##' // Mostra até 2 casas decimais se existirem
+                                            decimalSymbol: ",",
+                                            groupingSymbol: ".",
+                                            pattern: "#,##0.##",
                                         });
-                                        console.debug(`[previsualizacaoGrafico] Aplicando formato 'number' à coluna ${index}`);
                                     }
-
-                                    if (formatter) {
-                                        formatter.format(chartData, index);
-                                    }
+                                    if (formatter) formatter.format(chartData, index);
                                 } catch (formatError: any) {
                                     console.error(`[previsualizacaoGrafico] Erro ao aplicar formato '${formato}' à coluna ${index}:`, formatError);
-                                    // Continua mesmo se um formatador falhar
                                 }
-                            } else {
-                                console.warn(`[previsualizacaoGrafico] Tentativa de aplicar formato numérico '${formato}' à coluna ${index} não numérica (tipo: '${columnType}').`);
                             }
-                        } else if (index >= chartData.getNumberOfColumns()) {
-                            console.warn(`[previsualizacaoGrafico] Índice de formato ${index} fora dos limites das colunas da DataTable (${chartData.getNumberOfColumns()}).`);
                         }
                     });
-                } else {
-                    console.debug('[previsualizacaoGrafico] Sem formatos personalizados para aplicar.');
                 }
-                // --- FIM DA LÓGICA DE FORMATAÇÃO ---
 
-
-                console.debug(`[previsualizacaoGrafico] Preparando para desenhar gráfico tipo '${tipoGrafico}'...`);
                 let ChartClass;
-                const currentOptions = { ...opcoesFinais }; // Copia as opções base
+                const currentOptions = { ...opcoesFinais };
 
-                // Seleciona classe e ajusta opções específicas
+                const primeiroFormato = conjuntoDeDados?.formatos?.[1];
+                const axisFormat =
+                    primeiroFormato === "percent"
+                        ? "#%"
+                        : primeiroFormato === "currency"
+                        ? "R$ #,##0.00"
+                        : "#,##0.##";
+
                 switch (tipoGrafico) {
                     case "pie":
                         ChartClass = googleVisualization.PieChart;
-                        (currentOptions as any).pieSliceText = 'percentage'; // Mostra % na fatia
-                        // Legenda abaixo do gráfico (legenda = "captions")
-                        (currentOptions as any).legend = { position: "bottom", alignment: 'center', textStyle: { fontSize: 11 } };
-                        // Reduz altura da área do gráfico para abrir espaço para a legenda inferior
-                        (currentOptions as any).chartArea = { width: "90%", height: "80%" };
-                        if ('vAxis' in currentOptions) delete (currentOptions as any).vAxis; // Remove eixo Y
-                        if ('hAxis' in currentOptions) delete (currentOptions as any).hAxis; // Remove eixo X
+                        Object.assign(currentOptions, {
+                            pieSliceText: "percentage",
+                            legend: { position: "bottom", alignment: "center", textStyle: { fontSize: 11 } },
+                            chartArea: { width: "90%", height: "80%" },
+                        });
+                        delete (currentOptions as any).vAxis;
                         break;
                     case "line":
-                        ChartClass = googleVisualization.AreaChart; // Ou LineChart
-                        (currentOptions as any).vAxis.format = conjuntoDeDados?.formatos?.[1] === 'percent' ? '#%' : conjuntoDeDados?.formatos?.[1] === 'currency' ? 'R$ #,##0.00' : '#,##0.##'; // Formata eixo Y com base na primeira série de dados
+                        ChartClass = googleVisualization.AreaChart;
+                        (currentOptions as any).vAxis.format = axisFormat;
                         break;
                     case "chart":
                     default:
-                        ChartClass = googleVisualization.ColumnChart; // Colunas verticais
-                        // ChartClass = googleVisualization.BarChart; // Barras horizontais (se preferir)
-                        (currentOptions as any).vAxis.format = conjuntoDeDados?.formatos?.[1] === 'percent' ? '#%' : conjuntoDeDados?.formatos?.[1] === 'currency' ? 'R$ #,##0.00' : '#,##0.##'; // Formata eixo Y
-                        // Se for BarChart (horizontal), formatar hAxis em vez de vAxis
-                        // if (ChartClass === googleVisualization.BarChart) {
-                        //    (currentOptions as any).hAxis = { viewWindow: { min: 0 }, format: conjuntoDeDados?.formatos?.[1] === 'percent' ? '#%' : conjuntoDeDados?.formatos?.[1] === 'currency' ? 'R$ #,##0.00' : '#,##0.##' };
-                        //    delete (currentOptions as any).vAxis; // Remove vAxis para BarChart
-                        // }
+                        ChartClass = googleVisualization.ColumnChart;
+                        (currentOptions as any).vAxis.format = axisFormat;
                         break;
                 }
 
-                if (!chartRef.current) return; // Última verificação
                 chartInstance = new ChartClass(chartRef.current);
-
-                // Listener de erro do Google Charts
-                googleVisualization.events.addListener(chartInstance, 'error', (err: any) => {
-                    console.error('[previsualizacaoGrafico] Erro no desenho do Google Charts:', err);
+                googleVisualization.events.addListener(chartInstance, "error", (err: any) => {
+                    console.error("[previsualizacaoGrafico] Erro no desenho do Google Charts:", err);
                     if (isMounted) setDrawError(`Erro ao desenhar: ${err.message || String(err)}`);
                 });
 
-                console.debug('[previsualizacaoGrafico] Desenhando gráfico com opções:', JSON.stringify(currentOptions));
                 chartInstance.draw(chartData, currentOptions);
-                console.debug('[previsualizacaoGrafico] Gráfico desenhado.');
-
             } catch (err: any) {
-                console.error('[previsualizacaoGrafico] Falha no processo de desenho:', err);
-                if (isMounted && !drawError) { // Só define se não houver erro mais específico
+                console.error("[previsualizacaoGrafico] Falha no processo de desenho:", err);
+                if (isMounted && !drawError) {
                     setDrawError(`Erro ao gerar gráfico: ${err.message || String(err)}`);
                 }
             } finally {
-                if (isMounted) {
-                    setIsLoadingLibs(false);
-                }
+                if (isMounted) setIsLoadingLibs(false);
             }
         };
 
-        // Chama draw se houver dados válidos
-        // O useEffect só é re-executado se as dependências mudarem
         draw();
 
-
-        // ResizeObserver (mantido como no original)
         if (chartRef.current && (window as any).ResizeObserver) {
-            resizeObserver = new ResizeObserver(() => {
-                if (isMounted) draw(); // Redesenha ao mudar tamanho
-            });
+            resizeObserver = new ResizeObserver(() => isMounted && draw());
             resizeObserver.observe(chartRef.current);
         }
 
-        // Função de Limpeza (mantida, com adição de remoção de listeners)
         return () => {
-            console.debug('[previsualizacaoGrafico] Limpando componente...');
             isMounted = false;
             if (resizeObserver && chartRef.current) {
-                try { resizeObserver.unobserve(chartRef.current); } catch { }
+                try {
+                    resizeObserver.unobserve(chartRef.current);
+                } catch {}
                 resizeObserver.disconnect();
             }
-            if (chartInstance && typeof chartInstance.clearChart === 'function') {
+            if (chartInstance?.clearChart) {
                 try {
-                    if (googleVisualization && googleVisualization.events) {
+                    if (googleVisualization?.events) {
                         googleVisualization.events.removeAllListeners(chartInstance);
                     }
                     chartInstance.clearChart();
-                    console.debug('[previsualizacaoGrafico] Instância do gráfico limpa.');
                 } catch (e) {
                     console.error("[previsualizacaoGrafico] Erro ao limpar instância:", e);
                 }
             }
-            chartInstance = null;
-            googleVisualization = null;
         };
-        // Dependências atualizadas para incluir formatos
-    }, [
-        tipoGrafico,
-        dadosGrafico, // Já memoizado
-        titulo,
-        opcoesFinais, // Já memoizado
-        conjuntoDeDados?.formatos, // Adicionado dependencia direta nos formatos
-        previsualizacaoGerada
-    ]);
+    }, [tipoGrafico, dadosGrafico, titulo, opcoesFinais, conjuntoDeDados?.formatos]);
 
-    // Loader Personalizado (mantido)
-    const LoaderPersonalizado = () => (
-        <div className="flex flex-col items-center justify-center h-full text-gray-500">
-            <Loader2 className="w-8 h-8 animate-spin mr-2" />
-            <p>A carregar biblioteca de gráficos...</p>
-        </div>
-    );
-
-    // 1. Não é para gerar ainda
-    if (!previsualizacaoGerada) {
-        return (
-            <div className="w-full h-full p-4 bg-gray-50 border-2 border-dashed border-gray-300 rounded-2xl flex flex-col items-center justify-center text-center">
-                <Eye className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-600 mb-2">Pré-visualização</h3>
-                <p className="text-gray-500 text-sm">Clique em "Gerar/Atualizar Gráfico".</p>
-            </div>
-        );
-    }
-
-    // 2. Carregando
+    // --- Renderização condicional ---
     if (isLoadingLibs) {
         return (
             <div className="w-full h-full p-4 bg-white border border-gray-200 rounded-2xl shadow-inner flex flex-col items-center justify-center text-gray-500">
@@ -340,34 +259,31 @@ export const PrevisualizacaoGrafico: React.FC<PrevisualizacaoGraficoProps> = ({
         );
     }
 
-    // 3. Erro
     if (drawError) {
         return (
             <div className="w-full h-full p-4 bg-red-50 border border-red-200 rounded-2xl shadow-inner flex flex-col items-center justify-center text-red-700 text-center">
                 <AlertTriangle className="w-10 h-10 mb-3" />
                 <p className="font-semibold mb-1">Erro na Pré-visualização</p>
                 <p className="text-xs">{drawError}</p>
-                <p className="text-xs mt-2 text-gray-500">Verifique dados/formatos ou consola (F12).</p>
+                <p className="text-xs mt-2 text-gray-500">Verifique os dados ou o console (F12).</p>
             </div>
         );
     }
 
-    // 4. Sucesso ou Dados Inválidos (após tentativa)
+    if (!possuiDadosValidos()) {
+        return (
+            <div className="w-full h-full p-4 bg-gray-50 border-2 border-dashed border-gray-300 rounded-2xl flex flex-col items-center justify-center text-center">
+                <Eye className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-600 mb-2">Pré-visualização</h3>
+                <p className="text-gray-500 text-sm">Insira dados para visualizar o gráfico.</p>
+            </div>
+        );
+    }
+
     return (
         <div className="w-full h-full p-4 bg-white border border-gray-200 rounded-2xl shadow-inner relative group">
-            {!possuiDadosValidos() ? (
-                <div className="w-full h-full flex flex-col items-center justify-center text-center text-gray-500">
-                    <BarChart3 className="w-10 h-10 mb-3 text-gray-400" />
-                    <p className="font-semibold">Pré-visualização Indisponível</p>
-                    <p className="text-sm">Insira dados válidos e clique em "Atualizar Gráfico".</p>
-                </div>
-            ) : (
-                // Container do gráfico
-                <div ref={chartRef} style={{ width: "100%", height: "100%" }} />
-            )}
-
-            {/* Botão Tela Cheia */}
-            {!emTelaCheia && aoAlternarTelaCheia && possuiDadosValidos() && !isLoadingLibs && !drawError && (
+            <div ref={chartRef} style={{ width: "100%", height: "100%" }} />
+            {!emTelaCheia && aoAlternarTelaCheia && (
                 <button
                     onClick={aoAlternarTelaCheia}
                     className="absolute top-2 right-2 p-2 bg-white/50 backdrop-blur-sm border border-gray-200 rounded-full text-gray-600 hover:bg-gray-200 hover:text-gray-900 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all"

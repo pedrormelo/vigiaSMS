@@ -23,21 +23,6 @@ import {
   UserCog,
   UserCheck as UserCheckIcon,
   User as UserIcon,
-  History,
-  FilePlus,
-  FileSymlink,
-  UploadCloud,
-  FileText as FileTextIcon,
-  Link as LinkIcon,
-  Eye,
-  Trash2,
-  Database,
-  Upload,
-  PieChart,
-  BarChart3,
-  AreaChart,
-  Gauge,
-  CopyPlus
 } from "lucide-react";
 import { HiOutlineLogout } from "react-icons/hi";
 import Image from 'next/image';

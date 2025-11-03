@@ -1,11 +1,12 @@
 // src/components/contextosCard/contextoCard.tsx
 "use client"
 
-import { FileText, FileSpreadsheet, FileSearch, Link, Calendar, ChartNetwork, Gauge } from "lucide-react" 
+import { FileText, FileSpreadsheet, FileSearch, Link, Calendar, ChartNetwork, Gauge, Presentation } from "lucide-react" // Adicionado FilePresentation
 import { cn } from "@/lib/utils"
 import Image from "next/image"
 
-export type FileType = "pdf" | "doc" | "dashboard" | "excel" | "resolucao" | "link" | "leis" | "indicador"
+// ATUALIZADO: Adicionado "apresentacao"
+export type FileType = "pdf" | "doc" | "dashboard" | "excel" | "resolucao" | "link" | "leis" | "indicador" | "apresentacao"
 
 interface FileItemProps {
     title: string
@@ -25,6 +26,13 @@ export const fileTypeConfig = {
         color: "bg-[#2651FF] hover:bg-[#1E40B8]",
         svg: "/icons/CONTEXTOS/DOC-1.svg",
         label: "DOC",
+    },
+    // NOVO: Tipo Apresentação
+    apresentacao: {
+        color: "bg-amber-500 hover:bg-amber-600", // Amarelo Ouro (Amber)
+        svg: "/icons/CONTEXTOS/PPT-1.svg", // Assumindo um novo ícone PPT-1
+        icon: Presentation, // Ícone Lucide como fallback
+        label: "Apresentação",
     },
     dashboard: {
         color: "bg-[#B329E9] hover:bg-purple-600",
@@ -60,6 +68,7 @@ export const fileTypeConfig = {
 }
 
 export function FileItem({ title, type, insertedDate, className, onClick }: FileItemProps) {
+    // CORREÇÃO: Trata 'apresentacao' para usar o ícone SVG se existir
     const config = fileTypeConfig[type]
     const IconComponent = (config as any).icon
 

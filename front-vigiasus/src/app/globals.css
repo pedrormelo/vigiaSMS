@@ -94,3 +94,41 @@ button, a{
     animation: fadeInUp 0.6s ease-out forwards;
     opacity: 0; 
   }
+
+  .rdp,
+.rdp-root,
+.rdp * {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none;
+}
+
+/* Remover bordas da tabela e células */
+.rdp table,
+.rdp tbody,
+.rdp thead,
+.rdp tr,
+.rdp td,
+.rdp th {
+  border: none !important;
+  border-collapse: collapse !important;
+  border-spacing: 0 !important;
+  padding: 0;
+}
+
+/* Remover bordas dos botões */
+.rdp-button,
+.rdp-button_next,
+.rdp-button_previous,
+.rdp-day,
+.rdp-day_button {
+  border: none !important;
+  outline: none !important;
+}
+
+/* Estados de foco sem bordas */
+.rdp *:focus,
+.rdp *:focus-visible {
+  outline: none !important;
+  border: none !important;
+}

@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { LayoutSelector, type LayoutType } from "@/components/dashboard/selecionarLayout"
 import { DashboardPreview, type GraphData } from "@/components/dashboard/dasboard-preview"
-import { AvailableGraphsPanel } from "@/components/dashboard/graficos-filterBar"
 import { SelecioneGraficoModal } from "@/components/popups/selecioneGrafico-modal"
 import { diretoriasConfig } from "@/constants/diretorias";
 import { Button } from "@/components/ui/button"
