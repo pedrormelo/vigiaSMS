@@ -23,6 +23,7 @@ export interface Versao {
   nome: string;
   data: string;
   autor: string;
+  estaOculta?: boolean; // <-- ADICIONADO AQUI
 }
 
 

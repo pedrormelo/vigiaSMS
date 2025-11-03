@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { SearchBar } from "@/components/ui/search-bar-faq";
 import { useDebounce } from "@/hooks/useDebounce";
 
-// --- Componentes de Conteúdo dos Tópicos ---
+// --- Componentes de Conteúdo dos Tópicos (Permanecem os mesmos) ---
 
 const OQueEContextoContent = () => (
     <div className="space-y-8">
@@ -28,6 +28,7 @@ const OQueEContextoContent = () => (
             </p>
         </header>
         {/* [IMAGEM: Visão geral da tela de gerência mostrando cards de diferentes tipos de contexto] */}
+        {/* <Image src="/caminho/para/imagem.png" width={800} height={200} alt="Visão geral dos cards de contexto" className="rounded-lg shadow-md mb-4" /> */}
         <section className="prose max-w-none text-gray-700 space-y-4">
             <p>No VigiaSUS, um <strong>&ldquo;Contexto&rdquo;</strong> representa qualquer peça de informação relevante que você deseja registrar, compartilhar e acompanhar dentro da sua gerência ou diretoria. Pense nele como um container para seus dados importantes.</p>
             <p>Os contextos são a base para a organização e visualização das informações na plataforma. Eles podem ser de diferentes tipos, cada um adequado para um tipo específico de dado:</p>
@@ -58,8 +59,8 @@ const AddArquivoLinkContent = () => (
                 <li><strong>Título:</strong> Dê um título claro e descritivo para o seu contexto. Este título aparecerá no card. Ex: <span className="italic">&ldquo;Relatório Mensal de Atendimentos - Setembro/2025&rdquo;</span>.</li>
                 <li><strong>Anexar Fonte:</strong> Escolha <strong>uma</strong> das opções:
                     <ul className="list-disc pl-5 mt-2 space-y-2">                   
-                        <li><strong>Arquivo (<UploadCloud className="inline w-4 h-4 mx-1"/>):</strong> Arraste e solte o arquivo desejado (PDF, DOCX, XLSX, etc.) na área indicada, ou clique nela para selecionar o arquivo do seu computador. O nome e tamanho do arquivo aparecerão.<br/><Image src="/ajuda/contextos/1.png" width={1000} height={40} alt="IMAGEM: Detalhe da área de upload de arquivo, mostrando a opção de arrastar/soltar e o botão de selecionar"></Image></li>
-                        <li><strong>Link (<LinkIcon className="inline w-4 h-4 mx-1"/>):</strong> Clique no botão com ícone de link (🔗). Uma caixa de diálogo pedirá a URL completa. Cole o endereço web (ex: <span className="italic">https://site.com/documento.pdf</span>). O link inserido será exibido na área de anexo. <br/><Image src="/ajuda/contextos/2.png" width={1000} height={40} alt="IMAGEM: Botão de link destacado e a caixa de prompt para inserir a URL"></Image></li>
+                        <li><strong>Arquivo (<UploadCloud className="inline w-4 h-4 mx-1"/>):</strong> Arraste e solte o arquivo desejado (PDF, DOCX, XLSX, etc.) na área indicada, ou clique nela para selecionar o arquivo do seu computador. O nome e tamanho do arquivo aparecerão.<br/><Image src="/ajuda/contextos/1.png" width={1000} height={40} alt="IMAGEM: Detalhe da área de upload de arquivo, mostrando a opção de arrastar/soltar e o botão de selecionar" className="rounded-md my-2" /></li>
+                        <li><strong>Link (<LinkIcon className="inline w-4 h-4 mx-1"/>):</strong> Clique no botão com ícone de link (🔗). Uma caixa de diálogo pedirá a URL completa. Cole o endereço web (ex: <span className="italic">https://site.com/documento.pdf</span>). O link inserido será exibido na área de anexo. <br/><Image src="/ajuda/contextos/2.png" width={1000} height={40} alt="IMAGEM: Botão de link destacado e a caixa de prompt para inserir a URL" className="rounded-md my-2" /></li>
                     </ul>
                     <p className="text-xs text-gray-500 mt-1"><strong>Dica:</strong> Você pode usar os botões <Eye className="inline w-4 h-4 mx-0.5"/> (para links) e <Trash2 className="inline w-4 h-4 mx-0.5"/> para visualizar ou remover o anexo atual.</p>
                 </li>
@@ -81,9 +82,9 @@ const AddGraficoContent = () => (
             <p>Crie visualizações dinâmicas diretamente no VigiaSUS:</p>
             <ol className="list-decimal pl-5 space-y-3">
                 <li><strong>Abra o Modal:</strong> Clique em &ldquo;Adicionar Contexto&rdquo; (<FilePlus className="inline w-4 h-4 mx-1"/>).</li>
-                <li><strong>Selecione a Aba &ldquo;Dashboard&rdquo;:</strong> Escolha a aba &ldquo;Dashboard&rdquo; (ícone <LayoutDashboard className="inline w-4 h-4 mx-1"/>) no topo do modal. <br/><Image src="/ajuda/contextos/3.png" width={1000} height={40} alt="IMAGEM: Captura do modal &ldquo;Adicionar Contexto&rdquo; com a aba &ldquo;Dashboard&rdquo; selecionada"></Image></li>
+                <li><strong>Selecione a Aba &ldquo;Dashboard&rdquo;:</strong> Escolha a aba &ldquo;Dashboard&rdquo; (ícone <LayoutDashboard className="inline w-4 h-4 mx-1"/>) no topo do modal. <br/><Image src="/ajuda/contextos/3.png" width={1000} height={40} alt="IMAGEM: Captura do modal &ldquo;Adicionar Contexto&rdquo; com a aba &ldquo;Dashboard&rdquo; selecionada" className="rounded-md my-2" /></li>
                 <li><strong>Título e Detalhes:</strong> Dê um título claro ao gráfico (Ex: <span className="italic">&ldquo;Atendimentos por Complexidade - 1º Semestre&rdquo;</span>) e uma descrição opcional sobre os dados.</li>
-                <li><strong>Escolha o Tipo de Gráfico:</strong> Selecione entre Pizza (<PieChart className="inline w-4 h-4 mx-1"/>), Barras (<BarChart3 className="inline w-4 h-4 mx-1"/>) ou Área/Linha (<AreaChart className="inline w-4 h-4 mx-1"/>). A estrutura da tabela de dados se ajustará ligeiramente.<br/><Image src="/ajuda/contextos/4.png" width={1000} height={40} alt="IMAGEM: Seletor de tipo de gráfico destacando as opções Pizza, Barras e Área"></Image></li>
+                <li><strong>Escolha o Tipo de Gráfico:</strong> Selecione entre Pizza (<PieChart className="inline w-4 h-4 mx-1"/>), Barras (<BarChart3 className="inline w-4 h-4 mx-1"/>) ou Área/Linha (<AreaChart className="inline w-4 h-4 mx-1"/>). A estrutura da tabela de dados se ajustará ligeiramente.<br/><Image src="/ajuda/contextos/4.png" width={1000} height={40} alt="IMAGEM: Seletor de tipo de gráfico destacando as opções Pizza, Barras e Área" className="rounded-md my-2" /></li>
                 <li><strong>Fonte dos Dados:</strong> Escolha como fornecer os dados:
                     <ul className="list-disc pl-5 mt-2 space-y-2">
                         <li><strong>Dados Manuais (<Database className="inline w-4 h-4 mx-1"/>):</strong> Preencha a tabela interativa diretamente na tela.
@@ -93,14 +94,23 @@ const AddGraficoContent = () => (
                                 <li>Use o seletor (<Settings className="inline w-3 h-3"/>) abaixo do título da coluna de valor para definir o <strong>Formato</strong> (Número, Percentual, Moeda) - isso afeta a exibição no gráfico.</li>
                                 <li>Use o ícone <Trash2 className="inline w-4 h-4 mx-0.5"/> para remover linhas ou colunas (exceto a primeira coluna e a primeira série de valores).</li>
                             </ul>
-                             <span className="text-xs italic text-gray-500">[IMAGEM: Tabela de dados manuais com destaques nos botões de adicionar linha/coluna, edição de título e seletor de formato]</span>
-
+                             {/* [IMAGEM: Tabela de dados manuais com destaques nos botões de adicionar linha/coluna, edição de título e seletor de formato] */}
+                             {/* <Image src="/caminho/para/tabela-manual.png" width={800} height={300} alt="Tabela de dados manuais" className="rounded-md my-2" /> */}
                         </li>
-                        <li><strong>Upload de Arquivo (<Upload className="inline w-4 h-4 mx-1"/>):</strong> Baixe o arquivo modelo CSV clicando em <strong>&ldquo;Baixar template de exemplo&rdquo;</strong>. Preencha o CSV com seus dados (mantendo os cabeçalhos) e faça o upload clicando na área indicada ou arrastando o arquivo.<br/><span className="text-xs italic text-gray-500">[IMAGEM: Área de upload de arquivo CSV, destacando o botão de baixar template]</span></li>
+                        <li><strong>Upload de Arquivo (<Upload className="inline w-4 h-4 mx-1"/>):</strong> Baixe o arquivo modelo CSV clicando em <strong>&ldquo;Baixar template de exemplo&rdquo;</strong>. Preencha o CSV com seus dados (mantendo os cabeçalhos) e faça o upload clicando na área indicada ou arrastando o arquivo.<br/>
+                            {/* [IMAGEM: Área de upload de arquivo CSV, destacando o botão de baixar template] */}
+                            {/* <Image src="/caminho/para/upload-csv.png" width={800} height={150} alt="Área de upload de CSV" className="rounded-md my-2" /> */}
+                        </li>
                     </ul>
                 </li>
-                <li><strong>Tema de Cores (Opcional):</strong> Escolha uma paleta de cores predefinida para o seu gráfico. <br/><span className="text-xs italic text-gray-500">[IMAGEM: Seção de seleção de tema de cores com as bolinhas coloridas]</span></li>
-                <li><strong>Gerar Pré-visualização:</strong> Clique no botão <strong>&ldquo;Gerar Gráfico&rdquo; / &ldquo;Atualizar Gráfico&rdquo;</strong> para ver como ele ficará. Você pode visualizar em tela cheia (<Expand className="inline w-4 h-4 mx-1"/>).<br/><span className="text-xs italic text-gray-500">[IMAGEM: Área de pré-visualização do gráfico com o botão &ldquo;Atualizar Gráfico&rdquo; e o ícone de tela cheia]</span></li>
+                <li><strong>Tema de Cores (Opcional):</strong> Escolha uma paleta de cores predefinida para o seu gráfico. <br/>
+                    {/* [IMAGEM: Seção de seleção de tema de cores com as bolinhas coloridas] */}
+                    {/* <Image src="/caminho/para/seletor-cores.png" width={800} height={100} alt="Seletor de cores" className="rounded-md my-2" /> */}
+                </li>
+                <li><strong>Gerar Pré-visualização:</strong> Clique no botão <strong>&ldquo;Gerar Gráfico&rdquo; / &ldquo;Atualizar Gráfico&rdquo;</strong> para ver como ele ficará. Você pode visualizar em tela cheia (<Expand className="inline w-4 h-4 mx-1"/>).<br/>
+                    {/* [IMAGEM: Área de pré-visualização do gráfico com o botão "Atualizar Gráfico" e o ícone de tela cheia] */}
+                    {/* <Image src="/caminho/para/preview-grafico.png" width={800} height={300} alt="Preview do gráfico" className="rounded-md my-2" /> */}
+                </li>
                 <li><strong>Submeter:</strong> Se estiver satisfeito, clique em &ldquo;Submeter&rdquo; (<FileSymlink className="inline w-4 h-4 mx-1"/>).</li>
             </ol>
         </section>
@@ -117,15 +127,27 @@ const AddIndicadorContent = () => (
             <p>Indicadores (KPIs - Key Performance Indicators) são ótimos para destacar e acompanhar métricas chave de forma rápida e visual.</p>
             <ol className="list-decimal pl-5 space-y-3">
                 <li><strong>Abra o Modal:</strong> Clique em &ldquo;Adicionar Contexto&rdquo; (<FilePlus className="inline w-4 h-4 mx-1"/>).</li>
-                <li><strong>Selecione a Aba &ldquo;Indicador&rdquo;:</strong> Escolha a aba &ldquo;Indicador&rdquo; (ícone <Gauge className="inline w-4 h-4 mx-1"/>) no topo do modal.<br/><span className="text-xs italic text-gray-500">[IMAGEM: Captura do modal &ldquo;Adicionar Contexto&rdquo; com a aba &ldquo;Indicador&rdquo; selecionada]</span></li>
+                <li><strong>Selecione a Aba &ldquo;Indicador&rdquo;:</strong> Escolha a aba &ldquo;Indicador&rdquo; (ícone <Gauge className="inline w-4 h-4 mx-1"/>) no topo do modal.<br/>
+                    {/* [IMAGEM: Captura do modal "Adicionar Contexto" com a aba "Indicador" selecionada] */}
+                    {/* <Image src="/caminho/para/modal-indicador.png" width={800} height={100} alt="Modal com aba Indicador" className="rounded-md my-2" /> */}
+                </li>
                 <li><strong>Título:</strong> Nome claro para o indicador (Ex: <span className="italic">&ldquo;Cobertura Vacinal Pólio&rdquo;</span>).</li>
                 <li><strong>Descrição:</strong> Explicação breve do que o indicador mede (Ex: <span className="italic">&ldquo;% Crianças menores de 1 ano vacinadas&rdquo;</span>).</li>
                 <li><strong>Valor Atual:</strong> O número ou percentual mais recente do indicador (Ex: <span className="italic">&ldquo;92%&rdquo;</span> ou <span className="italic">&ldquo;1.250&rdquo;</span>). Este é um campo obrigatório.</li>
-                <li><strong>Unidade:</strong> Selecione a unidade de medida na lista (%, R$, Pessoas, Dias, Nenhum, etc.).<br/><span className="text-xs italic text-gray-500">[IMAGEM: Dropdown de Unidades mostrando opções como &ldquo;%&rdquo;, &ldquo;R$&rdquo;, &ldquo;Pessoas&rdquo;]</span></li>
+                <li><strong>Unidade:</strong> Selecione a unidade de medida na lista (%, R$, Pessoas, Dias, Nenhum, etc.).<br/>
+                    {/* [IMAGEM: Dropdown de Unidades mostrando opções como '%', 'R$', 'Pessoas'] */}
+                    {/* <Image src="/caminho/para/dropdown-unidades.png" width={800} height={100} alt="Dropdown de Unidades" className="rounded-md my-2" /> */}
+                </li>
                 <li><strong>Valor Alvo (Meta - Opcional):</strong> Defina a meta a ser alcançada (Ex: <span className="italic">&ldquo;95%&rdquo;</span>).</li>
                 <li><strong>Texto Comparativo (Opcional):</strong> Uma frase curta para dar contexto (Ex: <span className="italic">&ldquo;+2% vs mês anterior&rdquo;</span>, <span className="italic">&ldquo;-5 dias na fila&rdquo;</span>, <span className="italic">&ldquo;— Sem alteração&rdquo;</span>). Use `+`, `-` ou `—` no início para indicar a tendência (positivo, negativo, neutro) - isso afetará a cor e o ícone (▲/▼) no card.</li>
-                <li><strong>Ícone e Cor:</strong> Escolha um ícone (<Heart className="inline w-4 h-4 mx-0.5"/>, <Users className="inline w-4 h-4 mx-0.5"/>, etc.) e uma cor que representem o indicador visualmente. A cor será usada na borda do card.<br/><span className="text-xs italic text-gray-500">[IMAGEM: Grade de seleção de ícones e paleta de seleção de cores]</span></li>
-                <li><strong>Pré-visualização:</strong> Um card de exemplo será atualizado automaticamente à medida que você preenche os campos, mostrando como o indicador final aparecerá.<br/><span className="text-xs italic text-gray-500">[IMAGEM: Card de pré-visualização do indicador sendo atualizado dinamicamente]</span></li>
+                <li><strong>Ícone e Cor:</strong> Escolha um ícone (<Heart className="inline w-4 h-4 mx-0.5"/>, <Users className="inline w-4 h-4 mx-0.5"/>, etc.) e uma cor que representem o indicador visualmente. A cor será usada na borda do card.<br/>
+                    {/* [IMAGEM: Grade de seleção de ícones e paleta de seleção de cores] */}
+                    {/* <Image src="/caminho/para/seletor-icone-cor.png" width={800} height={150} alt="Seletores de ícone e cor" className="rounded-md my-2" /> */}
+                </li>
+                <li><strong>Pré-visualização:</strong> Um card de exemplo será atualizado automaticamente à medida que você preenche os campos, mostrando como o indicador final aparecerá.<br/>
+                    {/* [IMAGEM: Card de pré-visualização do indicador sendo atualizado dinamicamente] */}
+                    {/* <Image src="/caminho/para/preview-indicador.png" width={300} height={200} alt="Preview do indicador" className="rounded-md my-2" /> */}
+                </li>
                 <li><strong>Submeter:</strong> Clique em &ldquo;Submeter&rdquo; (<FileSymlink className="inline w-4 h-4 mx-1"/>).</li>
             </ol>
              <p className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md text-sm text-yellow-800"><strong>Atenção:</strong> Título e Valor Atual são obrigatórios para submeter um indicador.</p>
@@ -146,11 +168,26 @@ const NovaVersaoContent = () => (
             <ol className="list-decimal pl-5 space-y-3">
                 <li><strong>Localize o Contexto:</strong> Encontre o card do contexto que você deseja atualizar na página da sua gerência ou na seção &ldquo;Contextos Enviados&rdquo;.</li>
                 <li><strong>Abra os Detalhes:</strong> Clique no card para abrir a janela de visualização de detalhes.</li>
-                <li><strong>Vá para a Aba &ldquo;Versões&rdquo; / &ldquo;Histórico&rdquo;:</strong> Clique na aba correspondente (o nome pode variar, ícone <History className="inline w-4 h-4 mx-1"/>).<br/><span className="text-xs italic text-gray-500">[IMAGEM: Modal de visualização de detalhes, destacando a aba de Histórico/Versões]</span></li>
-                <li><strong>Clique em &ldquo;Criar Nova Versão&rdquo;:</strong> Se você tiver permissão (geralmente perfil Membro e se o contexto permitir, como em &ldquo;Aguardando Correção&rdquo;), verá um botão &ldquo;+ Criar Nova Versão&rdquo;. Clique nele.<br/><span className="text-xs italic text-gray-500">[IMAGEM: Aba de Histórico/Versões com o botão &ldquo;+ Criar Nova Versão&rdquo; destacado]</span></li>
-                <li><strong>Modal de Nova Versão:</strong> O modal de &ldquo;Adicionar Contexto&rdquo; abrirá, mas pré-preenchido com as informações da versão anterior (Título, tipo, etc.) e marcado como &ldquo;NOVA VERSÃO&rdquo; no topo.<br/><span className="text-xs italic text-gray-500">[IMAGEM: Modal &ldquo;Adicionar Contexto&rdquo; mostrando o indicador &ldquo;NOVA VERSÃO&rdquo; e campos pré-preenchidos]</span></li>
-                <li><strong>Atualize a Fonte:</strong> Anexe o <strong>novo arquivo</strong>, insira o <strong>novo link</strong>, atualize os <strong>dados manuais</strong> do gráfico ou insira o <strong>novo valor</strong> do indicador. <strong>Este passo é obrigatório.</strong>. <br/><span className="text-xs italic text-gray-500">[IMAGEM: Seção de anexo/dados do modal no modo Nova Versão, destacando a necessidade de atualizar]</span></li>
-                <li><strong>Descreva a Alteração:</strong> Selecione o <strong>Motivo da Alteração</strong> (Ex: &ldquo;Correção de Informação Incorreta&rdquo;, &ldquo;Atualização Mensal&rdquo;) e escreva uma <strong>Descrição das Alterações</strong> detalhando o que mudou nesta versão (Ex: <span className="italic">&ldquo;Atualizados dados para Outubro/2025&rdquo;</span>, <span className="italic">&ldquo;Corrigido valor da Linha 5&rdquo;</span>). <strong>A descrição é obrigatória</strong>.<br/><span className="text-xs italic text-gray-500">[IMAGEM: Seção &rdquo;Detalhes da Nova Versão&ldquo; no modal, com campos de motivo e descrição destacados]</span></li>
+                <li><strong>Vá para a Aba &ldquo;Versões&rdquo; / &ldquo;Histórico&rdquo;:</strong> Clique na aba correspondente (o nome pode variar, ícone <History className="inline w-4 h-4 mx-1"/>).<br/>
+                    {/* [IMAGEM: Modal de visualização de detalhes, destacando a aba de Histórico/Versões] */}
+                    {/* <Image src="/caminho/para/modal-detalhes-versoes.png" width={800} height={100} alt="Modal de detalhes com aba Versões" className="rounded-md my-2" /> */}
+                </li>
+                <li><strong>Clique em &ldquo;Criar Nova Versão&rdquo;:</strong> Se você tiver permissão (geralmente perfil Membro e se o contexto permitir, como em &ldquo;Aguardando Correção&rdquo;), verá um botão &ldquo;+ Criar Nova Versão&rdquo;. Clique nele.<br/>
+                    {/* [IMAGEM: Aba de Histórico/Versões com o botão "+ Criar Nova Versão" destacado] */}
+                    {/* <Image src="/caminho/para/botao-nova-versao.png" width={800} height={150} alt="Botão Criar Nova Versão" className="rounded-md my-2" /> */}
+                </li>
+                <li><strong>Modal de Nova Versão:</strong> O modal de &ldquo;Adicionar Contexto&rdquo; abrirá, mas pré-preenchido com as informações da versão anterior (Título, tipo, etc.) e marcado como &ldquo;NOVA VERSÃO&rdquo; no topo.<br/>
+                    {/* [IMAGEM: Modal "Adicionar Contexto" mostrando o indicador "NOVA VERSÃO"] */}
+                    {/* <Image src="/caminho/para/modal-nova-versao.png" width={800} height={200} alt="Modal de Nova Versão" className="rounded-md my-2" /> */}
+                </li>
+                <li><strong>Atualize a Fonte:</strong> Anexe o <strong>novo arquivo</strong>, insira o <strong>novo link</strong>, atualize os <strong>dados manuais</strong> do gráfico ou insira o <strong>novo valor</strong> do indicador. <strong>Este passo é obrigatório.</strong>. <br/>
+                    {/* [IMAGEM: Seção de anexo/dados do modal no modo Nova Versão] */}
+                    {/* <Image src="/caminho/para/modal-nova-versao-fonte.png" width={800} height={200} alt="Atualizando a fonte na nova versão" className="rounded-md my-2" /> */}
+                </li>
+                <li><strong>Descreva a Alteração:</strong> Selecione o <strong>Motivo da Alteração</strong> (Ex: &ldquo;Correção de Informação Incorreta&rdquo;, &ldquo;Atualização Mensal&rdquo;) e escreva uma <strong>Descrição das Alterações</strong> detalhando o que mudou nesta versão (Ex: <span className="italic">&ldquo;Atualizados dados para Outubro/2025&rdquo;</span>, <span className="italic">&ldquo;Corrigido valor da Linha 5&rdquo;</span>). <strong>A descrição é obrigatória</strong>.<br/>
+                    {/* [IMAGEM: Seção "Detalhes da Nova Versão" no modal] */}
+                    {/* <Image src="/caminho/para/modal-nova-versao-detalhes.png" width={800} height={200} alt="Detalhes da nova versão" className="rounded-md my-2" /> */}
+                </li>
                 <li><strong>Submeter:</strong> Clique em &ldquo;Submeter&rdquo;. A nova versão será enviada para o fluxo de validação normal (começando pelo Gerente).</li>
             </ol>
              <p className="mt-4 text-sm text-gray-600">A versão antiga permanecerá no histórico, acessível pela aba &ldquo;Versões&rdquo;. A nova versão se tornará a principal após ser aprovada.</p>
@@ -229,60 +266,17 @@ export default function GerenciandoConteudoPage() {
   const [activeTopicHref, setActiveTopicHref] = useState(currentAreaTopics[0]?.href || "");
   const ActiveContentComponent = contentComponents[activeTopicHref] || OQueEContextoContent; // Fallback
   const [searchValue, setSearchValue] = useState("");
-  const debouncedSearchValue = useDebounce(searchValue, 300);
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const searchContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Lógica de busca removida (useMemo, useEffect, etc.) para corresponder a primeiros-passos
 
-  // Lógica de Busca Global
-  const globalFilteredResults = useMemo(() => {
-    if (!debouncedSearchValue) return [];
-    const lowerCaseSearch = debouncedSearchValue.toLowerCase();
-    const results: Array<HelpTopic & { areaNome: string }> = [];
-    allHelpData.forEach(area => {
-      area.topicos.forEach(topico => {
-        // Remover aspas literais do título antes de comparar
-        const cleanTitle = topico.titulo.replace(/"/g, '');
-        const matchesTitle = cleanTitle.toLowerCase().includes(lowerCaseSearch);
-        const matchesDesc = topico.descricao.toLowerCase().includes(lowerCaseSearch);
-        const matchesKeywords = topico.keywords?.toLowerCase().includes(lowerCaseSearch);
-        if (matchesTitle || matchesDesc || matchesKeywords) {
-          // Adicionar título limpo ao resultado
-          results.push({ ...topico, titulo: cleanTitle, areaNome: area.nome });
-        }
-      });
-    });
-    return results;
-  }, [debouncedSearchValue]);
-
-  // Efeito para fechar dropdown
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
-        setIsSearchFocused(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => { document.removeEventListener('mousedown', handleClickOutside); };
-  }, []);
-
-  // Seleção de tópico
+  // Lógica de seleção de tópico simplificada
   const handleTopicSelect = (href: string) => {
-      const isCurrentArea = currentAreaTopics.some(t => t.href === href);
-      if (isCurrentArea) {
-        setActiveTopicHref(href);
-        setSearchValue(""); // Limpa busca ao selecionar um tópico da área
-        setIsSearchFocused(false); // Fecha dropdown
-        // Tentar scroll suave para o topo do conteúdo principal
-         const mainEl = document.getElementById('main-content-area');
-         if(mainEl) mainEl.scrollTo({ top: 0, behavior: 'smooth' });
-         else window.scrollTo({ top: 0, behavior: 'smooth' }); // Fallback para a janela
-      } else {
-        // Se o tópico selecionado for de outra área (via busca global),
-        // a navegação via Link no dropdown cuidará da mudança de página.
-        setSearchValue(""); // Limpa busca
-        setIsSearchFocused(false); // Fecha dropdown
-        // Não precisa chamar setActiveTopicHref aqui
-      }
+      setActiveTopicHref(href);
+      setSearchValue(""); // Limpa busca ao selecionar um tópico da área
+      // Tentar scroll suave para o topo do conteúdo principal
+       const mainEl = document.getElementById('main-content-area');
+       if(mainEl) mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+       else window.scrollTo({ top: 0, behavior: 'smooth' }); // Fallback para a janela
   };
 
   return (
@@ -290,7 +284,7 @@ export default function GerenciandoConteudoPage() {
       {/* Cabeçalho Fixo da Área */}
       <div className="border-b border-gray-200 bg-blue-50 sticky top-16 z-10">
         <div className="max-w-6xl mx-auto px-6 py-4">
-          {/* AJUSTADO: Layout do cabeçalho */}
+          {/* Layout do cabeçalho idêntico a primeiros-passos */}
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             {/* Título e Breadcrumb (Esquerda) */}
             <div>
@@ -300,53 +294,32 @@ export default function GerenciandoConteudoPage() {
                 <span className="font-medium text-blue-900">Adicionando Conteúdo</span>
               </div>
               <div className="flex items-center gap-3">
-                <FilePlus className="w-7 h-7 text-blue-700" />
+                <FilePlus className="w-10 h-10 text-blue-700" />
                 <h1 className="text-2xl font-bold text-blue-900">Adicionando e Gerenciando Conteúdo</h1>
               </div>
             </div>
 
-            {/* Container da Barra de Busca (Direita) */}
-            <div ref={searchContainerRef} id="ajuda-search-container" className="w-full md:w-auto md:max-w-xs lg:max-w-sm relative self-center md:self-auto">
-               {/* Usando a SearchBar padrão */}
+            {/* Container da Barra de Busca (Direita) - Idêntico a primeiros-passos */}
+            <div className="w-full md:w-full lg:max-w-3xl rounded-3xl">
                <SearchBar
-                 placeholder="Buscar em toda a Ajuda..."
+                 placeholder="Buscar nesta seção..." // Placeholder idêntico
                  value={searchValue}
                  onChange={setSearchValue}
-                 onFocus={() => setIsSearchFocused(true)} // Manter onFocus para abrir dropdown
-                 onSearch={() => setIsSearchFocused(false)} // Opcional: Fechar dropdown ao buscar
-                 className="shadow-sm" // Aplicar sombra se necessário
+                 className="shadow-sm"
+                 // Removido onFocus, onSearch, etc.
                />
-               {/* Dropdown de Resultados Globais (Lógica mantida) */}
-               {isSearchFocused && debouncedSearchValue && (
-                 <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-20 max-h-72 overflow-y-auto">
-                   {globalFilteredResults.length > 0 ? (
-                     globalFilteredResults.map((result) => (
-                       <Link
-                         href={result.href}
-                         key={result.href}
-                         onClick={() => handleTopicSelect(result.href)} // Usar Link e handleTopicSelect
-                         className="block w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 group"
-                       >
-                         <div className="font-medium truncate">{result.titulo}</div> {/* Usa título limpo */}
-                         <div className="text-xs text-gray-500 group-hover:text-blue-600">{result.areaNome}</div>
-                       </Link>
-                     ))
-                   ) : (
-                     <div className="px-4 py-3 text-sm text-gray-500 text-center">
-                       Nenhum tópico encontrado para &ldquo;{debouncedSearchValue}&rdquo;.
-                     </div>
-                   )}
-                 </div>
-               )}
+               {/* Dropdown de Resultados Globais REMOVIDO */}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Conteúdo Principal com Sidebar (Lógica mantida) */}
+      {/* Conteúdo Principal com Sidebar (Ajustes de espaçamento) */}
       <div className="max-w-6xl mx-auto px-6 py-8 md:py-12 flex flex-col md:flex-row gap-8 lg:gap-12 relative">
-        <aside className="w-full md:w-64 flex-shrink-0 order-last md:order-first">
-          <div className="sticky top-40"> {/* Ajustado top */}
+        {/* AJUSTADO: Adicionado 'mr-3' e 'lg:gap-12' no container pai */}
+        <aside className="w-full md:w-64 flex-shrink-0 order-last md:order-first mr-3">
+          {/* AJUSTADO: Alterado 'top-40' para 'top-52' */}
+          <div className="sticky top-52">
             <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
               Nesta Seção
             </h2>
@@ -354,40 +327,35 @@ export default function GerenciandoConteudoPage() {
             <nav className="space-y-1">
               {currentAreaTopics.map((topico) => {
                 const isActive = activeTopicHref === topico.href;
-                const Icon = topicIconMap[topico.href] || ChevronRight; // Usa mapa de ícones
-                const isInGlobalSearchResults = debouncedSearchValue && globalFilteredResults.some(ft => ft.href === topico.href);
+                const Icon = topicIconMap[topico.href] || ChevronRight;
                 // Remover aspas literais do título para exibição
                 const displayTitle = topico.titulo.replace(/"/g, '');
 
                 return (
                   <button
                     key={topico.href}
-                    onClick={() => { handleTopicSelect(topico.href); }} // Usa handleTopicSelect
+                    onClick={() => { handleTopicSelect(topico.href); }} // Usa handleTopicSelect simplificado
                     className={cn(
                       "w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-left transition-colors",
                        isActive ? "bg-blue-100 text-blue-700 font-medium" :
-                       isInGlobalSearchResults ? "bg-yellow-50 text-yellow-800 hover:bg-yellow-100" :
-                       "text-gray-700 hover:bg-gray-100"
+                       "text-gray-700 hover:bg-gray-100" // Removida lógica de highlight de busca
                     )}
                   >
                     <Icon className={cn("w-4 h-4 flex-shrink-0",
                         isActive ? "text-blue-600" :
-                        isInGlobalSearchResults ? "text-yellow-600" :
-                        "text-gray-400"
+                        "text-gray-400" // Removida lógica de highlight de busca
                     )} />
                     <span className="truncate">{displayTitle}</span> {/* Usa título limpo */}
                   </button>
                 );
               })}
-              {/* Mensagens de busca */}
-               {debouncedSearchValue && globalFilteredResults.length > 0 && !currentAreaTopics.some(t => globalFilteredResults.some(gr => gr.href === t.href)) && ( <div className="mt-4 text-center py-4 px-2 text-sm text-gray-500"> Nenhum tópico <em>desta seção</em> encontrado. Verifique os resultados globais acima. </div> )}
-               {debouncedSearchValue && globalFilteredResults.length === 0 && ( <div className="mt-4 text-center py-4 px-2 text-sm text-gray-500"> <SearchX className="w-8 h-8 mx-auto mb-2 text-gray-400"/> Nenhum tópico encontrado. </div> )}
+              {/* Mensagens de busca REMOVIDAS */}
             </nav>
           </div>
         </aside>
 
         {/* Conteúdo Principal (Direita) */}
-        <main id="main-content-area" className="flex-1 min-w-0"> {/* Removido overflow e scroll-padding */}
+        <main id="main-content-area" className="flex-1 min-w-0">
           <ActiveContentComponent />
           {/* Botão Voltar */}
           <div className="mt-16 pt-8 border-t border-gray-200">

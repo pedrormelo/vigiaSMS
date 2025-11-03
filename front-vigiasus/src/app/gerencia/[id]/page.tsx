@@ -2,12 +2,14 @@
 "use client";
 
 import Image from 'next/image';
+// ATUALIZADO: Importar useState
 import { useState, useMemo } from 'react';
-import { useParams } from 'next/navigation'; // Importado para obter o ID da URL
+import { useParams } from 'next/navigation';
 import { Edit, Eye, SearchX } from 'lucide-react';
 
 // Hooks
 import { useDebounce } from "@/hooks/useDebounce";
+import { useStaleness } from "@/hooks/useStaleness"; // Funcionalidade mantida
 
 // Componentes da UI e Popups
 import { FileGrid } from "@/components/contextosCard/contextosGrid";
@@ -18,15 +20,14 @@ import { AddDashboardButton } from "@/components/gerencia/dashboard-btn1";
 import GerenciaDashboardPreview from "@/components/gerencia/dashboard/gerencia-dashboard-preview";
 import { VisualizarContextoModal } from "@/components/popups/visualizarContextoModal/index";
 import { ModalAdicionarConteudo } from "@/components/popups/addContextoModal/index";
-import StatusBadge from "@/components/alerts/statusBadge";
-import StatusBanner from "@/components/ui/status-banner";
-import { useStaleness } from "@/hooks/useStaleness";
+import StatusBadge from "@/components/alerts/statusBadge"; // Funcionalidade mantida
+import StatusBanner from "@/components/ui/status-banner"; // Funcionalidade mantida
 
 // Tipos e Dados
 import type { FileType } from "@/components/contextosCard/contextoCard";
 import type { AbaAtiva, DetalhesContexto, NomeIcone, Versao, SubmitData } from "@/components/popups/addContextoModal/types";
-import { diretoriasConfig } from "@/constants/diretorias"; // Usado para buscar dados dinâmicos
-import { mockGraphs } from "@/constants/graphData"; // Mantemos os mocks para os gráficos por enquanto
+import { diretoriasConfig } from "@/constants/diretorias";
+import { mockGraphs } from "@/constants/graphData";
 
 // Tipos de Dados Locais
 type IndicatorData = Omit<React.ComponentProps<typeof IndicatorCard>, "onClick"> & {
@@ -36,11 +37,12 @@ type IndicatorData = Omit<React.ComponentProps<typeof IndicatorCard>, "onClick">
     insertedDate: string;
 };
 
-// --- DADOS MOCKADOS (Podem ser substituídos por chamadas de API no futuro) ---
-const indicators: IndicatorData[] = [
-    { id: "ind-1", title: "População Atendida", value: "68 milhões", unidade: "Milhões", subtitle: "Atendimento da Rede Municipal", change: "+32% em relação ao PMQA", changeType: "positive", borderColor: "border-l-blue-500", iconType: "cuidados", insertedDate: "2025-10-13T12:00:00.000Z", versoes: [{ id: 1, nome: "v1 - População Atendida", data: "2025-08-10", autor: "Carlos" }, { id: 2, nome: "v2 - População Atendida", data: "2025-09-15", autor: "Ana" }] },
-    { id: "ind-2", title: "Unidades de Saúde", value: "200", unidade: "Unidades", subtitle: "Unidades ativas", change: "— Sem alteração", changeType: "neutral", borderColor: "border-l-green-500", iconType: "unidades", insertedDate: "2025-09-01", versoes: [{ id: 1, nome: "v1 - Unidades de Saúde", data: "2025-09-01", autor: "Carlos" }] },
-    { id: "ind-3", title: "Profissionais Ativos", value: "2.345", unidade: "Pessoas", subtitle: "Em toda Secretaria", change: "+4,2% em relação ao PMQA", changeType: "positive", borderColor: "border-l-red-500", iconType: "servidores", insertedDate: "2025-10-10T12:00:00.000Z", versoes: [{ id: 1, nome: "v1 - Profissionais Ativos", data: "2025-07-20", autor: "Mariana" }, { id: 2, nome: "v2 - Profissionais Ativos", data: "2025-08-20", autor: "Mariana" }, { id: 3, nome: "v3 - Profissionais Ativos", data: "2025-09-20", autor: "Carlos" }] },
+// --- DADOS MOCKADOS (AGORA COMO ESTADO INICIAL) ---
+// Adicionado 'estaOculta: false' em todas as versões
+const initialIndicators: IndicatorData[] = [
+    { id: "ind-1", title: "População Atendida", value: "68 milhões", unidade: "Milhões", subtitle: "Atendimento da Rede Municipal", change: "+32% em relação ao PMQA", changeType: "positive", borderColor: "border-l-blue-500", iconType: "cuidados", insertedDate: "2025-10-13T12:00:00.000Z", versoes: [{ id: 1, nome: "v1 - População Atendida", data: "2025-08-10", autor: "Carlos", estaOculta: false }, { id: 2, nome: "v2 - População Atendida", data: "2025-09-15", autor: "Ana", estaOculta: false }] },
+    { id: "ind-2", title: "Unidades de Saúde", value: "200", unidade: "Unidades", subtitle: "Unidades ativas", change: "— Sem alteração", changeType: "neutral", borderColor: "border-l-green-500", iconType: "unidades", insertedDate: "2025-09-01", versoes: [{ id: 1, nome: "v1 - Unidades de Saúde", data: "2025-09-01", autor: "Carlos", estaOculta: false }] },
+    { id: "ind-3", title: "Profissionais Ativos", value: "2.345", unidade: "Pessoas", subtitle: "Em toda Secretaria", change: "+4,2% em relação ao PMQA", changeType: "positive", borderColor: "border-l-red-500", iconType: "servidores", insertedDate: "2025-10-10T12:00:00.000Z", versoes: [{ id: 1, nome: "v1 - Profissionais Ativos", data: "2025-07-20", autor: "Mariana", estaOculta: false }, { id: 2, nome: "v2 - Profissionais Ativos", data: "2025-08-20", autor: "Mariana", estaOculta: false }, { id: 3, nome: "v3 - Profissionais Ativos", data: "2025-09-20", autor: "Carlos", estaOculta: false }] },
 ];
 
 const dadosDashboardPEC = {
@@ -49,13 +51,14 @@ const dadosDashboardPEC = {
     cores: ['#3B82F6', '#F97316', '#EF4444'] 
 };
 
-const sampleFiles: DetalhesContexto[] = [
-    { id: "1", title: "Pagamento ESF e ESB - 2025", type: "pdf", insertedDate: "2024-07-15", url: "/docs/teste.pdf", description: "Documento detalhado sobre os pagamentos das equipes de Saúde da Família (ESF) e Saúde Bucal (ESB) para o ano de 2025.", solicitante: "Ana Lima", autor: "Diretoria Financeira", versoes: [{ id: 1, nome: "Pagamento ESF e ESB - 2025 (v1).pdf", data: "2024-06-23", autor: "Carlos" }, { id: 2, nome: "Pagamento ESF e ESB - 2025 (v2).pdf", data: "2024-07-10", autor: "Carlos" }, { id: 3, nome: "Pagamento ESF e ESB - 2025 (v3).pdf", data: "2024-07-15", autor: "Ana" }] },
-    { id: "3", title: "Unidades com o PEC implementado", type: "dashboard", insertedDate: "2025-08-22", payload: dadosDashboardPEC, description: "Dashboard interativo que monitora o status de implementação do Prontuário Eletrônico do Cidadão (PEC) nas unidades de saúde.", solicitante: "Carlos Andrade", autor: "Gerência de TI", chartType: "chart", versoes: [{ id: 1, nome: "PEC Status - (v1)", data: "2025-08-22", autor: "Carlos Andrade" }] },
-    { id: "4", title: "Servidores Ativos", type: "excel", insertedDate: "2024-06-23", url: "#", description: "Planilha com a relação de todos os servidores ativos, incluindo comissionados, efetivos e contratos temporários.", solicitante: "Mariana Costa", autor: "Recursos Humanos", versoes: [{ id: 1, nome: "Servidores Ativos (v1).xlsx", data: "2024-06-23", autor: "Mariana Costa" }] },
-    { id: "6", title: "Link para Dashboard Externo", type: "link", insertedDate: "2025-10-13T12:00:00.000Z", url: "https://www.google.com", description: "Link de acesso ao painel de monitoramento de dados epidemiológicos mantido pelo Ministério da Saúde.", solicitante: "João Silva", autor: "Vigilância Epidemiológica", versoes: [{ id: 1, nome: "Link MS Saúde (v1)", data: "2024-06-23", autor: "João Silva" }] },
-    { id: "5", title: "Resolução 20/07/2025", type: "resolucao", insertedDate: "2024-07-20", url: "#", description: "Publicação oficial da resolução do Conselho Municipal de Saúde sobre as novas diretrizes de atendimento.", solicitante: "Conselho Municipal", autor: "Conselho Municipal", versoes: [{ id: 1, nome: "Resolução 20/07/2025 (v1)", data: "2024-07-20", autor: "CMS" }] },
-    { id: "2", title: "Relatório de Atividades da Atenção Básica", type: "doc", insertedDate: "2024-05-15", url: "/docs/pas.docx", description: "Documento Word contendo o compilado das atividades realizadas pela Atenção Básica no último trimestre.", solicitante: "Fernanda Lima", autor: "Diretoria de Atenção Básica", versoes: [{ id: 1, nome: "Relatório Atividades AB (v1).docx", data: "2024-05-15", autor: "Fernanda Lima" }] },
+// Adicionado 'estaOculta: false' em todas as versões
+const initialSampleFiles: DetalhesContexto[] = [
+    { id: "1", title: "Pagamento ESF e ESB - 2025", type: "pdf", insertedDate: "2024-07-15", url: "/docs/teste.pdf", description: "Documento detalhado sobre os pagamentos das equipes de Saúde da Família (ESF) e Saúde Bucal (ESB) para o ano de 2025.", solicitante: "Ana Lima", autor: "Diretoria Financeira", versoes: [{ id: 1, nome: "Pagamento ESF e ESB - 2025 (v1).pdf", data: "2024-06-23", autor: "Carlos", estaOculta: false }, { id: 2, nome: "Pagamento ESF e ESB - 2025 (v2).pdf", data: "2024-07-10", autor: "Carlos", estaOculta: false }, { id: 3, nome: "Pagamento ESF e ESB - 2025 (v3).pdf", data: "2024-07-15", autor: "Ana", estaOculta: false }] },
+    { id: "3", title: "Unidades com o PEC implementado", type: "dashboard", insertedDate: "2025-08-22", payload: dadosDashboardPEC, description: "Dashboard interativo que monitora o status de implementação do Prontuário Eletrônico do Cidadão (PEC) nas unidades de saúde.", solicitante: "Carlos Andrade", autor: "Gerência de TI", chartType: "chart", versoes: [{ id: 1, nome: "PEC Status - (v1)", data: "2025-08-22", autor: "Carlos Andrade", estaOculta: false }] },
+    { id: "4", title: "Servidores Ativos", type: "excel", insertedDate: "2024-06-23", url: "#", description: "Planilha com a relação de todos os servidores ativos, incluindo comissionados, efetivos e contratos temporários.", solicitante: "Mariana Costa", autor: "Recursos Humanos", versoes: [{ id: 1, nome: "Servidores Ativos (v1).xlsx", data: "2024-06-23", autor: "Mariana Costa", estaOculta: false }] },
+    { id: "6", title: "Link para Dashboard Externo", type: "link", insertedDate: "2025-10-13T12:00:00.000Z", url: "https://www.google.com", description: "Link de acesso ao painel de monitoramento de dados epidemiológicos mantido pelo Ministério da Saúde.", solicitante: "João Silva", autor: "Vigilância Epidemiológica", versoes: [{ id: 1, nome: "Link MS Saúde (v1)", data: "2024-06-23", autor: "João Silva", estaOculta: false }] },
+    { id: "5", title: "Resolução 20/07/2025", type: "resolucao", insertedDate: "2024-07-20", url: "#", description: "Publicação oficial da resolução do Conselho Municipal de Saúde sobre as novas diretrizes de atendimento.", solicitante: "Conselho Municipal", autor: "Conselho Municipal", versoes: [{ id: 1, nome: "Resolução 20/07/2025 (v1)", data: "2024-07-20", autor: "CMS", estaOculta: false }] },
+    { id: "2", title: "Relatório de Atividades da Atenção Básica", type: "doc", insertedDate: "2024-05-15", url: "/docs/pas.docx", description: "Documento Word contendo o compilado das atividades realizadas pela Atenção Básica no último trimestre.", solicitante: "Fernanda Lima", autor: "Diretoria de Atenção Básica", versoes: [{ id: 1, nome: "Relatório Atividades AB (v1).docx", data: "2024-05-15", autor: "Fernanda Lima", estaOculta: false }] },
 ];
 
 export default function GerenciaPage() {
@@ -63,7 +66,6 @@ export default function GerenciaPage() {
     const params = useParams();
     const id = (params?.id as string) || "";
 
-    // Lógica para encontrar a diretoria e gerência com base no ID da URL
     const resolved = useMemo(() => {
         if (!id) return null;
         for (const key of Object.keys(diretoriasConfig)) {
@@ -87,12 +89,16 @@ export default function GerenciaPage() {
     const [selectedTypes, setSelectedTypes] = useState<FileType[]>([]);
     const debouncedSearchValue = useDebounce(searchValue, 300);
 
-    // --- ATUALIZAÇÃO / STALENESS (via hook reutilizável) ---
+    // --- ATUALIZADO: DADOS AGORA SÃO ESTADO ---
+    const [arquivos, setArquivos] = useState<DetalhesContexto[]>(initialSampleFiles);
+    const [indicadores, setIndicadores] = useState<IndicatorData[]>(initialIndicators);
+
+    // --- ATUALIZAÇÃO / STALENESS (agora usa 'arquivos' e 'indicadores') ---
     const { variant: stalenessVariant, label: stalenessLabel, lastUpdatedAt } = useStaleness({
         extractors: [
             () => {
                 const arr: Array<string> = [];
-                for (const f of sampleFiles) {
+                for (const f of arquivos) { // <-- Usa 'arquivos'
                     if (f.insertedDate) arr.push(f.insertedDate);
                     if (Array.isArray(f.versoes)) for (const v of f.versoes) if (v.data) arr.push(v.data);
                 }
@@ -100,7 +106,7 @@ export default function GerenciaPage() {
             },
             () => {
                 const arr: Array<string> = [];
-                for (const ind of indicators) {
+                for (const ind of indicadores) { // <-- Usa 'indicadores'
                     if (ind.insertedDate) arr.push(ind.insertedDate);
                     if (Array.isArray(ind.versoes)) for (const v of ind.versoes) if (v.data) arr.push(v.data);
                 }
@@ -111,7 +117,7 @@ export default function GerenciaPage() {
         locale: 'pt-BR'
     });
 
-    // --- LÓGICA DE FILTRAGEM ---
+    // --- LÓGICA DE FILTRAGEM (agora usa 'arquivos') ---
     const handleSelectedTypesChange = (type: FileType) => {
         setSelectedTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]);
     };
@@ -120,13 +126,13 @@ export default function GerenciaPage() {
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-        return sampleFiles.filter(file => {
+        return arquivos.filter(file => { // <-- Usa 'arquivos'
             const matchesSearch = file.title.toLowerCase().includes(debouncedSearchValue.toLowerCase());
             const matchesTab = activeTab === 'todas' || new Date(file.insertedDate) >= sevenDaysAgo;
             const matchesType = selectedTypes.length === 0 || selectedTypes.includes(file.type);
             return matchesSearch && matchesTab && matchesType;
         });
-    }, [debouncedSearchValue, activeTab, selectedTypes]);
+    }, [debouncedSearchValue, activeTab, selectedTypes, arquivos]); // <-- Depende de 'arquivos'
 
     // --- HANDLERS DE EVENTOS ---
     const abrirModal = (aba: AbaAtiva) => {
@@ -148,14 +154,18 @@ export default function GerenciaPage() {
         const iconMap: Record<IndicatorData['iconType'], NomeIcone> = { cuidados: "Heart", unidades: "Building", servidores: "ClipboardList", atividade: "TrendingUp", cruz: "Landmark", populacao: "Users", medicos: "UserCheck", ambulancia: "DollarSign" };
         const borderColorMap: { [key: string]: string } = { "border-l-blue-500": "#3B82F6", "border-l-green-500": "#22C55E", "border-l-red-500": "#EF4444" };
 
+        // ATUALIZADO: Busca o indicador mais recente do estado
+        const indicadorAtual = indicadores.find(i => i.id === indicator.id) || indicator;
+
         const dadosFormatados: DetalhesContexto = {
-            id: indicator.id, title: indicator.title, type: 'indicador', insertedDate: indicator.versoes.length > 0 ? indicator.versoes[indicator.versoes.length - 1].data : new Date().toISOString(),
-            description: indicator.subtitle, solicitante: indicator.versoes.length > 0 ? indicator.versoes[0].autor : "N/A",
-            versoes: indicator.versoes, valorAtual: indicator.value, unidade: indicator.unidade,
-            textoComparativo: indicator.change || "", cor: borderColorMap[indicator.borderColor], icone: iconMap[indicator.iconType],
+            id: indicadorAtual.id, title: indicadorAtual.title, type: 'indicador', insertedDate: indicadorAtual.versoes.length > 0 ? indicadorAtual.versoes[indicadorAtual.versoes.length - 1].data : new Date().toISOString(),
+            description: indicadorAtual.subtitle, solicitante: indicadorAtual.versoes.length > 0 ? indicadorAtual.versoes[0].autor : "N/A",
+            versoes: indicadorAtual.versoes, // <-- Passa as versões atualizadas
+            valorAtual: indicadorAtual.value, unidade: indicadorAtual.unidade,
+            textoComparativo: indicadorAtual.change || "", cor: borderColorMap[indicadorAtual.borderColor], icone: iconMap[indicadorAtual.iconType],
             payload: {
-                description: indicator.subtitle, valorAtual: indicator.value, unidade: indicator.unidade,
-                textoComparativo: indicator.change || "", cor: borderColorMap[indicator.borderColor], icone: iconMap[indicator.iconType],
+                description: indicadorAtual.subtitle, valorAtual: indicadorAtual.value, unidade: indicadorAtual.unidade,
+                textoComparativo: indicadorAtual.change || "", cor: borderColorMap[indicadorAtual.borderColor], icone: iconMap[indicadorAtual.iconType],
             },
         };
         setFicheiroSelecionado(dadosFormatados);
@@ -164,11 +174,64 @@ export default function GerenciaPage() {
 
     const aoSubmeterConteudo = (dados: SubmitData) => {
         console.log("Novo conteúdo recebido:", dados);
+        // Aqui você adicionaria a lógica para atualizar os estados 'arquivos' ou 'indicadores'
     };
 
     const aoClicarArquivo = (ficheiro: DetalhesContexto) => {
-        setFicheiroSelecionado(ficheiro);
+        // ATUALIZADO: Busca o arquivo mais recente do estado
+        const arquivoAtual = arquivos.find(f => f.id === ficheiro.id) || ficheiro;
+        setFicheiroSelecionado(arquivoAtual); // <-- Passa o arquivo com estado atualizado
         setModalVisualizacaoAberto(true);
+    };
+
+    // --- FUNÇÃO ADICIONADA ---
+    const lidarComAlternarVisibilidadeVersao = (contextoId: string, versaoId: number) => {
+        // Atualiza o estado dos arquivos
+        setArquivos(prevArquivos => 
+            prevArquivos.map(arquivo => {
+                if (arquivo.id === contextoId && arquivo.versoes) {
+                    return {
+                        ...arquivo,
+                        versoes: arquivo.versoes.map(versao => 
+                            versao.id === versaoId 
+                                ? { ...versao, estaOculta: !versao.estaOculta } 
+                                : versao
+                        )
+                    };
+                }
+                return arquivo;
+            })
+        );
+        // Atualiza o estado dos indicadores
+        setIndicadores(prevIndicadores =>
+            prevIndicadores.map(indicador => {
+                if (indicador.id === contextoId && indicador.versoes) {
+                     return {
+                        ...indicador,
+                        versoes: indicador.versoes.map(versao => 
+                            versao.id === versaoId 
+                                ? { ...versao, estaOculta: !versao.estaOculta } 
+                                : versao
+                        )
+                    };
+                }
+                return indicador;
+            })
+        );
+        
+        // Atualiza o ficheiro selecionado no modal (se estiver aberto) para refletir a mudança
+        if (ficheiroSelecionado && ficheiroSelecionado.id === contextoId && ficheiroSelecionado.versoes) {
+            setFicheiroSelecionado({
+                ...ficheiroSelecionado,
+                versoes: ficheiroSelecionado.versoes.map(versao => 
+                    versao.id === versaoId 
+                        ? { ...versao, estaOculta: !versao.estaOculta } 
+                        : versao
+                )
+            });
+        }
+        // Simula um "salvamento"
+        console.log(`Visibilidade alternada para versao ${versaoId} no contexto ${contextoId}`);
     };
 
     // --- RENDERIZAÇÃO ---
@@ -180,11 +243,20 @@ export default function GerenciaPage() {
     return (
         <div className="min-h-screen bg-[#FDFDFD]">
             <ModalAdicionarConteudo estaAberto={isModalOpen} aoFechar={() => { setIsModalOpen(false); setDadosParaEditar(null); }} aoSubmeter={aoSubmeterConteudo} abaInicial={abaInicial} dadosIniciais={dadosParaEditar} />
-            <VisualizarContextoModal estaAberto={modalVisualizacaoAberto} aoFechar={() => setModalVisualizacaoAberto(false)} dadosDoContexto={ficheiroSelecionado} aoCriarNovaVersao={lidarComCriarNovaVersao} perfil={perfil} isEditing={modo === 'edicao'} />
+            {/* ATUALIZADO: Passa a nova prop 'aoAlternarVisibilidadeVersao' */}
+            <VisualizarContextoModal 
+                estaAberto={modalVisualizacaoAberto} 
+                aoFechar={() => setModalVisualizacaoAberto(false)} 
+                dadosDoContexto={ficheiroSelecionado} 
+                aoCriarNovaVersao={lidarComCriarNovaVersao} 
+                perfil={perfil} 
+                isEditing={modo === 'edicao'} 
+                aoAlternarVisibilidadeVersao={lidarComAlternarVisibilidadeVersao} // <-- PROP ADICIONADA
+            />
 
-            {/* Header Dinâmico */}
+            {/* Header Dinâmico (Removido pl-25) */}
             <div className="relative p-8 mb-6 text-white shadow-lg" style={{ background: `linear-gradient(to right, ${diretoria.cores.from}, ${diretoria.cores.to})` }}>
-                <h2 className="text-3xl font-regular mt-1 pl-25">{diretoria.nome}</h2>
+                <h2 className="text-3xl font-regular mt-1">{diretoria.nome}</h2>
             </div>
 
             
@@ -229,7 +301,7 @@ export default function GerenciaPage() {
 
                 <div className="flex justify-center items-center gap-4 mb-16 flex-wrap">
                     {modo === 'edicao' && <AddIndicatorButton onClick={() => abrirModal('indicador')} />}
-                    {indicators.map((indicator) => (
+                    {indicadores.map((indicator) => ( // <-- Usa 'indicadores'
                         <IndicatorCard key={indicator.id} {...indicator} onClick={() => lidarComVisualizarIndicador(indicator)} />
                     ))}
                 </div>
