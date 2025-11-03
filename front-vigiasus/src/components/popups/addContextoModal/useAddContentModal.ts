@@ -1,12 +1,42 @@
 // src/components/popups/addContextoModal/useAddContentModal.ts
 import { useState, useEffect, useCallback } from "react"; 
 import { saveAs } from "file-saver";
-import { AbaAtiva, AbaFonteDeDados, TipoGrafico, ConjuntoDeDadosGrafico, ModalAdicionarConteudoProps, NomeIcone, DetalhesContexto, TipoVersao, FormatoColuna } from "./types";
+import { 
+    AbaAtiva, AbaFonteDeDados, TipoGrafico, ConjuntoDeDadosGrafico, 
+    ModalAdicionarConteudoProps, NomeIcone, DetalhesContexto, 
+    TipoVersao, FormatoColuna, 
+    ContextoPayload, DashboardPayload, IndicadorPayload
+} from "./types";
 import { showWarningToast, showErrorToast, showDispatchToast } from "@/components/ui/Toasts";
+import { FileType } from "@/components/contextosCard/contextoCard";
 
 interface PropsDoHook extends ModalAdicionarConteudoProps {
     dadosIniciais?: Partial<DetalhesContexto> & { description?: string; payload?: Partial<ConjuntoDeDadosGrafico>; chartType?: TipoGrafico } | null;
 }
+
+// --- CONSTANTES DE VALIDAÇÃO ---
+const CONTEXTO_ACCEPT_STRING = ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.ods,.odt,.odp";
+const CONTEXTO_ACCEPT_MAP: { [key: string]: FileType } = {
+    "application/pdf": "pdf",
+    "application/msword": "doc",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "doc",
+    "application/vnd.oasis.opendocument.text": "doc",
+    "application/vnd.ms-excel": "excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "excel",
+    "application/vnd.oasis.opendocument.spreadsheet": "excel",
+    "application/vnd.ms-powerpoint": "apresentacao",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation": "apresentacao",
+    "application/vnd.oasis.opendocument.presentation": "apresentacao",
+};
+const detectarTipoPorExtensao = (nomeArquivo: string): FileType | null => {
+    const extensao = nomeArquivo.split('.').pop()?.toLowerCase() || '';
+    if (['pdf'].includes(extensao)) return 'pdf';
+    if (['doc', 'docx', 'odt'].includes(extensao)) return 'doc';
+    if (['xls', 'xlsx', 'ods'].includes(extensao)) return 'excel';
+    if (['ppt', 'pptx', 'odp'].includes(extensao)) return 'apresentacao';
+    return null;
+};
+// --- FIM DAS CONSTANTES ---
 
 export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, abaInicial = 'contexto', dadosIniciais }: PropsDoHook) => {
     // --- ESTADOS GERAIS ---
@@ -21,6 +51,7 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
     const [urlContexto, setUrlContexto] = useState("");
     const [isNewVersionMode, setIsNewVersionMode] = useState(false);
     const [selectedVersion, setSelectedVersion] = useState("");
+    const [tipoArquivoDetectado, setTipoArquivoDetectado] = useState<FileType | null>(null); 
 
     // --- ESTADOS DO DASHBOARD ---
     const [tituloGrafico, setTituloGrafico] = useState("");
@@ -49,13 +80,14 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
     const [corIndicador, setCorIndicador] = useState("#3B82F6");
     const [iconeIndicador, setIconeIndicador] = useState<NomeIcone>("Heart");
 
-    const [previsualizacaoGerada, setPrevisualizacaoGerada] = useState(false);
+    // const [previsualizacaoGerada, setPrevisualizacaoGerada] = useState(false); // Removido
     const [tipoVersao, setTipoVersao] = useState<TipoVersao>(TipoVersao.CORRECAO);
     const [descricaoVersao, setDescricaoVersao] = useState("");
 
     const reiniciarTodoOEstado = useCallback(() => {
         setTituloContexto(""); setDetalhesContexto(""); setArquivoContexto(null); setUrlContexto("");
         setIsNewVersionMode(false); setSelectedVersion("");
+        setTipoArquivoDetectado(null); 
         setTituloGrafico(""); setDetalhesGrafico(""); setTipoGrafico("pie");
         setArquivoDeDados(null);
         setConjuntoDeDados({
@@ -68,7 +100,7 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
         setValorAlvoIndicador(""); setUnidadeIndicador("Nenhum"); setTextoComparativoIndicador("");
         setCorIndicador("#3B82F6"); setIconeIndicador("Heart");
         setAbaAtiva(abaInicial); setAbaFonteDeDados('manual');
-        setPrevisualizacaoGerada(false);
+        // setPrevisualizacaoGerada(false); // Removido
         setTipoVersao(TipoVersao.CORRECAO);
         setDescricaoVersao("");
     }, [abaInicial]);
@@ -86,56 +118,74 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
                 setTituloContexto(dadosIniciais.title || "");
                 setDetalhesContexto(dadosIniciais.description || "");
                 
+                if (dadosIniciais.type && dadosIniciais.type !== 'dashboard' && dadosIniciais.type !== 'indicador') {
+                    setTipoArquivoDetectado(dadosIniciais.type);
+                }
+                if (dadosIniciais.type === 'link') {
+                    setUrlContexto(dadosIniciais.url || "");
+                }
+                
                 setTituloGrafico(dadosIniciais.title || "");
                 setDetalhesGrafico(dadosIniciais.description || "");
                 setTipoGrafico(dadosIniciais.chartType || 'pie');
                 
-                if (dadosIniciais.payload) {
+                if (dadosIniciais.payload && dadosIniciais.type === 'dashboard') {
+                    const payloadDash = dadosIniciais.payload as ConjuntoDeDadosGrafico;
                     setConjuntoDeDados({
-                        colunas: dadosIniciais.payload.colunas || ["Categoria", "Valor"],
-                        linhas: dadosIniciais.payload.linhas || [],
-                        cores: dadosIniciais.payload.cores || ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444'],
-                        formatos: dadosIniciais.payload.formatos || [
+                        colunas: payloadDash.colunas || ["Categoria", "Valor"],
+                        linhas: payloadDash.linhas || [],
+                        cores: payloadDash.cores || ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444'],
+                        formatos: payloadDash.formatos || [
                             'text' as FormatoColuna, 
-                            ...(dadosIniciais.payload.colunas?.slice(1).map(() => 'number' as FormatoColuna) || ['number' as FormatoColuna]) // Resto como número
+                            ...(payloadDash.colunas?.slice(1).map(() => 'number' as FormatoColuna) || ['number' as FormatoColuna])
                         ],
                     });
-                 setPrevisualizacaoGerada(true);
+                 // setPrevisualizacaoGerada(true); // Removido
                 }
 
-                setTituloIndicador(dadosIniciais.title || "");
-                setDescricaoIndicador(dadosIniciais.description || "");
-                setValorAtualIndicador(dadosIniciais.valorAtual || "");
-                setValorAlvoIndicador(dadosIniciais.valorAlvo || "");
-                setUnidadeIndicador(dadosIniciais.unidade || "Nenhum");
-                setTextoComparativoIndicador(dadosIniciais.textoComparativo || "");
-                setCorIndicador(dadosIniciais.cor || "#3B82F6");
-                setIconeIndicador(dadosIniciais.icone || "Heart");
+                if (dadosIniciais.type === 'indicador' && dadosIniciais.payload) {
+                    const payloadIndicador = dadosIniciais.payload as any; 
+                    setTituloIndicador(dadosIniciais.title || "");
+                    setDescricaoIndicador(payloadIndicador.description || dadosIniciais.description || "");
+                    setValorAtualIndicador(payloadIndicador.valorAtual || dadosIniciais.valorAtual || "");
+                    setValorAlvoIndicador(dadosIniciais.valorAlvo || "");
+                    setUnidadeIndicador(payloadIndicador.unidade || dadosIniciais.unidade || "Nenhum");
+                    setTextoComparativoIndicador(payloadIndicador.textoComparativo || dadosIniciais.textoComparativo || "");
+                    setCorIndicador(payloadIndicador.cor || dadosIniciais.cor || "#3B82F6");
+                    setIconeIndicador(payloadIndicador.icone || dadosIniciais.icone || "Heart");
+                }
             }
         }
     }, [estaAberto, dadosIniciais, abaInicial, reiniciarTodoOEstado]);
 
 
     const aoSubmeterFormulario = () => {
-        let payload;
-        const versionInfo = isNewVersionMode ? { type: tipoVersao, description: descricaoVersao, versionNumber: selectedVersion } : null;
+        let payload: Partial<ContextoPayload> | Partial<DashboardPayload> | Partial<IndicadorPayload>;
+        const versionInfo = isNewVersionMode ? { type: tipoVersao, description: descricaoVersao } : null;
 
         switch (abaAtiva) {
             case 'contexto':
-                payload = { title: tituloContexto, details: detalhesContexto, file: arquivoContexto, url: urlContexto, versionInfo };
-                aoSubmeter({ type: 'contexto', payload });
+                payload = { 
+                    title: tituloContexto, 
+                    details: detalhesContexto, 
+                    file: arquivoContexto, 
+                    url: urlContexto, 
+                    versionInfo, 
+                    fileType: tipoArquivoDetectado 
+                };
+                aoSubmeter({ type: 'contexto', payload: payload }); 
                 showDispatchToast("Seu contexto foi enviado para aprovação do gerente.");
                 break;
 
             case 'dashboard':
                 payload = { title: tituloGrafico, details: detalhesGrafico, type: tipoGrafico, dataFile: arquivoDeDados, dataset: conjuntoDeDados, versionInfo };
-                aoSubmeter({ type: 'dashboard', payload });
+                aoSubmeter({ type: 'dashboard', payload: payload });
                 showDispatchToast("Seu dashboard foi enviado para aprovação.");
                 break;
 
             case 'indicador':
                 payload = { titulo: tituloIndicador, descricao: descricaoIndicador, valorAtual: valorAtualIndicador, valorAlvo: valorAlvoIndicador, unidade: unidadeIndicador, textoComparativo: textoComparativoIndicador, cor: corIndicador, icone: iconeIndicador, versionInfo };
-                aoSubmeter({ type: 'indicador', payload });
+                aoSubmeter({ type: 'indicador', payload: payload });
                 showDispatchToast("Seu indicador foi enviado para aprovação.");
                 break;
         }
@@ -144,18 +194,37 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
     
     const aoSelecionarArquivo = (arquivo: File | null) => {
         if (!arquivo) return;
+        
         const LIMITE_TAMANHO_MB = 15;
         if (arquivo.size > LIMITE_TAMANHO_MB * 1024 * 1024) {
             showErrorToast("Arquivo muito grande", `O tamanho máximo é de ${LIMITE_TAMANHO_MB} MB.`);
             return;
         }
-        setArquivoContexto(arquivo);
-        setUrlContexto("");
+
+        let tipoDetectado: FileType | null = CONTEXTO_ACCEPT_MAP[arquivo.type];
+        
+        if (!tipoDetectado) {
+            tipoDetectado = detectarTipoPorExtensao(arquivo.name);
+        }
+
+        if (tipoDetectado) {
+            setArquivoContexto(arquivo);
+            setUrlContexto("");
+            setTipoArquivoDetectado(tipoDetectado);
+        } else {
+            showErrorToast("Tipo de arquivo inválido", `Formato não permitido. Use: ${CONTEXTO_ACCEPT_STRING}`);
+            setArquivoContexto(null);
+            setTipoArquivoDetectado(null);
+        }
     };
 
     const aoClicarBotaoUrl = () => {
         const url = prompt("Por favor, insira a URL:");
-        if (url) { setUrlContexto(url); setArquivoContexto(null); }
+        if (url) { 
+            setUrlContexto(url); 
+            setArquivoContexto(null); 
+            setTipoArquivoDetectado("link");
+        }
     };
 
     const aoEntrarNaArea = (e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); setArrastandoSobre(true); };
@@ -171,6 +240,7 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
 
     const aoMudarTipoGrafico = (t: TipoGrafico) => {
         setTipoGrafico(t);
+        // Não mexe mais nas colunas
     };
 
     const adicionarLinha = () => {
@@ -178,26 +248,53 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
             showWarningToast("Limite de 25 linhas atingido.");
             return;
         }
-        setConjuntoDeDados((d) => ({ ...d, linhas: [...d.linhas, Array(d.colunas.length).fill("")] }));
+        // --- CORRIGIDO ---
+        setConjuntoDeDados((d) => ({ ...d, linhas: [...d.linhas, ["", ...Array(d.colunas.length - 1).fill(null)]] }));
     };
 
     const removerLinha = (index: number) => setConjuntoDeDados((d) => ({ ...d, linhas: d.linhas.filter((_, i) => i !== index) }));
 
     const atualizarCelula = (linha: number, coluna: number, valor: string) => {
-        if (coluna > 0) {
-            if (valor.includes('-')) {
+        let valorFinal: string | number | null = valor; 
+
+        if (coluna > 0) { 
+            const valorTrim = valor.trim();
+            
+            if (valorTrim === "") {
+                valorFinal = null; 
+            } else if (valorTrim.includes('-')) {
                 showErrorToast("Valor inválido.", "Números negativos não são permitidos.");
-                return;
-            }
-            const eNumerico = /^\d*\.?\d*$/.test(valor);
-            if (!eNumerico && valor !== "") {
-                showErrorToast("Valor inválido.", "Apenas números são permitidos nesta coluna.");
-                return;
+                return; 
+            } else {
+                const valorLimpo = valorTrim
+                    .replace(/R\$|\s/g, '')
+                    .replace(/\./g, (match, offset, original) => offset === original.lastIndexOf('.') ? '.' : '') 
+                    .replace(',', '.'); 
+
+                const eFormatoNumero = /^\d*\.?\d*$/.test(valorLimpo);
+
+                if (eFormatoNumero && valorLimpo) {
+                    const num = parseFloat(valorLimpo);
+                    if (!isNaN(num)) {
+                        valorFinal = num; 
+                    } else {
+                        valorFinal = null; 
+                    }
+                } else if (valorTrim !== "") {
+                    showErrorToast("Valor inválido.", "Apenas números são permitidos.");
+                    return;
+                } else {
+                    valorFinal = null;
+                }
             }
         }
-        setConjuntoDeDados((d) => ({ ...d, linhas: d.linhas.map((l, i) => i === linha ? l.map((c, j) => (j === coluna ? valor : c)) : l) }));
+        
+        setConjuntoDeDados((d) => ({ ...d, linhas: d.linhas.map((l, i) => 
+            i === linha ? l.map((c, j) => (j === coluna ? valorFinal : c)) : l
+        )}));
     };
 
+   // --- ESTA É A CORREÇÃO ---
    const adicionarColuna = () => {
         if (conjuntoDeDados.colunas.length >= 30) {
             showWarningToast("Limite de 30 colunas atingido.");
@@ -206,10 +303,12 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
         setConjuntoDeDados((d) => ({
             ...d,
             colunas: [...d.colunas, `Série ${d.colunas.length}`],
-            linhas: d.linhas.map(linha => [...linha, ""]),
+            linhas: d.linhas.map(linha => [...linha, null]), // <-- CORRIGIDO de "" para null
             formatos: [...(d.formatos || []), 'number'] 
         }));
     };
+    // --- FIM DA CORREÇÃO ---
+
    const removerColuna = (indiceColuna: number) => {
         if (indiceColuna === 0) {
             showErrorToast("Ação não permitida", "A coluna de categorias não pode ser removida."); return;
@@ -251,6 +350,7 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
     const obterNomeFonteContexto = () => {
         if (arquivoContexto) return arquivoContexto.name;
         if (urlContexto) return urlContexto;
+        if (tipoArquivoDetectado) setTipoArquivoDetectado(null); 
         return "Nenhum arquivo ou link selecionado";
     };
 
@@ -260,7 +360,7 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
                 if (isNewVersionMode) {
                     return !tipoVersao || !descricaoVersao.trim() || (!arquivoContexto && !urlContexto.trim());
                 }
-                return !tituloContexto.trim() || (!arquivoContexto && !urlContexto.trim());
+                return !tituloContexto.trim() || (!arquivoContexto && !urlContexto.trim()) || !tipoArquivoDetectado;
 
             case 'dashboard':
                  if (isNewVersionMode) {
@@ -270,7 +370,9 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
                     
                     return !tipoVersao || !descricaoVersao.trim() || !dadosForamAlterados;
                 }
-                return !tituloGrafico.trim();
+                const temDadosManuais = abaFonteDeDados === 'manual' && conjuntoDeDados.linhas.length > 0 && conjuntoDeDados.linhas.some(l => l.slice(1).some(c => c !== null && c !== ''));
+                const temArquivo = abaFonteDeDados === 'upload' && !!arquivoDeDados;
+                return !tituloGrafico.trim() || (!temDadosManuais && !temArquivo);
 
             case 'indicador':
                 if (isNewVersionMode) {
@@ -285,15 +387,27 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
 
     return {
         abaAtiva, setAbaAtiva, aoCancelar: aoFechar, aoSubmeter: aoSubmeterFormulario, submissaoDesativada,
+        
+        // Contexto
         tituloContexto, setTituloContexto, detalhesContexto, setDetalhesContexto, arquivoContexto, setArquivoContexto,
         urlContexto, setUrlContexto, arrastandoSobre, aoSelecionarArquivo, aoClicarBotaoUrl, aoEntrarNaArea,
         aoSairDaArea, aoArrastarSobre, aoSoltarArquivo, obterNomeFonteContexto, formatarTamanhoArquivo,
+        CONTEXTO_ACCEPT_STRING,
+        tipoArquivoDetectado,
+        
+        // Nova Versão
         isNewVersionMode, selectedVersion, tipoVersao, setTipoVersao, descricaoVersao, setDescricaoVersao,
+        
+        // Dashboard
         abaFonteDeDados, setAbaFonteDeDados, tituloGrafico, setTituloGrafico, detalhesGrafico, setDetalhesGrafico,
-        tipoGrafico, aoMudarTipo: aoMudarTipoGrafico, arquivoDeDados, setArquivoDeDados, atualizarFormatoColuna,
+        tipoGrafico, aoMudarTipo: aoMudarTipoGrafico, arquivoDeDados, setArquivoDeDados,
         conjuntoDeDados, definirCoresDoGrafico,
         adicionarLinha, removerLinha, atualizarCelula, adicionarColuna, removerColuna, atualizarNomeColuna,
-        baixarModelo, previsualizacaoGerada, setPrevisualizacaoGerada,
+        atualizarFormatoColuna,
+        baixarModelo, 
+        // previsualizacaoGerada, // Removido
+        
+        // Indicador
         tituloIndicador, setTituloIndicador, descricaoIndicador, setDescricaoIndicador, valorAtualIndicador,
         setValorAtualIndicador, valorAlvoIndicador, setValorAlvoIndicador, unidadeIndicador, setUnidadeIndicador,
         textoComparativoIndicador, setTextoComparativoIndicador, corIndicador, setCorIndicador, iconeIndicador, setIconeIndicador,

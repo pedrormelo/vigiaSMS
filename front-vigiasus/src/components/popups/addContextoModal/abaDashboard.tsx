@@ -1,15 +1,13 @@
 // src/components/popups/addContextoModal/abaDashboard.tsx
 import React, { useState } from 'react';
-import { Database, Upload, BarChart3, Minimize } from 'lucide-react';
+import { Database, Upload, Minimize } from 'lucide-react'; // Removido BarChart3
 import { useModalAdicionarConteudo } from '@/components/popups/addContextoModal/useAddContentModal';
 import { SeletorTipoGrafico } from '@/components/popups/addContextoModal/seletorTipoGrafico';
 import { SecaoDadosManuais } from '@/components/popups/addContextoModal/secaoDadosManuais';
 import { SecaoUploadArquivo } from '@/components/popups/addContextoModal/secaoUploadArquivo';
 import { PrevisualizacaoGrafico } from '@/components/popups/addContextoModal/previsualizacaoGrafico';
-// Importar FormatoColuna aqui também
 import { TipoVersao, FormatoColuna } from '@/components/popups/addContextoModal/types';
 
-// CORREÇÃO: Adicionar 'atualizarFormatoColuna' ao Pick
 type AbaDashboardProps = Pick<
     ReturnType<typeof useModalAdicionarConteudo>,
     | 'tituloGrafico' | 'setTituloGrafico'
@@ -19,14 +17,14 @@ type AbaDashboardProps = Pick<
     | 'conjuntoDeDados' | 'definirCoresDoGrafico'
     | 'atualizarCelula' | 'adicionarLinha' | 'removerLinha' | 'adicionarColuna' | 'removerColuna' | 'atualizarNomeColuna'
     | 'arquivoDeDados' | 'setArquivoDeDados' | 'baixarModelo'
-    | 'previsualizacaoGerada' | 'setPrevisualizacaoGerada'
+    // REMOVIDO: | 'previsualizacaoGerada' | 'setPrevisualizacaoGerada'
     | 'isNewVersionMode'
     | 'selectedVersion'
     | 'tipoVersao'
     | 'setTipoVersao'
     | 'descricaoVersao'
     | 'setDescricaoVersao'
-    | 'atualizarFormatoColuna' // <-- ADICIONADO AQUI
+    | 'atualizarFormatoColuna'
 >;
 
 const coresPredefinidas = {
@@ -36,23 +34,23 @@ const coresPredefinidas = {
 };
 
 export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
-    // CORREÇÃO: Desestruturar 'atualizarFormatoColuna'
     const {
         tituloGrafico, setTituloGrafico, detalhesGrafico, setDetalhesGrafico,
         tipoGrafico, aoMudarTipo, abaFonteDeDados, setAbaFonteDeDados,
         conjuntoDeDados, definirCoresDoGrafico,
         atualizarCelula, adicionarLinha, removerLinha, adicionarColuna, removerColuna, atualizarNomeColuna,
         arquivoDeDados, setArquivoDeDados, baixarModelo,
-        previsualizacaoGerada, setPrevisualizacaoGerada,
+        // REMOVIDO: previsualizacaoGerada, setPrevisualizacaoGerada,
         isNewVersionMode, selectedVersion, tipoVersao, setTipoVersao, descricaoVersao, setDescricaoVersao,
-        atualizarFormatoColuna // <-- Adicionado na desestruturação
+        atualizarFormatoColuna
     } = props;
 
     const [graficoEmTelaCheia, setGraficoEmTelaCheia] = useState(false);
     const alternarTelaCheia = () => setGraficoEmTelaCheia(!graficoEmTelaCheia);
 
-    // Funções generateColorTheme, handleColorClick e variável corTemaAtiva (sem alterações)
-     const generateColorTheme = (baseColor: string): string[] => {
+    // ... (Funções generateColorTheme, handleColorClick e corTemaAtiva permanecem iguais) ...
+    const generateColorTheme = (baseColor: string): string[] => {
+        // ... (lógica)
         const hexToHsl = (hex: string) => {
             const r = parseInt(hex.slice(1, 3), 16) / 255;
             const g = parseInt(hex.slice(3, 5), 16) / 255;
@@ -191,7 +189,6 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                             <button onClick={() => setAbaFonteDeDados("upload")} className={`flex-1 text-sm py-2 px-4 rounded-2xl font-semibold transition-all flex justify-center items-center gap-2 ${abaFonteDeDados === "upload" ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:bg-gray-200"}`}><Upload className="w-4 h-4" /> Upload de Arquivo</button>
                         </div>
                         {abaFonteDeDados === 'manual' ? (
-                            // Passar todas as props necessárias para SecaoDadosManuais
                             <SecaoDadosManuais
                                 conjuntoDeDados={conjuntoDeDados}
                                 aoAtualizarCelula={atualizarCelula}
@@ -200,7 +197,7 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                                 aoAdicionarColuna={adicionarColuna}
                                 aoRemoverColuna={removerColuna}
                                 aoAtualizarNomeColuna={atualizarNomeColuna}
-                                aoAtualizarFormatoColuna={atualizarFormatoColuna} // <-- Passando aqui
+                                aoAtualizarFormatoColuna={atualizarFormatoColuna}
                             />
                         ) : (
                             <SecaoUploadArquivo arquivoDeDados={arquivoDeDados} setArquivoDeDados={setArquivoDeDados} aoBaixarModelo={baixarModelo} />
@@ -208,20 +205,19 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                     </div>
                 </div>
 
-                {/* Coluna Direita */}
+                {/* Coluna Direita (REMOVIDO BOTÃO) */}
                 <div className="flex flex-col space-y-4 h-full pt-1">
                      <label className="block text-lg font-medium text-gray-700 flex-shrink-0">Pré-visualização</label>
-                     <div className="flex-1 min-h-0">
+                     <div className="flex-1 min-h-0 h-full"> {/* <-- ADICIONADO h-full */}
                         <PrevisualizacaoGrafico
-                            tipoGrafico={tipoGrafico} conjuntoDeDados={conjuntoDeDados}
-                            titulo={tituloGrafico} previsualizacaoGerada={previsualizacaoGerada}
+                            tipoGrafico={tipoGrafico} 
+                            conjuntoDeDados={conjuntoDeDados}
+                            titulo={tituloGrafico}
+                            // REMOVIDO: previsualizacaoGerada={previsualizacaoGerada}
                             aoAlternarTelaCheia={alternarTelaCheia}
                         />
                     </div>
-                     <button onClick={() => setPrevisualizacaoGerada(true)} className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white font-semibold rounded-2xl hover:bg-blue-700 transition shadow flex-shrink-0">
-                        <BarChart3 className="w-5 h-5" />
-                        {previsualizacaoGerada ? "Atualizar Gráfico" : "Gerar Gráfico"}
-                    </button>
+                     {/* REMOVIDO: Botão "Gerar Gráfico" */}
                 </div>
             </div>
 
@@ -233,9 +229,10 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                         <button onClick={alternarTelaCheia} className="p-3 bg-gray-100 rounded-full text-gray-700 hover:bg-gray-200 transition-colors" title="Fechar tela cheia"><Minimize className="w-6 h-6" /></button>
                     </div>
                     <div className="flex-1 min-h-0 w-full h-full">
-                        <PrevisualizacaoGrafico
-                            tipoGrafico={tipoGrafico} conjuntoDeDados={conjuntoDeDados}
-                            titulo={tituloGrafico} previsualizacaoGerada={previsualizacaoGerada}
+                        <PrevisualizacaoGrafico 
+                            tipoGrafico={tipoGrafico} 
+                            conjuntoDeDados={conjuntoDeDados}
+                            titulo={tituloGrafico} 
                             emTelaCheia={true}
                         />
                     </div>
