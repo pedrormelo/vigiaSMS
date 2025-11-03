@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { 
+import {
     ArrowLeft, Info, History, Download, FileText, Plus, User, ChevronDown, FileType as FileIcon, LucideProps, Minimize, ZoomIn, ZoomOut, RotateCcw,
     Eye, EyeOff // <-- Ícones de visibilidade
 } from 'lucide-react';
@@ -22,22 +22,22 @@ interface VisualizarContextoModalProps {
     aoCriarNovaVersao?: (dados: DetalhesContexto) => void;
     perfil: 'diretor' | 'gerente' | 'membro';
     isEditing?: boolean;
-    aoAlternarVisibilidadeVersao?: (contextoId: string, versaoId: number) => void; 
+    aoAlternarVisibilidadeVersao?: (contextoId: string, versaoId: number) => void;
 }
 
 
 type TipoAba = 'detalhes' | 'versoes';
 
 // --- COMPONENTE AbaDetalhes (Sem alterações nesta etapa) ---
-const AbaDetalhes = ({ 
-    dados, 
-    aoFazerDownload, 
-    aoAlternarTelaCheia, 
+const AbaDetalhes = ({
+    dados,
+    aoFazerDownload,
+    aoAlternarTelaCheia,
     isEditing
-}: { 
-    dados: DetalhesContexto; 
-    aoFazerDownload: () => void; 
-    aoAlternarTelaCheia: () => void; 
+}: {
+    dados: DetalhesContexto;
+    aoFazerDownload: () => void;
+    aoAlternarTelaCheia: () => void;
     isEditing?: boolean;
 }) => {
     const versoesDisponiveis = dados.versoes || [];
@@ -45,7 +45,7 @@ const AbaDetalhes = ({
     const versaoMaisRecenteGeral = versoesDisponiveis.length > 0 ? versoesDisponiveis.reduce((a, b) => a.id > b.id ? a : b) : null;
     const versaoMaisRecenteVisivel = versoesVisiveis.length > 0 ? versoesVisiveis.reduce((a, b) => a.id > b.id ? a : b) : null;
     const [versaoSelecionadaId, setVersaoSelecionadaId] = useState<number | null>(versaoMaisRecenteVisivel?.id || versaoMaisRecenteGeral?.id || null);
-    
+
     useEffect(() => {
         const idInicial = versaoMaisRecenteVisivel?.id || versaoMaisRecenteGeral?.id || null;
         setVersaoSelecionadaId(idInicial);
@@ -65,8 +65,8 @@ const AbaDetalhes = ({
                         const title = isMostRecent ? 'Visualizando a versão mais recente' : 'Visualizando uma versão anterior';
 
                         return (
-                            <StatusBanner 
-                                variant={versaoSelecionada.estaOculta ? 'warning' : variant} 
+                            <StatusBanner
+                                variant={versaoSelecionada.estaOculta ? 'warning' : variant}
                                 title={versaoSelecionada.estaOculta ? 'Versão Oculta' : title}
                             >
                                 <div className="text-sm pl-3 leading-relaxed">
@@ -83,27 +83,27 @@ const AbaDetalhes = ({
                     <div className="mt-4">
                         <label htmlFor="version-select" className="block text-sm font-medium text-gray-700 mb-1">Visualizar outra versão:</label>
                         <div className="relative">
-                            <select 
-                                id="version-select" 
-                                value={versaoSelecionadaId || ''} 
-                                onChange={(e) => setVersaoSelecionadaId(Number(e.target.value))} 
+                            <select
+                                id="version-select"
+                                value={versaoSelecionadaId || ''}
+                                onChange={(e) => setVersaoSelecionadaId(Number(e.target.value))}
                                 className="w-full appearance-none bg-white border border-gray-300 rounded-2xl py-2 px-3 pr-8 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
                             >
                                 {listaDropdown.sort((a, b) => b.id - a.id).map(versao => (
-                                   <option key={versao.id} value={versao.id}>
-                                       {versao.nome} {versao.estaOculta ? '(Oculta)' : ''}
-                                   </option>
+                                    <option key={versao.id} value={versao.id}>
+                                        {versao.nome} {versao.estaOculta ? '(Oculta)' : ''}
+                                    </option>
                                 ))}
                             </select>
                             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700"><ChevronDown className="w-4 h-4" /></div>
                         </div>
                     </div>
                 )}
-                
+
                 {listaDropdown.length === 0 && !isEditing && versoesDisponiveis.length > 0 && (
-                     <StatusBanner variant='info' title='Versões Ocultas'>
-                         <p className="text-sm pl-3">Todas as versões visíveis deste contexto estão ocultas no momento.</p>
-                     </StatusBanner>
+                    <StatusBanner variant='info' title='Versões Ocultas'>
+                        <p className="text-sm pl-3">Todas as versões visíveis deste contexto estão ocultas no momento.</p>
+                    </StatusBanner>
                 )}
 
                 <div className="bg-gray-50 rounded-2xl border border-gray-200 p-4 flex items-center justify-between">
@@ -150,20 +150,20 @@ const AbaDetalhes = ({
 };
 
 // --- COMPONENTE AbaVersoes (Modificado) ---
-const AbaVersoes = ({ 
-    aoCriarNovaVersao, 
-    dados, 
-    perfil, 
-    isEditing, 
+const AbaVersoes = ({
+    aoCriarNovaVersao,
+    dados,
+    perfil,
+    isEditing,
     aoAlternarVisibilidadeVersao
-}: { 
-    aoCriarNovaVersao?: (dados: DetalhesContexto) => void; 
-    dados: DetalhesContexto; 
-    perfil: VisualizarContextoModalProps['perfil']; 
-    isEditing?: boolean; 
+}: {
+    aoCriarNovaVersao?: (dados: DetalhesContexto) => void;
+    dados: DetalhesContexto;
+    perfil: VisualizarContextoModalProps['perfil'];
+    isEditing?: boolean;
     aoAlternarVisibilidadeVersao?: (versaoId: number) => void;
 }) => {
-    
+
     const podeCriarNovaVersao = perfil === 'membro' && isEditing;
     const todasAsVersoes = dados.versoes || [];
     const numeroDeVersoesVisiveis = todasAsVersoes.filter(v => !v.estaOculta).length;
@@ -182,12 +182,12 @@ const AbaVersoes = ({
             {versoesParaExibir.length > 0 ? (
                 <ul className="space-y-3">
                     {versoesParaExibir.sort((a, b) => b.id - a.id).map((versao: Versao) => {
-                        
+
                         const isUltimaVersaoVisivel = !versao.estaOculta && numeroDeVersoesVisiveis === 1;
 
                         return (
-                            <li 
-                                key={versao.id} 
+                            <li
+                                key={versao.id}
                                 className={cn(
                                     "p-3 bg-gray-50 rounded-lg border border-gray-200 flex justify-between items-center transition-colors",
                                     isEditing ? "hover:bg-gray-100" : "",
@@ -199,20 +199,20 @@ const AbaVersoes = ({
                                     <p className={cn("font-medium", versao.estaOculta ? "text-gray-600" : "text-gray-800")}>{versao.nome}</p>
                                     <p className="text-sm text-gray-500">por {versao.autor} em {new Date(versao.data).toLocaleDateString('pt-BR')}</p>
                                 </div>
-                                
+
                                 {/* --- ATUALIZADO: Switch de Visibilidade --- */}
                                 {isEditing && perfil === 'membro' && aoAlternarVisibilidadeVersao && (
-                                    <div 
+                                    <div
                                         className={cn("flex items-center gap-2", isUltimaVersaoVisivel && "opacity-50 cursor-not-allowed")}
                                         title={isUltimaVersaoVisivel ? "Não é possível ocultar a única versão visível." : (versao.estaOculta ? "Clique para tornar visível" : "Clique para ocultar")}
                                     >
                                         {/* O Ícone agora é o label e fica ANTES do switch */}
-                                        <label 
-                                            htmlFor={`switch-v${versao.id}`} 
+                                        <label
+                                            htmlFor={`switch-v${versao.id}`}
                                             className={cn(isUltimaVersaoVisivel ? "cursor-not-allowed" : "cursor-pointer")}
                                         >
-                                            {versao.estaOculta ? 
-                                                <EyeOff className="w-4 h-4 text-gray-500" /> : 
+                                            {versao.estaOculta ?
+                                                <EyeOff className="w-4 h-4 text-gray-500" /> :
                                                 <Eye className="w-4 h-4 text-blue-600" />
                                             }
                                         </label>
@@ -222,6 +222,7 @@ const AbaVersoes = ({
                                             onCheckedChange={() => aoAlternarVisibilidadeVersao(versao.id)}
                                             disabled={isUltimaVersaoVisivel}
                                             aria-label={versao.estaOculta ? "Tornar versão visível" : "Ocultar versão"}
+                                            className='focus:ring-2 ring-blue-300 ring-offset-1'
                                         />
                                         {/* REMOVIDO o texto "Visível/Oculto" e o ícone duplicado */}
                                     </div>
@@ -250,13 +251,13 @@ const BotaoAba = ({ id, label, Icon, abaAtiva, setAbaAtiva }: { id: TipoAba; lab
 );
 
 // --- COMPONENTE PRINCIPAL DO MODAL (Sem alterações) ---
-export function VisualizarContextoModal({ 
-    estaAberto, 
-    aoFechar, 
-    dadosDoContexto, 
-    aoCriarNovaVersao, 
-    perfil, 
-    isEditing, 
+export function VisualizarContextoModal({
+    estaAberto,
+    aoFechar,
+    dadosDoContexto,
+    aoCriarNovaVersao,
+    perfil,
+    isEditing,
     aoAlternarVisibilidadeVersao
 }: VisualizarContextoModalProps) {
     const [abaAtiva, setAbaAtiva] = useState<TipoAba>('detalhes');
@@ -281,7 +282,7 @@ export function VisualizarContextoModal({
     // Handler para o download
     const lidarComDownload = () => {
         if (!dadosDoContexto) return;
-         if (dadosDoContexto.type === 'dashboard' && chartContainerRef.current) {
+        if (dadosDoContexto.type === 'dashboard' && chartContainerRef.current) {
             // (lógica SVG)
         } else if (dadosDoContexto.url) {
             const a = document.createElement('a');
@@ -321,22 +322,22 @@ export function VisualizarContextoModal({
                         <BotaoAba id="detalhes" label="Detalhes" Icon={Info} abaAtiva={abaAtiva} setAbaAtiva={setAbaAtiva} />
                         <BotaoAba id="versoes" label="Versões" Icon={History} abaAtiva={abaAtiva} setAbaAtiva={setAbaAtiva} />
                     </div>
-                    
+
                     {/* Conteúdo da Aba */}
                     <div className="h-[60vh]">
                         {abaAtiva === 'detalhes' && (
-                            <AbaDetalhes 
-                                dados={dadosDoContexto} 
-                                aoFazerDownload={lidarComDownload} 
-                                aoAlternarTelaCheia={alternarTelaCheia} 
+                            <AbaDetalhes
+                                dados={dadosDoContexto}
+                                aoFazerDownload={lidarComDownload}
+                                aoAlternarTelaCheia={alternarTelaCheia}
                                 isEditing={isEditing}
                             />
                         )}
                         {abaAtiva === 'versoes' && (
-                            <AbaVersoes 
-                                aoCriarNovaVersao={aoCriarNovaVersao} 
-                                dados={dadosDoContexto} 
-                                perfil={perfil} 
+                            <AbaVersoes
+                                aoCriarNovaVersao={aoCriarNovaVersao}
+                                dados={dadosDoContexto}
+                                perfil={perfil}
                                 isEditing={isEditing}
                                 aoAlternarVisibilidadeVersao={handleToggleVersao}
                             />

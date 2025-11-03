@@ -30,7 +30,7 @@ export const fileTypeConfig = {
     // NOVO: Tipo Apresentação
     apresentacao: {
         color: "bg-amber-500 hover:bg-amber-600", // Amarelo Ouro (Amber)
-        svg: "/icons/CONTEXTOS/PPT-1.svg", // Assumindo um novo ícone PPT-1
+        svg: "/icons/CONTEXTOS/PPTX-1.svg", // Ícone PPTX-1 existente em public/icons/CONTEXTOS
         icon: Presentation, // Ícone Lucide como fallback
         label: "Apresentação",
     },
@@ -42,7 +42,7 @@ export const fileTypeConfig = {
 
     indicador: {
         color: "bg-teal-500 hover:bg-teal-600",
-        svg: "/icons/CONTEXTOS/INDC.svg",
+        svg: "/icons/CONTEXTOS/INDIC.svg",
         label: "Indicador",
     },
     excel: {

@@ -22,16 +22,17 @@ interface GerenciasFilterBarProps {
 
 // Mapeamento de ícones (Baseado em NotificationItem)
 const filterIconMap: Record<FileType, string | React.ElementType | null> = {
-    doc: "/icons/CONTEXTOS/DOC.svg",
-    excel: "/icons/CONTEXTOS/PLA.svg",
-    pdf: "/icons/CONTEXTOS/PDF.svg",
-    //comentario: "/icons/comentario-icon.svg",
-    //sistema: "/icons/system.svg",
-    dashboard:"/icons/CONTEXTOS/GRA.svg",
-    link: fileTypeConfig.link.icon,
-    resolucao: "/icons/CONTEXTOS/RES.svg", // Fallback
-    indicador: null,
-    //leis: fileTypeConfig.leis.icon,
+  doc: "/icons/CONTEXTOS/DOC.svg",
+  excel: "/icons/CONTEXTOS/PLA.svg",
+  pdf: "/icons/CONTEXTOS/PDF.svg",
+  //comentario: "/icons/comentario-icon.svg",
+  //sistema: "/icons/system.svg",
+  dashboard: "/icons/CONTEXTOS/GRA.svg",
+  link: "/icons/CONTEXTOS/LINK.svg",
+  resolucao: "/icons/CONTEXTOS/RES.svg",
+  indicador: "/icons/CONTEXTOS/INDIC.svg",
+  apresentacao: "/icons/CONTEXTOS/PPTX.svg",
+  leis: fileTypeConfig.leis.icon,
 };
 
 export default function GerenciasFilterBar({

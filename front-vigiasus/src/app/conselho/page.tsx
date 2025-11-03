@@ -113,7 +113,6 @@ export default function CMSpage() {
 
         <main className="flex-1 bg-white mx-auto min-h-screen">
             <AddContentModal
-            <AddContentModal
                 isOpen={showAddContexto}
                 onClose={() => setShowAddContexto(false)}
                 onSubmit={() => setShowAddContexto(false)}
