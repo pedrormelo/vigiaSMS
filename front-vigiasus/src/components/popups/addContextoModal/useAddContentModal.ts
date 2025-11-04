@@ -1,5 +1,5 @@
 // src/components/popups/addContextoModal/useAddContentModal.ts
-import { useState, useEffect, useCallback } from "react"; 
+import { useState, useEffect, useCallback, useMemo } from "react"; 
 import { saveAs } from "file-saver";
 import { 
     AbaAtiva, AbaFonteDeDados, TipoGrafico, ConjuntoDeDadosGrafico, 
@@ -10,41 +10,85 @@ import {
 import { showWarningToast, showErrorToast, showDispatchToast } from "@/components/ui/Toasts";
 import { FileType } from "@/components/contextosCard/contextoCard";
 
-interface PropsDoHook extends ModalAdicionarConteudoProps {
-    dadosIniciais?: Partial<DetalhesContexto> & { description?: string; payload?: Partial<ConjuntoDeDadosGrafico>; chartType?: TipoGrafico } | null;
-}
-
-// --- CONSTANTES DE VALIDAÇÃO ---
-const CONTEXTO_ACCEPT_STRING = ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.ods,.odt,.odp";
-const CONTEXTO_ACCEPT_MAP: { [key: string]: FileType } = {
-    "application/pdf": "pdf",
-    "application/msword": "doc",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "doc",
-    "application/vnd.oasis.opendocument.text": "doc",
-    "application/vnd.ms-excel": "excel",
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "excel",
-    "application/vnd.oasis.opendocument.spreadsheet": "excel",
-    "application/vnd.ms-powerpoint": "apresentacao",
-    "application/vnd.openxmlformats-officedocument.presentationml.presentation": "apresentacao",
-    "application/vnd.oasis.opendocument.presentation": "apresentacao",
+// (O resto do arquivo, incluindo FILE_TYPE_DEFINITIONS, getAcceptString, etc., permanece o mesmo)
+// --- INÍCIO DAS DEFINIÇÕES DE TIPO ---
+const FILE_TYPE_DEFINITIONS: Record<FileType, { mimes: string[], extensions: string[], label: string }> = {
+    'pdf': { 
+        mimes: ['application/pdf'], 
+        extensions: ['.pdf'], 
+        label: 'PDF' 
+    },
+    'doc': { 
+        mimes: ['application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.oasis.opendocument.text'], 
+        extensions: ['.doc', '.docx', '.odt'], 
+        label: 'Documento' 
+    },
+    'excel': { 
+        mimes: ['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.oasis.opendocument.spreadsheet'], 
+        extensions: ['.xls', '.xlsx', '.ods'], 
+        label: 'Planilha' 
+    },
+    'apresentacao': { 
+        mimes: ['application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/vnd.oasis.opendocument.presentation'], 
+        extensions: ['.ppt', '.pptx', '.odp'], 
+        label: 'Apresentação' 
+    },
+    'resolucao': { 
+        mimes: ['application/pdf'], 
+        extensions: ['.pdf'], 
+        label: 'Resolução (PDF)' 
+    },
+    'leis': { 
+        mimes: ['application/pdf'], 
+        extensions: ['.pdf'], 
+        label: 'Lei (PDF)' 
+    },
+    'dashboard': { mimes: [], extensions: [], label: 'Dashboard' },
+    'indicador': { mimes: [], extensions: [], label: 'Indicador' },
+    'link': { mimes: [], extensions: [], label: 'Link' },
 };
-const detectarTipoPorExtensao = (nomeArquivo: string): FileType | null => {
-    const extensao = nomeArquivo.split('.').pop()?.toLowerCase() || '';
-    if (['pdf'].includes(extensao)) return 'pdf';
-    if (['doc', 'docx', 'odt'].includes(extensao)) return 'doc';
-    if (['xls', 'xlsx', 'ods'].includes(extensao)) return 'excel';
-    if (['ppt', 'pptx', 'odp'].includes(extensao)) return 'apresentacao';
+
+const getAcceptString = (fileType: FileType | null): string => {
+    if (fileType && FILE_TYPE_DEFINITIONS[fileType] && FILE_TYPE_DEFINITIONS[fileType].mimes.length > 0) {
+        const def = FILE_TYPE_DEFINITIONS[fileType];
+        return [...def.mimes, ...def.extensions].join(',');
+    }
+    
+    return Object.values(FILE_TYPE_DEFINITIONS)
+        .flatMap(def => [...def.mimes, ...def.extensions])
+        .filter(Boolean)
+        .join(',');
+};
+
+const detectarTipoPorArquivo = (arquivo: File): FileType | null => {
+    const extensao = '.' + arquivo.name.split('.').pop()?.toLowerCase();
+    for (const key in FILE_TYPE_DEFINITIONS) {
+        const fileType = key as FileType;
+        const def = FILE_TYPE_DEFINITIONS[fileType];
+        if (def.mimes.includes(arquivo.type) || def.extensions.includes(extensao)) {
+            return fileType;
+        }
+    }
     return null;
 };
-// --- FIM DAS CONSTANTES ---
+// --- FIM DAS NOVAS DEFINIÇÕES ---
+
+// Definindo a interface das Props do Hook
+interface PropsDoHook {
+    estaAberto: boolean;
+    aoFechar: () => void;
+    aoSubmeter: (dados: any) => void; // Ajuste 'any' se tiver o tipo SubmitData
+    abaInicial?: AbaAtiva;
+    dadosIniciais?: Partial<DetalhesContexto> | null;
+}
 
 export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, abaInicial = 'contexto', dadosIniciais }: PropsDoHook) => {
-    // --- ESTADOS GERAIS ---
+    // ... (Estados gerais) ...
     const [abaAtiva, setAbaAtiva] = useState<AbaAtiva>(abaInicial);
     const [abaFonteDeDados, setAbaFonteDeDados] = useState<AbaFonteDeDados>('manual');
     const [arrastandoSobre, setArrastandoSobre] = useState(false);
 
-    // --- ESTADOS DO CONTEXTO ---
+    // ... (Estados do Contexto) ...
     const [tituloContexto, setTituloContexto] = useState("");
     const [detalhesContexto, setDetalhesContexto] = useState("");
     const [arquivoContexto, setArquivoContexto] = useState<File | null>(null);
@@ -52,25 +96,20 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
     const [isNewVersionMode, setIsNewVersionMode] = useState(false);
     const [selectedVersion, setSelectedVersion] = useState("");
     const [tipoArquivoDetectado, setTipoArquivoDetectado] = useState<FileType | null>(null); 
+    
+    const [tipoArquivoOriginal, setTipoArquivoOriginal] = useState<FileType | null>(null);
 
-    // --- ESTADOS DO DASHBOARD ---
+    // ... (Estados do Dashboard e Indicador) ...
     const [tituloGrafico, setTituloGrafico] = useState("");
     const [detalhesGrafico, setDetalhesGrafico] = useState("");
     const [tipoGrafico, setTipoGrafico] = useState<TipoGrafico>("pie");
     const [arquivoDeDados, setArquivoDeDados] = useState<File | null>(null);
-    
     const [conjuntoDeDados, setConjuntoDeDados] = useState<ConjuntoDeDadosGrafico>({
         colunas: ["Categoria", "Valor"],
         linhas: [["Exemplo de Categoria", 100]],
         cores: ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444'],
         formatos: ['text', 'number'],
     });
-
-    const definirCoresDoGrafico = (novasCores: string[]) => {
-        setConjuntoDeDados(dadosAtuais => ({ ...dadosAtuais, cores: novasCores }));
-    };
-
-    // --- ESTADOS DO INDICADOR ---
     const [tituloIndicador, setTituloIndicador] = useState("");
     const [descricaoIndicador, setDescricaoIndicador] = useState("");
     const [valorAtualIndicador, setValorAtualIndicador] = useState("");
@@ -79,15 +118,18 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
     const [textoComparativoIndicador, setTextoComparativoIndicador] = useState("");
     const [corIndicador, setCorIndicador] = useState("#3B82F6");
     const [iconeIndicador, setIconeIndicador] = useState<NomeIcone>("Heart");
-
-    // const [previsualizacaoGerada, setPrevisualizacaoGerada] = useState(false); // Removido
     const [tipoVersao, setTipoVersao] = useState<TipoVersao>(TipoVersao.CORRECAO);
     const [descricaoVersao, setDescricaoVersao] = useState("");
+    
+    const definirCoresDoGrafico = (novasCores: string[]) => {
+        setConjuntoDeDados(dadosAtuais => ({ ...dadosAtuais, cores: novasCores }));
+    };
 
     const reiniciarTodoOEstado = useCallback(() => {
         setTituloContexto(""); setDetalhesContexto(""); setArquivoContexto(null); setUrlContexto("");
         setIsNewVersionMode(false); setSelectedVersion("");
         setTipoArquivoDetectado(null); 
+        setTipoArquivoOriginal(null);
         setTituloGrafico(""); setDetalhesGrafico(""); setTipoGrafico("pie");
         setArquivoDeDados(null);
         setConjuntoDeDados({
@@ -100,7 +142,6 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
         setValorAlvoIndicador(""); setUnidadeIndicador("Nenhum"); setTextoComparativoIndicador("");
         setCorIndicador("#3B82F6"); setIconeIndicador("Heart");
         setAbaAtiva(abaInicial); setAbaFonteDeDados('manual');
-        // setPrevisualizacaoGerada(false); // Removido
         setTipoVersao(TipoVersao.CORRECAO);
         setDescricaoVersao("");
     }, [abaInicial]);
@@ -115,6 +156,8 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
                 const proximaVersao = (dadosIniciais.versoes?.length || 0) + 1;
                 setSelectedVersion(`v${proximaVersao}`);
 
+                setTipoArquivoOriginal(dadosIniciais.type || null);
+                
                 setTituloContexto(dadosIniciais.title || "");
                 setDetalhesContexto(dadosIniciais.description || "");
                 
@@ -140,7 +183,6 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
                             ...(payloadDash.colunas?.slice(1).map(() => 'number' as FormatoColuna) || ['number' as FormatoColuna])
                         ],
                     });
-                 // setPrevisualizacaoGerada(true); // Removido
                 }
 
                 if (dadosIniciais.type === 'indicador' && dadosIniciais.payload) {
@@ -158,6 +200,58 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
         }
     }, [estaAberto, dadosIniciais, abaInicial, reiniciarTodoOEstado]);
 
+    
+    const acceptString = useMemo(() => {
+        if (isNewVersionMode && tipoArquivoOriginal && FILE_TYPE_DEFINITIONS[tipoArquivoOriginal].mimes.length > 0) {
+            return getAcceptString(tipoArquivoOriginal);
+        }
+        return getAcceptString(null);
+    }, [isNewVersionMode, tipoArquivoOriginal]);
+
+    const helpText = useMemo(() => {
+        if (isNewVersionMode && tipoArquivoOriginal && FILE_TYPE_DEFINITIONS[tipoArquivoOriginal].mimes.length > 0) {
+            const def = FILE_TYPE_DEFINITIONS[tipoArquivoOriginal];
+            return `Apenas arquivos ${def.label} (${def.extensions.join(', ')})`;
+        }
+        return "PDF, DOC, XLS, PPT, etc.";
+    }, [isNewVersionMode, tipoArquivoOriginal]);
+
+
+    const aoSelecionarArquivo = (arquivo: File | null) => {
+        if (!arquivo) return;
+        
+        const LIMITE_TAMANHO_MB = 15;
+        if (arquivo.size > LIMITE_TAMANHO_MB * 1024 * 1024) {
+            showErrorToast("Arquivo muito grande", `O tamanho máximo é de ${LIMITE_TAMANHO_MB} MB.`);
+            return;
+        }
+
+        const tipoDetectado = detectarTipoPorArquivo(arquivo);
+
+        if (!tipoDetectado) {
+            showErrorToast("Tipo de arquivo inválido", `Formato não permitido. Use: ${acceptString}`);
+            setArquivoContexto(null);
+            setTipoArquivoDetectado(null);
+            return;
+        }
+
+        if (isNewVersionMode && tipoArquivoOriginal) {
+            const eTipoDeArquivoOriginal = FILE_TYPE_DEFINITIONS[tipoArquivoOriginal].mimes.length > 0;
+            
+            if (eTipoDeArquivoOriginal && tipoDetectado !== tipoArquivoOriginal) {
+                showErrorToast("Tipo de arquivo incorreto", `A nova versão deve ser do mesmo tipo do original (${FILE_TYPE_DEFINITIONS[tipoArquivoOriginal].label}).`);
+                setArquivoContexto(null);
+                setTipoArquivoDetectado(tipoArquivoOriginal); // Mantém o tipo original
+                return;
+            }
+        }
+
+        setArquivoContexto(arquivo);
+        setUrlContexto("");
+        setTipoArquivoDetectado(tipoDetectado);
+    };
+
+    // ... (O restante do arquivo permanece o mesmo) ...
 
     const aoSubmeterFormulario = () => {
         let payload: Partial<ContextoPayload> | Partial<DashboardPayload> | Partial<IndicadorPayload>;
@@ -192,33 +286,11 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
         aoFechar();
     };
     
-    const aoSelecionarArquivo = (arquivo: File | null) => {
-        if (!arquivo) return;
-        
-        const LIMITE_TAMANHO_MB = 15;
-        if (arquivo.size > LIMITE_TAMANHO_MB * 1024 * 1024) {
-            showErrorToast("Arquivo muito grande", `O tamanho máximo é de ${LIMITE_TAMANHO_MB} MB.`);
+    const aoClicarBotaoUrl = () => {
+        if (isNewVersionMode && tipoArquivoOriginal && FILE_TYPE_DEFINITIONS[tipoArquivoOriginal].mimes.length > 0) {
+            showErrorToast("Ação não permitida", "Você não pode alterar o tipo de 'Arquivo' para 'Link' em uma nova versão.");
             return;
         }
-
-        let tipoDetectado: FileType | null = CONTEXTO_ACCEPT_MAP[arquivo.type];
-        
-        if (!tipoDetectado) {
-            tipoDetectado = detectarTipoPorExtensao(arquivo.name);
-        }
-
-        if (tipoDetectado) {
-            setArquivoContexto(arquivo);
-            setUrlContexto("");
-            setTipoArquivoDetectado(tipoDetectado);
-        } else {
-            showErrorToast("Tipo de arquivo inválido", `Formato não permitido. Use: ${CONTEXTO_ACCEPT_STRING}`);
-            setArquivoContexto(null);
-            setTipoArquivoDetectado(null);
-        }
-    };
-
-    const aoClicarBotaoUrl = () => {
         const url = prompt("Por favor, insira a URL:");
         if (url) { 
             setUrlContexto(url); 
@@ -240,7 +312,6 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
 
     const aoMudarTipoGrafico = (t: TipoGrafico) => {
         setTipoGrafico(t);
-        // Não mexe mais nas colunas
     };
 
     const adicionarLinha = () => {
@@ -248,7 +319,6 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
             showWarningToast("Limite de 25 linhas atingido.");
             return;
         }
-        // --- CORRIGIDO ---
         setConjuntoDeDados((d) => ({ ...d, linhas: [...d.linhas, ["", ...Array(d.colunas.length - 1).fill(null)]] }));
     };
 
@@ -294,7 +364,6 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
         )}));
     };
 
-   // --- ESTA É A CORREÇÃO ---
    const adicionarColuna = () => {
         if (conjuntoDeDados.colunas.length >= 30) {
             showWarningToast("Limite de 30 colunas atingido.");
@@ -303,11 +372,10 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
         setConjuntoDeDados((d) => ({
             ...d,
             colunas: [...d.colunas, `Série ${d.colunas.length}`],
-            linhas: d.linhas.map(linha => [...linha, null]), // <-- CORRIGIDO de "" para null
+            linhas: d.linhas.map(linha => [...linha, null]), 
             formatos: [...(d.formatos || []), 'number'] 
         }));
     };
-    // --- FIM DA CORREÇÃO ---
 
    const removerColuna = (indiceColuna: number) => {
         if (indiceColuna === 0) {
@@ -384,7 +452,8 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
                 return true;
         }
     })();
-
+    
+    // --- CORREÇÃO: ADICIONAR tipoArquivoOriginal AO RETORNO ---
     return {
         abaAtiva, setAbaAtiva, aoCancelar: aoFechar, aoSubmeter: aoSubmeterFormulario, submissaoDesativada,
         
@@ -392,8 +461,12 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
         tituloContexto, setTituloContexto, detalhesContexto, setDetalhesContexto, arquivoContexto, setArquivoContexto,
         urlContexto, setUrlContexto, arrastandoSobre, aoSelecionarArquivo, aoClicarBotaoUrl, aoEntrarNaArea,
         aoSairDaArea, aoArrastarSobre, aoSoltarArquivo, obterNomeFonteContexto, formatarTamanhoArquivo,
-        CONTEXTO_ACCEPT_STRING,
+        
+        acceptString, 
+        helpText,     
+        
         tipoArquivoDetectado,
+        tipoArquivoOriginal, // <-- ADICIONADO AQUI
         
         // Nova Versão
         isNewVersionMode, selectedVersion, tipoVersao, setTipoVersao, descricaoVersao, setDescricaoVersao,
@@ -405,7 +478,6 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
         adicionarLinha, removerLinha, atualizarCelula, adicionarColuna, removerColuna, atualizarNomeColuna,
         atualizarFormatoColuna,
         baixarModelo, 
-        // previsualizacaoGerada, // Removido
         
         // Indicador
         tituloIndicador, setTituloIndicador, descricaoIndicador, setDescricaoIndicador, valorAtualIndicador,

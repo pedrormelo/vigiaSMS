@@ -2,13 +2,15 @@
 
 import { PieChart, BarChart3, AreaChart } from "lucide-react"; 
 import type { FileType } from '@/components/contextosCard/contextoCard';
-import { StatusContexto } from "@/components/validar/typesDados"; // <-- 1. IMPORTAR STATUS
+// 1. IMPORTAR HistoricoEvento e StatusContexto
+import { StatusContexto, HistoricoEvento } from "@/components/validar/typesDados"; 
 
 export type AbaAtiva = "contexto" | "dashboard" | "indicador";
 export type AbaFonteDeDados = "manual" | "upload";
 export type TipoGrafico = "pie" | "chart" | "line";
 export type NomeIcone = "Heart" | "Landmark" | "ClipboardList" | "Users" | "TrendingUp" | "DollarSign" | "Building" | "UserCheck";
 export type FormatoColuna = 'number' | 'percent' | 'currency' | 'text';
+
 export enum TipoVersao {
   CORRECAO = "Correção de Informação Incorreta",
   ATUALIZACAO_MENSAL = "Atualização Mensal",
@@ -90,19 +92,29 @@ interface IndicadorDetailsPayload {
     icone: NomeIcone;
 }
 
+// 2. INTERFACE DETALHESCONTEXTO ATUALIZADA
+// Esta é a interface principal que o modal unificado usará.
+// Ela é uma "super-interface" que pode conter dados de um 'Contexto' ou de um 'DetalhesContexto' original.
 export interface DetalhesContexto {
     id: string;
-    title: string;
+    title: string; // 'nome' em Contexto
     type: FileType;
-    insertedDate: string;
-    status: StatusContexto; // <-- 2. ADICIONADO STATUS
+    insertedDate: string; // 'data' em Contexto
+    status: StatusContexto; // 'situacao' em Contexto
+    
+    // Campos opcionais que podem ou não estar presentes
     url?: string;
     payload?: ConjuntoDeDadosGrafico | IndicadorDetailsPayload;
-    description?: string;
+    description?: string; // 'detalhes' em Contexto
     solicitante?: string;
     autor?: string;
     chartType?: TipoGrafico;
     versoes?: Versao[]; 
+    
+    // --- CAMPO ADICIONADO PARA O HISTÓRICO ORIGINAL ---
+    historico?: HistoricoEvento[]; // Para a timeline de validação
+
+    // Campos específicos de Indicador (mantidos)
     valorAtual?: string;
     valorAlvo?: string;
     unidade?: string;
@@ -110,6 +122,10 @@ export interface DetalhesContexto {
     cor?: string;
     icone?: NomeIcone;
     cores?: string[];
+
+    // Campos que só existem no 'Contexto' original (opcionais)
+    email?: string;
+    gerencia?: string;
 }
 
 

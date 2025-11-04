@@ -3,7 +3,7 @@ import React from 'react';
 import { UploadCloud, Link as LinkIcon, Eye, Trash2 } from 'lucide-react';
 import { useModalAdicionarConteudo } from '@/components/popups/addContextoModal/useAddContentModal';
 import { TipoVersao } from '@/components/popups/addContextoModal/types';
-import IconeDocumento from '@/components/validar/iconeDocumento'; // <-- Importar IconeDocumento
+import IconeDocumento from '@/components/validar/iconeDocumento'; 
 import { FileType } from '@/components/contextosCard/contextoCard';
 
 type AbaContextoProps = Pick<
@@ -21,29 +21,23 @@ type AbaContextoProps = Pick<
     | 'setTipoVersao'
     | 'descricaoVersao'
     | 'setDescricaoVersao'
-    // --- NOVAS PROPS ---
-    | 'CONTEXTO_ACCEPT_STRING'
     | 'tipoArquivoDetectado'
+    | 'acceptString'
+    | 'helpText'
+    | 'tipoArquivoOriginal'
 >;
 
-// --- CORREÇÃO: Lógica do Ícone ---
 const IconeFonte = ({ tipo }: { tipo: FileType | null }) => {
     if (tipo === 'link') {
         return <LinkIcon className="w-10 h-10 text-green-600 mb-3" />;
     }
-    // Se o tipo for um DocType válido (pdf, doc, excel, apresentacao)
-    // ou um FileType que também é DocType (dashboard, resolucao, indicador)
-    // passamos para o IconeDocumento.
     if (tipo) {
-        // Tipos que não são DocType ('leis') serão tratados pelo fallback do IconeDocumento
         return (
             <div className="w-10 h-10 mb-3 scale-125"> 
-                {/* Corrigido: Passa o tipo que pode ser 'link', 'leis' ou DocType */}
                 <IconeDocumento type={tipo} />
             </div>
         );
     }
-    // Padrão se tipo for null
     return <UploadCloud className="w-10 h-10 text-gray-400 mb-3" />;
 };
 
@@ -62,8 +56,11 @@ export const AbaContexto: React.FC<AbaContextoProps> = ({
     setTipoVersao,
     descricaoVersao,
     setDescricaoVersao,
-    CONTEXTO_ACCEPT_STRING, // <-- Recebe
-    tipoArquivoDetectado     // <-- Recebe
+    tipoArquivoDetectado,
+    acceptString,
+    helpText,
+    // --- 2. DESTRUTURAR A PROP FALTANTE ---
+    tipoArquivoOriginal,
 }) => {
     return (
         <div className="h-full overflow-y-auto pr-4">
@@ -135,12 +132,10 @@ export const AbaContexto: React.FC<AbaContextoProps> = ({
                     <div className="flex gap-2 items-stretch">
                         <div onDrop={aoSoltarArquivo} onDragOver={aoArrastarSobre} onDragEnter={aoEntrarNaArea} onDragLeave={aoSairDaArea} className={`flex-1 border-2 border-dashed rounded-2xl p-6 text-center transition-all cursor-pointer flex flex-col justify-center items-center ${arrastandoSobre ? 'border-blue-500 bg-blue-50 animate-pulse-border' : 'border-gray-300 bg-gray-50/50 hover:border-gray-400'}`}>
                             
-                            {/* ATUALIZADO: Passa o 'accept' string */}
-                            <input id="context-file-input" type="file" onChange={(e) => aoSelecionarArquivo(e.target.files ? e.target.files[0] : null)} className="hidden" accept={CONTEXTO_ACCEPT_STRING} />
+                            <input id="context-file-input" type="file" onChange={(e) => aoSelecionarArquivo(e.target.files ? e.target.files[0] : null)} className="hidden" accept={acceptString} />
                             
                             <label htmlFor="context-file-input" className="cursor-pointer w-full flex flex-col items-center justify-center">
                                 
-                                {/* ATUALIZADO: Usa o IconeFonte dinâmico */}
                                 <IconeFonte tipo={tipoArquivoDetectado} />
 
                                 {(arquivoContexto || urlContexto) ? (
@@ -152,19 +147,24 @@ export const AbaContexto: React.FC<AbaContextoProps> = ({
                                     <>
                                         <p className="font-semibold text-gray-700">Arraste e solte o arquivo</p>
                                         <p className="text-sm text-gray-500">ou <span className="text-blue-600 font-semibold">clique para selecionar</span></p>
-                                        <p className="text-xs text-gray-400 mt-2">PDF, DOC, XLS, PPT</p>
+                                        <p className="text-xs text-gray-400 mt-2">{helpText}</p>
                                     </>
                                 )}
                             </label>
                         </div>
                         <div className="flex flex-col gap-2">
-                            <button onClick={aoClicarBotaoUrl} className="px-4 py-3 border border-gray-200 cursor-pointer rounded-2xl hover:bg-gray-100 transition-colors h-full flex items-center" title="Adicionar link">
+                            <button 
+                                onClick={aoClicarBotaoUrl} 
+                                className="px-4 py-3 border border-gray-200 cursor-pointer rounded-2xl hover:bg-gray-100 transition-colors h-full flex items-center disabled:opacity-50 disabled:cursor-not-allowed" 
+                                title="Adicionar link"
+                                // --- 3. AGORA A VARIÁVEL EXISTE ---
+                                disabled={isNewVersionMode && tipoArquivoOriginal !== 'link'}
+                            >
                                 <LinkIcon className="w-5 h-5 text-gray-600" />
                             </button>
                             <button disabled={!urlContexto} onClick={() => window.open(urlContexto, '_blank')} className="px-4 py-3 border border-gray-200 cursor-pointer rounded-2xl hover:bg-gray-100 transition-colors h-full flex items-center disabled:opacity-50 disabled:cursor-not-allowed" title="Visualizar Link">
                                 <Eye className="w-5 h-5 text-gray-600" />
                             </button>
-                            {/* ATUALIZADO: Limpa o tipo detectado ao remover */}
                             <button disabled={!arquivoContexto && !urlContexto} onClick={() => { setArquivoContexto(null); setUrlContexto(""); setTipoArquivoDetectado(null); }} className="px-4 py-3 border border-gray-200 cursor-pointer rounded-2xl hover:bg-gray-100 transition-colors h-full flex items-center disabled:opacity-50 disabled:cursor-not-allowed" title="Remover">
                                 <Trash2 className="w-5 h-5 text-gray-600" />
                             </button>

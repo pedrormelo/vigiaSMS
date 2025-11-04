@@ -59,10 +59,8 @@ const sampleFiles: DetalhesContexto[] = [
     { id: "6", title: "Link para Dashboard Externo", type: "link", insertedDate: "2025-10-13T12:00:00.000Z", url: "https://www.google.com", description: "Link de acesso ao painel de monitoramento de dados epidemiológicos mantido pelo Ministério da Saúde.", solicitante: "João Silva", autor: "Vigilância Epidemiológica", versoes: [{ id: 1, nome: "Link MS Saúde (v1)", data: "2024-06-23", autor: "João Silva" }], status: StatusContexto.Publicado },
     { id: "5", title: "Resolução 20/07/2025", type: "resolucao", insertedDate: "2024-07-20", url: "#", description: "Publicação oficial da resolução do Conselho Municipal de Saúde sobre as novas diretrizes de atendimento.", solicitante: "Conselho Municipal", autor: "Conselho Municipal", versoes: [{ id: 1, nome: "Resolução 20/07/2025 (v1)", data: "2024-07-20", autor: "CMS" }], status: StatusContexto.Publicado },
     { id: "2", title: "Relatório de Atividades da Atenção Básica", type: "doc", insertedDate: "2024-05-15", url: "/docs/pas.docx", description: "Documento Word contendo o compilado das atividades realizadas pela Atenção Básica no último trimestre.", solicitante: "Fernanda Lima", autor: "Diretoria de Atenção Básica", versoes: [{ id: 1, nome: "Relatório Atividades AB (v1).docx", data: "2024-05-15", autor: "Fernanda Lima" }], status: StatusContexto.Publicado },
-        // Apresentações (PPTX) mock para testes
     { id: "9", title: "Apresentação de Resultados 2025", type: "apresentacao", insertedDate: "2025-09-05", url: "/docs/mock_resultados_2025.pptx", description: "Slides com os principais resultados do quadrimestre.", solicitante: "Equipe Planejamento", autor: "GPU", versoes: [{ id: 1, nome: "Resultados 2025 (v1).pptx", data: "2025-09-05", autor: "GPU", estaOculta: false }], status: StatusContexto.Publicado },
     { id: "8", title: "Plano de Ação Trimestral", type: "apresentacao", insertedDate: "2025-10-15", url: "/docs/mock_plano_acao_trimestral.pptx", description: "Apresentação do plano de ação para o próximo trimestre.", solicitante: "Diretoria de Gestão", autor: "DGE", versoes: [{ id: 1, nome: "Plano Ação (v1).pptx", data: "2025-10-15", autor: "DGE", estaOculta: false }], status: StatusContexto.AguardandoDiretor },
-    // Adicionando um item pendente para teste
     { id: "7", title: "Relatório Parcial de Atividades (Novembro)", type: "doc", insertedDate: "2025-11-01T10:00:00.000Z", url: "#", description: "Versão preliminar para análise do gerente.", solicitante: "Membro da Gerência", autor: "Membro", versoes: [{ id: 1, nome: "Relatório Parcial Nov (v1).docx", data: "2025-11-01", autor: "Membro" }], status: StatusContexto.AguardandoGerente },
 ];
 
@@ -95,7 +93,6 @@ export default function GerenciaPage() {
     const debouncedSearchValue = useDebounce(searchValue, 300);
 
     // --- ATUALIZADO: DADOS AGORA SÃO ESTADO ---
-    // (Usando os mocks que agora incluem 'status')
     const [arquivos, setArquivos] = useState<DetalhesContexto[]>(sampleFiles);
     const [indicadores, setIndicadores] = useState<IndicatorData[]>(indicators);
 
@@ -105,16 +102,39 @@ export default function GerenciaPage() {
             () => {
                 const arr: Array<string> = [];
                 for (const f of arquivos) { // <-- Usa estado 'arquivos'
-                    if (f.insertedDate) arr.push(f.insertedDate);
-                    if (Array.isArray(f.versoes)) for (const v of f.versoes) if (v.data) arr.push(v.data);
+                    // --- INÍCIO DA CORREÇÃO ---
+                    // Só considera a data se o status for Publicado
+                    if (f.status === StatusContexto.Publicado) { 
+                    // --- FIM DA CORREÇÃO ---
+                        if (f.insertedDate) arr.push(f.insertedDate);
+                        if (Array.isArray(f.versoes)) {
+                            for (const v of f.versoes) {
+                                // Só considera a data da versão se ELA NÃO ESTIVER OCULTA
+                                if (v.data && !v.estaOculta) {
+                                    arr.push(v.data);
+                                }
+                            }
+                        }
+                    }
                 }
                 return arr;
             },
             () => {
                 const arr: Array<string> = [];
                 for (const ind of indicadores) { // <-- Usa estado 'indicadores'
-                    if (ind.insertedDate) arr.push(ind.insertedDate);
-                    if (Array.isArray(ind.versoes)) for (const v of ind.versoes) if (v.data) arr.push(v.data);
+                    // --- INÍCIO DA CORREÇÃO ---
+                    // Só considera a data se o status for Publicado
+                    if (ind.status === StatusContexto.Publicado) {
+                    // --- FIM DA CORREÇÃO ---
+                        if (ind.insertedDate) arr.push(ind.insertedDate);
+                        if (Array.isArray(ind.versoes)) {
+                            for (const v of ind.versoes) {
+                                if (v.data && !v.estaOculta) {
+                                    arr.push(v.data);
+                                }
+                            }
+                        }
+                    }
                 }
                 return arr;
             }

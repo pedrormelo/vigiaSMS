@@ -204,7 +204,17 @@ export const PrevisualizacaoGrafico: React.FC<PrevisualizacaoGraficoProps> = ({
                         break;
                 }
 
-                chartInstance = new ChartClass(chartRef.current);
+                // --- INÍCIO DA CORREÇÃO ---
+                // Verificamos se a 'ref' (chartRef.current) ainda existe *antes*
+                // de passá-la para o construtor do Google Charts.
+                if (!chartRef.current || !isMounted) {
+                    console.warn("[previsualizacaoGrafico] A referência do gráfico (chartRef.current) tornou-se nula durante o desenho. Abortando.");
+                    if (isMounted) setIsLoadingLibs(false); // Garante que o loading pare
+                    return; // Aborta a função de desenho
+                }
+                // --- FIM DA CORREÇÃO ---
+
+                chartInstance = new ChartClass(chartRef.current); // Esta era a linha 207
                 googleVisualization.events.addListener(chartInstance, "error", (err: any) => {
                     console.error("[previsualizacaoGrafico] Erro no desenho do Google Charts:", err);
                     if (isMounted) setDrawError(`Erro ao desenhar: ${err.message || String(err)}`);
@@ -282,7 +292,11 @@ export const PrevisualizacaoGrafico: React.FC<PrevisualizacaoGraficoProps> = ({
 
     return (
         <div className="w-full h-full p-4 bg-white border border-gray-200 rounded-2xl shadow-inner relative group">
+            {/* Este 'div' é o container que recebe a ref.
+              Ele SÓ é renderizado quando nenhum dos estados (isLoading, drawError, !possuiDadosValidos) é verdadeiro.
+            */}
             <div ref={chartRef} style={{ width: "100%", height: "100%" }} />
+            
             {!emTelaCheia && aoAlternarTelaCheia && (
                 <button
                     onClick={aoAlternarTelaCheia}

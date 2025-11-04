@@ -6,7 +6,10 @@ import { useValidarContextos } from "@/hooks/useValidarContextos";
 
 // Componentes
 import ContextoTable from "@/components/validar/ContextoTable";
-import DetalhesContextoModal from "@/components/popups/detalhesContextoModal";
+// 1. IMPORTAÇÃO ATUALIZADA
+// import DetalhesContextoModal from "@/components/popups/detalhesContextoModal"; // <-- REMOVIDO
+import { VisualizarContextoModal } from "@/components/popups/visualizarContextoModal"; // <-- ADICIONADO (O /index.tsx é automático)
+
 import { Button } from "@/components/ui/button";
 import { ModalAdicionarConteudo } from "@/components/popups/addContextoModal/index";
 
@@ -135,15 +138,21 @@ export default function ValidacaoContextos() {
         </div>
       </div>
 
-      {/* Modal de Detalhes */}
-      <DetalhesContextoModal
-        isOpen={isDetalhesModalOpen}
-        onClose={() => setIsDetalhesModalOpen(false)}
-        contexto={selectedContexto}
+      {/* 2. MODAL INTEGRADO (ATUALIZADO) */}
+      <VisualizarContextoModal
+        estaAberto={isDetalhesModalOpen}
+        aoFechar={() => setIsDetalhesModalOpen(false)}
+        dadosDoContexto={selectedContexto}
         perfil={perfil}
-        onDeferir={(contextoId, comentario) => { console.log("Deferir:", contextoId, comentario); carregarContextos(); }} // Exemplo com recarga
-        onIndeferir={(contextoId, comentario) => { console.log("Indeferir:", contextoId, comentario); carregarContextos(); }} // Exemplo com recarga
-        onCorrigir={handleAbrirCorrecao} // Passa a função para abrir o modal de correção
+        onDeferir={(contextoId, comentario) => { console.log("Deferir:", contextoId, comentario); carregarContextos(); }}
+        onIndeferir={(contextoId, comentario) => { console.log("Indeferir:", contextoId, comentario); carregarContextos(); }}
+        onCorrigir={handleAbrirCorrecao}
+        
+        // --- PROPS DE CONTROLE DE MODO ---
+        // Na página de validação, nunca estamos no "modo de edição"
+        isEditing={false} 
+        // Esta não é a página de histórico
+        isFromHistory={false} 
       />
 
       {/* Modal de Adição/Correção */}
