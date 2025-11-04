@@ -16,7 +16,8 @@ export const mockData: Contexto[] = [
         historico: [
             { data: "2025-08-02T10:00:00Z", autor: "Pedro Augusto Lorenzo", acao: "Submetido para análise." },
         ],
-        url: "/docs/mock_coapes_financeiro.xlsx" // <-- URL Adicionada
+        url: "/docs/mock_coapes_financeiro.xlsx", // <-- URL Adicionada
+        type: "excel" as DocType, // <-- Tipo Adicionado
     },
     {
         id: "2",
@@ -32,7 +33,8 @@ export const mockData: Contexto[] = [
             { data: "2025-08-03T11:30:00Z", autor: "Luiza Vitória de Alincatra", acao: "Submetido para análise." },
             { data: "2025-08-04T09:00:00Z", autor: "João Silva (Gerente)", acao: "Análise Gerente: Devolvido para correção. Justificativa: Falta a coluna 'Fonte do Recurso'." },
         ],
-        url: "/docs/mock_emendas_2025.xlsx" // <-- URL Adicionada
+        url: "/docs/mock_emendas_2025.xlsx", // <-- URL Adicionada
+        type: "excel" as DocType,
     },
     {
         id: "3",
@@ -48,7 +50,8 @@ export const mockData: Contexto[] = [
             { data: "2025-08-05T15:00:00Z", autor: "Murilo Alencar Gomes", acao: "Submetido para análise." },
             { data: "2025-08-06T10:00:00Z", autor: "João Silva (Gerente)", acao: "Análise Gerente: Deferido." },
         ],
-        url: "/docs/mock_ouvidoria_relatorio.docx" // <-- URL Adicionada
+        url: "/docs/mock_ouvidoria_relatorio.docx", // <-- URL Adicionada
+        type: "doc" as DocType,
     },
     {
         id: "4", // Este estava publicado, vamos mudar para AguardandoGerente para teste
@@ -64,7 +67,8 @@ export const mockData: Contexto[] = [
             { data: "2025-08-28T14:00:00Z", autor: "Julia Maria da Cunha Leite", acao: "Submetido para análise." },
             // Removido histórico de aprovação
         ],
-        url: "/docs/mock_pvjet_agosto.pdf" // <-- URL Adicionada
+        url: "/docs/mock_pvjet_agosto.pdf", // <-- URL Adicionada
+        type: "pdf" as DocType,
     },
     {
         id: "5", // Este estava como cancelado/indeferido, vamos mudar para AguardandoGerente
@@ -81,7 +85,8 @@ export const mockData: Contexto[] = [
             // Removido histórico de cancelamento
         ],
         // Dashboards podem não ter URL direta, mas mantemos a estrutura
-        url: "/dashboards/epidemiologico/semana35" // Exemplo de link interno
+        url: "/dashboards/epidemiologico/semana35", // Exemplo de link interno
+        type: "dashboard" as DocType,
     },
     {
         id: "6",
@@ -96,7 +101,8 @@ export const mockData: Contexto[] = [
         historico: [
             { data: "2025-09-05T10:30:00Z", autor: "Equipe Planejamento", acao: "Submetido para análise." },
         ],
-        url: "/docs/mock_resultados_2025.pptx"
+        url: "/docs/mock_resultados_2025.pptx",
+        type: "apresentacao" as DocType,
     },
     {
         id: "7",
@@ -112,6 +118,7 @@ export const mockData: Contexto[] = [
             { data: "2025-10-15T09:00:00Z", autor: "Diretoria de Gestão", acao: "Submetido para análise." },
             { data: "2025-10-16T14:20:00Z", autor: "Gerente", acao: "Deferido e encaminhado ao Diretor." },
         ],
-        url: "/docs/mock_plano_acao_trimestral.pptx"
+        url: "/docs/mock_plano_acao_trimestral.pptx",
+        type: "apresentacao" as DocType,
     },
 ];
