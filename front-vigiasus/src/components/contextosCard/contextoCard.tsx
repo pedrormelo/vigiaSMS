@@ -33,15 +33,9 @@ export const fileTypeConfig = {
         label: "DOC",
     },
     apresentacao: {
-<<<<<<< HEAD
         color: "bg-amber-400 hover:bg-amber-500", // Amarelo Ouro (Amber)
         svg: "/icons/CONTEXTOS/PPTX-1.svg", // Ícone PPTX-1 existente em public/icons/CONTEXTOS
         icon: Presentation, // Ícone Lucide como fallback
-=======
-        color: "bg-amber-500 hover:bg-amber-600", // Amarelo Ouro (Amber)
-        svg: "/icons/CONTEXTOS/PPT-1.svg", 
-        icon: Presentation, 
->>>>>>> 77aa2aa91da48927076046c86f16e7ec9f9b0e51
         label: "Apresentação",
     },
     dashboard: {
