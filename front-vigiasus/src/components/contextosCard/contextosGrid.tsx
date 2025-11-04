@@ -1,14 +1,17 @@
+// src/components/contextosCard/contextosGrid.tsx
 "use client"
 
 import { FileItem, type FileType } from "../contextosCard/contextoCard"
 import { AddContextButton } from "./adicionarContexto"
 import ScrollArea from "@/components/ui/scroll-area"
+import { StatusContexto } from "@/components/validar/typesDados" // <-- 1. IMPORTAR O STATUS
 
 interface FileData {
     id: string
     title: string
     type: FileType
     insertedDate: string
+    status: StatusContexto; // <-- 2. ADICIONAR STATUS À INTERFACE
 }
 
 interface FileGridProps {
@@ -29,6 +32,7 @@ export function FileGrid({ files, onFileClick, onAddContextClick, className, isE
                 title={file.title}
                 type={file.type}
                 insertedDate={file.insertedDate}
+                status={file.status} // <-- 3. PASSAR A PROP DE STATUS
                 onClick={() => onFileClick?.(file)}
                 className="w-full"
             />

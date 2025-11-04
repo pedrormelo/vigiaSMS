@@ -1,17 +1,22 @@
 // src/components/contextosCard/contextoCard.tsx
 "use client"
 
-import { FileText, FileSpreadsheet, FileSearch, Link, Calendar, ChartNetwork, Gauge, Presentation } from "lucide-react" // Adicionado FilePresentation
+import { 
+    FileText, FileSpreadsheet, FileSearch, Link, Calendar, ChartNetwork, Gauge, Presentation, 
+    Clock // <-- 1. Importar o ícone Clock
+} from "lucide-react" 
 import { cn } from "@/lib/utils"
 import Image from "next/image"
+import { StatusContexto } from "@/components/validar/typesDados" 
+import StatusBadge from "@/components/alerts/statusBadge" 
 
-// ATUALIZADO: Adicionado "apresentacao"
 export type FileType = "pdf" | "doc" | "dashboard" | "excel" | "resolucao" | "link" | "leis" | "indicador" | "apresentacao"
 
 interface FileItemProps {
     title: string
     type: FileType
     insertedDate: string
+    status: StatusContexto; 
     className?: string
     onClick?: () => void
 }
@@ -27,11 +32,16 @@ export const fileTypeConfig = {
         svg: "/icons/CONTEXTOS/DOC-1.svg",
         label: "DOC",
     },
-    // NOVO: Tipo Apresentação
     apresentacao: {
+<<<<<<< HEAD
         color: "bg-amber-400 hover:bg-amber-500", // Amarelo Ouro (Amber)
         svg: "/icons/CONTEXTOS/PPTX-1.svg", // Ícone PPTX-1 existente em public/icons/CONTEXTOS
         icon: Presentation, // Ícone Lucide como fallback
+=======
+        color: "bg-amber-500 hover:bg-amber-600", // Amarelo Ouro (Amber)
+        svg: "/icons/CONTEXTOS/PPT-1.svg", 
+        icon: Presentation, 
+>>>>>>> 77aa2aa91da48927076046c86f16e7ec9f9b0e51
         label: "Apresentação",
     },
     dashboard: {
@@ -42,7 +52,7 @@ export const fileTypeConfig = {
 
     indicador: {
         color: "bg-teal-500 hover:bg-teal-600",
-        svg: "/icons/CONTEXTOS/INDIC.svg",
+        svg: "/icons/CONTEXTOS/INDC.svg",
         label: "Indicador",
     },
     excel: {
@@ -67,21 +77,44 @@ export const fileTypeConfig = {
     },
 }
 
-export function FileItem({ title, type, insertedDate, className, onClick }: FileItemProps) {
-    // CORREÇÃO: Trata 'apresentacao' para usar o ícone SVG se existir
+// --- REMOVIDAS as consts pendingStyle e pendingTextStyle ---
+
+export function FileItem({ title, type, insertedDate, status, className, onClick }: FileItemProps) {
     const config = fileTypeConfig[type]
     const IconComponent = (config as any).icon
+    
+    const isPublished = status === StatusContexto.Publicado;
+
+    // --- LÓGICA DE ESTILO ATUALIZADA ---
+    const cardColor = config.color; // <-- Sempre usa a cor original
+    const textColor = "text-white"; // <-- Sempre usa texto branco
 
     return (
         <div
             className={cn(
-                "rounded-4xl p-6 cursor-pointer hover:scale-105 transition-transform duration-200 shadow-md flex flex-col justify-between max-h-[200px] max-w-[245px]",
-                config.color,
+                "rounded-4xl p-6 cursor-pointer transition-all duration-200 shadow-md flex flex-col justify-between max-h-[200px] max-w-[245px] relative overflow-hidden", // <-- Adicionado overflow-hidden
+                cardColor, // <-- Cor original é aplicada
+                // --- APLICA FILTROS SE NÃO ESTIVER PUBLICADO ---
+                !isPublished && "opacity-70 grayscale-[80%] hover:opacity-100 hover:grayscale-0", 
                 className,
             )}
             onClick={onClick}
+            title={isPublished ? title : `${title} (Status: ${status})`} // Tooltip melhorado
         >
-            <div className="flex justify-center mb-4">
+            {/* O Badge de Status (AGORA CORRIGIDO) */}
+            {!isPublished && (
+                <div className="absolute top-3 left-3 z-10">
+                    {/* Isto agora vai renderizar o badge correto, ex: "Aguardando Gerente" */}
+                    <StatusBadge status={status} />
+                </div>
+            )}
+            
+            {/* --- ADICIONADA MARCA D'ÁGUA DE STATUS --- */}
+            {!isPublished && (
+                 <Clock className="absolute -right-2 -bottom-2 w-20 h-20 text-black/10 z-0" strokeWidth={1.5} />
+            )}
+
+            <div className="flex justify-center mb-4 mt-6 z-10"> {/* Adicionado mt-6 e z-10 */}
                 { (config as any).svg ? (
                     <Image src={(config as any).svg} alt={config.label} width={40} height={40} />
                 ) : IconComponent ? (
@@ -89,11 +122,11 @@ export function FileItem({ title, type, insertedDate, className, onClick }: File
                 ) : null }
             </div>
 
-            <div className="text-center mb-4">
-                <h3 className="font-medium text-white text-lg leading-tight truncate px-2" title={title}>{title}</h3>
+            <div className="text-center mb-4 z-10"> {/* Adicionado z-10 */}
+                <h3 className={cn("font-medium text-lg leading-tight truncate px-2", textColor)} title={title}>{title}</h3>
             </div>
 
-            <div className="flex items-center justify-center gap-2 text-white/90">
+            <div className={cn("flex items-center justify-center gap-2 z-10", "text-white/90")}> {/* Adicionado z-10 */}
                 <Calendar className="h-4 w-4" />
                 <time dateTime={insertedDate} className="text-sm">
                     {new Date(insertedDate).toLocaleDateString("pt-BR")}
