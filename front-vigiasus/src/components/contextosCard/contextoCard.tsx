@@ -29,7 +29,7 @@ export const fileTypeConfig = {
     },
     // NOVO: Tipo Apresentação
     apresentacao: {
-        color: "bg-amber-500 hover:bg-amber-600", // Amarelo Ouro (Amber)
+        color: "bg-amber-400 hover:bg-amber-500", // Amarelo Ouro (Amber)
         svg: "/icons/CONTEXTOS/PPTX-1.svg", // Ícone PPTX-1 existente em public/icons/CONTEXTOS
         icon: Presentation, // Ícone Lucide como fallback
         label: "Apresentação",

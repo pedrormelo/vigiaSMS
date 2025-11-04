@@ -1,15 +1,247 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// ======================================================
+// Prisma Schema - VigiaSUS
+// Banco: MySQL 8 / XAMPP
+// ======================================================
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
+}
+
+// ======================================================
+// ENUMS
+// ======================================================
+
+enum Role {
+  MEMBRO
+  GERENTE
+  DIRETOR
+  SECRETARIA
+}
+
+enum StatusValidacao {
+  AGUARDANDO_GERENTE
+  AGUARDANDO_DIRETOR
+  AGUARDANDO_CORRECAO
+  PUBLICADO
+  INDEFERIDO
+}
+
+enum TipoContexto {
+  ARQUIVO_LINK
+  DASHBOARD
+  INDICADOR
+}
+
+enum TipoLayoutDashboard {
+  ASYMMETRIC
+  GRID
+  SIDEBYSIDE
+}
+
+enum DocType {
+  PDF
+  EXCEL
+  DOC
+  LINK
+}
+
+enum GraphType {
+  PIE
+  BAR
+  LINE
+}
+
+// ======================================================
+// ENTIDADES
+// ======================================================
+
+model Diretoria {
+  id          String           @id @default(cuid())
+  nome        String
+  corFrom     String?
+  corTo       String?
+  bannerImage String?
+  gerencias   Gerencia[]
+  dashboard   DashboardLayout?
+  users       User[]
+
+  createdAt DateTime @default(now())
+}
+
+model Gerencia {
+  id          String     @id @default(cuid())
+  nome        String
+  sigla       String?
+  diretoriaId String
+  diretoria   Diretoria  @relation(fields: [diretoriaId], references: [id], onDelete: Cascade)
+  users       User[]
+  contextos   Contexto[]
+
+  createdAt DateTime @default(now())
+
+  @@index([diretoriaId])
+}
+
+model User {
+  id           String     @id @default(cuid())
+  nome         String
+  email        String     @unique
+  passwordHash String
+  role         Role
+  gerenciaId   String?
+  diretoriaId  String?
+  gerencia     Gerencia?  @relation(fields: [gerenciaId], references: [id], onDelete: SetNull)
+  diretoria    Diretoria? @relation(fields: [diretoriaId], references: [id], onDelete: SetNull)
+
+  contextosCriados   Contexto[]           @relation("AutorOriginal")
+  versoesSolicitadas ContextoVersao[]     @relation("Solicitante")
+  historicosCriados  ValidacaoHistorico[]
+  comentarios        Comentario[]
+  notificacoes       Notificacao[]        @relation("NotificacaoDestinatario")
+
+  createdAt DateTime @default(now())
+
+  @@index([gerenciaId])
+  @@index([diretoriaId])
+}
+
+model Contexto {
+  id               String           @id @default(cuid())
+  tituloConceitual String
+  tipo             TipoContexto
+  autorOriginalId  String
+  autorOriginal    User             @relation("AutorOriginal", fields: [autorOriginalId], references: [id], onDelete: Cascade)
+  gerenciaDonaId   String
+  gerenciaDona     Gerencia         @relation(fields: [gerenciaDonaId], references: [id], onDelete: Cascade)
+  versoes          ContextoVersao[]
+
+  createdAt DateTime @default(now())
+
+  @@index([gerenciaDonaId])
+}
+
+model ContextoVersao {
+  id               String          @id @default(cuid())
+  contextoId       String
+  contexto         Contexto        @relation(fields: [contextoId], references: [id], onDelete: Cascade)
+  titulo           String
+  descricao        String?
+  solicitanteId    String
+  solicitante      User            @relation("Solicitante", fields: [solicitanteId], references: [id], onDelete: Cascade)
+  versaoNumero     Int
+  motivoNovaVersao String?
+  descNovaVersao   String?
+  statusValidacao  StatusValidacao
+  isAtiva          Boolean         @default(false)
+  isDestacado      Boolean         @default(false)
+
+  arquivo              VersaoArquivo?
+  dashboard            VersaoDashboard?
+  indicador            VersaoIndicador?
+  historicos           ValidacaoHistorico[]
+  comentarios          Comentario[]
+  notificacoes         Notificacao[]
+  dashboardLayoutItems DashboardLayoutItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([contextoId])
+  @@index([statusValidacao, createdAt])
+}
+
+model VersaoArquivo {
+  id       String         @id @default(cuid())
+  versaoId String         @unique
+  versao   ContextoVersao @relation(fields: [versaoId], references: [id], onDelete: Cascade)
+  url      String
+  docType  DocType
+}
+
+model VersaoDashboard {
+  id          String         @id @default(cuid())
+  versaoId    String         @unique
+  versao      ContextoVersao @relation(fields: [versaoId], references: [id], onDelete: Cascade)
+  tipoGrafico GraphType
+  payload     Json
+}
+
+model VersaoIndicador {
+  id               String         @id @default(cuid())
+  versaoId         String         @unique
+  versao           ContextoVersao @relation(fields: [versaoId], references: [id], onDelete: Cascade)
+  valorAtual       Decimal        @db.Decimal(18, 4)
+  valorAlvo        Decimal?       @db.Decimal(18, 4)
+  unidade          String
+  textoComparativo String?
+  cor              String
+  icone            String
+}
+
+model ValidacaoHistorico {
+  id            String          @id @default(cuid())
+  versaoId      String
+  versao        ContextoVersao  @relation(fields: [versaoId], references: [id], onDelete: Cascade)
+  autorId       String
+  autor         User            @relation(fields: [autorId], references: [id], onDelete: Cascade)
+  statusNovo    StatusValidacao
+  justificativa String?
+  timestamp     DateTime        @default(now())
+
+  @@index([versaoId])
+  @@index([timestamp])
+}
+
+model Comentario {
+  id        String         @id @default(cuid())
+  versaoId  String
+  versao    ContextoVersao @relation(fields: [versaoId], references: [id], onDelete: Cascade)
+  autorId   String
+  autor     User           @relation(fields: [autorId], references: [id], onDelete: Cascade)
+  texto     String
+  timestamp DateTime       @default(now())
+
+  @@index([versaoId])
+  @@index([timestamp])
+}
+
+model Notificacao {
+  id             String          @id @default(cuid())
+  destinatarioId String
+  destinatario   User            @relation("NotificacaoDestinatario", fields: [destinatarioId], references: [id], onDelete: Cascade)
+  tipo           String
+  titulo         String
+  isLida         Boolean         @default(false)
+  versaoId       String?
+  versao         ContextoVersao? @relation(fields: [versaoId], references: [id], onDelete: SetNull)
+  createdAt      DateTime        @default(now())
+
+  @@index([destinatarioId])
+}
+
+model DashboardLayout {
+  id          String                @id @default(cuid())
+  diretoriaId String                @unique
+  diretoria   Diretoria             @relation(fields: [diretoriaId], references: [id], onDelete: Cascade)
+  tipoLayout  TipoLayoutDashboard
+  itens       DashboardLayoutItem[]
+
+  createdAt DateTime @default(now())
+}
+
+model DashboardLayoutItem {
+  id                String          @id @default(cuid())
+  dashboardLayoutId String
+  dashboardLayout   DashboardLayout @relation(fields: [dashboardLayoutId], references: [id], onDelete: Cascade)
+  contextoVersaoId  String
+  contextoVersao    ContextoVersao  @relation(fields: [contextoVersaoId], references: [id], onDelete: Cascade)
+  slotIndex         Int
+
+  @@unique([dashboardLayoutId, slotIndex])
+  @@unique([dashboardLayoutId, contextoVersaoId])
 }

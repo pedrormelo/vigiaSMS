@@ -83,4 +83,35 @@ export const mockData: Contexto[] = [
         // Dashboards podem não ter URL direta, mas mantemos a estrutura
         url: "/dashboards/epidemiologico/semana35" // Exemplo de link interno
     },
+    {
+        id: "6",
+        solicitante: "Equipe Planejamento",
+        email: "planejamento@sms.gov",
+        nome: "Apresentação de Resultados 2025",
+        situacao: StatusContexto.AguardandoGerente,
+        docType: "apresentacao" as DocType,
+        gerencia: "Gerência de Planejamento em Saúde",
+        data: "2025-09-05T10:30:00Z",
+        detalhes: "Slides com os principais resultados do quadrimestre para validação.",
+        historico: [
+            { data: "2025-09-05T10:30:00Z", autor: "Equipe Planejamento", acao: "Submetido para análise." },
+        ],
+        url: "/docs/mock_resultados_2025.pptx"
+    },
+    {
+        id: "7",
+        solicitante: "Diretoria de Gestão",
+        email: "gestao@sms.gov",
+        nome: "Plano de Ação Trimestral",
+        situacao: StatusContexto.AguardandoDiretor,
+        docType: "apresentacao" as DocType,
+        gerencia: "Gerência de Gestão do Trabalho",
+        data: "2025-10-15T09:00:00Z",
+        detalhes: "Apresentação do plano de ação do próximo trimestre para aprovação.",
+        historico: [
+            { data: "2025-10-15T09:00:00Z", autor: "Diretoria de Gestão", acao: "Submetido para análise." },
+            { data: "2025-10-16T14:20:00Z", autor: "Gerente", acao: "Deferido e encaminhado ao Diretor." },
+        ],
+        url: "/docs/mock_plano_acao_trimestral.pptx"
+    },
 ];
