@@ -2,6 +2,7 @@
 
 import { PieChart, BarChart3, AreaChart } from "lucide-react"; 
 import type { FileType } from '@/components/contextosCard/contextoCard';
+import { StatusContexto } from "@/components/validar/typesDados"; // <-- 1. IMPORTAR STATUS
 
 export type AbaAtiva = "contexto" | "dashboard" | "indicador";
 export type AbaFonteDeDados = "manual" | "upload";
@@ -29,9 +30,7 @@ export interface Versao {
 
 export interface ConjuntoDeDadosGrafico {
   colunas: string[];
-  // --- A CORREÇÃO ESTÁ AQUI ---
-  linhas: (string | number | null)[][]; // <-- Adicionado | null
-  // --- FIM DA CORREÇÃO ---
+  linhas: (string | number | null)[][]; 
   cores?: string[];
   formatos?: FormatoColuna[];
 }
@@ -96,6 +95,7 @@ export interface DetalhesContexto {
     title: string;
     type: FileType;
     insertedDate: string;
+    status: StatusContexto; // <-- 2. ADICIONADO STATUS
     url?: string;
     payload?: ConjuntoDeDadosGrafico | IndicadorDetailsPayload;
     description?: string;

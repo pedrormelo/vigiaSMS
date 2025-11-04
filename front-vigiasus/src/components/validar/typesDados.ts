@@ -1,5 +1,6 @@
 // src/components/validar/typesDados.ts
 
+import { FileType } from "@/components/contextosCard/contextoCard"; // <-- 1. IMPORTAR
 import { ReactNode } from "react";
 
 export interface HistoricoEvento {
@@ -9,7 +10,6 @@ export interface HistoricoEvento {
 }
 
 //Tipos para os diferentes formatos de documento
-// ATUALIZADO: Adicionado "apresentacao"
 export type DocType = "excel" | "pdf" | "doc" | "dashboard" | "resolucao" | "indicador" | "apresentacao";
 
 /** Estados possíveis do contexto */
@@ -17,7 +17,7 @@ export enum StatusContexto {
   AguardandoGerente = "Aguardando análise do Gerente",
   AguardandoDiretor = "Aguardando análise do Diretor",
   AguardandoCorrecao = "Aguardando Correção",
-  Deferido = "Deferido",
+  Deferido = "Deferido", // Pode ser removido se o fluxo for direto para Publicado
   Indeferido = "Indeferido",
   Publicado = "Publicado",
 }
@@ -30,13 +30,13 @@ export interface Contexto {
   gerencia: string;
   nome: string;
   situacao: StatusContexto;
-//  icone: string;
   docType: DocType; 
+  type: FileType; // <-- 2. ADICIONADO PARA CONSISTÊNCIA
   detalhes: string;
   data: string;
   historico?: HistoricoEvento[];
-  url?: string; // Adicionando URL opcional
-  payload?: any; // Adicionando payload opcional
+  url?: string; 
+  payload?: any; 
 }
 
 /** Tipo Column genérico para a tabela */
