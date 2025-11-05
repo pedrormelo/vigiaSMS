@@ -2,8 +2,19 @@
 
 import { PieChart, BarChart3, AreaChart } from "lucide-react"; 
 import type { FileType } from '@/components/contextosCard/contextoCard';
-// 1. IMPORTAR HistoricoEvento e StatusContexto
-import { StatusContexto, HistoricoEvento } from "@/components/validar/typesDados"; 
+// 1. IMPORTAR OS TIPOS UNIFICADOS DE typesDados.ts
+import { 
+    StatusContexto, 
+    HistoricoEvento, 
+    Contexto as DetalhesContexto, // Renomeia 'Contexto' para 'DetalhesContexto' localmente
+    Versao 
+} from "@/components/validar/typesDados";
+
+// Re-exportar para consistência nos outros arquivos
+export type { StatusContexto, HistoricoEvento, DetalhesContexto, Versao };
+
+
+// --- O restante dos tipos (que são específicos do MODAL) permanece ---
 
 export type AbaAtiva = "contexto" | "dashboard" | "indicador";
 export type AbaFonteDeDados = "manual" | "upload";
@@ -21,25 +32,21 @@ export interface VersionInfo {
   description: string;
 }
 
-export interface Versao {
-  id: number;
-  nome: string;
-  data: string;
-  autor: string;
-  estaOculta?: boolean;
-
-  // --- CORREÇÃO: Propriedades de validação adicionadas ---
-  // Tornadas opcionais (?) para garantir compatibilidade
-  status?: StatusContexto;
-  historico?: HistoricoEvento[];
-}
-
-
 export interface ConjuntoDeDadosGrafico {
   colunas: string[];
   linhas: (string | number | null)[][]; 
   cores?: string[];
   formatos?: FormatoColuna[];
+}
+
+// Tipo para o payload de visualização de um indicador (interno ao modal)
+export interface IndicadorDetailsPayload {
+    description: string;
+    valorAtual: string;
+    unidade: string;
+    textoComparativo: string;
+    cor: string;
+    icone: NomeIcone;
 }
 
 // Tipos específicos para cada payload de submissão
@@ -88,59 +95,11 @@ export interface ModalAdicionarConteudoProps {
   arquivoAnexado?: File | null;
 }
 
-// Tipo para o payload de visualização de um indicador
-interface IndicadorDetailsPayload {
-    description: string;
-    valorAtual: string;
-    unidade: string;
-    textoComparativo: string;
-    cor: string;
-    icone: NomeIcone;
-}
-
-// 2. INTERFACE DETALHESCONTEXTO ATUALIZADA
-// Esta é a interface principal que o modal unificado usará.
-// Ela é uma "super-interface" que pode conter dados de um 'Contexto' ou de um 'DetalhesContexto' original.
-export interface DetalhesContexto {
-    id: string;
-    title: string; // 'nome' em Contexto
-    type: FileType;
-    insertedDate: string; // 'data' em Contexto
-    status: StatusContexto; // 'situacao' em Contexto
-    
-    // Campos opcionais que podem ou não estar presentes
-    url?: string;
-    payload?: ConjuntoDeDadosGrafico | IndicadorDetailsPayload;
-    description?: string; // 'detalhes' em Contexto
-    solicitante?: string;
-    autor?: string;
-    chartType?: TipoGrafico;
-    versoes?: Versao[]; 
-    estaOculto?: boolean;
-    
-    // --- CAMPO ADICIONADO PARA O HISTÓRICO ORIGINAL ---
-    historico?: HistoricoEvento[]; // Para a timeline de validação
-
-    // Campos específicos de Indicador (mantidos)
-    valorAtual?: string;
-    valorAlvo?: string;
-    unidade?: string;
-    textoComparativo?: string;
-    cor?: string;
-    icone?: NomeIcone;
-    cores?: string[];
-
-    // Campos que só existem no 'Contexto' original (opcionais)
-    email?: string;
-    gerencia?: string;
-}
-
-
+// Props das sub-abas (sem alteração)
 export interface SeletorTipoGraficoProps {
   tipoSelecionado: TipoGrafico;
   aoMudarTipo: (tipo: TipoGrafico) => void;
 }
-
 export interface SecaoDadosManuaisProps {
   conjuntoDeDados: ConjuntoDeDadosGrafico;
   aoAtualizarCelula: (linha: number, coluna: number, valor: string) => void;
@@ -151,32 +110,28 @@ export interface SecaoDadosManuaisProps {
   aoAtualizarNomeColuna: (index: number, novoNome: string) => void;
   aoAtualizarFormatoColuna: (indiceSerie: number, novoFormato: FormatoColuna) => void;
 }
-
 export interface SecaoUploadArquivoProps {
   arquivoDeDados: File | null;
   setArquivoDeDados: (arquivo: File | null) => void;
   aoBaixarModelo: () => void;
 }
-
 export interface AbaIndicadorProps {
-  tituloIndicador: string;
-  setTituloIndicador: (valor: string) => void;
-  descricaoIndicador: string;
-  setDescricaoIndicador: (valor: string) => void;
-  valorAtualIndicador: string;
-  setValorAtualIndicador: (valor: string) => void;
-  valorAlvoIndicador: string;
-  setValorAlvoIndicador: (valor: string) => void;
-  unidadeIndicador: string;
-  setUnidadeIndicador: (valor: string) => void;
-  textoComparativoIndicador: string;
-  setTextoComparativoIndicador: (valor: string) => void;
-  corIndicador: string;
-  setCorIndicador: (valor: string) => void;
-  iconeIndicador: NomeIcone;
-  setIconeIndicador: (valor: NomeIcone) => void;
+    // ... (props inalteradas)
+    tituloIndicador: string; setTituloIndicador: (valor: string) => void;
+    descricaoIndicador: string; setDescricaoIndicador: (valor: string) => void;
+    valorAtualIndicador: string; setValorAtualIndicador: (valor: string) => void;
+    valorAlvoIndicador: string; setValorAlvoIndicador: (valor: string) => void;
+    unidadeIndicador: string; setUnidadeIndicador: (valor: string) => void;
+    textoComparativoIndicador: string; setTextoComparativoIndicador: (valor: string) => void;
+    corIndicador: string; setCorIndicador: (valor: string) => void;
+    iconeIndicador: NomeIcone; setIconeIndicador: (valor: NomeIcone) => void;
+    isNewVersionMode: boolean;
+    selectedVersion: string;
+    tipoVersao: TipoVersao;
+    setTipoVersao: (valor: TipoVersao) => void;
+    descricaoVersao: string;
+    setDescricaoVersao: (valor: string) => void;
 }
-
 export const TIPOS_GRAFICOS = {
   pie: { Icon: PieChart, rotulo: "Pizza" },
   chart: { Icon: BarChart3, rotulo: "Barras" },

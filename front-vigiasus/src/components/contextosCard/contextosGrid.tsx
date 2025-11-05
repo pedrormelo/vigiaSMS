@@ -4,26 +4,20 @@
 import { FileItem, type FileType } from "../contextosCard/contextoCard"
 import { AddContextButton } from "./adicionarContexto"
 import ScrollArea from "@/components/ui/scroll-area"
-import { StatusContexto } from "@/components/validar/typesDados" 
+// 1. IMPORTAR O TIPO UNIFICADO
+import { Contexto, StatusContexto } from "@/components/validar/typesDados" 
 
-// 1. ATUALIZAR INTERFACE FileData
-interface FileData {
-    id: string
-    title: string
-    type: FileType
-    insertedDate: string
-    status: StatusContexto; 
-    estaOculto?: boolean; // <-- ADICIONADO
-}
+// 2. ATUALIZAR INTERFACE FileData para ser Contexto
+// (Removemos FileData e usamos Contexto diretamente)
 
-// 2. ATUALIZAR INTERFACE FileGridProps
+// 3. ATUALIZAR INTERFACE FileGridProps
 interface FileGridProps {
-    files: FileData[]
-    onFileClick?: (file: FileData) => void
+    files: Contexto[] // <-- Usa o tipo unificado Contexto
+    onFileClick?: (file: Contexto) => void // <-- Usa o tipo unificado Contexto
     onAddContextClick?: () => void
     className?: string
     isEditing?: boolean;
-    onToggleOculto?: (id: string) => void; // <-- ADICIONADO
+    onToggleOculto?: (id: string) => void; 
 }
 
 export function FileGrid({ 
@@ -32,24 +26,24 @@ export function FileGrid({
     onAddContextClick, 
     className, 
     isEditing,
-    onToggleOculto // <-- RECEBE A PROP
+    onToggleOculto 
 }: FileGridProps) {
     
-    // 3. ATUALIZAR O .map()
+    // 4. ATUALIZAR O .map() para ler do Contexto
     const gridItems = [
         ...(isEditing ? [<AddContextButton key="add-context" onClick={() => onAddContextClick?.()} />] : []),
         ...files.map((file) => (
             <FileItem
                 key={file.id}
-                id={file.id} // <-- PASSAR ID
-                title={file.title}
-                type={file.type}
-                insertedDate={file.insertedDate}
-                status={file.status} 
-                estaOculto={file.estaOculto} // <-- PASSAR estaOculto
-                isEditing={isEditing} // <-- PASSAR isEditing
+                id={file.id} 
+                title={file.title} // <-- Correto
+                type={file.type} // <-- Correto
+                insertedDate={file.insertedDate} // <-- Correto
+                status={file.status} // <-- Correto
+                estaOculto={file.estaOculto} 
+                isEditing={isEditing} 
                 onClick={() => onFileClick?.(file)}
-                onToggleOculto={onToggleOculto} // <-- PASSAR onToggleOculto
+                onToggleOculto={onToggleOculto} 
                 className="w-full"
             />
         ))

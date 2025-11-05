@@ -5,47 +5,41 @@ import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { MessageSquare, ArrowRight } from 'lucide-react';
 
-// Importar tipos e dados mockados
 import { notificationsData } from '@/constants/notificationsData';
 import { mockData as contextosAbertos } from '@/constants/contextos';
 import { mockDataHistorico as contextosHistorico } from '@/constants/contextosHistorico';
-import { Comment, Contexto } from '@/components/validar/typesDados'; // Usar tipos de validar
+// 1. IMPORTAR O TIPO UNIFICADO
+import { Comment, Contexto } from '@/components/validar/typesDados'; 
 
 import { SearchBar } from '@/components/ui/search-bar';
-import CommentItem from '@/components/notifications/commentItem'; // Reutilizar o item de comentário
-import { useDebounce } from '@/hooks/useDebounce'; // Para otimizar a busca
+import CommentItem from '@/components/notifications/commentItem';
+import { useDebounce } from '@/hooks/useDebounce'; 
 import { Button } from '@/components/button';
 
-// Interface para agrupar comentário e informações do contexto
 interface CommentContextItem {
     comment: Comment;
     contextoId: string;
-    contextoNome: string;
-    // Poderíamos adicionar a data/hora do *contexto* se necessário
+    contextoNome: string; // Manter 'contextoNome' para UI
 }
 
 export default function MeusComentariosPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const debouncedSearch = useDebounce(searchQuery, 300);
 
-    // Simula a busca de comentários do usuário e dados do contexto associado
     const meusComentariosComContexto = useMemo((): CommentContextItem[] => {
         const comentariosFiltrados: CommentContextItem[] = [];
-        const todosContextos = [...contextosAbertos, ...contextosHistorico]; // Combina mocks
+        const todosContextos: Contexto[] = [...contextosAbertos, ...contextosHistorico]; // 2. Usar 'Contexto[]'
 
         notificationsData.forEach(notificacao => {
             if (notificacao.contextoId && notificacao.comments) {
                 notificacao.comments.forEach(comment => {
-                    // **Simulação:** Considera comentários onde o autor é "Você"
-                    // Em um sistema real, isso seria filtrado pelo ID do usuário no backend
                     if (comment.author === "Você") {
-                        // Busca o nome do contexto associado
                         const contexto = todosContextos.find(ctx => ctx.id === notificacao.contextoId);
                         if (contexto) {
                             comentariosFiltrados.push({
                                 comment: comment,
                                 contextoId: contexto.id,
-                                contextoNome: contexto.nome,
+                                contextoNome: contexto.title, // 3. Mudar de nome -> title
                             });
                         }
                     }
@@ -53,7 +47,7 @@ export default function MeusComentariosPage() {
             }
         });
 
-        // Ordena os comentários do mais recente para o mais antigo (baseado na data/hora do comentário)
+        // (Lógica de ordenação - sem alteração)
         try {
             comentariosFiltrados.sort((a, b) => {
                 const dateTimeStringA = `${a.comment.date.split('/').reverse().join('-')}T${a.comment.time}`;
@@ -61,7 +55,7 @@ export default function MeusComentariosPage() {
                 const dateA = new Date(dateTimeStringA);
                 const dateB = new Date(dateTimeStringB);
                 if (!isNaN(dateA.getTime()) && !isNaN(dateB.getTime())) {
-                    return dateB.getTime() - dateA.getTime(); // Mais recente primeiro
+                    return dateB.getTime() - dateA.getTime(); 
                 }
                 return 0;
             });
@@ -69,11 +63,9 @@ export default function MeusComentariosPage() {
              console.error("Erro ao ordenar comentários:", e, comentariosFiltrados);
         }
 
-
         return comentariosFiltrados;
-    }, []); // Executa apenas uma vez, pois os mocks não mudam
+    }, []); 
 
-    // Filtra os comentários com base na busca
     const comentariosFiltradosParaExibicao = useMemo(() => {
         if (!debouncedSearch) {
             return meusComentariosComContexto;
@@ -81,7 +73,7 @@ export default function MeusComentariosPage() {
         const lowerSearch = debouncedSearch.toLowerCase();
         return meusComentariosComContexto.filter(item =>
             item.comment.text.toLowerCase().includes(lowerSearch) ||
-            item.contextoNome.toLowerCase().includes(lowerSearch)
+            item.contextoNome.toLowerCase().includes(lowerSearch) // Busca pelo nome (que agora vem de 'title')
         );
     }, [meusComentariosComContexto, debouncedSearch]);
 
@@ -118,15 +110,12 @@ export default function MeusComentariosPage() {
                                     <p className="text-sm text-gray-500">
                                         No contexto: <span className="font-semibold text-blue-600">{contextoNome}</span>
                                     </p>
-                                    {/* Link para o contexto (ajuste a rota se necessário) */}
-                                    <Link href={`/validar?id=${contextoId}`} passHref> {/* Exemplo de link */}
+                                    <Link href={`/validar?id=${contextoId}`} passHref> 
                                         <Button variant="ghost" size="sm" className="text-blue-600 hover:bg-blue-50 h-auto px-3 py-1 text-xs rounded-lg">
                                             Ver Contexto <ArrowRight className="ml-1 w-3 h-3" />
                                         </Button>
                                     </Link>
                                 </div>
-                                {/* Item do Comentário */}
-                                {/* Passando um objeto Comment completo para CommentItem */}
                                 <CommentItem comment={comment} />
                             </div>
                         ))

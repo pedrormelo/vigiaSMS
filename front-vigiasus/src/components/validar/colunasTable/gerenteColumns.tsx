@@ -17,20 +17,21 @@ export const gerenteColumns: Column<Contexto>[] = [
     ),
   },
   {
-    key: "nome", header: "Contexto",
+    key: "title", // nome -> title
+    header: "Contexto",
     render: (row) => (
       <div className="flex items-center gap-3">
-        <IconeDocumento type={row.docType} />
-        <span className="font-medium">{row.nome}</span>
+        <IconeDocumento type={row.type} /> {/* docType -> type */}
+        <span className="font-medium">{row.title}</span> {/* nome -> title */}
       </div>
     ),
   },
   {
-    key: "situacao", header: "Situação",
-    //  O status agora é lido de `row.situacao`
-    // e usa a configuração central para exibir o texto e a cor corretos.
+    key: "status", // situacao -> status
+    header: "Situação",
     render: (row) => {
-      const config = statusConfig[row.situacao] || { text: row.situacao, className: "bg-gray-100 text-gray-800" };
+      // situacao -> status
+      const config = statusConfig[row.status] || { text: row.status, className: "bg-gray-100 text-gray-800" };
       return <span className={`px-3 py-1 text-xs font-semibold rounded-full ${config.className}`}>{config.text}</span>;
     }
   },

@@ -14,18 +14,19 @@ import IndeferirContextoModal from '@/components/popups/IndeferirContextoModal';
 import { showDispatchToast, showErrorToast, showSuccessToast } from '@/components/ui/Toasts';
 import AbaDetalhes from './abaDetalhes';
 import AbaVersoes from './abaVersoes';
-import type { DetalhesContexto, Versao } from '@/components/popups/addContextoModal/types'; 
-import type { Contexto } from '@/components/validar/typesDados';
-import { StatusContexto } from '@/components/validar/typesDados';
 
-// 4. PROPS UNIFICADAS (sem alteração)
+// 3. TIPOS (Agora importa o 'Contexto' unificado)
+import type { DetalhesContexto } from '@/components/popups/addContextoModal/types'; 
+import { Contexto, StatusContexto } from '@/components/validar/typesDados'; 
+
+// 4. PROPS UNIFICADAS (Atualizado para receber 'Contexto')
 interface VisualizarContextoModalProps {
     estaAberto: boolean;
     aoFechar: () => void;
-    dadosDoContexto: (Contexto | DetalhesContexto) | null; 
+    dadosDoContexto: Contexto | null; // <-- Recebe o tipo 'Contexto' unificado
     perfil: 'diretor' | 'gerente' | 'membro';
     
-    aoCriarNovaVersao?: (dados: DetalhesContexto) => void;
+    aoCriarNovaVersao?: (dados: Contexto) => void; // <-- Passa 'Contexto'
     isEditing?: boolean;
     aoAlternarVisibilidadeVersao?: (contextoId: string, versaoId: number) => void;
     aoAlternarVisibilidadeIndicador?: (contextoId: string) => void; 
@@ -33,10 +34,13 @@ interface VisualizarContextoModalProps {
     isFromHistory?: boolean;
     onDeferir?: (contextoId: string, comentario?: string) => void;
     onIndeferir?: (contextoId: string, comentario: string) => void;
-    onCorrigir?: (contextoParaCorrigir: Contexto) => void; 
+    onCorrigir?: (contextoParaCorrigir: Contexto) => void; // <-- Recebe 'Contexto'
 }
+
 type TipoAba = 'detalhes' | 'versoes';
-const BotaoAba = (/* ... (sem alteração) ... */{ id, label, Icon, abaAtiva, setAbaAtiva }: { id: TipoAba; label: string; Icon: React.ElementType<LucideProps>; abaAtiva: TipoAba; setAbaAtiva: (aba: TipoAba) => void; }) => (
+
+// --- COMPONENTE BotaoAba (Mantido) ---
+const BotaoAba = ({ id, label, Icon, abaAtiva, setAbaAtiva }: { id: TipoAba; label: string; Icon: React.ElementType<LucideProps>; abaAtiva: TipoAba; setAbaAtiva: (aba: TipoAba) => void; }) => (
     <button onClick={() => setAbaAtiva(id)} className={cn(
         "flex-1 py-3 px-4 rounded-xl font-semibold transition-all flex justify-center items-center text-sm gap-2",
         abaAtiva === id ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:bg-gray-200/50"
@@ -69,68 +73,51 @@ export function VisualizarContextoModal({
     const [indeferirOpen, setIndeferirOpen] = useState(false); 
     const chartContainerRef = useRef<HTMLDivElement | null>(null);
 
-    // --- HOOK DE NORMALIZAÇÃO (A CORREÇÃO ESTÁ AQUI) ---
-    const normalizedData: DetalhesContexto | null = useMemo(() => {
+    // --- HOOK DE NORMALIZAÇÃO (LÓGICA UNIFICADA E CORRIGIDA) ---
+    const normalizedData: Contexto | null = useMemo(() => {
         if (!dadosDoContexto) return null;
-
-        // --- INÍCIO DA CORREÇÃO ---
-        // A verificação deve ser pelo campo 'situacao', que SÓ existe no tipo 'Contexto' (de /validar)
-        if ('situacao' in dadosDoContexto && dadosDoContexto.situacao) {
-            // Se for Contexto (vindo da pág. de validação)
-            const dados = dadosDoContexto as Contexto;
-            const mappedData: DetalhesContexto = {
-                ...dados, 
-                title: dados.nome,
-                status: dados.situacao,
-                insertedDate: dados.data,
-                description: dados.detalhes,
-                historico: dados.historico || [],
-                versoes: [{
-                    id: 1, // Assume v1 se não houver 'versoes'
-                    nome: "Versão 1",
-                    data: dados.data,
-                    autor: dados.solicitante,
-                    estaOculta: false,
-                    status: dados.situacao, // <-- Status da versão é preenchido
-                    historico: dados.historico || [] // <-- Histórico da versão é preenchido
-                }],
-                estaOculto: false,
-            };
-            return mappedData;
-        }
-        // --- FIM DA CORREÇÃO ---
-
-
-        // Se já for DetalhesContexto (vindo da pág. de gerência)
-        // Usamos '...dadosDoContexto' para criar uma cópia e não mutar o prop original
-        const detalhes = { ...dadosDoContexto } as DetalhesContexto;
         
-        // Verifica se o array 'versoes' existe, mas está "incompleto" (sem status/histórico)
-        // Isso acontece com os mocks da pág. /gerencia
-        if (detalhes.versoes && detalhes.versoes.length > 0 && (detalhes.versoes[0] as any).status === undefined) {
-            
-            // Recria o array 'versoes' preenchendo os campos faltantes
-            detalhes.versoes = detalhes.versoes.map((v, i) => {
-                const eAUltimaVersao = i === (detalhes.versoes?.length ?? 0) - 1;
+        // Cria uma cópia para evitar mutação
+        const dados = { ...dadosDoContexto };
+
+        // 1. GARANTIR QUE 'estaOculto' exista
+        if (dados.estaOculto === undefined) dados.estaOculto = false;
+
+        // 2. GARANTIR QUE 'versoes' exista e esteja formatado
+        if (!dados.versoes || dados.versoes.length === 0) {
+            // Se não há versões (ex: mock antigo), cria a v1 a partir dos dados gerais
+            dados.versoes = [{
+                id: 1,
+                nome: dados.title || "Versão 1",
+                data: dados.insertedDate,
+                autor: dados.solicitante || "N/A",
+                estaOculta: false,
+                status: dados.status, // Usa o status geral
+                historico: dados.historico || [] // Usa o histórico geral
+            }];
+        } else {
+            // Se há versões (ex: mock da pág. de gerência), garante que a última
+            // versão tenha o status e histórico corretos.
+            dados.versoes = dados.versoes.map((v, i) => {
+                const eAUltimaVersao = i === (dados.versoes!.length - 1);
+                
+                // Se a versão não tiver status/histórico (mocks antigos), preenche
+                const statusDaVersao = v.status || (eAUltimaVersao ? dados.status : StatusContexto.Publicado);
+                const historicoDaVersao = v.historico || (eAUltimaVersao ? (dados.historico || []) : []);
+                
                 return {
                     ...v,
-                    // Versões anteriores são 'Publicado' por padrão. A última assume o status GERAL.
-                    status: eAUltimaVersao ? detalhes.status : StatusContexto.Publicado,
-                    // Apenas a ÚLTIMA versão recebe o histórico GERAL (para a timeline)
-                    historico: eAUltimaVersao ? (detalhes.historico || []) : []
+                    status: statusDaVersao,
+                    historico: historicoDaVersao
                 };
             });
         }
 
-        if (detalhes.estaOculto === undefined) detalhes.estaOculto = false;
-        return detalhes;
-
+        return dados;
     }, [dadosDoContexto]);
+    // --- FIM DA NORMALIZAÇÃO ---
 
 
-    // O RESTANTE DO COMPONENTE (useEffect, handlers, renderFooter, JSX)
-    // pode permanecer exatamente o mesmo.
-    // ... (lógica de lidarComDownload, handleToggleVersao, etc.) ...
     const alternarTelaCheia = () => {
         setEmTelaCheia(!emTelaCheia);
         setZoomLevel(1);
@@ -172,12 +159,13 @@ export function VisualizarContextoModal({
     };
 
     const handleCorrigirClick = () => {
-        if (dadosDoContexto && onCorrigir && 'situacao' in dadosDoContexto) {
+        // O onCorrigir é específico da pág /validar
+        if (dadosDoContexto && onCorrigir && 'solicitante' in dadosDoContexto) {
             onCorrigir(dadosDoContexto as Contexto);
-        } else if (normalizedData && aoCriarNovaVersao) {
+        } 
+        // o aoCriarNovaVersao é da pág /gerencia
+        else if (normalizedData && aoCriarNovaVersao) {
             aoCriarNovaVersao(normalizedData);
-        } else {
-            console.warn("Tentativa de correção em dados não-Contexto ou sem handler.");
         }
     };
     
@@ -208,8 +196,21 @@ export function VisualizarContextoModal({
     // --- Renderização do Rodapé ---
     const renderFooter = (): React.ReactNode => {
         if (!normalizedData) return null; 
-        if (isFromHistory || isEditing) return null; 
+        // Se estiver no histórico (somente leitura)
+        if (isFromHistory) return null; 
 
+        // Se estiver no MODO EDIÇÃO (pág. /gerencia)
+        if (isEditing) {
+            return (
+                <div className="flex justify-center w-full">
+                     <p className="text-sm text-gray-500 italic">Use a aba &lsquo;Versões&rsquo; para criar uma nova versão.</p>
+                </div>
+            );
+        }
+
+        // --- Se estiver no MODO VISUALIZAÇÃO ---
+
+        // 1. Membro vendo "Aguardando Correção" (pág. /validar)
         if (perfil === "membro" && normalizedData.status === StatusContexto.AguardandoCorrecao) {
             return (
                 <div className="flex justify-center w-full">
@@ -218,7 +219,8 @@ export function VisualizarContextoModal({
             );
         }
 
-        if (perfil === "gerente" || perfil === "diretor") {
+        // 2. Gerente/Diretor vendo pendência (pág. /validar)
+        if ((perfil === "gerente" || perfil === "diretor") && !isFromHistory) {
              const podeAgir = (perfil === "gerente" && normalizedData.status === StatusContexto.AguardandoGerente) || 
                               (perfil === "diretor" && normalizedData.status === StatusContexto.AguardandoDiretor);
             
@@ -243,13 +245,14 @@ export function VisualizarContextoModal({
             }
         }
         
-        return null;
+        // 3. Caso padrão (ex: Membro vendo algo 'Publicado' na pág /gerencia)
+        return null; // Sem ações
     };
 
 
     if (!estaAberto || !normalizedData) return null; 
 
-    // --- JSX DO MODAL UNIFICADO (sem alteração) ---
+    // --- JSX DO MODAL UNIFICADO ---
     return (
         <>
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
@@ -307,7 +310,7 @@ export function VisualizarContextoModal({
                 </div>
             </div>
 
-            {/* Modal Tela Cheia (sem alteração) ... */}
+            {/* Modal Tela Cheia */}
             {emTelaCheia && (
                 <div className="fixed inset-0 bg-white z-[60] flex flex-col animate-fade-in">
                     
@@ -340,7 +343,7 @@ export function VisualizarContextoModal({
                 </div>
             )}
             
-            {/* Modal de Indeferir (sem alteração) ... */}
+            {/* Modal de Indeferir */}
             <IndeferirContextoModal
                 open={indeferirOpen}
                 onOpenChange={setIndeferirOpen}
@@ -350,7 +353,7 @@ export function VisualizarContextoModal({
                 requireComment
             />
 
-            {/* Estilos (sem alteração) ... */}
+            {/* Estilos */}
             <style>{`
                  @keyframes fadeIn {
                      from { opacity: 0; }

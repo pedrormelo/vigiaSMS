@@ -6,9 +6,8 @@ import { useValidarContextos } from "@/hooks/useValidarContextos";
 
 // Componentes
 import ContextoTable from "@/components/validar/ContextoTable";
-// 1. IMPORTAÇÃO ATUALIZADA
-// import DetalhesContextoModal from "@/components/popups/detalhesContextoModal"; // <-- REMOVIDO
-import { VisualizarContextoModal } from "@/components/popups/visualizarContextoModal"; // <-- ADICIONADO (O /index.tsx é automático)
+// 1. IMPORTAÇÃO CORRETA
+import { VisualizarContextoModal } from "@/components/popups/visualizarContextoModal";
 
 import { Button } from "@/components/ui/button";
 import { ModalAdicionarConteudo } from "@/components/popups/addContextoModal/index";
@@ -17,22 +16,24 @@ import { ModalAdicionarConteudo } from "@/components/popups/addContextoModal/ind
 import { membroColumns } from "@/components/validar/colunasTable/membroColumns";
 import { gerenteColumns } from "@/components/validar/colunasTable/gerenteColumns";
 import { diretorColumns } from "@/components/validar/colunasTable/diretorColumns";
+// 2. IMPORTAR TIPO UNIFICADO
 import { Contexto } from "@/components/validar/typesDados";
 import { FileType } from "@/components/contextosCard/contextoCard";
+// 3. ATUALIZAR IMPORTAÇÃO (DetalhesContexto é um alias de Contexto)
 import { DetalhesContexto, SubmitData } from '@/components/popups/addContextoModal/types';
-// Ícones
 import { RefreshCw, Eye, Trash } from "lucide-react";
 
 export default function ValidacaoContextos() {
 
-  const { data, isLoading, error, carregarContextos } = useValidarContextos(); // Assumindo que isLoading está disponível
+  const { data, isLoading, error, carregarContextos } = useValidarContextos();
   const [perfil, setPerfil] = useState<"diretor" | "gerente" | "membro">("gerente");
 
   // Estados para os modais
   const [isDetalhesModalOpen, setIsDetalhesModalOpen] = useState(false);
   const [selectedContexto, setSelectedContexto] = useState<Contexto | null>(null);
   const [isCorrecaoModalOpen, setIsCorrecaoModalOpen] = useState(false);
-  const [contextoParaEditar, setContextoParaEditar] = useState<Partial<DetalhesContexto> | null>(null);
+  // 4. USAR O TIPO UNIFICADO
+  const [contextoParaEditar, setContextoParaEditar] = useState<Partial<Contexto> | null>(null);
 
   // Abre o modal de detalhes
   const handleViewClick = (contexto: Contexto) => {
@@ -44,20 +45,12 @@ export default function ValidacaoContextos() {
   const handleAbrirCorrecao = (contextoParaCorrigir: Contexto) => {
     setIsDetalhesModalOpen(false); // Fecha o modal de detalhes
 
-    // Prepara os dados para o modal de edição
-   const dadosParaEdicao: Partial<DetalhesContexto> = {
-      id: contextoParaCorrigir.id,
-      title: contextoParaCorrigir.nome,
-      type: contextoParaCorrigir.docType as FileType, // Cast seguro
-      insertedDate: contextoParaCorrigir.data,
-      url: contextoParaCorrigir.url,
-      payload: contextoParaCorrigir.payload, 
-      description: contextoParaCorrigir.detalhes,
-      solicitante: contextoParaCorrigir.solicitante,
-      versoes: contextoParaCorrigir.historico?.map((h, i) => ({ id: i + 1, nome: `Versão ${i + 1}`, data: h.data, autor: h.autor })),
-    };
+    // 5. MAPEAMENTO ATUALIZADO (Agora é 1-para-1, mais simples)
+    // O 'contextoParaCorrigir' já tem a estrutura unificada (title, status, etc.)
+    // O 'dadosIniciais' do modal de adição/correção espera 'DetalhesContexto' (que é um alias de 'Contexto')
+    // Não precisamos mais de mapeamento manual (ex: nome -> title)
+    setContextoParaEditar(contextoParaCorrigir);
 
-    setContextoParaEditar(dadosParaEdicao);
     setTimeout(() => { setIsCorrecaoModalOpen(true); }, 50); // Abre o modal de correção
   };
 
@@ -87,8 +80,8 @@ export default function ValidacaoContextos() {
               <button onClick={() => handleViewClick(row)} className="hover:text-blue-600" title="Visualizar Contexto">
                 <Eye size={16} />
               </button>
-              {/* Lógica do botão de apagar (se aplicável para membro) */}
-              {perfil === 'membro' && !['Deferido', 'Indeferido', 'Publicado'].includes(row.situacao) && (
+              {/* 6. LÓGICA DO BOTÃO DE APAGAR (USA row.status) */}
+              {perfil === 'membro' && !['Deferido', 'Indeferido', 'Publicado'].includes(row.status) && (
                 <button className="hover:text-red-600" title="Apagar Contexto">
                   <Trash size={16} />
                 </button>
@@ -124,7 +117,7 @@ export default function ValidacaoContextos() {
       <div className="bg-gray-100/25 rounded-[2rem] p-6 shadow-sm">
         <h1 className="text-2xl font-regular text-[#1745FF] mb-4">Solicitações em Aberto</h1>
         {isLoading ? (
-            <p className="text-center text-gray-500 py-4">Carregando...</p> // Indicador de loading
+            <p className="text-center text-gray-500 py-4">Carregando...</p> 
         ) : (
             <ContextoTable data={data} columns={getColumns()} />
         )}
@@ -138,20 +131,16 @@ export default function ValidacaoContextos() {
         </div>
       </div>
 
-      {/* 2. MODAL INTEGRADO (ATUALIZADO) */}
+      {/* 7. MODAL INTEGRADO (VISUALIZAR) */}
       <VisualizarContextoModal
         estaAberto={isDetalhesModalOpen}
         aoFechar={() => setIsDetalhesModalOpen(false)}
-        dadosDoContexto={selectedContexto}
+        dadosDoContexto={selectedContexto} // Passa o Contexto unificado
         perfil={perfil}
         onDeferir={(contextoId, comentario) => { console.log("Deferir:", contextoId, comentario); carregarContextos(); }}
         onIndeferir={(contextoId, comentario) => { console.log("Indeferir:", contextoId, comentario); carregarContextos(); }}
-        onCorrigir={handleAbrirCorrecao}
-        
-        // --- PROPS DE CONTROLE DE MODO ---
-        // Na página de validação, nunca estamos no "modo de edição"
+        onCorrigir={handleAbrirCorrecao} // Função para abrir o modal de edição
         isEditing={false} 
-        // Esta não é a página de histórico
         isFromHistory={false} 
       />
 
@@ -160,7 +149,8 @@ export default function ValidacaoContextos() {
         estaAberto={isCorrecaoModalOpen}
         aoFechar={() => { setIsCorrecaoModalOpen(false); setContextoParaEditar(null); }}
         aoSubmeter={handleSubmeterCorrecao}
-        dadosIniciais={contextoParaEditar} // Passa os dados para pré-preencher
+        // 8. Passa o Contexto unificado (como Partial<DetalhesContexto>)
+        dadosIniciais={contextoParaEditar} 
       />
     </div>
   );
