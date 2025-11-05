@@ -1,3 +1,4 @@
+// src/app/validar/historico/page.tsx
 "use client";
 
 import { useState, useCallback } from "react";
@@ -6,13 +7,14 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { useHistoricoContextos } from "@/hooks/useHistoricoContextos";
 
 import ContextoTable from "@/components/validar/ContextoTable";
-import DetalhesContextoModal from "@/components/popups/detalhesContextoModal";
+// 1. IMPORTAÇÃO ATUALIZADA
+// import DetalhesContextoModal from "@/components/popups/detalhesContextoModal"; // <-- REMOVIDO
+import { VisualizarContextoModal } from "@/components/popups/visualizarContextoModal"; // <-- ADICIONADO
+
 import { Button } from "@/components/ui/button";
 import Paginacao from "@/components/ui/paginacao";
 import { SearchBar } from "@/components/ui/search-bar";
-// 1. Importar o DateInputFilter
 import DateInputFilter from "@/components/validar/dateInputFilter"; 
-// 2. Importar ícones para os novos estados
 import { ArrowLeft, Eye, Loader2, SearchX } from "lucide-react"; 
 
 import { membroColumns } from "@/components/validar/colunasTable/membroColumns";
@@ -29,10 +31,9 @@ export default function HistoricoPage() {
     to: undefined,
   });
 
-  // 3. Passar o dateRange para o hook e receber o isLoading
   const { data, error, isLoading, currentPage, totalPages, setCurrentPage } = useHistoricoContextos(
     debouncedSearchQuery,
-    dateRange // Passando o estado do filtro de data
+    dateRange
   );
 
   const [perfil, setPerfil] = useState<"diretor" | "gerente" | "membro">("gerente");
@@ -78,7 +79,6 @@ export default function HistoricoPage() {
     return <div className="p-8 text-red-500">{error}</div>;
   }
 
-  // 4. Componente auxiliar para renderizar o conteúdo da tabela
   const renderTableContent = () => {
     if (isLoading) {
       return (
@@ -102,6 +102,7 @@ export default function HistoricoPage() {
 
   return (
     <div className="p-8 bg-white min-h-screen">
+      {/* Simulação de Perfil... (sem alteração) */}
       <div className="flex gap-2 mb-4 bg-yellow-100 p-2 rounded-md text-sm">
         <p className="font-bold my-auto">Simulação de Perfil:</p>
         <button onClick={() => setPerfil("diretor")} className={`px-3 py-1 rounded-md ${perfil === 'diretor' && 'bg-blue-200 font-semibold'}`}>Diretor</button>
@@ -109,6 +110,7 @@ export default function HistoricoPage() {
         <button onClick={() => setPerfil("membro")} className={`px-3 py-1 rounded-md ${perfil === 'membro' && 'bg-blue-200 font-semibold'}`}>Membro</button>
       </div>
       
+      {/* Cabeçalho... (sem alteração) */}
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-[#1745FF]">Histórico de Contextos</h1>
         <Link href="/validar">
@@ -119,6 +121,7 @@ export default function HistoricoPage() {
         </Link>
       </div>
 
+      {/* Conteúdo da Tabela... (sem alteração) */}
       <div className="bg-gray-100/25 rounded-[2rem] p-6 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
           <SearchBar
@@ -127,14 +130,11 @@ export default function HistoricoPage() {
             placeholder="Pesquise por nome ou solicitante..."
             className="w-full md:w-auto md:flex-1"
           />
-          {/* 5. Adicionar o seletor de data ao JSX */}
           <DateInputFilter onDateChange={handleDateFilterChange} />
         </div>
         
-        {/* 6. Chamar o novo renderizador */}
         {renderTableContent()}
 
-        {/* 7. Só mostrar paginação se houver dados e mais de uma página */}
         {!isLoading && data.length > 0 && totalPages > 1 && (
           <Paginacao 
             currentPage={currentPage}
@@ -144,12 +144,13 @@ export default function HistoricoPage() {
         )}
       </div>
 
-      <DetalhesContextoModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        contexto={selectedContexto}
+      {/* 2. MODAL ATUALIZADO */}
+      <VisualizarContextoModal
+        estaAberto={isModalOpen}
+        aoFechar={() => setIsModalOpen(false)}
+        dadosDoContexto={selectedContexto}
         perfil={perfil}
-        isFromHistory={true}
+        isFromHistory={true} // <-- Importante: Mantém o modo "somente leitura"
       />
     </div>
   );

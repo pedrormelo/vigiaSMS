@@ -31,16 +31,20 @@ export function ModalAdicionarConteudo(props: ModalAdicionarConteudoProps) {
         <>
             <EstilosModal />
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                {/* CORREÇÃO: Largura e altura consistentes para todas as abas */}
+                {/* Largura e altura consistentes para todas as abas */}
                 <div className={`bg-white rounded-[40px] w-full max-w-7xl h-[90vh] flex flex-col shadow-2xl transition-all duration-300`}>
                     
-                    <div className="bg-gradient-to-r from-[#0037C1] to-[#00BDFF] px-8 py-4 flex items-center justify-between rounded-t-[40px] flex-shrink-0">
+                    <header className="bg-gradient-to-r from-[#0037C1] to-[#00BDFF] px-8 py-4 flex items-center justify-between rounded-t-[40px] flex-shrink-0">
                         <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-opacity-20 rounded-lg flex items-center justify-center">
-                                {abaAtiva === 'contexto' && <FilePlus2 className="w-6 h-6 text-white" />}
-                                {abaAtiva === 'dashboard' && <LayoutDashboard className="w-6 h-6 text-white" />}
-                                {abaAtiva === 'indicador' && <Gauge className="w-6 h-6 text-white" />}
-                            </div>
+                            
+                            {/* --- INÍCIO DA MODIFICAÇÃO --- */}
+                            {/* O 'div' branco arredondado foi removido daqui. */}
+                            {/* Os ícones agora são renderizados diretamente. */}
+                            {abaAtiva === 'contexto' && <FilePlus2 className="w-6 h-6 text-white" />}
+                            {abaAtiva === 'dashboard' && <LayoutDashboard className="w-6 h-6 text-white" />}
+                            {abaAtiva === 'indicador' && <Gauge className="w-6 h-6 text-white" />}
+                            {/* --- FIM DA MODIFICAÇÃO --- */}
+
                             <h2 className="text-2xl font-regular text-white">
                                 {isNewVersionMode ? 'Criar Nova Versão' : (
                                     abaAtiva === 'contexto' ? 'Adicionar Novo Contexto' :
@@ -50,7 +54,7 @@ export function ModalAdicionarConteudo(props: ModalAdicionarConteudoProps) {
                             </h2>
                         </div>
                         <button onClick={aoCancelar} className="w-8 h-8 bg-opacity-20 text-white hover:text-gray-100 cursor-pointer rounded-full flex items-center justify-center transition-colors"><ArrowLeft className="w-6 h-6" /></button>
-                    </div>
+                    </header>
 
                     <div className="flex-1 p-8 flex flex-col min-h-0 overflow-y-auto">
                        {!isNewVersionMode && (
@@ -68,13 +72,13 @@ export function ModalAdicionarConteudo(props: ModalAdicionarConteudoProps) {
                         </div>
                     </div>
 
-                    <div className="px-6 py-4 bg-gray-50 flex justify-end gap-4 flex-shrink-0 border-t border-gray-200 rounded-b-[40px]">
+                    <footer className="px-6 py-4 bg-gray-50 flex justify-end gap-4 flex-shrink-0 border-t border-gray-200 rounded-b-[40px]">
                         <button onClick={aoCancelar} className="px-8 py-3 bg-gray-200 text-gray-700 rounded-2xl hover:bg-gray-300 transition-colors font-bold">Cancelar</button>
                         <button onClick={aoSubmeter} disabled={submissaoDesativada} className="px-8 py-3 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-colors font-bold disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2">
                             <FileSymlink className="w-5 h-5" />
                             Submeter
                         </button>
-                    </div>
+                    </footer>
                 </div>
             </div>
         </>

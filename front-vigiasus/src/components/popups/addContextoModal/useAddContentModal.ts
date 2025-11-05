@@ -3,46 +3,23 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { saveAs } from "file-saver";
 import { 
     AbaAtiva, AbaFonteDeDados, TipoGrafico, ConjuntoDeDadosGrafico, 
-    ModalAdicionarConteudoProps, NomeIcone, DetalhesContexto, 
+    NomeIcone, DetalhesContexto, 
     TipoVersao, FormatoColuna, 
-    ContextoPayload, DashboardPayload, IndicadorPayload
+    ContextoPayload, DashboardPayload, IndicadorPayload,
+    SubmitData
 } from "./types";
 import { showWarningToast, showErrorToast, showDispatchToast } from "@/components/ui/Toasts";
 import { FileType } from "@/components/contextosCard/contextoCard";
+import { cn } from "@/lib/utils";
 
-// (O resto do arquivo, incluindo FILE_TYPE_DEFINITIONS, getAcceptString, etc., permanece o mesmo)
-// --- INÍCIO DAS DEFINIÇÕES DE TIPO ---
+// --- DEFINIÇÕES DE TIPO DE ARQUIVO ---
 const FILE_TYPE_DEFINITIONS: Record<FileType, { mimes: string[], extensions: string[], label: string }> = {
-    'pdf': { 
-        mimes: ['application/pdf'], 
-        extensions: ['.pdf'], 
-        label: 'PDF' 
-    },
-    'doc': { 
-        mimes: ['application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.oasis.opendocument.text'], 
-        extensions: ['.doc', '.docx', '.odt'], 
-        label: 'Documento' 
-    },
-    'excel': { 
-        mimes: ['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.oasis.opendocument.spreadsheet'], 
-        extensions: ['.xls', '.xlsx', '.ods'], 
-        label: 'Planilha' 
-    },
-    'apresentacao': { 
-        mimes: ['application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/vnd.oasis.opendocument.presentation'], 
-        extensions: ['.ppt', '.pptx', '.odp'], 
-        label: 'Apresentação' 
-    },
-    'resolucao': { 
-        mimes: ['application/pdf'], 
-        extensions: ['.pdf'], 
-        label: 'Resolução (PDF)' 
-    },
-    'leis': { 
-        mimes: ['application/pdf'], 
-        extensions: ['.pdf'], 
-        label: 'Lei (PDF)' 
-    },
+    'pdf': { mimes: ['application/pdf'], extensions: ['.pdf'], label: 'PDF' },
+    'doc': { mimes: ['application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.oasis.opendocument.text'], extensions: ['.doc', '.docx', '.odt'], label: 'Documento' },
+    'excel': { mimes: ['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.oasis.opendocument.spreadsheet'], extensions: ['.xls', '.xlsx', '.ods'], label: 'Planilha' },
+    'apresentacao': { mimes: ['application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/vnd.oasis.opendocument.presentation'], extensions: ['.ppt', '.pptx', '.odp'], label: 'Apresentação' },
+    'resolucao': { mimes: ['application/pdf'], extensions: ['.pdf'], label: 'Resolução (PDF)' },
+    'leis': { mimes: ['application/pdf'], extensions: ['.pdf'], label: 'Lei (PDF)' },
     'dashboard': { mimes: [], extensions: [], label: 'Dashboard' },
     'indicador': { mimes: [], extensions: [], label: 'Indicador' },
     'link': { mimes: [], extensions: [], label: 'Link' },
@@ -71,35 +48,47 @@ const detectarTipoPorArquivo = (arquivo: File): FileType | null => {
     }
     return null;
 };
-// --- FIM DAS NOVAS DEFINIÇÕES ---
+// --- FIM DAS DEFINIÇÕES ---
 
 // Definindo a interface das Props do Hook
 interface PropsDoHook {
     estaAberto: boolean;
     aoFechar: () => void;
-    aoSubmeter: (dados: any) => void; // Ajuste 'any' se tiver o tipo SubmitData
+    aoSubmeter: (dados: SubmitData) => void;
     abaInicial?: AbaAtiva;
     dadosIniciais?: Partial<DetalhesContexto> | null;
+    arquivoAnexado?: File | null; 
 }
 
-export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, abaInicial = 'contexto', dadosIniciais }: PropsDoHook) => {
-    // ... (Estados gerais) ...
+export const useModalAdicionarConteudo = ({ 
+    estaAberto, 
+    aoFechar, 
+    aoSubmeter, 
+    abaInicial = 'contexto', 
+    dadosIniciais, 
+    arquivoAnexado
+}: PropsDoHook) => {
+    
+    // --- ESTADOS GERAIS ---
     const [abaAtiva, setAbaAtiva] = useState<AbaAtiva>(abaInicial);
     const [abaFonteDeDados, setAbaFonteDeDados] = useState<AbaFonteDeDados>('manual');
-    const [arrastandoSobre, setArrastandoSobre] = useState(false);
+    const [arrastandoSobre, setArrastandoSobre] = useState(false); 
 
-    // ... (Estados do Contexto) ...
+    // --- ESTADOS DE CONTEXTO ---
     const [tituloContexto, setTituloContexto] = useState("");
     const [detalhesContexto, setDetalhesContexto] = useState("");
     const [arquivoContexto, setArquivoContexto] = useState<File | null>(null);
     const [urlContexto, setUrlContexto] = useState("");
-    const [isNewVersionMode, setIsNewVersionMode] = useState(false);
-    const [selectedVersion, setSelectedVersion] = useState("");
     const [tipoArquivoDetectado, setTipoArquivoDetectado] = useState<FileType | null>(null); 
     
+    // --- ESTADOS DE NOVA VERSÃO ---
+    const [isNewVersionMode, setIsNewVersionMode] = useState(false);
+    const [selectedVersion, setSelectedVersion] = useState("");
     const [tipoArquivoOriginal, setTipoArquivoOriginal] = useState<FileType | null>(null);
+    const [tipoVersao, setTipoVersao] = useState<TipoVersao>(TipoVersao.CORRECAO);
+    const [descricaoVersao, setDescricaoVersao] = useState("");
 
-    // ... (Estados do Dashboard e Indicador) ...
+    // --- ESTADOS DE DASHBOARD ---
     const [tituloGrafico, setTituloGrafico] = useState("");
     const [detalhesGrafico, setDetalhesGrafico] = useState("");
     const [tipoGrafico, setTipoGrafico] = useState<TipoGrafico>("pie");
@@ -110,6 +99,8 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
         cores: ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444'],
         formatos: ['text', 'number'],
     });
+
+    // --- ESTADOS DE INDICADOR ---
     const [tituloIndicador, setTituloIndicador] = useState("");
     const [descricaoIndicador, setDescricaoIndicador] = useState("");
     const [valorAtualIndicador, setValorAtualIndicador] = useState("");
@@ -118,8 +109,7 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
     const [textoComparativoIndicador, setTextoComparativoIndicador] = useState("");
     const [corIndicador, setCorIndicador] = useState("#3B82F6");
     const [iconeIndicador, setIconeIndicador] = useState<NomeIcone>("Heart");
-    const [tipoVersao, setTipoVersao] = useState<TipoVersao>(TipoVersao.CORRECAO);
-    const [descricaoVersao, setDescricaoVersao] = useState("");
+
     
     const definirCoresDoGrafico = (novasCores: string[]) => {
         setConjuntoDeDados(dadosAtuais => ({ ...dadosAtuais, cores: novasCores }));
@@ -152,10 +142,11 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
             setAbaAtiva(abaInicial);
 
             if (dadosIniciais) {
+                // --- LÓGICA MODO EDIÇÃO (Nova Versão) ---
                 setIsNewVersionMode(true);
                 const proximaVersao = (dadosIniciais.versoes?.length || 0) + 1;
                 setSelectedVersion(`v${proximaVersao}`);
-
+                
                 setTipoArquivoOriginal(dadosIniciais.type || null);
                 
                 setTituloContexto(dadosIniciais.title || "");
@@ -196,9 +187,29 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
                     setCorIndicador(payloadIndicador.cor || dadosIniciais.cor || "#3B82F6");
                     setIconeIndicador(payloadIndicador.icone || dadosIniciais.icone || "Heart");
                 }
+            
+            } else if (arquivoAnexado) {
+                // --- LÓGICA MODO CRIAÇÃO (via Drag-and-Drop) ---
+                const tipoDetectado = detectarTipoPorArquivo(arquivoAnexado);
+                
+                if (tipoDetectado && tipoDetectado !== 'dashboard' && tipoDetectado !== 'indicador') {
+                    setArquivoContexto(arquivoAnexado);
+                    setTipoArquivoDetectado(tipoDetectado);
+                    setAbaAtiva('contexto'); 
+
+                    const nomeSemExtensao = arquivoAnexado.name.split('.').slice(0, -1).join('.');
+                    if (nomeSemExtensao) {
+                        const tituloFormatado = nomeSemExtensao.replace(/[-_]/g, ' '); 
+                        setTituloContexto(tituloFormatado);
+                    }
+
+                } else {
+                    showErrorToast("Arquivo inválido", "O arquivo solto não é um tipo de contexto válido (PDF, DOC, etc).");
+                    setArquivoContexto(null);
+                }
             }
         }
-    }, [estaAberto, dadosIniciais, abaInicial, reiniciarTodoOEstado]);
+    }, [estaAberto, dadosIniciais, abaInicial, reiniciarTodoOEstado, arquivoAnexado]);
 
     
     const acceptString = useMemo(() => {
@@ -250,8 +261,6 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
         setUrlContexto("");
         setTipoArquivoDetectado(tipoDetectado);
     };
-
-    // ... (O restante do arquivo permanece o mesmo) ...
 
     const aoSubmeterFormulario = () => {
         let payload: Partial<ContextoPayload> | Partial<DashboardPayload> | Partial<IndicadorPayload>;
@@ -314,6 +323,8 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
         setTipoGrafico(t);
     };
 
+    // --- LÓGICA DA TABELA DO DASHBOARD ---
+
     const adicionarLinha = () => {
         if (conjuntoDeDados.linhas.length >= 25) {
             showWarningToast("Limite de 25 linhas atingido.");
@@ -352,7 +363,7 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
                     }
                 } else if (valorTrim !== "") {
                     showErrorToast("Valor inválido.", "Apenas números são permitidos.");
-                    return;
+                    return; 
                 } else {
                     valorFinal = null;
                 }
@@ -408,6 +419,8 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
         saveAs(blob, `modelo-${tipoGrafico}.csv`);
     };
 
+    // --- FUNÇÕES UTILITÁRIAS ---
+
     const formatarTamanhoArquivo = (bytes: number) => {
         if (bytes === 0) return '0 Bytes';
         const k = 1024; const tamanhos = ['Bytes', 'KB', 'MB', 'GB'];
@@ -422,38 +435,60 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
         return "Nenhum arquivo ou link selecionado";
     };
 
+    // --- LÓGICA DE SUBMISSÃO (ATUALIZADA) ---
+    
     const submissaoDesativada = (() => {
+        // Define o mínimo de caracteres para os detalhes
+        const MIN_DETALHES_LENGTH = 15; 
+
         switch (abaAtiva) {
             case 'contexto':
                 if (isNewVersionMode) {
+                    // (Nova Versão) Precisa de descrição da VERSÃO (obrigatório) E (arquivo OU url)
                     return !tipoVersao || !descricaoVersao.trim() || (!arquivoContexto && !urlContexto.trim());
                 }
-                return !tituloContexto.trim() || (!arquivoContexto && !urlContexto.trim()) || !tipoArquivoDetectado;
+                
+                // (Novo) Precisa de título, DETALHES (com min 15 chars), (arquivo OU url) E tipo detectado
+                return !tituloContexto.trim() || 
+                       detalhesContexto.trim().length < MIN_DETALHES_LENGTH || 
+                       (!arquivoContexto && !urlContexto.trim()) || 
+                       !tipoArquivoDetectado;
 
             case 'dashboard':
                  if (isNewVersionMode) {
+                    // (Nova Versão)
                     const dadosManuaisForamModificados = abaFonteDeDados === 'manual' && JSON.stringify(conjuntoDeDados) !== JSON.stringify(dadosIniciais?.payload);
                     const novoArquivoFoiEnviado = abaFonteDeDados === 'upload' && !!arquivoDeDados;
                     const dadosForamAlterados = dadosManuaisForamModificados || novoArquivoFoiEnviado;
                     
                     return !tipoVersao || !descricaoVersao.trim() || !dadosForamAlterados;
                 }
+                // (Novo)
                 const temDadosManuais = abaFonteDeDados === 'manual' && conjuntoDeDados.linhas.length > 0 && conjuntoDeDados.linhas.some(l => l.slice(1).some(c => c !== null && c !== ''));
                 const temArquivo = abaFonteDeDados === 'upload' && !!arquivoDeDados;
-                return !tituloGrafico.trim() || (!temDadosManuais && !temArquivo);
+                
+                // (Novo) Precisa de título, DETALHES (mín 15) E (dados manuais OU arquivo)
+                return !tituloGrafico.trim() || 
+                       detalhesGrafico.trim().length < MIN_DETALHES_LENGTH || 
+                       (!temDadosManuais && !temArquivo);
 
             case 'indicador':
                 if (isNewVersionMode) {
+                    // (Nova Versão) Precisa de descrição da VERSÃO e VALOR ATUAL
                     return !tipoVersao || !descricaoVersao.trim() || !valorAtualIndicador.trim();
                 }
-                return !tituloIndicador.trim() || !valorAtualIndicador.trim();
+                
+                // (Novo) Precisa de título, DESCRIÇÃO (mín 15) e VALOR ATUAL
+                return !tituloIndicador.trim() || 
+                       descricaoIndicador.trim().length < MIN_DETALHES_LENGTH || 
+                       !valorAtualIndicador.trim();
 
             default:
                 return true;
         }
     })();
     
-    // --- CORREÇÃO: ADICIONAR tipoArquivoOriginal AO RETORNO ---
+    // --- RETORNO DO HOOK ---
     return {
         abaAtiva, setAbaAtiva, aoCancelar: aoFechar, aoSubmeter: aoSubmeterFormulario, submissaoDesativada,
         
@@ -461,12 +496,10 @@ export const useModalAdicionarConteudo = ({ estaAberto, aoFechar, aoSubmeter, ab
         tituloContexto, setTituloContexto, detalhesContexto, setDetalhesContexto, arquivoContexto, setArquivoContexto,
         urlContexto, setUrlContexto, arrastandoSobre, aoSelecionarArquivo, aoClicarBotaoUrl, aoEntrarNaArea,
         aoSairDaArea, aoArrastarSobre, aoSoltarArquivo, obterNomeFonteContexto, formatarTamanhoArquivo,
-        
         acceptString, 
         helpText,     
-        
         tipoArquivoDetectado,
-        tipoArquivoOriginal, // <-- ADICIONADO AQUI
+        tipoArquivoOriginal, 
         
         // Nova Versão
         isNewVersionMode, selectedVersion, tipoVersao, setTipoVersao, descricaoVersao, setDescricaoVersao,

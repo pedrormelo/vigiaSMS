@@ -3,22 +3,37 @@
 
 import { 
     FileText, FileSpreadsheet, FileSearch, Link, Calendar, ChartNetwork, Gauge, Presentation, 
-    Clock // <-- 1. Importar o ícone Clock
+    Clock,
+    MoreVertical, // 1. IMPORTAR ÍCONES
+    Eye, EyeOff 
 } from "lucide-react" 
 import { cn } from "@/lib/utils"
 import Image from "next/image"
 import { StatusContexto } from "@/components/validar/typesDados" 
 import StatusBadge from "@/components/alerts/statusBadge" 
+import { Badge } from "@/components/ui/badge" 
+
+// 2. IMPORTAR COMPONENTES DO DROPDOWN
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 export type FileType = "pdf" | "doc" | "dashboard" | "excel" | "resolucao" | "link" | "leis" | "indicador" | "apresentacao"
 
 interface FileItemProps {
+    id: string; 
     title: string
     type: FileType
     insertedDate: string
     status: StatusContexto; 
     className?: string
     onClick?: () => void
+    isEditing?: boolean; 
+    estaOculto?: boolean; 
+    onToggleOculto?: (id: string) => void; 
 }
 
 export const fileTypeConfig = {
@@ -33,9 +48,9 @@ export const fileTypeConfig = {
         label: "DOC",
     },
     apresentacao: {
-        color: "bg-amber-400 hover:bg-amber-500", // Amarelo Ouro (Amber)
-        svg: "/icons/CONTEXTOS/PPTX-1.svg", // Ícone PPTX-1 existente em public/icons/CONTEXTOS
-        icon: Presentation, // Ícone Lucide como fallback
+        color: "bg-amber-400 hover:bg-amber-500", 
+        svg: "/icons/CONTEXTOS/PPTX-1.svg", 
+        icon: Presentation, 
         label: "Apresentação",
     },
     dashboard: {
@@ -43,7 +58,6 @@ export const fileTypeConfig = {
         icon: ChartNetwork,
         label: "Gráfico de Dashboard",
     },
-
     indicador: {
         color: "bg-teal-500 hover:bg-teal-600",
         svg: "/icons/CONTEXTOS/INDC.svg",
@@ -71,44 +85,108 @@ export const fileTypeConfig = {
     },
 }
 
-// --- REMOVIDAS as consts pendingStyle e pendingTextStyle ---
-
-export function FileItem({ title, type, insertedDate, status, className, onClick }: FileItemProps) {
+export function FileItem({ 
+    id, 
+    title, 
+    type, 
+    insertedDate, 
+    status, 
+    className, 
+    onClick,
+    isEditing = false,
+    estaOculto = false,
+    onToggleOculto
+}: FileItemProps) {
     const config = fileTypeConfig[type]
     const IconComponent = (config as any).icon
     
     const isPublished = status === StatusContexto.Publicado;
+    
+    // Estilo desabilitado se não publicado OU se estiver oculto
+    const isDisabled = !isPublished || estaOculto;
 
-    // --- LÓGICA DE ESTILO ATUALIZADA ---
-    const cardColor = config.color; // <-- Sempre usa a cor original
-    const textColor = "text-white"; // <-- Sempre usa texto branco
+    const cardColor = config.color; 
+    const textColor = "text-white"; 
+
+    // --- NOVA LÓGICA DE VALIDAÇÃO ---
+    // A ação de "Ocultar" só é permitida se o item já estiver publicado.
+    // A ação de "Tornar Visível" (des-ocultar) é sempre permitida no modo de edição.
+    const canToggleHide = estaOculto ? true : isPublished;
+    // --- FIM DA NOVA LÓGICA ---
 
     return (
         <div
             className={cn(
-                "rounded-4xl p-6 cursor-pointer transition-all duration-200 shadow-md flex flex-col justify-between max-h-[200px] max-w-[245px] relative overflow-hidden", // <-- Adicionado overflow-hidden
-                cardColor, // <-- Cor original é aplicada
-                // --- APLICA FILTROS SE NÃO ESTIVER PUBLICADO ---
-                !isPublished && "opacity-70 grayscale-[80%] hover:opacity-100 hover:grayscale-0", 
+                "rounded-4xl p-6 cursor-pointer transition-all duration-200 shadow-md flex flex-col justify-between max-h-[200px] max-w-[245px] relative overflow-hidden", 
+                cardColor, 
+                isDisabled && "opacity-70 grayscale-[80%] hover:opacity-100 hover:grayscale-0", 
                 className,
             )}
             onClick={onClick}
-            title={isPublished ? title : `${title} (Status: ${status})`} // Tooltip melhorado
+            title={isPublished ? title : `${title} (Status: ${status})`} 
         >
-            {/* O Badge de Status (AGORA CORRIGIDO) */}
-            {!isPublished && (
-                <div className="absolute top-3 left-3 z-10">
-                    {/* Isto agora vai renderizar o badge correto, ex: "Aguardando Gerente" */}
+            {/* --- CONTAINER DE BADGES ATUALIZADO --- */}
+            <div className="absolute top-3 left-3 z-10 flex flex-col items-start gap-1.5">
+                {!isPublished && (
                     <StatusBadge status={status} />
+                )}
+                
+                {estaOculto && (
+                    <Badge className="bg-gray-700/80 text-white border-none py-1 px-2" title="Este contexto está oculto">
+                        <EyeOff className="w-3.5 h-3.5 mr-1" />
+                        Oculto
+                    </Badge>
+                )}
+            </div>
+            
+            {/* --- MENU DROPDOWN (UI ATUALIZADA E LÓGICA DE 'disabled') --- */}
+            {isEditing && (
+                <div className="absolute top-2 right-2 z-20">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger
+                            asChild
+                            onClick={(e) => e.stopPropagation()} 
+                        >
+                            {/* 1. UI ATUALIZADA (estilo "botão de modal") */}
+                            <button className="p-1.5 rounded-full text-white/90 hover:bg-white/25 transition-colors">
+                                <MoreVertical className="w-5 h-5" />
+                            </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent 
+                            align="end" 
+                            className="bg-white/90 backdrop-blur-md"
+                            onClick={(e) => e.stopPropagation()} 
+                        >
+                            <DropdownMenuItem
+                                // 2. LÓGICA DE 'disabled' APLICADA
+                                disabled={!canToggleHide} 
+                                onClick={() => onToggleOculto?.(id)}
+                                className="cursor-pointer font-medium"
+                                // 3. Tooltip se estiver desabilitado
+                                title={!canToggleHide ? "Apenas contextos publicados podem ser ocultados" : (estaOculto ? "Tornar Visível" : "Ocultar Contexto")}
+                            >
+                                {estaOculto ? (
+                                    <><Eye className="w-4 h-4 mr-2" /> Tornar Visível</>
+                                ) : (
+                                    <><EyeOff className="w-4 h-4 mr-2" /> Ocultar Contexto</>
+                                )}
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             )}
             
-            {/* --- ADICIONADA MARCA D'ÁGUA DE STATUS --- */}
+            {/* Marca d'água */}
             {!isPublished && (
                  <Clock className="absolute -right-2 -bottom-2 w-20 h-20 text-black/10 z-0" strokeWidth={1.5} />
             )}
 
-            <div className="flex justify-center mb-4 mt-6 z-10"> {/* Adicionado mt-6 e z-10 */}
+            {/* --- PADDING SUPERIOR CONDICIONAL (CORREÇÃO DA SOBREPOSIÇÃO) --- */}
+            <div className={cn(
+                "flex justify-center mb-4 z-10",
+                // Adiciona margem se um badge estiver visível (não publicado OU oculto)
+                (!isPublished || estaOculto) && "mt-6" 
+            )}> 
                 { (config as any).svg ? (
                     <Image src={(config as any).svg} alt={config.label} width={40} height={40} />
                 ) : IconComponent ? (
@@ -116,11 +194,11 @@ export function FileItem({ title, type, insertedDate, status, className, onClick
                 ) : null }
             </div>
 
-            <div className="text-center mb-4 z-10"> {/* Adicionado z-10 */}
+            {/* Título e Data */}
+            <div className="text-center mb-4 z-10"> 
                 <h3 className={cn("font-medium text-lg leading-tight truncate px-2", textColor)} title={title}>{title}</h3>
             </div>
-
-            <div className={cn("flex items-center justify-center gap-2 z-10", "text-white/90")}> {/* Adicionado z-10 */}
+            <div className={cn("flex items-center justify-center gap-2 z-10", "text-white/90")}> 
                 <Calendar className="h-4 w-4" />
                 <time dateTime={insertedDate} className="text-sm">
                     {new Date(insertedDate).toLocaleDateString("pt-BR")}

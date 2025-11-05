@@ -27,6 +27,11 @@ export interface Versao {
   data: string;
   autor: string;
   estaOculta?: boolean;
+
+  // --- CORREÇÃO: Propriedades de validação adicionadas ---
+  // Tornadas opcionais (?) para garantir compatibilidade
+  status?: StatusContexto;
+  historico?: HistoricoEvento[];
 }
 
 
@@ -80,6 +85,7 @@ export interface ModalAdicionarConteudoProps {
   aoSubmeter: (dados: SubmitData) => void;
   abaInicial?: AbaAtiva;
   dadosIniciais?: Partial<DetalhesContexto> | null;
+  arquivoAnexado?: File | null;
 }
 
 // Tipo para o payload de visualização de um indicador
@@ -110,6 +116,7 @@ export interface DetalhesContexto {
     autor?: string;
     chartType?: TipoGrafico;
     versoes?: Versao[]; 
+    estaOculto?: boolean;
     
     // --- CAMPO ADICIONADO PARA O HISTÓRICO ORIGINAL ---
     historico?: HistoricoEvento[]; // Para a timeline de validação

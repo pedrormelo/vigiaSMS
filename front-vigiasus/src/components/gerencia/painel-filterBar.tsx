@@ -30,9 +30,9 @@ const filterIconMap: Record<FileType, string | React.ElementType | null> = {
   dashboard: "/icons/CONTEXTOS/GRA.svg",
   link: "/icons/CONTEXTOS/LINK.svg",
   resolucao: "/icons/CONTEXTOS/RES.svg",
-  indicador: "/icons/CONTEXTOS/INDIC.svg",
+  //indicador: "/icons/CONTEXTOS/INDIC.svg",
   apresentacao: "/icons/CONTEXTOS/PPTX.svg",
-  leis: fileTypeConfig.leis.icon,
+ // leis: fileTypeConfig.leis.icon,
 };
 
 export default function GerenciasFilterBar({

@@ -1,12 +1,13 @@
 // src/components/popups/addContextoModal/abaDashboard.tsx
 import React, { useState } from 'react';
-import { Database, Upload, Minimize } from 'lucide-react'; // Removido BarChart3
+import { Database, Upload, Minimize } from 'lucide-react';
 import { useModalAdicionarConteudo } from '@/components/popups/addContextoModal/useAddContentModal';
 import { SeletorTipoGrafico } from '@/components/popups/addContextoModal/seletorTipoGrafico';
 import { SecaoDadosManuais } from '@/components/popups/addContextoModal/secaoDadosManuais';
 import { SecaoUploadArquivo } from '@/components/popups/addContextoModal/secaoUploadArquivo';
 import { PrevisualizacaoGrafico } from '@/components/popups/addContextoModal/previsualizacaoGrafico';
 import { TipoVersao, FormatoColuna } from '@/components/popups/addContextoModal/types';
+import { cn } from "@/lib/utils"; // <-- Importação do 'cn'
 
 type AbaDashboardProps = Pick<
     ReturnType<typeof useModalAdicionarConteudo>,
@@ -17,14 +18,13 @@ type AbaDashboardProps = Pick<
     | 'conjuntoDeDados' | 'definirCoresDoGrafico'
     | 'atualizarCelula' | 'adicionarLinha' | 'removerLinha' | 'adicionarColuna' | 'removerColuna' | 'atualizarNomeColuna'
     | 'arquivoDeDados' | 'setArquivoDeDados' | 'baixarModelo'
-    // REMOVIDO: | 'previsualizacaoGerada' | 'setPrevisualizacaoGerada'
     | 'isNewVersionMode'
     | 'selectedVersion'
     | 'tipoVersao'
     | 'setTipoVersao'
     | 'descricaoVersao'
     | 'setDescricaoVersao'
-    | 'atualizarFormatoColuna'
+    | 'atualizarFormatoColuna' // <-- Prop corrigida (estava faltando)
 >;
 
 const coresPredefinidas = {
@@ -40,7 +40,6 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
         conjuntoDeDados, definirCoresDoGrafico,
         atualizarCelula, adicionarLinha, removerLinha, adicionarColuna, removerColuna, atualizarNomeColuna,
         arquivoDeDados, setArquivoDeDados, baixarModelo,
-        // REMOVIDO: previsualizacaoGerada, setPrevisualizacaoGerada,
         isNewVersionMode, selectedVersion, tipoVersao, setTipoVersao, descricaoVersao, setDescricaoVersao,
         atualizarFormatoColuna
     } = props;
@@ -48,9 +47,13 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
     const [graficoEmTelaCheia, setGraficoEmTelaCheia] = useState(false);
     const alternarTelaCheia = () => setGraficoEmTelaCheia(!graficoEmTelaCheia);
 
-    // ... (Funções generateColorTheme, handleColorClick e corTemaAtiva permanecem iguais) ...
+    // --- Lógica de Validação ---
+    const MIN_DETALHES_LENGTH = 15;
+    const isDetalhesValido = detalhesGrafico.trim().length >= MIN_DETALHES_LENGTH;
+    const showDetalhesWarning = !isDetalhesValido && detalhesGrafico.length > 0;
+    // --- Fim da Lógica ---
+
     const generateColorTheme = (baseColor: string): string[] => {
-        // ... (lógica)
         const hexToHsl = (hex: string) => {
             const r = parseInt(hex.slice(1, 3), 16) / 255;
             const g = parseInt(hex.slice(3, 5), 16) / 255;
@@ -89,7 +92,6 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
             <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,_1fr)_minmax(0,_1.5fr)_minmax(0,_1fr)] gap-6 h-full animate-fade-in pb-4">
                 {/* Coluna Esquerda */}
                 <div className="flex flex-col space-y-6 pt-1">
-                    {/* ... (Título, Detalhes, Tema de Cores, Detalhes Nova Versão - permanecem iguais) ... */}
                      <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-x-6 gap-y-2 items-end">
                         <div>
                             <label className="block text-lg font-medium text-gray-700 mb-2">
@@ -117,18 +119,45 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                         )}
                     </div>
 
+                    {/* --- CAMPO DE DETALHES ATUALIZADO --- */}
                     {!isNewVersionMode && (
                         <div>
-                            <label className="block text-lg font-medium text-gray-700 mb-2">Detalhes do Gráfico</label>
+                            <div className="flex justify-between items-center mb-2">
+                                <label htmlFor="dashboard-detalhes" className="block text-lg font-medium text-gray-700">
+                                    Detalhes do Gráfico
+                                </label>
+                                <span className={cn(
+                                    "text-xs font-medium",
+                                    showDetalhesWarning ? "text-red-500" : (isDetalhesValido ? "text-green-600" : "text-gray-500")
+                                )}>
+                                    {detalhesGrafico.length} / {MIN_DETALHES_LENGTH}
+                                </span>
+                            </div>
                             <textarea
+                                id="dashboard-detalhes"
                                 value={detalhesGrafico} onChange={(e) => setDetalhesGrafico(e.target.value)}
-                                placeholder="Descreva o contexto, período, fonte dos dados, etc."
+                                placeholder="Descreva o contexto, período, fonte dos dados, etc. (mín. 15 caracteres)"
                                 rows={4}
-                                className="w-full px-4 py-3 border bg-gray-50/25 border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
+                                className={cn(
+                                    "w-full px-4 py-3 border bg-gray-50/25 border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none",
+                                    showDetalhesWarning ? 
+                                    "border-red-300 focus:ring-red-500" : 
+                                    (isDetalhesValido ? 
+                                    "border-green-300 focus:ring-green-500" : 
+                                    "border-gray-200 focus:ring-blue-500"),
+                                    isNewVersionMode && "disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                )}
                                 disabled={isNewVersionMode}
                             />
+                            {showDetalhesWarning && !isDetalhesValido && (
+                                <p className="text-xs text-red-500 mt-1.5">
+                                    Os detalhes são obrigatórios (mín. {MIN_DETALHES_LENGTH} caracteres).
+                                </p>
+                            )}
                         </div>
                     )}
+                    {/* --- FIM DA ATUALIZAÇÃO --- */}
+
 
                      <div>
                         <label className="block text-lg font-medium text-gray-700 mb-2">Tema de Cores</label>
@@ -205,19 +234,17 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                     </div>
                 </div>
 
-                {/* Coluna Direita (REMOVIDO BOTÃO) */}
+                {/* Coluna Direita */}
                 <div className="flex flex-col space-y-4 h-full pt-1">
                      <label className="block text-lg font-medium text-gray-700 flex-shrink-0">Pré-visualização</label>
-                     <div className="flex-1 min-h-0 h-full"> {/* <-- ADICIONADO h-full */}
+                     <div className="flex-1 min-h-0 h-full">
                         <PrevisualizacaoGrafico
                             tipoGrafico={tipoGrafico} 
                             conjuntoDeDados={conjuntoDeDados}
                             titulo={tituloGrafico}
-                            // REMOVIDO: previsualizacaoGerada={previsualizacaoGerada}
                             aoAlternarTelaCheia={alternarTelaCheia}
                         />
                     </div>
-                     {/* REMOVIDO: Botão "Gerar Gráfico" */}
                 </div>
             </div>
 
