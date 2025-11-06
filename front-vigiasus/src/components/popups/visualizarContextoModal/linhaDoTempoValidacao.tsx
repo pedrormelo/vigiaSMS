@@ -15,35 +15,61 @@ interface LinhaDoTempoValidacaoProps {
 }
 
 const LinhaDoTempoValidacao = ({ historico, status }: LinhaDoTempoValidacaoProps) => {
+    // A definição das etapas permanece a mesma
     const etapasWorkflow = [
-        { nome: "Submetido", status: [StatusContexto.AguardandoGerente, StatusContexto.AguardandoDiretor, StatusContexto.Publicado, StatusContexto.Deferido, StatusContexto.Indeferido, StatusContexto.AguardandoCorrecao], icon: Send },
-        { nome: "Análise Gerente", status: [StatusContexto.AguardandoDiretor, StatusContexto.Publicado, StatusContexto.Deferido, StatusContexto.Indeferido, StatusContexto.AguardandoCorrecao], icon: UserCog },
-        { nome: "Análise Diretor", status: [StatusContexto.Publicado, StatusContexto.Deferido, StatusContexto.Indeferido, StatusContexto.AguardandoCorrecao], icon: UserCheck },
-        { nome: "Finalizado", status: [StatusContexto.Publicado, StatusContexto.Indeferido], icon: CircleCheckBig}
+        { nome: "Submetido", status: [], icon: Send }, // Os status aqui não são mais usados para lógica de índice
+        { nome: "Análise Gerente", status: [], icon: UserCog },
+        { nome: "Análise Diretor", status: [], icon: UserCheck },
+        { nome: "Finalizado", status: [], icon: CircleCheckBig}
     ];
 
     const statusAtual = status; 
 
-    let indiceEtapaAtual = etapasWorkflow.findIndex(etapa => etapa.status.includes(statusAtual));
-     if (indiceEtapaAtual === -1 && (statusAtual === StatusContexto.Publicado || statusAtual === StatusContexto.Indeferido)) {
-        indiceEtapaAtual = etapasWorkflow.length - 1; 
+    // --- INÍCIO DA CORREÇÃO ---
+    // Substituímos o .findIndex() por um mapeamento direto (switch).
+    // Isso garante que o status correto seja mapeado para a etapa correta da timeline.
+    
+    let indiceEtapaAtual: number;
+    
+    switch (statusAtual) {
+        case StatusContexto.AguardandoCorrecao:
+            indiceEtapaAtual = 0; // Se aguarda correção, a etapa "Submetido" fica ativa (piscando)
+            break;
+        case StatusContexto.AguardandoGerente:
+            indiceEtapaAtual = 1; // Se aguarda gerente, a etapa "Análise Gerente" fica ativa
+            break;
+        case StatusContexto.AguardandoDiretor:
+            indiceEtapaAtual = 2; // Se aguarda diretor, a etapa "Análise Diretor" fica ativa
+            break;
+        case StatusContexto.Publicado:
+        case StatusContexto.Deferido:
+        case StatusContexto.Indeferido:
+            indiceEtapaAtual = 3; // Se finalizado, a etapa "Finalizado" fica ativa
+            break;
+        default:
+            indiceEtapaAtual = 0; // Fallback
     }
+    // --- FIM DA CORREÇÃO ---
+
 
     let indiceEtapaDevolvida = -1;
+    // Esta lógica está correta, mas ajustamos o índice
     if (statusAtual === StatusContexto.AguardandoCorrecao) {
         const ultimoEventoAnalise = [...(historico || [])].reverse().find(h =>
             h.acao.toLowerCase().includes("análise gerente") || h.acao.toLowerCase().includes("análise diretor")
         );
          if (ultimoEventoAnalise?.acao.toLowerCase().includes("análise diretor")) {
-             indiceEtapaDevolvida = 2;
+             indiceEtapaDevolvida = 2; // Devolvido pelo Diretor
          } else if (ultimoEventoAnalise?.acao.toLowerCase().includes("análise gerente")) {
-             indiceEtapaDevolvida = 1;
+             indiceEtapaDevolvida = 1; // Devolvido pelo Gerente
          } else {
-             indiceEtapaDevolvida = 1;
+             indiceEtapaDevolvida = 1; // Fallback
          }
+        // A etapa atual (piscando) é a 0 (Submetido), pois aguarda nova submissão
         indiceEtapaAtual = 0;
     }
 
+    // A função getUltimoEventoParaEtapa permanece a mesma
     const getUltimoEventoParaEtapa = (etapaIndex: number): HistoricoEvento | undefined => {
         const etapa = etapasWorkflow[etapaIndex];
          const eventosRelevantes = (historico || []).filter(e => {
@@ -57,6 +83,7 @@ const LinhaDoTempoValidacao = ({ historico, status }: LinhaDoTempoValidacaoProps
         return eventosRelevantes.length > 0 ? eventosRelevantes[eventosRelevantes.length - 1] : undefined;
     };
     
+    // A lógica de comentários permanece a mesma
     const comentariosParaExibir: Comment[] = useMemo(() => {
         const eventos = historico || []; 
         return eventos
@@ -85,6 +112,8 @@ const LinhaDoTempoValidacao = ({ historico, status }: LinhaDoTempoValidacaoProps
                 <div className="flex items-start justify-between px-4">
                     {etapasWorkflow.map((etapa, index) => {
                         const evento = getUltimoEventoParaEtapa(index);
+                        
+                        // Lógica de renderização (agora funciona com o indiceEtapaAtual correto)
                         const isFinalizada = (statusAtual === StatusContexto.Publicado || statusAtual === StatusContexto.Indeferido) && index <= indiceEtapaAtual;
                         const isConcluida = !isFinalizada && index < indiceEtapaAtual && index !== indiceEtapaDevolvida;
                         const isAtual = !isFinalizada && index === indiceEtapaAtual && index !== indiceEtapaDevolvida;
@@ -118,7 +147,9 @@ const LinhaDoTempoValidacao = ({ historico, status }: LinhaDoTempoValidacaoProps
                                     {isDevolvida && (<p className="text-xs font-medium text-orange-600 mt-1">Devolvido</p>)}
                                 </div>
                                 {index < etapasWorkflow.length - 1 && (
-                                    <div className={`flex-1 mt-[19px] h-0.5 transition-colors ${(isConcluida || isFinalizada || (isAtual && index < indiceEtapaAtual)) ? 'bg-green-300' : 'bg-gray-200'} min-w-[10px]`}></div>
+                                    <div className={`flex-1 mt-[19px] h-0.5 transition-colors ${
+                                        (isConcluida || isFinalizada || (isAtual && index < indiceEtapaAtual) || (isDevolvida && index < indiceEtapaDevolvida)) ? 'bg-green-300' : 'bg-gray-200'
+                                    } min-w-[10px]`}></div>
                                 )}
                             </React.Fragment>
                         );
@@ -126,7 +157,7 @@ const LinhaDoTempoValidacao = ({ historico, status }: LinhaDoTempoValidacaoProps
                 </div>
             </div>
             
-            {/* Seção de Comentários/Justificativas */}
+            {/* Seção de Comentários/Justificativas (Sem alterações) */}
             {comentariosParaExibir.length > 0 && (
                 <div className="px-3">
                     <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">

@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 const FILE_TYPE_DEFINITIONS: Record<FileType, { mimes: string[], extensions: string[], label: string }> = {
     'pdf': { mimes: ['application/pdf'], extensions: ['.pdf'], label: 'PDF' },
     'doc': { mimes: ['application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.oasis.opendocument.text'], extensions: ['.doc', '.docx', '.odt'], label: 'Documento' },
-    'excel': { mimes: ['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.oasis.opendocument.spreadsheet'], extensions: ['.xls', '.xlsx', '.ods'], label: 'Planilha' },
+    'planilha': { mimes: ['application/vnd.ms-planilha', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.oasis.opendocument.spreadsheet'], extensions: ['.xls', '.xlsx', '.ods'], label: 'Planilha' },
     'apresentacao': { mimes: ['application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/vnd.oasis.opendocument.presentation'], extensions: ['.ppt', '.pptx', '.odp'], label: 'Apresentação' },
     'resolucao': { mimes: ['application/pdf'], extensions: ['.pdf'], label: 'Resolução (PDF)' },
     'leis': { mimes: ['application/pdf'], extensions: ['.pdf'], label: 'Lei (PDF)' },

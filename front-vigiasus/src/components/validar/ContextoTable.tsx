@@ -10,10 +10,18 @@ interface Props {
 
 export default function ContextoTable({ data, columns, onUpdate }: Props) {
     return (
-        <div className="overflow-x-auto bg-white rounded-3xl border border-gray-300">
+        // --- INÍCIO DA CORREÇÃO ---
+        // Adicionado: 
+        // 1. max-h-[600px] (limita a altura em 600 pixels)
+        // 2. overflow-y-auto (adiciona a barra de rolagem vertical quando necessário)
+        // 3. scrollbar-custom (aplica o estilo de rolagem personalizado do app)
+        <div className="overflow-x-auto overflow-y-auto max-h-[500px] scrollbar-custom bg-white rounded-3xl border border-gray-300"> 
+        {/* --- FIM DA CORREÇÃO --- */}
+            
+            {/* Adicionado sticky top-0 para o cabeçalho */}
             <table className="w-full text-left">
                 {/* Cabeçalho da tabela */}
-                <thead className="bg-blue-400">
+                <thead className="bg-blue-400 sticky top-0 z-10"> 
                     <tr>
                         {columns.map((col) => (
                             <th key={String(col.key)} className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">

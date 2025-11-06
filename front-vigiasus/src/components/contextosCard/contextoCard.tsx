@@ -4,7 +4,7 @@
 import { 
     FileText, FileSpreadsheet, FileSearch, Link, Calendar, ChartNetwork, Gauge, Presentation, 
     Clock,
-    MoreVertical, // 1. IMPORTAR ÍCONES
+    MoreVertical, 
     Eye, EyeOff 
 } from "lucide-react" 
 import { cn } from "@/lib/utils"
@@ -12,8 +12,6 @@ import Image from "next/image"
 import { StatusContexto } from "@/components/validar/typesDados" 
 import StatusBadge from "@/components/alerts/statusBadge" 
 import { Badge } from "@/components/ui/badge" 
-
-// 2. IMPORTAR COMPONENTES DO DROPDOWN
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,7 +19,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-export type FileType = "pdf" | "doc" | "dashboard" | "excel" | "resolucao" | "link" | "leis" | "indicador" | "apresentacao"
+// 1. TIPO ATUALIZADO: "excel" -> "planilha"
+export type FileType = "pdf" | "doc" | "dashboard" | "planilha" | "resolucao" | "link" | "leis" | "indicador" | "apresentacao"
 
 interface FileItemProps {
     id: string; 
@@ -36,6 +35,7 @@ interface FileItemProps {
     onToggleOculto?: (id: string) => void; 
 }
 
+// 2. CONFIG ATUALIZADA: "excel" -> "planilha"
 export const fileTypeConfig = {
     pdf: {
         color: "bg-[#C53131] hover:bg-[#A02020]",
@@ -63,10 +63,10 @@ export const fileTypeConfig = {
         svg: "/icons/CONTEXTOS/INDC.svg",
         label: "Indicador",
     },
-    excel: {
+    planilha: { // <-- Renomeado de "excel"
         color: "bg-[#008C32] hover:bg-[#006B24]",
         svg: "/icons/CONTEXTOS/PLA-1.svg",
-        label: "Excel/XLSX/CSV",
+        label: "Planilha", // <-- Label atualizada
     },
     resolucao: {
         color: "bg-[#E2712A] hover:bg-[#C95A2A]",
@@ -97,22 +97,15 @@ export function FileItem({
     estaOculto = false,
     onToggleOculto
 }: FileItemProps) {
+    // (O restante do componente permanece o mesmo, pois ele lê a 'config' dinamicamente)
     const config = fileTypeConfig[type]
     const IconComponent = (config as any).icon
     
     const isPublished = status === StatusContexto.Publicado;
-    
-    // Estilo desabilitado se não publicado OU se estiver oculto
     const isDisabled = !isPublished || estaOculto;
-
     const cardColor = config.color; 
     const textColor = "text-white"; 
-
-    // --- NOVA LÓGICA DE VALIDAÇÃO ---
-    // A ação de "Ocultar" só é permitida se o item já estiver publicado.
-    // A ação de "Tornar Visível" (des-ocultar) é sempre permitida no modo de edição.
     const canToggleHide = estaOculto ? true : isPublished;
-    // --- FIM DA NOVA LÓGICA ---
 
     return (
         <div
@@ -125,12 +118,11 @@ export function FileItem({
             onClick={onClick}
             title={isPublished ? title : `${title} (Status: ${status})`} 
         >
-            {/* --- CONTAINER DE BADGES ATUALIZADO --- */}
+            {/* --- Container de Badges --- */}
             <div className="absolute top-3 left-3 z-10 flex flex-col items-start gap-1.5">
                 {!isPublished && (
                     <StatusBadge status={status} />
                 )}
-                
                 {estaOculto && (
                     <Badge className="bg-gray-700/80 text-white border-none py-1 px-2" title="Este contexto está oculto">
                         <EyeOff className="w-3.5 h-3.5 mr-1" />
@@ -139,7 +131,7 @@ export function FileItem({
                 )}
             </div>
             
-            {/* --- MENU DROPDOWN (UI ATUALIZADA E LÓGICA DE 'disabled') --- */}
+            {/* --- Menu Dropdown --- */}
             {isEditing && (
                 <div className="absolute top-2 right-2 z-20">
                     <DropdownMenu>
@@ -147,7 +139,6 @@ export function FileItem({
                             asChild
                             onClick={(e) => e.stopPropagation()} 
                         >
-                            {/* 1. UI ATUALIZADA (estilo "botão de modal") */}
                             <button className="p-1.5 rounded-full text-white/90 hover:bg-white/25 transition-colors">
                                 <MoreVertical className="w-5 h-5" />
                             </button>
@@ -158,11 +149,9 @@ export function FileItem({
                             onClick={(e) => e.stopPropagation()} 
                         >
                             <DropdownMenuItem
-                                // 2. LÓGICA DE 'disabled' APLICADA
                                 disabled={!canToggleHide} 
                                 onClick={() => onToggleOculto?.(id)}
                                 className="cursor-pointer font-medium"
-                                // 3. Tooltip se estiver desabilitado
                                 title={!canToggleHide ? "Apenas contextos publicados podem ser ocultados" : (estaOculto ? "Tornar Visível" : "Ocultar Contexto")}
                             >
                                 {estaOculto ? (
@@ -176,15 +165,12 @@ export function FileItem({
                 </div>
             )}
             
-            {/* Marca d'água */}
             {!isPublished && (
                  <Clock className="absolute -right-2 -bottom-2 w-20 h-20 text-black/10 z-0" strokeWidth={1.5} />
             )}
 
-            {/* --- PADDING SUPERIOR CONDICIONAL (CORREÇÃO DA SOBREPOSIÇÃO) --- */}
             <div className={cn(
                 "flex justify-center mb-4 z-10",
-                // Adiciona margem se um badge estiver visível (não publicado OU oculto)
                 (!isPublished || estaOculto) && "mt-6" 
             )}> 
                 { (config as any).svg ? (

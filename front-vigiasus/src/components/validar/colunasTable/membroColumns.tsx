@@ -6,8 +6,6 @@ import IconeDocumento from '@/components/validar/iconeDocumento';
 import { FaEye, FaTrash } from 'react-icons/fa';
 import { statusConfig } from './statusConfig'; 
 
-// Lista de status que são considerados "finais".
-// Quando um contexto está num destes estados, não pode ser apagado.
 const statusFinais: StatusContexto[] = [
   StatusContexto.Deferido,
   StatusContexto.Indeferido,
@@ -16,38 +14,54 @@ const statusFinais: StatusContexto[] = [
 
 export const membroColumns: Column<Contexto>[] = [
   {
-    key: "nome",
+    key: "title", 
     header: "Contexto",
     render: (row) => (
       <div className="flex items-center gap-3">
-        <IconeDocumento type={row.docType} />
-        <span className="font-medium">{row.nome}</span>
+        <IconeDocumento type={row.type} /> 
+        <span className="font-medium">{row.title}</span> 
       </div>
     ),
   },
   {
-    key: "situacao",
-    header: "Situação",
+    key: "status",
+    header: "Status", // Renomeado de "Situação"
     render: (row) => {
-      // Usa a configuração de status centralizada
-      const config = statusConfig[row.situacao] || { text: row.situacao, className: "bg-gray-100 text-gray-800" };
-      return <span className={`px-3 py-1 text-xs font-semibold rounded-full ${config.className}`}>{config.text}</span>;
+      // --- LÓGICA ATUALIZADA ---
+      const config = statusConfig[row.status] || { text: row.status, className: "bg-gray-100 text-gray-800" };
+      const versaoNum = row.versoes ? row.versoes.length : 1;
+      const isNovaVersao = versaoNum > 1;
+
+      return (
+        <div className="flex flex-col gap-1.5 items-start">
+          <span className={`px-3 py-1 text-xs font-semibold rounded-full ${config.className}`}>
+            {config.text}
+          </span>
+          
+          {isNovaVersao ? (
+            <span className="px-2 py-0.5 text-[10px] font-bold text-blue-800 bg-blue-100 rounded-full border border-blue-200">
+              v{versaoNum} - Nova Versão
+            </span>
+          ) : (
+            <span className="px-2 py-0.5 text-[10px] font-medium text-gray-600 bg-gray-100 rounded-full border border-gray-200">
+              v1 - Nova Submissão
+            </span>
+          )}
+        </div>
+      );
+      // --- FIM DA ATUALIZAÇÃO ---
     }
   },
   {
     key: "acoes",
     header: "Ações",
-    // A renderização das ações agora recebe a `row`
-    // para verificar o status do contexto.
     render: (row) => (
       <div className="flex items-center gap-4 text-gray-500">
         <button className="hover:text-blue-600" title="Visualizar Contexto">
           <FaEye size={16} />
         </button>
 
-        {/* O botão de apagar só é renderizado
-            se o status do contexto NÃO estiver na lista de status finais. */}
-        {!statusFinais.includes(row.situacao) && (
+        {!statusFinais.includes(row.status) && (
           <button className="hover:text-red-600" title="Apagar Contexto">
             <FaTrash size={16} />
           </button>
