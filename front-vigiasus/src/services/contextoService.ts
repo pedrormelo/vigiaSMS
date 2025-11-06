@@ -137,14 +137,12 @@ export const getContextoById = async (id: string): Promise<Contexto | null> => {
 // --- (FUNÇÃO CORRIGIDA) ---
 
 /**
- * Busca todos os contextos (publicados/visíveis) associados a uma Gerência específica.
+ * Busca todos os contextos associados a uma Gerência específica.
+ * AGORA RETORNA TODOS OS STATUS (pendentes, publicados, etc.)
  * @param nomeGerencia O NOME COMPLETO da gerência (ex: "Gerência de Planejamento").
  */
 export const getContextosPorGerencia = async (nomeGerencia: string): Promise<Contexto[]> => {
-  console.log(`Service: buscando todos os contextos para a gerência NOME: ${nomeGerencia}`);
-
-  // 3. LÓGICA REMOVIDA: A lógica de tradução de ID para NOME foi removida.
-  // A página (page.tsx) já resolve o nome e o passa diretamente.
+  console.log(`Service: buscando TODOS os contextos para a gerência NOME: ${nomeGerencia}`);
 
   if (!nomeGerencia) {
       console.warn(`Service: getContextosPorGerencia chamado com nome indefinido.`);
@@ -154,20 +152,21 @@ export const getContextosPorGerencia = async (nomeGerencia: string): Promise<Con
   if (USE_MOCKS) {
     return new Promise(resolve => {
       setTimeout(() => {
-        // 4. FILTRAR O DB MOCKADO PELO NOME (que veio como argumento)
-        // E status de publicação (modo de visualização padrão)
-        const encontrados = allContextosMock.filter(
-          contexto => contexto.gerencia === nomeGerencia && 
-                      (contexto.status === StatusContexto.Publicado || contexto.status === StatusContexto.Deferido)
-        );
         
-        console.log(`Service: Encontrados ${encontrados.length} contextos publicados para a gerência "${nomeGerencia}"`);
+        // --- INÍCIO DA CORREÇÃO ---
+        // Filtra APENAS pelo nome da gerência.
+        const encontrados = allContextosMock.filter(
+          contexto => contexto.gerencia === nomeGerencia
+        );
+        // --- FIM DA CORREÇÃO ---
+        
+        console.log(`Service: Encontrados ${encontrados.length} contextos (todos os status) para a gerência "${nomeGerencia}"`);
         resolve(encontrados);
       }, 500);
     });
   } else {
     // A lógica da API real seria algo como:
-    // const response = await fetch(`/api/contextos?gerenciaNome=${encodeURIComponent(nomeGerencia)}&status=publicado`);
+    // const response = await fetch(`/api/contextos?gerenciaNome=${encodeURIComponent(nomeGerencia)}&incluirPendentes=true`);
     // return await response.json();
     console.warn("API real não implementada para getContextosPorGerencia");
     return [];

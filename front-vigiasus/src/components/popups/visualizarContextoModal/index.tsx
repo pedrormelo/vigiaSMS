@@ -1,32 +1,34 @@
 // src/components/popups/visualizarContextoModal/index.tsx
 "use client";
 
-// 1. IMPORTAÇÕES (sem alteração)
+// 1. IMPORTAÇÕES
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
     ArrowLeft, Info, History, FileText, LucideProps, ZoomIn, ZoomOut, RotateCcw,
-    FileCheck2, FileX, X,
+    FileCheck2, FileX, X, Clock
 } from 'lucide-react';
 import { VisualizadorDeConteudo } from './visualizadorDeConteudo';
 import { Button } from "@/components/ui/button";
 import { cn } from '@/lib/utils';
+// Importa o novo modal de deferimento
+import DeferirContextoModal from '@/components/popups/deferirContextoModal';
 import IndeferirContextoModal from '@/components/popups/IndeferirContextoModal';
 import { showDispatchToast, showErrorToast, showSuccessToast } from '@/components/ui/Toasts';
 import AbaDetalhes from './abaDetalhes';
 import AbaVersoes from './abaVersoes';
 
-// 3. TIPOS (Agora importa o 'Contexto' unificado)
-import type { DetalhesContexto } from '@/components/popups/addContextoModal/types'; 
+// 2. TIPOS
+import type { DetalhesContexto, Versao } from '@/components/popups/addContextoModal/types'; 
 import { Contexto, StatusContexto } from '@/components/validar/typesDados'; 
 
-// 4. PROPS UNIFICADAS (Atualizado para receber 'Contexto')
+// 3. PROPS DO MODAL
 interface VisualizarContextoModalProps {
     estaAberto: boolean;
     aoFechar: () => void;
-    dadosDoContexto: Contexto | null; // <-- Recebe o tipo 'Contexto' unificado
+    dadosDoContexto: Contexto | null;
     perfil: 'diretor' | 'gerente' | 'membro';
     
-    aoCriarNovaVersao?: (dados: Contexto) => void; // <-- Passa 'Contexto'
+    aoCriarNovaVersao?: (dados: Contexto) => void;
     isEditing?: boolean;
     aoAlternarVisibilidadeVersao?: (contextoId: string, versaoId: number) => void;
     aoAlternarVisibilidadeIndicador?: (contextoId: string) => void; 
@@ -34,12 +36,12 @@ interface VisualizarContextoModalProps {
     isFromHistory?: boolean;
     onDeferir?: (contextoId: string, comentario?: string) => void;
     onIndeferir?: (contextoId: string, comentario: string) => void;
-    onCorrigir?: (contextoParaCorrigir: Contexto) => void; // <-- Recebe 'Contexto'
+    onCorrigir?: (contextoParaCorrigir: Contexto) => void;
 }
 
 type TipoAba = 'detalhes' | 'versoes';
 
-// --- COMPONENTE BotaoAba (Mantido) ---
+// 4. COMPONENTE INTERNO: BotaoAba
 const BotaoAba = ({ id, label, Icon, abaAtiva, setAbaAtiva }: { id: TipoAba; label: string; Icon: React.ElementType<LucideProps>; abaAtiva: TipoAba; setAbaAtiva: (aba: TipoAba) => void; }) => (
     <button onClick={() => setAbaAtiva(id)} className={cn(
         "flex-1 py-3 px-4 rounded-xl font-semibold transition-all flex justify-center items-center text-sm gap-2",
@@ -66,86 +68,67 @@ export function VisualizarContextoModal({
     onCorrigir 
 }: VisualizarContextoModalProps) {
     
-    // --- ESTADOS (sem alteração) ---
+    // 5. ESTADOS
     const [abaAtiva, setAbaAtiva] = useState<TipoAba>('detalhes');
     const [emTelaCheia, setEmTelaCheia] = useState(false);
     const [zoomLevel, setZoomLevel] = useState(1);
     const [indeferirOpen, setIndeferirOpen] = useState(false); 
+    const [deferirOpen, setDeferirOpen] = useState(false); 
     const chartContainerRef = useRef<HTMLDivElement | null>(null);
 
-    // --- HOOK DE NORMALIZAÇÃO (LÓGICA UNIFICADA E CORRIGIDA) ---
+    // 6. NORMALIZAÇÃO DE DADOS (useMemo)
     const normalizedData: Contexto | null = useMemo(() => {
         if (!dadosDoContexto) return null;
         
-        // Cria uma cópia para evitar mutação
         const dados = { ...dadosDoContexto };
-
-        // 1. GARANTIR QUE 'estaOculto' exista
         if (dados.estaOculto === undefined) dados.estaOculto = false;
 
-        // 2. GARANTIR QUE 'versoes' exista e esteja formatado
         if (!dados.versoes || dados.versoes.length === 0) {
-            // Se não há versões (ex: mock antigo), cria a v1 a partir dos dados gerais
             dados.versoes = [{
                 id: 1,
                 nome: dados.title || "Versão 1",
                 data: dados.insertedDate,
                 autor: dados.solicitante || "N/A",
                 estaOculta: false,
-                status: dados.status, // Usa o status geral
-                historico: dados.historico || [] // Usa o histórico geral
+                status: dados.status,
+                historico: dados.historico || []
             }];
         } else {
-            // Se há versões (ex: mock da pág. de gerência), garante que a última
-            // versão tenha o status e histórico corretos.
             dados.versoes = dados.versoes.map((v, i) => {
                 const eAUltimaVersao = i === (dados.versoes!.length - 1);
-                
-                // Se a versão não tiver status/histórico (mocks antigos), preenche
                 const statusDaVersao = v.status || (eAUltimaVersao ? dados.status : StatusContexto.Publicado);
                 const historicoDaVersao = v.historico || (eAUltimaVersao ? (dados.historico || []) : []);
-                
-                return {
-                    ...v,
-                    status: statusDaVersao,
-                    historico: historicoDaVersao
-                };
+                return { ...v, status: statusDaVersao, historico: historicoDaVersao };
             });
         }
-
         return dados;
     }, [dadosDoContexto]);
-    // --- FIM DA NORMALIZAÇÃO ---
 
-
-    const alternarTelaCheia = () => {
-        setEmTelaCheia(!emTelaCheia);
-        setZoomLevel(1);
-    };
-
+    // 7. HANDLERS E EFEITOS
+    const alternarTelaCheia = () => { setEmTelaCheia(!emTelaCheia); setZoomLevel(1); };
+    
     useEffect(() => {
         if (estaAberto) {
             setAbaAtiva('detalhes'); 
             setEmTelaCheia(false);
             setZoomLevel(1);
             setIndeferirOpen(false);
+            setDeferirOpen(false); 
         }
     }, [estaAberto]);
-
+    
     const lidarComDownload = () => {
         if (!normalizedData) return;
         if (normalizedData.type === 'dashboard' && chartContainerRef.current) {
-            // (lógica SVG)
+            /* (lógica SVG) */
         } else if (normalizedData.url) {
             const a = document.createElement('a');
             a.href = normalizedData.url;
             a.download = normalizedData.title || 'arquivo';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
         }
     };
-
+    
     const handleToggleVersao = (versaoId: number) => {
         if (normalizedData && aoAlternarVisibilidadeVersao) {
             aoAlternarVisibilidadeVersao(normalizedData.id, versaoId);
@@ -157,26 +140,35 @@ export function VisualizarContextoModal({
             aoAlternarVisibilidadeIndicador(contextoId); 
         }
     };
-
+    
     const handleCorrigirClick = () => {
-        // O onCorrigir é específico da pág /validar
         if (dadosDoContexto && onCorrigir && 'solicitante' in dadosDoContexto) {
             onCorrigir(dadosDoContexto as Contexto);
         } 
-        // o aoCriarNovaVersao é da pág /gerencia
         else if (normalizedData && aoCriarNovaVersao) {
             aoCriarNovaVersao(normalizedData);
         }
     };
     
     // Handlers de Validação (Deferir/Indeferir)
-    const handleDeferirClick = () => {
+    
+    const handleConfirmarDeferimento = () => {
         if (normalizedData && onDeferir) {
             onDeferir(normalizedData.id, undefined);
             showSuccessToast("Contexto deferido com sucesso!");
-            aoFechar();
+            setDeferirOpen(false); // Fecha o modal de confirmação
+            aoFechar(); // Fecha o modal principal
         }
     };
+    
+    const handleDeferirClick = () => {
+        setDeferirOpen(true);
+    };
+
+    const cancelDeferir = () => {
+        setDeferirOpen(false);
+    };
+
     const openIndeferirModal = () => setIndeferirOpen(true);
     const cancelIndeferir = () => setIndeferirOpen(false);
     const confirmIndeferir = (comentario: string) => {
@@ -192,67 +184,46 @@ export function VisualizarContextoModal({
         }
     };
 
+    
+    // 8. LÓGICA DE VALIDAÇÃO
+    const isValidationView = !!(onDeferir || onIndeferir || onCorrigir);
 
-    // --- Renderização do Rodapé ---
-    const renderFooter = (): React.ReactNode => {
-        if (!normalizedData) return null; 
-        // Se estiver no histórico (somente leitura)
-        if (isFromHistory) return null; 
+    const podeAgir = useMemo(() => {
+        if (!normalizedData || isFromHistory || isEditing) return false;
+        return (perfil === "gerente" && normalizedData.status === StatusContexto.AguardandoGerente) || 
+               (perfil === "diretor" && normalizedData.status === StatusContexto.AguardandoDiretor);
+    }, [normalizedData, perfil, isFromHistory, isEditing]);
 
-        // Se estiver no MODO EDIÇÃO (pág. /gerencia)
-        if (isEditing) {
-            return (
-                <div className="flex justify-center w-full">
-                     <p className="text-sm text-gray-500 italic">Use a aba &lsquo;Versões&rsquo; para criar uma nova versão.</p>
-                </div>
-            );
-        }
+    const versaoEmJulgamento = useMemo(() => {
+        if (!podeAgir || !normalizedData?.versoes || normalizedData.versoes.length === 0) return null;
+        return normalizedData.versoes.reduce((a, b) => a.id > b.id ? a : b);
+    }, [normalizedData, podeAgir]);
 
-        // --- Se estiver no MODO VISUALIZAÇÃO ---
+    // 9. LÓGICA DE RENDERIZAÇÃO DO RODAPÉ (APENAS BOTÕES)
+    const renderAcaoBotoes = (): React.ReactNode => {
+         if (!podeAgir) return null; 
 
-        // 1. Membro vendo "Aguardando Correção" (pág. /validar)
-        if (perfil === "membro" && normalizedData.status === StatusContexto.AguardandoCorrecao) {
-            return (
-                <div className="flex justify-center w-full">
-                     <p className="text-sm text-gray-500 italic">Use a aba &lsquo;Versões&rsquo; para enviar uma correção.</p>
-                </div>
-            );
-        }
-
-        // 2. Gerente/Diretor vendo pendência (pág. /validar)
-        if ((perfil === "gerente" || perfil === "diretor") && !isFromHistory) {
-             const podeAgir = (perfil === "gerente" && normalizedData.status === StatusContexto.AguardandoGerente) || 
-                              (perfil === "diretor" && normalizedData.status === StatusContexto.AguardandoDiretor);
-            
-            if (podeAgir) {
-                return (
-                    <div className="flex items-center justify-between w-full gap-4">
-                        <p className="text-sm text-gray-500 hidden md:block">Selecione uma ação para este contexto.</p>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                            <Button onClick={openIndeferirModal} variant="outline" size="sm"
-                                className="bg-red-50 hover:bg-red-100 border-red-300 text-red-700 rounded-xl px-3 py-2 font-semibold"
-                            >
-                                <FileX className="mr-1 h-4 w-4" /> Indeferir
-                            </Button>
-                            <Button onClick={handleDeferirClick} variant="default" size="sm"
-                                className="bg-green-600 hover:bg-green-700 text-white rounded-xl px-3 py-2 font-semibold"
-                            >
-                                <FileCheck2 className="mr-1 h-4 w-4" /> Deferir
-                            </Button>
-                        </div>
-                    </div>
-                );
-            }
-        }
-        
-        // 3. Caso padrão (ex: Membro vendo algo 'Publicado' na pág /gerencia)
-        return null; // Sem ações
+        return (
+            <div className="flex items-center justify-end gap-2 flex-shrink-0 w-full">
+                <Button onClick={openIndeferirModal} variant="outline" size="sm"
+                    className="bg-red-50 hover:bg-red-100 border-red-300 text-red-700 rounded-xl px-3 py-2 font-semibold"
+                >
+                    <FileX className="mr-1 h-4 w-4" /> Indeferir
+                </Button>
+                <Button onClick={handleDeferirClick} variant="default" size="sm"
+                    className="bg-green-600 hover:bg-green-700 text-white rounded-xl px-3 py-2 font-semibold"
+                >
+                    <FileCheck2 className="mr-1 h-4 w-4" /> Deferir
+                </Button>
+            </div>
+        );
     };
-
-
+    
+    // --- 10. RENDERIZAÇÃO ---
     if (!estaAberto || !normalizedData) return null; 
 
-    // --- JSX DO MODAL UNIFICADO ---
+    const AcaoBotoesNode = renderAcaoBotoes();
+
     return (
         <>
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
@@ -274,7 +245,7 @@ export function VisualizarContextoModal({
                             <BotaoAba id="versoes" label="Versões e Histórico" Icon={History} abaAtiva={abaAtiva} setAbaAtiva={setAbaAtiva} />
                         </div>
 
-                        {/* Conteúdo da Aba (Renderiza os componentes importados) */}
+                        {/* Conteúdo da Aba */}
                         <div className={cn("flex-1 min-h-0 overflow-hidden", abaAtiva === 'detalhes' ? 'animate-fade-in' : 'animate-fade-in')}>
                             {abaAtiva === 'detalhes' && (
                                 <AbaDetalhes
@@ -285,7 +256,10 @@ export function VisualizarContextoModal({
                                     emTelaCheia={emTelaCheia}
                                     zoomLevel={zoomLevel}
                                     isFromHistory={isFromHistory}
-                                    aoAlternarVisibilidadeContexto={handleToggleContexto} 
+                                    aoAlternarVisibilidadeContexto={handleToggleContexto}
+                                    isValidationView={isValidationView} 
+                                    podeAgir={podeAgir}
+                                    versaoEmJulgamento={versaoEmJulgamento}
                                 />
                             )}
                             {abaAtiva === 'versoes' && (
@@ -299,11 +273,11 @@ export function VisualizarContextoModal({
                             )}
                         </div>
                     </div>
-
-                    {/* Rodapé */}
-                    {renderFooter() != null && (
+                    
+                    {/* Rodapé (Apenas botões) */}
+                    {AcaoBotoesNode && (
                         <div className="px-6 py-3 bg-gray-50 flex justify-end items-center gap-4 flex-shrink-0 border-t border-gray-200 rounded-b-[40px]">
-                           {renderFooter()}
+                           {AcaoBotoesNode}
                         </div>
                     )}
 
@@ -320,6 +294,7 @@ export function VisualizarContextoModal({
                                 <Button onClick={() => setZoomLevel(prev => Math.max(0.2, prev - 0.2))} variant="ghost" size="icon" className="text-black hover:bg-black/10 rounded-full w-8 h-8" title="Diminuir Zoom"><ZoomOut className="w-5 h-5" /></Button>
                                 <Button onClick={() => setZoomLevel(1)} variant="ghost" size="icon" className="text-black hover:bg-black/10 rounded-full w-8 h-8" title="Resetar Zoom"><RotateCcw className="w-5 h-5" /></Button>
                                 <Button onClick={() => setZoomLevel(prev => prev + 0.2)} variant="ghost" size="icon" className="text-black hover:bg-black/10 rounded-full w-8 h-8" title="Aumentar Zoom"><ZoomIn className="w-5 h-5" /></Button>
+
                             </>
                         )}
                         <Button onClick={alternarTelaCheia} variant="ghost" size="icon" className="text-black hover:bg-black/10 rounded-full w-8 h-8" title="Fechar Tela Cheia"><X className="w-5 h-5" /></Button>
@@ -352,6 +327,16 @@ export function VisualizarContextoModal({
                 contextoNome={normalizedData.title}
                 requireComment
             />
+
+            {/* Modal de Confirmação Deferir */}
+            <DeferirContextoModal
+                open={deferirOpen}
+                onOpenChange={setDeferirOpen}
+                onCancel={cancelDeferir}
+                onConfirm={handleConfirmarDeferimento}
+                contextoNome={normalizedData.title}
+            />
+
 
             {/* Estilos */}
             <style>{`

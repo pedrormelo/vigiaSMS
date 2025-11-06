@@ -22,7 +22,7 @@ export const diretorColumns: Column<Contexto>[] = [
     key: "gerencia",
     header: "Gerência",
     render: (row) => {
-      const backgroundColor = getGerenciaColor(row.gerencia || 'N/A'); // Adiciona fallback
+      const backgroundColor = getGerenciaColor(row.gerencia || 'N/A'); 
       const style = {
         backgroundColor: backgroundColor,
         color: "#fff", 
@@ -32,22 +32,42 @@ export const diretorColumns: Column<Contexto>[] = [
     },
   },
   {
-    key: "title", // nome -> title
+    key: "title", 
     header: "Contexto",
     render: (row) => (
       <div className="flex items-center gap-3">
-        <IconeDocumento type={row.type} /> {/* docType -> type */}
-        <span className="font-medium">{row.title}</span> {/* nome -> title */}
+        <IconeDocumento type={row.type} /> 
+        <span className="font-medium">{row.title}</span> 
       </div>
     ),
   },
   {
-    key: "status", // situacao -> status
-    header: "Situação",
+    key: "status",
+    header: "Status", // Renomeado de "Situação"
     render: (row) => {
-      // situacao -> status
+      // --- LÓGICA ATUALIZADA ---
       const config = statusConfig[row.status] || { text: row.status, className: "bg-gray-100 text-gray-800" };
-      return <span className={`px-3 py-1 text-xs font-semibold rounded-full ${config.className}`}>{config.text}</span>;
+      const versaoNum = row.versoes ? row.versoes.length : 1;
+      const isNovaVersao = versaoNum > 1;
+
+      return (
+        <div className="flex flex-col gap-1.5 items-start">
+          <span className={`px-3 py-1 text-xs font-semibold rounded-full ${config.className}`}>
+            {config.text}
+          </span>
+          
+          {isNovaVersao ? (
+            <span className="px-2 py-0.5 text-[10px] font-bold text-blue-800 bg-blue-100 rounded-full border border-blue-200">
+              v{versaoNum} - Nova Versão
+            </span>
+          ) : (
+            <span className="px-2 py-0.5 text-[10px] font-medium text-gray-600 bg-gray-100 rounded-full border border-gray-200">
+              v1 - Nova Submissão
+            </span>
+          )}
+        </div>
+      );
+      // --- FIM DA ATUALIZAÇÃO ---
     }
   },
   {
