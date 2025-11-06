@@ -17,6 +17,7 @@ import type { DocType } from '@/components/validar/typesDados';
 import { StatusContexto } from '@/components/validar/typesDados';
 import { showSuccessToast } from '@/components/ui/Toasts';
 import { diretoriasConfig } from '@/constants/diretorias'; // <-- 2. IMPORTAR DIRETORIAS
+import { FileType } from '@/components/contextosCard/contextoCard';
 
 // Props (Interface permanece a mesma)
 interface AbaDetalhesProps {
@@ -186,7 +187,8 @@ const AbaDetalhes = ({
                 <div className="bg-gray-50 rounded-2xl border border-gray-200 p-4 space-y-4">
                     <div className="flex items-center justify-between gap-4">
                         <div className="flex items-center gap-4 flex-1 min-w-0">
-                            <IconeDocumento type={dados.type as DocType} />
+                            {/* mudei de doctype para filetype */}
+                            <IconeDocumento type={dados.type as FileType} />
                             <div className="min-w-0">
                                 <p className="font-semibold text-gray-800 text-base leading-tight truncate" title={dados.title}>{dados.title}</p>
                                 <p className="text-sm text-gray-500">{new Date(dados.insertedDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>

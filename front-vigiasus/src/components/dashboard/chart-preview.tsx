@@ -43,10 +43,10 @@ export function ChartPreview({ type, title, data, colors, isHighlighted, editMod
 
             // Verifica a estrutura dos dados antes de tentar carregar a lib
             if (!hasValidDataStructure) {
-                 if (isMounted) {
+                if (isMounted) {
                     setDrawError("Formato de dados inválido para o gráfico.");
                     setIsLoading(false);
-                 }
+                }
                 return;
             }
 
@@ -132,14 +132,14 @@ export function ChartPreview({ type, title, data, colors, isHighlighted, editMod
                     });
                     // Adiciona listener para erros de desenho do Google Charts
                     google.visualization.events.addListener(chartInstance, 'error', (err: any) => {
-                         if (isMounted) {
+                        if (isMounted) {
                             console.error('[ChartPreview] Erro no desenho do Google Charts:', err);
                             setDrawError(err?.message || 'Erro ao desenhar o gráfico.');
                             setIsLoading(false);
-                         }
+                        }
                     });
                 } else {
-                     // Fallback se 'events' não estiver disponível (menos provável)
+                    // Fallback se 'events' não estiver disponível (menos provável)
                     console.warn('[ChartPreview] google.visualization.events não encontrado. Estado de loading pode não ser preciso.');
                     // Força isLoading para false após um tempo, como fallback
                     setTimeout(() => { if (isMounted) setIsLoading(false); }, 1000);
@@ -180,18 +180,18 @@ export function ChartPreview({ type, title, data, colors, isHighlighted, editMod
 
             // Limpa o ResizeObserver
             if (resizeObserver && chartRef.current) {
-                 try { resizeObserver.unobserve(chartRef.current); } catch {}
-                 resizeObserver.disconnect();
+                try { resizeObserver.unobserve(chartRef.current); } catch { }
+                resizeObserver.disconnect();
             }
             resizeObserver = null;
 
-             // Remove listeners do Google Charts
+            // Remove listeners do Google Charts
             if (readyListener && (window as any).google?.visualization?.events && chartInstance) {
                 try {
                     (window as any).google.visualization.events.removeListener(readyListener);
-                     (window as any).google.visualization.events.removeAllListeners(chartInstance);
-                     console.debug('[ChartPreview] Listeners do Google Charts removidos.'); // Log
-                } catch {}
+                    (window as any).google.visualization.events.removeAllListeners(chartInstance);
+                    console.debug('[ChartPreview] Listeners do Google Charts removidos.'); // Log
+                } catch { }
             }
             readyListener = null;
 
@@ -199,14 +199,14 @@ export function ChartPreview({ type, title, data, colors, isHighlighted, editMod
             if (chartInstance && typeof chartInstance.clearChart === 'function') {
                 try {
                     chartInstance.clearChart();
-                     console.debug('[ChartPreview] Instância do gráfico limpa.'); // Log
+                    console.debug('[ChartPreview] Instância do gráfico limpa.'); // Log
                 } catch (e) {
-                     console.error("[ChartPreview] Erro ao limpar instância do gráfico:", e);
+                    console.error("[ChartPreview] Erro ao limpar instância do gráfico:", e);
                 }
             }
             chartInstance = null;
         };
-    // Adiciona JSON.stringify(data) para reagir a mudanças no *conteúdo* dos dados
+        // Adiciona JSON.stringify(data) para reagir a mudanças no *conteúdo* dos dados
     }, [type, JSON.stringify(data), title, renderVersion, colors, hasValidDataStructure]); // Adicionado hasValidDataStructure
 
     // Renderização do componente
@@ -215,10 +215,10 @@ export function ChartPreview({ type, title, data, colors, isHighlighted, editMod
             className={cn(
                 "relative bg-white rounded-2xl border p-4 h-full flex flex-col transition-all duration-200 overflow-hidden", // Adicionado overflow-hidden
                 isHighlighted && editMode
-                    ? "border-blue-400 ring-2 ring-blue-400 ring-opacity-50 shadow-lg shadow-blue-400/25"
+                    ? "border-blue-100 border-2 border-dashed ring-3 ring-blue-400 ring-offset-1 shadow-lg shadow-blue-400/35"
                     : "border-gray-200 shadow-md",
-                 // Adiciona classe se houver erro ou dados inválidos
-                 (drawError || !hasValidDataStructure) ? "border-red-300 bg-red-50/50" : ""
+                // Adiciona classe se houver erro ou dados inválidos
+                (drawError || !hasValidDataStructure) ? "border-red-300 border-3 bg-red-100/50" : ""
             )}
             aria-busy={isLoading}
         >
@@ -226,22 +226,22 @@ export function ChartPreview({ type, title, data, colors, isHighlighted, editMod
             <div className="flex-1 min-h-0 relative"> {/* Garante que o container flexível funcione */}
 
                 {/* Mensagem de Erro ou Dados Inválidos */}
-                 {(drawError || !hasValidDataStructure) && !isLoading && (
-                     <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-2 bg-red-50 rounded-lg z-10">
-                          <AlertTriangle className="w-6 h-6 text-red-500 mb-2" />
-                         <span className="text-red-600 text-xs font-semibold">
+                {(drawError || !hasValidDataStructure) && !isLoading && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-centerrounded-lg z-0">
+                        <AlertTriangle className="w-6 h-6 text-red-500 mb-2" />
+                        <span className="text-red-600 text-xs font-semibold">
                             {drawError ? "Erro ao carregar gráfico" : "Dados inválidos"}
-                         </span>
-                         <span className="text-red-500 text-[10px] mt-1 line-clamp-2" title={drawError ?? undefined}>
+                        </span>
+                        <span className="text-red-500 text-[10px] mt-1 line-clamp-2" title={drawError ?? undefined}>
                             {drawError ?? "Verifique os dados fornecidos."}
-                         </span>
-                     </div>
-                 )}
+                        </span>
+                    </div>
+                )}
 
                 {/* O gráfico em si (oculto se houver erro/dados inválidos) */}
                 <div ref={chartRef} className={cn("w-full h-full", (drawError || !hasValidDataStructure) ? "invisible" : "")} />
 
-                 {/* Overlay de Loading (mostrado apenas durante o carregamento E se não houver erro ainda E se os dados forem válidos) */}
+                {/* Overlay de Loading (mostrado apenas durante o carregamento E se não houver erro ainda E se os dados forem válidos) */}
                 {isLoading && !drawError && hasValidDataStructure && (
                     <div className="absolute inset-0 rounded-lg overflow-hidden flex flex-col items-center justify-center gap-2 bg-white/80 backdrop-blur-sm z-20"> {/* Aumentado z-index */}
                         <Loader2 className="h-5 w-5 animate-spin text-blue-600" aria-hidden="true" />

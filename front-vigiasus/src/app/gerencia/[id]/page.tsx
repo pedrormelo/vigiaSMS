@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { Edit, Eye, SearchX, UploadCloud, Loader2 } from 'lucide-react';
-import { cn } from "@/lib/utils"; 
+import { cn } from "@/lib/utils";
 
 // Hooks
 import { useDebounce } from "@/hooks/useDebounce";
@@ -31,11 +31,11 @@ import Autoplay from "embla-carousel-autoplay";
 // Tipos e Dados
 import type { FileType } from "@/components/contextosCard/contextoCard";
 import type { AbaAtiva, DetalhesContexto, NomeIcone, Versao, SubmitData, IndicadorDetailsPayload, TipoGrafico } from "@/components/popups/addContextoModal/types";
-import { diretoriasConfig } from "@/constants/diretorias"; 
+import { diretoriasConfig } from "@/constants/diretorias";
 // Tipos Unificados
 import { Contexto, StatusContexto, HistoricoEvento } from "@/components/validar/typesDados";
 // Importar o Serviço
-import { getContextosPorGerencia } from "@/services/contextoService"; 
+import { getContextosPorGerencia } from "@/services/contextoService";
 
 export default function GerenciaPage() {
     // --- ROTEAMENTO E DADOS DINÂMICOS ---
@@ -64,26 +64,26 @@ export default function GerenciaPage() {
     const [activeTab, setActiveTab] = useState<'recente' | 'todas'>("todas");
     const [selectedTypes, setSelectedTypes] = useState<FileType[]>([]);
     const debouncedSearchValue = useDebounce(searchValue, 300);
-    const [isDragging, setIsDragging] = useState(false); 
+    const [isDragging, setIsDragging] = useState(false);
     const [arquivoAnexadoPorDrop, setArquivoAnexadoPorDrop] = useState<File | null>(null);
 
     // --- DADOS EM ESTADO ---
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [todosOsContextos, setTodosOsContextos] = useState<Contexto[]>([]); 
-    
+    const [todosOsContextos, setTodosOsContextos] = useState<Contexto[]>([]);
+
     const autoplayPlugin = useRef(
         Autoplay({ delay: 3000, stopOnInteraction: false, stopOnMouseEnter: true })
     );
 
     // --- EFEITO PARA BUSCAR DADOS DA GERÊNCIA ---
     useEffect(() => {
-        if (id) { 
+        if (id) {
             const carregarDados = async () => {
                 try {
                     setIsLoading(true);
                     setError(null);
-                    const dados = await getContextosPorGerencia(id); 
+                    const dados = await getContextosPorGerencia(id);
                     setTodosOsContextos(dados);
                 } catch (err: any) {
                     console.error("Erro ao buscar dados da gerência:", err);
@@ -94,18 +94,18 @@ export default function GerenciaPage() {
             };
             carregarDados();
         } else if (!id) {
-             setError("ID da gerência não encontrado na URL.");
-             setIsLoading(false);
+            setError("ID da gerência não encontrado na URL.");
+            setIsLoading(false);
         }
-    }, [id]); 
+    }, [id]);
 
 
     // --- HOOK DE STALENESS ---
     const stalenessExtractors = useMemo(() => [
         () => {
             const arr: Array<string> = [];
-            for (const f of todosOsContextos) { 
-                if (f.status === StatusContexto.Publicado) { 
+            for (const f of todosOsContextos) {
+                if (f.status === StatusContexto.Publicado) {
                     if (f.insertedDate) arr.push(f.insertedDate);
                     if (Array.isArray(f.versoes)) {
                         for (const v of f.versoes) {
@@ -118,10 +118,10 @@ export default function GerenciaPage() {
             }
             return arr;
         },
-    ], [todosOsContextos]); 
+    ], [todosOsContextos]);
 
     const { variant: stalenessVariant, label: stalenessLabel, lastUpdatedAt } = useStaleness({
-        extractors: stalenessExtractors, 
+        extractors: stalenessExtractors,
         thresholds: { recentDays: 7, staleDays: 30 },
         locale: 'pt-BR'
     });
@@ -136,22 +136,22 @@ export default function GerenciaPage() {
     const filteredIndicators = useMemo(() => {
         return todosOsContextos.filter(ctx => {
             if (ctx.type !== 'indicador') return false;
-            
+
             const matchesSearch = ctx.title.toLowerCase().includes(debouncedSearchValue.toLowerCase());
             // APENAS PUBLICADOS
             const matchesStatus = ctx.status === StatusContexto.Publicado;
             // Modo de edição (isEditing=true) mostra os ocultos
             const matchesVisibility = (modo === 'edicao') || !ctx.estaOculto;
-            
+
             return matchesStatus && matchesVisibility && matchesSearch;
         });
-    }, [todosOsContextos, debouncedSearchValue, modo]); 
+    }, [todosOsContextos, debouncedSearchValue, modo]);
 
     // FILTRO 2: Para Carrossel de Dashboards
     const filteredDashboards = useMemo(() => {
         return todosOsContextos.filter(ctx => {
             if (ctx.type !== 'dashboard') return false;
-            
+
             const matchesSearch = ctx.title.toLowerCase().includes(debouncedSearchValue.toLowerCase());
             // APENAS PUBLICADOS
             const matchesStatus = ctx.status === StatusContexto.Publicado;
@@ -174,7 +174,7 @@ export default function GerenciaPage() {
                 return false;
             }
             // *** FIM DA CORREÇÃO ***
-            
+
             // Filtros de Pesquisa, Abas e Tipos (aplicam-se a todos na grelha)
             const matchesSearch = file.title.toLowerCase().includes(debouncedSearchValue.toLowerCase());
             const matchesTab = activeTab === 'todas' || new Date(file.insertedDate) >= sevenDaysAgo;
@@ -194,7 +194,7 @@ export default function GerenciaPage() {
 
 
     // --- HANDLERS DE EVENTOS ---
-    
+
     const abrirModal = (aba: AbaAtiva) => {
         setAbaInicial(aba);
         setIsModalOpen(true);
@@ -203,21 +203,21 @@ export default function GerenciaPage() {
     const fecharModalAdicionar = () => {
         setIsModalOpen(false);
         setDadosParaEditar(null);
-        setArquivoAnexadoPorDrop(null); 
+        setArquivoAnexadoPorDrop(null);
     };
 
     const handleCloseViewModal = () => {
         setModalVisualizacaoAberto(false);
         setFicheiroSelecionado(null);
     };
-    
+
     const lidarComCriarNovaVersao = (dadosDoContextoAntigo: DetalhesContexto) => {
         setDadosParaEditar(dadosDoContextoAntigo);
         setModalVisualizacaoAberto(false);
         const tabParaAbrir: AbaAtiva =
             dadosDoContextoAntigo.type === 'dashboard' ? 'dashboard' :
-            dadosDoContextoAntigo.type === 'indicador' ? 'indicador' :
-            'contexto';
+                dadosDoContextoAntigo.type === 'indicador' ? 'indicador' :
+                    'contexto';
         setTimeout(() => abrirModal(tabParaAbrir), 50);
     };
 
@@ -241,16 +241,16 @@ export default function GerenciaPage() {
                 historico: indicator.historico,
             };
         }
-        
-        const payload = indicator.payload as IndicadorDetailsPayload; 
-        
+
+        const payload = indicator.payload as IndicadorDetailsPayload;
+
         const iconName = (payload.icone || "Heart") as NomeIcone;
         const iconMap: Record<NomeIcone, keyof typeof indicatorIcons> = {
             Heart: "cuidados", Building: "unidades", ClipboardList: "servidores",
             TrendingUp: "atividade", Landmark: "cruz", Users: "populacao",
             UserCheck: "medicos", DollarSign: "ambulancia",
         };
-        
+
         const borderColorMap: { [key: string]: string } = {
             "#3B82F6": "border-l-blue-500", "#22C55E": "border-l-green-500",
             "#EF4444": "border-l-red-500", "#EAB308": "border-l-yellow-500",
@@ -280,22 +280,22 @@ export default function GerenciaPage() {
             insertedDate: indicator.insertedDate,
             solicitante: indicator.solicitante,
             gerencia: indicator.gerencia,
-            autor: indicator.solicitante, 
+            autor: indicator.solicitante,
             historico: indicator.historico,
         };
     };
 
     const lidarComVisualizarIndicador = (indicator: Contexto) => {
-        setFicheiroSelecionado(indicator); 
+        setFicheiroSelecionado(indicator);
         setModalVisualizacaoAberto(true);
     };
 
     const aoSubmeterConteudo = (dados: SubmitData) => {
         console.log("Novo conteúdo recebido:", dados);
-        
+
         let title: string | undefined;
         let description: string | undefined;
-        let fileType: FileType = dados.type; 
+        let fileType: FileType = dados.type;
         let payload: any = null;
         let url: string | undefined = undefined;
         let chartType: TipoGrafico | undefined = undefined;
@@ -304,42 +304,42 @@ export default function GerenciaPage() {
             case 'contexto':
                 title = dados.payload.title;
                 description = dados.payload.details;
-                fileType = dados.payload.fileType || 'doc'; 
+                fileType = dados.payload.fileType || 'doc';
                 url = dados.payload.url;
-                payload = dados.payload.file; 
+                payload = dados.payload.file;
                 break;
             case 'dashboard':
                 title = dados.payload.title;
                 description = dados.payload.details;
                 fileType = 'dashboard';
-                payload = dados.payload.dataset; 
+                payload = dados.payload.dataset;
                 chartType = dados.payload.type;
                 break;
             case 'indicador':
                 title = dados.payload.titulo;
                 description = dados.payload.descricao;
                 fileType = 'indicador';
-                payload = dados.payload; 
+                payload = dados.payload;
                 break;
         }
 
-        if (title) { 
+        if (title) {
             const novoContexto: Contexto = {
-                 id: `new-ctx-${Math.random()}`,
-                 title: title, 
-                 type: fileType, 
-                 insertedDate: new Date().toISOString(),
-                 status: StatusContexto.AguardandoGerente,
-                 description: description, 
-                 url: url, 
-                 payload: payload, 
-                 chartType: chartType, 
-                 gerencia: resolved?.gerencia.id, 
-                 solicitante: "Usuário Atual (Mock)",
-                 email: "usuario@mock.com",
-                 estaOculto: false,
-                 historico: [{data: new Date().toISOString(), autor: "Usuário Atual (Mock)", acao: "Submetido para análise."}],
-                 versoes: [{id: 1, nome: "v1", data: new Date().toISOString(), autor: "Usuário Atual (Mock)", status: StatusContexto.AguardandoGerente, historico: []}]
+                id: `new-ctx-${Math.random()}`,
+                title: title,
+                type: fileType,
+                insertedDate: new Date().toISOString(),
+                status: StatusContexto.AguardandoGerente,
+                description: description,
+                url: url,
+                payload: payload,
+                chartType: chartType,
+                gerencia: resolved?.gerencia.id,
+                solicitante: "Usuário Atual (Mock)",
+                email: "usuario@mock.com",
+                estaOculto: false,
+                historico: [{ data: new Date().toISOString(), autor: "Usuário Atual (Mock)", acao: "Submetido para análise." }],
+                versoes: [{ id: 1, nome: "v1", data: new Date().toISOString(), autor: "Usuário Atual (Mock)", status: StatusContexto.AguardandoGerente, historico: [] }]
             };
             setTodosOsContextos(prev => [...prev, novoContexto]);
         }
@@ -347,17 +347,17 @@ export default function GerenciaPage() {
     };
 
     const aoClicarArquivo = (ficheiro: Contexto) => {
-        setFicheiroSelecionado(ficheiro); 
+        setFicheiroSelecionado(ficheiro);
         setModalVisualizacaoAberto(true);
     };
-    
+
     const lidarComAlternarVisibilidadeContexto = (contextoId: string) => {
         const contexto = todosOsContextos.find(f => f.id === contextoId);
         if (!contexto) return;
         const estaOcultando = !contexto.estaOculto;
         if (window.confirm(`Tem certeza que deseja ${estaOcultando ? 'ocultar' : 'tornar visível'} o contexto "${contexto.title}"?`)) {
             setTodosOsContextos(prev =>
-                prev.map(ctx => 
+                prev.map(ctx =>
                     ctx.id === contextoId ? { ...ctx, estaOculto: !ctx.estaOculto } : ctx
                 )
             );
@@ -378,13 +378,13 @@ export default function GerenciaPage() {
             return ctx;
         }));
         if (ficheiroSelecionado && ficheiroSelecionado.id === contextoId) {
-             setFicheiroSelecionado(prev => prev ? ({
-                 ...prev,
-                 versoes: prev.versoes?.map(v => v.id === versaoId ? { ...v, estaOculta: !v.estaOculta } : v)
-             }) : null);
+            setFicheiroSelecionado(prev => prev ? ({
+                ...prev,
+                versoes: prev.versoes?.map(v => v.id === versaoId ? { ...v, estaOculta: !v.estaOculta } : v)
+            }) : null);
         }
     };
-    const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); if (modo === 'edicao') { setIsDragging(true); } }, [modo]); 
+    const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); if (modo === 'edicao') { setIsDragging(true); } }, [modo]);
     const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); if (e.relatedTarget && (e.currentTarget as Node).contains(e.relatedTarget as Node)) { return; } setIsDragging(false); }, []);
     const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault(); e.stopPropagation();
@@ -392,32 +392,32 @@ export default function GerenciaPage() {
         if (modo !== 'edicao') { return; }
         if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
             const file = e.dataTransfer.files[0];
-            setArquivoAnexadoPorDrop(file); 
-            setAbaInicial('contexto');        
-            setIsModalOpen(true);             
+            setArquivoAnexadoPorDrop(file);
+            setAbaInicial('contexto');
+            setIsModalOpen(true);
             e.dataTransfer.clearData();
         }
-    }, [modo]); 
+    }, [modo]);
 
 
     // --- RENDERIZAÇÃO ---
     if (!id) return <div className="p-8 text-center text-gray-500">Carregando ID...</div>;
-    
+
     if (error && !isLoading) {
-         return (
-             <div className="flex flex-col items-center justify-center min-h-[400px] text-red-500 p-8">
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[400px] text-red-500 p-8">
                 <SearchX className="w-12 h-12" />
                 <p className="mt-4 text-lg font-semibold">Erro ao carregar dados</p>
                 <p className="text-sm text-center">{error}</p>
             </div>
-         );
+        );
     }
-    
-    if (!resolved && !isLoading) { 
+
+    if (!resolved && !isLoading) {
         return <div className="p-8 text-center text-red-500">Gerência com ID &ldquo;{id}&rdquo; não encontrada na configuração (diretorias.ts).</div>;
     }
 
-    const { diretoria, gerencia } = resolved || {}; 
+    const { diretoria, gerencia } = resolved || {};
 
     const renderContent = () => {
         if (isLoading) {
@@ -428,18 +428,18 @@ export default function GerenciaPage() {
                 </div>
             );
         }
-        
+
         const itemsIndicadores = filteredIndicators.map((indicatorCtx) => {
             const props = mapContextToIndicatorProps(indicatorCtx);
             return (
-                <IndicatorCard 
-                    key={props.id} 
-                    {...props} 
-                    onClick={() => lidarComVisualizarIndicador(indicatorCtx)} 
+                <IndicatorCard
+                    key={props.id}
+                    {...props}
+                    onClick={() => lidarComVisualizarIndicador(indicatorCtx)}
                 />
             );
         });
-        
+
         if (modo === 'edicao') {
             itemsIndicadores.unshift(<AddIndicatorButton key="add-indicator" onClick={() => abrirModal('indicador')} />);
         }
@@ -451,25 +451,25 @@ export default function GerenciaPage() {
                     {(() => {
                         // Não renderiza a seção se estiver vazia (visualização) ou só tiver o botão (edição)
                         if (itemsIndicadores.length === 0 || (itemsIndicadores.length === 1 && modo === 'edicao' && itemsIndicadores[0].key === 'add-indicator')) {
-                           if (modo === 'visualizacao') {
-                               return <div className="text-sm text-center text-gray-500 py-4">(Nenhum indicador publicado)</div>;
-                           }
-                           // Em modo de edição, mostra só o botão
-                           return (
+                            if (modo === 'visualizacao') {
+                                return <div className="text-sm text-center text-gray-500 py-4">(Nenhum indicador publicado)</div>;
+                            }
+                            // Em modo de edição, mostra só o botão
+                            return (
                                 <div className="flex justify-center items-center gap-4 flex-wrap">
                                     {itemsIndicadores}
                                 </div>
-                           );
+                            );
                         }
-                        
+
                         // Se houver mais de 4 (e não for edição), usa carrossel
                         if (itemsIndicadores.length > 4 && modo === 'visualizacao') {
                             return (
-                                <Carousel 
-                                    plugins={[autoplayPlugin.current]} 
-                                    opts={{ align: "start", loop: true }} 
-                                    className="w-full max-w-full mx-auto" 
-                                    onMouseEnter={autoplayPlugin.current.stop} 
+                                <Carousel
+                                    plugins={[autoplayPlugin.current]}
+                                    opts={{ align: "start", loop: true }}
+                                    className="w-full max-w-full mx-auto"
+                                    onMouseEnter={autoplayPlugin.current.stop}
                                     onMouseLeave={autoplayPlugin.current.play}
                                 >
                                     <CarouselContent className="-ml-4">
@@ -482,7 +482,7 @@ export default function GerenciaPage() {
                                 </Carousel>
                             );
                         }
-                        
+
                         // Senão, usa grid
                         return (
                             <div className="flex justify-center items-center gap-4 flex-wrap">
@@ -499,16 +499,16 @@ export default function GerenciaPage() {
 
                 {/* Barra de Filtro de Contextos */}
                 <FilterBar searchValue={searchValue} onSearchChange={setSearchValue} activeTab={activeTab} onTabChange={setActiveTab} selectedTypes={selectedTypes} onSelectedTypesChange={handleSelectedTypesChange} clearTypeFilter={() => setSelectedTypes([])} />
-                
+
                 {/* Grade de Contextos (Arquivos) */}
                 <div className="border-2 border-none border-gray-300 rounded-4xl bg-[#FDFDFD] min-h-[300px] flex items-center justify-center">
                     {filteredFiles.length > 0 || (modo === 'edicao') ? (
-                        <FileGrid 
-                            files={filteredFiles} 
-                            onFileClick={aoClicarArquivo} 
-                            isEditing={modo === 'edicao'} 
-                            onAddContextClick={() => abrirModal('contexto')} 
-                            onToggleOculto={lidarComAlternarVisibilidadeContexto} 
+                        <FileGrid
+                            files={filteredFiles}
+                            onFileClick={aoClicarArquivo}
+                            isEditing={modo === 'edicao'}
+                            onAddContextClick={() => abrirModal('contexto')}
+                            onToggleOculto={lidarComAlternarVisibilidadeContexto}
                         />
                     ) : (
                         <div className="flex flex-col items-center justify-center text-center p-6">
@@ -516,8 +516,8 @@ export default function GerenciaPage() {
                             <h3 className="text-xl font-semibold text-gray-700">Nenhum Contexto Encontrado</h3>
                             <p className="text-gray-500 mt-2 max-w-md">
                                 {searchValue || selectedTypes.length > 0 ?
-                                 "Não há contextos que correspondam aos filtros aplicados." :
-                                 "Não há contextos (arquivos, links, etc.) publicados para esta gerência."
+                                    "Não há contextos que correspondam aos filtros aplicados." :
+                                    "Não há contextos (arquivos, links, etc.) publicados para esta gerência."
                                 }
                             </p>
                         </div>
@@ -528,39 +528,39 @@ export default function GerenciaPage() {
     };
 
     return (
-        <div 
+        <div
             className="min-h-screen bg-[#FDFDFD] relative"
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
         >
-            <ModalAdicionarConteudo 
-                estaAberto={isModalOpen} 
-                aoFechar={fecharModalAdicionar} 
-                aoSubmeter={aoSubmeterConteudo} 
-                abaInicial={abaInicial} 
+            <ModalAdicionarConteudo
+                estaAberto={isModalOpen}
+                aoFechar={fecharModalAdicionar}
+                aoSubmeter={aoSubmeterConteudo}
+                abaInicial={abaInicial}
                 dadosIniciais={dadosParaEditar}
-                arquivoAnexado={arquivoAnexadoPorDrop} 
+                arquivoAnexado={arquivoAnexadoPorDrop}
             />
-            <VisualizarContextoModal 
-                estaAberto={modalVisualizacaoAberto} 
+            <VisualizarContextoModal
+                estaAberto={modalVisualizacaoAberto}
                 aoFechar={handleCloseViewModal}
-                dadosDoContexto={ficheiroSelecionado} 
-                aoCriarNovaVersao={lidarComCriarNovaVersao} 
-                perfil={perfil} 
+                dadosDoContexto={ficheiroSelecionado}
+                aoCriarNovaVersao={lidarComCriarNovaVersao}
+                perfil={perfil}
                 isEditing={modo === 'edicao'}
                 aoAlternarVisibilidadeVersao={lidarComAlternarVisibilidadeVersao}
-                aoAlternarVisibilidadeIndicador={lidarComAlternarVisibilidadeContexto} 
+                aoAlternarVisibilidadeIndicador={lidarComAlternarVisibilidadeContexto}
             />
 
 
             {/* Header Dinâmico */}
-            <div className="relative p-8 mb-6 text-white shadow-lg" 
-                 style={{ background: `linear-gradient(to right, ${diretoria?.cores.from || '#ccc'}, ${diretoria?.cores.to || '#999'})` }}>
+            <div className="relative p-8 mb-6 text-white shadow-lg"
+                style={{ background: `linear-gradient(to right, ${diretoria?.cores.from || '#ccc'}, ${diretoria?.cores.to || '#999'})` }}>
                 <h2 className="text-3xl font-regular mt-1">{diretoria?.nome || (isLoading ? "Carregando..." : "Diretoria")}</h2>
             </div>
 
-            
+
             <div className="container mx-auto p-6">
 
                 {/* Banner de Staleness */}
@@ -573,7 +573,7 @@ export default function GerenciaPage() {
                             <p className="pl-9 text-sm">
                                 {lastUpdatedAt ? (
                                     <>
-                                        Última atualização em {lastUpdatedAt.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}. 
+                                        Última atualização em {lastUpdatedAt.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}.
                                         Considere solicitar novos dados ou publicar um contexto para manter o acompanhamento em dia.
                                     </>
                                 ) : (
@@ -602,16 +602,16 @@ export default function GerenciaPage() {
                     {modo === 'edicao' && <AddDashboardButton onClick={() => abrirModal('dashboard')} />}
                 </div>
                 <div className="mb-10">
-                    <GerenciaDashboardPreview 
-                        graphs={filteredDashboards} 
-                        gerencia={id} 
+                    <GerenciaDashboardPreview
+                        graphs={filteredDashboards}
+                        gerencia={id}
                     />
                 </div>
-                
+
                 {/* Conteúdo Principal (Indicadores e Contextos) */}
                 {renderContent()}
 
-                
+
                 {/* Seção Sobre */}
                 <div className="mt-32 mb-16">
                     <div className="flex flex-row items-start gap-8">

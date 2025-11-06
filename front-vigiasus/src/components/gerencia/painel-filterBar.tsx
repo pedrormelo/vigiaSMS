@@ -30,9 +30,8 @@ const filterIconMap: Record<FileType, string | React.ElementType | null> = {
   resolucao: "/icons/CONTEXTOS/RES.svg",
   apresentacao: "/icons/CONTEXTOS/PPTX.svg",
   // Tipos que não podem ser filtrados (provavelmente)
-  indicador: null, 
-  leis: null,
-  excel: null, // <-- Deixado como null para segurança
+  indicador: null,
+  leis: null, // <-- Deixado como null para segurança
 };
 
 export default function GerenciasFilterBar({
@@ -45,9 +44,9 @@ export default function GerenciasFilterBar({
   clearTypeFilter,
 }: GerenciasFilterBarProps) {
 
-   const filterableTypes = Object.keys(filterIconMap).filter(
-        type => filterIconMap[type as FileType] !== null
-    ) as FileType[];
+  const filterableTypes = Object.keys(filterIconMap).filter(
+    type => filterIconMap[type as FileType] !== null
+  ) as FileType[];
 
   return (
     <div className="mb-6">
@@ -83,7 +82,7 @@ export default function GerenciasFilterBar({
                 {filterableTypes.map((type) => {
                   const config = fileTypeConfig[type]; // fileTypeConfig já foi atualizado
                   if (!config) {
-                      return null; 
+                    return null;
                   }
 
                   const iconSource = filterIconMap[type];
@@ -91,12 +90,12 @@ export default function GerenciasFilterBar({
 
                   let IconComponent: React.ReactNode = null;
                   if (typeof iconSource === 'string') {
-                      IconComponent = <Image src={iconSource} alt={config.label} width={16} height={16} className="w-4 h-4 flex-shrink-0" />;
+                    IconComponent = <Image src={iconSource} alt={config.label} width={16} height={16} className="w-4 h-4 flex-shrink-0" />;
                   } else if (iconSource) {
-                      const LucideIcon = iconSource as React.ElementType;
-                      IconComponent = <LucideIcon className="w-4 h-4 flex-shrink-0 text-gray-600" />;
+                    const LucideIcon = iconSource as React.ElementType;
+                    IconComponent = <LucideIcon className="w-4 h-4 flex-shrink-0 text-gray-600" />;
                   } else {
-                      IconComponent = <FileQuestion className="w-4 h-4 flex-shrink-0 text-gray-400" />
+                    IconComponent = <FileQuestion className="w-4 h-4 flex-shrink-0 text-gray-400" />
                   }
 
                   return (
@@ -124,8 +123,8 @@ export default function GerenciasFilterBar({
         </Popover>
 
         {/* Botões de abas */}
-        <button onClick={() => onTabChange("recente")} className={cn( "px-6 py-2 cursor-pointer rounded-full font-medium transition shadow-sm", activeTab === "recente" ? "bg-blue-600 text-white" : "bg-white text-gray-500 hover:bg-gray-50" )}>Recentes</button>
-        <button onClick={() => onTabChange("todas")} className={cn( "px-6 py-2 cursor-pointer rounded-full font-medium transition shadow-sm", activeTab === "todas" ? "bg-blue-600 text-white" : "bg-white text-gray-500 hover:bg-gray-50" )}>Todas</button>
+        <button onClick={() => onTabChange("recente")} className={cn("px-6 py-2 cursor-pointer rounded-full font-medium transition shadow-sm", activeTab === "recente" ? "bg-blue-600 text-white" : "bg-white text-gray-500 hover:bg-gray-50")}>Recentes</button>
+        <button onClick={() => onTabChange("todas")} className={cn("px-6 py-2 cursor-pointer rounded-full font-medium transition shadow-sm", activeTab === "todas" ? "bg-blue-600 text-white" : "bg-white text-gray-500 hover:bg-gray-50")}>Todas</button>
       </div>
     </div>
   );

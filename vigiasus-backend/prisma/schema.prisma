@@ -190,7 +190,6 @@ model ValidacaoHistorico {
   autorId       String
   autor         User            @relation(fields: [autorId], references: [id], onDelete: Cascade)
   statusNovo    StatusValidacao
-  justificativa String?
   timestamp     DateTime        @default(now())
 
   @@index([versaoId])
