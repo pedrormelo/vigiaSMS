@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 // 1. IMPORTAÇÕES
 import {
-    Download, Info, MessageSquare, ChevronDown, User,
+    Download, Info, MessageCircle, ChevronDown, User,
     FileType as FileIcon, Building, Send, Clock
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -185,17 +185,29 @@ const AbaDetalhes = ({
 
                         <div className="flex-shrink-0 flex items-center gap-2">
                             {podeComentar && (
-                                <Button
-                                    onClick={() => setMostrarInputComentario(!mostrarInputComentario)}
-                                    variant="outline"
-                                    size="sm"
+                                <button
+                                    type="button"
+                                    onClick={() => setMostrarInputComentario(v => !v)}
+                                    aria-pressed={mostrarInputComentario}
+                                    aria-controls="comentario-panel"
+                                    aria-expanded={mostrarInputComentario}
                                     className={cn(
-                                        "rounded-2xl bg-blue-50 hover:bg-blue-100 border-blue-300 text-blue-700",
-                                        mostrarInputComentario && "ring-2 ring-blue-500"
+                                        "relative flex items-center gap-2 px-3 py-2 font-semibold rounded-2xl transition-all",
+                                        mostrarInputComentario
+                                            ? "bg-white text-blue-700 border border-blue-300 shadow-sm ring-2 ring-blue-300"
+                                            : "bg-blue-600 text-white hover:bg-blue-700"
                                     )}
+                                    title={mostrarInputComentario ? "Fechar comentários" : "Comentar"}
                                 >
-                                    <MessageSquare className="w-4 h-4 mr-1.5" /> Comentar
-                                </Button>
+                                    <MessageCircle className='w-4 h-4' />
+                                    <span className="hidden sm:inline">{mostrarInputComentario ? 'Comentando' : 'Comentar'}</span>
+                                    {mostrarInputComentario && (
+                                        <span
+                                            aria-hidden
+                                            className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-blue-500 ring-2 ring-white shadow"
+                                        />
+                                    )}
+                                </button>
                             )}
                         </div>
                     </div>
@@ -229,7 +241,7 @@ const AbaDetalhes = ({
 
                 {/* --- SEÇÃO DE COMENTÁRIO --- */}
                 {mostrarInputComentario && (
-                    <div className="pt-4 animate-fade-in">
+                    <div className="animate-fade-in" id="comentario-panel">
                         <div className="bg-gray-50 rounded-2xl border border-gray-200 p-4 space-y-3 shadow-inner">
                             <label className="text-sm font-semibold text-gray-700" htmlFor="novo-comentario-input">
                                 Adicionar Novo Comentário
@@ -238,14 +250,14 @@ const AbaDetalhes = ({
                                 id="novo-comentario-input"
                                 value={novoComentario}
                                 onChange={(e) => setNovoComentario(e.target.value)}
-                                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm bg-white"
                                 rows={3}
-                                placeholder="Digite seu comentário para a equipe de validação..."
+                                placeholder="Escreva um comentário..."
+                                className="w-full mt-2 resize-none rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:ring-3 focus:ring-blue-400 ring-offset-2"
                             />
                             <div className="flex justify-end gap-2">
-                                <Button variant="ghost" size="sm" onClick={() => setMostrarInputComentario(false)}>Cancelar</Button>
-                                <Button variant="default" size="sm" onClick={handleEnviarComentario} disabled={!novoComentario.trim()} className="bg-blue-600 hover:bg-blue-700 text-white">
-                                    <Send className="w-4 h-4 mr-1.5" /> Enviar Comentário
+                                <Button variant="ghost" size="sm" onClick={() => setMostrarInputComentario(false)} className="px-3 py-2 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100">Cancelar</Button>
+                                <Button variant="default" size="sm" onClick={handleEnviarComentario} disabled={!novoComentario.trim()} className="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <Send className="w-4 h-4 mr-1.5" /> Enviar
                                 </Button>
                             </div>
                         </div>
