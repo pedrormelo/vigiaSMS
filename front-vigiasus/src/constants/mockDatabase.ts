@@ -34,9 +34,9 @@ const histAguardandoDiretor2: HistoricoEvento[] = [ // <-- Definição agora no 
     { data: "2025-10-16T14:20:00Z", autor: "Gerente", acao: "Deferido e encaminhado ao Diretor." },
 ];
 const histAguardandoGerenteMultiVersao: HistoricoEvento[] = [ // (Origem: gerencia/page.tsx)
-  { acao: "Submetido (v1)", autor: "Membro da Equipe", data: "2025-09-01T10:00:00Z" },
-  { acao: "Análise Gerente: Devolvido para correção. Justificativa: Faltou a página 3.", autor: "Gerente Ana", data: "2025-09-02T11:00:00Z" },
-  { acao: "Submetido (v2)", autor: "Membro da Equipe", data: "2025-09-03T12:00:00Z" }
+    { acao: "Submetido (v1)", autor: "Membro da Equipe", data: "2025-09-01T10:00:00Z" },
+    { acao: "Análise Gerente: Devolvido para correção. Justificativa: Faltou a página 3.", autor: "Gerente Ana", data: "2025-09-02T11:00:00Z" },
+    { acao: "Submetido (v2)", autor: "Membro da Equipe", data: "2025-09-03T12:00:00Z" }
 ];
 
 
@@ -58,7 +58,7 @@ const histPublicadoSimples: HistoricoEvento[] = [
 const payloadDashboardPEC: ConjuntoDeDadosGrafico = {
     colunas: ['Status de Implantação', 'Quantidade de Unidades'],
     linhas: [['PEC Implantado', 150], ['Em Implantação', 25], ['Não Iniciado', 25]],
-    cores: ['#3B82F6', '#F97316', '#EF4444'] 
+    cores: ['#3B82F6', '#F97316', '#EF4444']
 };
 
 
@@ -66,7 +66,7 @@ const payloadDashboardPEC: ConjuntoDeDadosGrafico = {
 // (Nomes das gerências padronizados para bater com diretorias.ts)
 
 export const allContextosMock: Contexto[] = [
-    
+
     // --- Contextos "Abertos" (Origem: contextos.ts) ---
     {
         id: "1",
@@ -168,8 +168,8 @@ export const allContextosMock: Contexto[] = [
     },
 
     // --- Contextos "Fechados" (Origem: contextosHistorico.ts) ---
-     {
-        id: "100", 
+    {
+        id: "100",
         solicitante: "Julia Maria Leite",
         email: "julia.leite@example.com",
         title: "Pagamento PV/JET - Julho",
@@ -181,8 +181,8 @@ export const allContextosMock: Contexto[] = [
         historico: histPublicadoCompleto,
         url: "/docs/mock_pvjet_julho.pdf",
         versoes: [{ id: 1, nome: "v1 - Pagamento Julho", data: "2025-07-28T14:00:00Z", autor: "Julia Maria Leite", status: StatusContexto.Publicado, historico: histPublicadoCompleto }]
-      },
-      {
+    },
+    {
         id: "101",
         solicitante: "Mariana Costa",
         email: "mari.costa@example.com",
@@ -195,8 +195,8 @@ export const allContextosMock: Contexto[] = [
         historico: histPublicadoSimples,
         url: "/docs/mock_portaria_xyz.docx",
         versoes: [{ id: 1, nome: "v1 - Nova Portaria", data: "2025-07-10T18:00:00Z", autor: "Mariana Costa", status: StatusContexto.Publicado, historico: histPublicadoSimples }]
-      },
-      {
+    },
+    {
         id: "102",
         solicitante: "Rafael Souza",
         email: "rafa.souza@example.com",
@@ -206,7 +206,7 @@ export const allContextosMock: Contexto[] = [
         gerencia: "Gerência de Planejamento", // g6
         insertedDate: "2025-06-20T10:00:00Z",
         description: "Documento oficial com o plano de metas para o ano fiscal de 2026.",
-        historico: histPublicadoCompleto, 
+        historico: histPublicadoCompleto,
         url: "/docs/mock_plano_metas_2026.pdf",
         versoes: [{ id: 1, nome: "v1 - Metas 2026", data: "2025-06-20T10:00:00Z", autor: "Rafael Souza", status: StatusContexto.Publicado, historico: histPublicadoCompleto }]
     },
@@ -238,148 +238,148 @@ export const allContextosMock: Contexto[] = [
         url: "/docs/mock_contratos.docx",
         versoes: [{ id: 1, nome: "v1 - Contratos", data: "2025-05-30T09:00:00Z", autor: "Bruno Martins", status: StatusContexto.Publicado, historico: histPublicadoCompleto }]
     },
-    
+
     // --- (MIGRADO) Contextos "Publicados" (Origem: gerencia/[id]/page.tsx sampleFiles) ---
     // (Gerências atualizadas para bater com diretorias.ts)
-    
-    { 
-        id: "ger-file-1", 
-        title: "Pagamento ESF e ESB - 2025 (Gerência)", 
-        type: "pdf", 
-        insertedDate: "2024-07-15", 
-        url: "/docs/teste.pdf", 
-        description: "Documento detalhado sobre os pagamentos das equipes de Saúde da Família e Saúde Bucal.", 
-        solicitante: "Ana Lima (g6)", 
+
+    {
+        id: "ger-file-1",
+        title: "Pagamento ESF e ESB - 2025 (Gerência)",
+        type: "pdf",
+        insertedDate: "2024-07-15",
+        url: "/docs/teste.pdf",
+        description: "Documento detalhado sobre os pagamentos das equipes de Saúde da Família e Saúde Bucal.",
+        solicitante: "Ana Lima (g6)",
         gerencia: "Gerência de Planejamento", // g6
-        status: StatusContexto.Publicado, 
+        status: StatusContexto.Publicado,
         estaOculto: false,
         historico: histPublicadoCompleto,
         versoes: [
-            { id: 1, nome: "v1 - Pagamento ESF", data: "2024-06-23", autor: "Carlos", status: StatusContexto.Publicado, historico: histPublicadoCompleto, estaOculta: true }, 
+            { id: 1, nome: "v1 - Pagamento ESF", data: "2024-06-23", autor: "Carlos", status: StatusContexto.Publicado, historico: histPublicadoCompleto, estaOculta: true },
             { id: 2, nome: "v2 - Pagamento ESF e ESB", data: "2024-07-15", autor: "Ana", status: StatusContexto.Publicado, historico: histPublicadoCompleto }
-        ], 
+        ],
     },
-    { 
-        id: "ger-file-2", 
-        title: "Relatório de Atividades da Atenção Básica", 
-        type: "doc", 
-        insertedDate: "2024-05-15", 
-        url: "/docs/pas.docx", 
-        description: "Documento Word contendo o compilado de atividades da Atenção Básica.", 
-        solicitante: "Fernanda Lima (g2)", 
+    {
+        id: "ger-file-2",
+        title: "Relatório de Atividades da Atenção Básica",
+        type: "doc",
+        insertedDate: "2024-05-15",
+        url: "/docs/pas.docx",
+        description: "Documento Word contendo o compilado de atividades da Atenção Básica.",
+        solicitante: "Fernanda Lima (g2)",
         gerencia: "Gerência de Atenção Básica", // g2
-        status: StatusContexto.Publicado, 
+        status: StatusContexto.Publicado,
         estaOculto: false,
         historico: histPublicadoSimples,
         versoes: [
             { id: 1, nome: "Relatório Atividades AB (v1).docx", data: "2024-05-15", autor: "Fernanda Lima", status: StatusContexto.Publicado, historico: histPublicadoSimples }
-        ], 
+        ],
     },
-    { 
-        id: "ger-file-3", 
-        title: "Unidades com o PEC implementado", 
-        type: "dashboard", 
-        insertedDate: "2025-08-22", 
-        payload: payloadDashboardPEC, 
-        description: "Dashboard interativo mostrando o status de implementação do Prontuário Eletrônico do Cidadão.", 
-        solicitante: "Carlos Andrade (g7)", 
+    {
+        id: "ger-file-3",
+        title: "Unidades com o PEC implementado",
+        type: "dashboard",
+        insertedDate: "2025-08-22",
+        payload: payloadDashboardPEC,
+        description: "Dashboard interativo mostrando o status de implementação do Prontuário Eletrônico do Cidadão.",
+        solicitante: "Carlos Andrade (g7)",
         gerencia: "Gerência de Tecnologia da Informação", // g7
-        chartType: "chart", 
-        status: StatusContexto.Publicado, 
+        chartType: "chart",
+        status: StatusContexto.Publicado,
         estaOculto: false,
         historico: histPublicadoCompleto,
         versoes: [
             { id: 1, nome: "PEC Status - (v1)", data: "2025-08-22", autor: "Carlos Andrade", status: StatusContexto.Publicado, historico: histPublicadoCompleto }
-        ], 
+        ],
     },
-    { 
-        id: "ger-file-4", 
-        title: "Servidores Ativos (Relação Completa)", 
+    {
+        id: "ger-file-4",
+        title: "Servidores Ativos (Relação Completa)",
         type: "planilha", // "excel" -> "planilha"
-        insertedDate: "2024-06-23", 
-        url: "/docs/mock_emendas_2025.xlsx", 
-        description: "Planilha com a relação de todos os servidores ativos, incluindo comissionados, efetivos e contratos.", 
-        solicitante: "Mariana Costa (g6)", 
+        insertedDate: "2024-06-23",
+        url: "/docs/mock_emendas_2025.xlsx",
+        description: "Planilha com a relação de todos os servidores ativos, incluindo comissionados, efetivos e contratos.",
+        solicitante: "Mariana Costa (g6)",
         gerencia: "Gerência de Planejamento", // g6 (Mapeado de 'Gestão do Trabalho')
-        status: StatusContexto.Publicado, 
+        status: StatusContexto.Publicado,
         estaOculto: false,
         historico: histPublicadoSimples,
         versoes: [
             { id: 1, nome: "Servidores Ativos (v1).xlsx", data: "2024-06-23", autor: "Mariana Costa", status: StatusContexto.Publicado, historico: histPublicadoSimples }
-        ], 
+        ],
     },
-    { 
-        id: "ger-file-5", 
-        title: "Resolução 20/07/2025", 
-        type: "resolucao", 
-        insertedDate: "2024-07-20", 
+    {
+        id: "ger-file-5",
+        title: "Resolução 20/07/2025",
+        type: "resolucao",
+        insertedDate: "2024-07-20",
         url: "/docs/teste.pdf",
-        description: "Publicação oficial da resolução do CMS sobre novos fluxos de atendimento.", 
-        solicitante: "Conselho Municipal", 
+        description: "Publicação oficial da resolução do CMS sobre novos fluxos de atendimento.",
+        solicitante: "Conselho Municipal",
         gerencia: "Gerência de Planejamento", // g6 (Mapeado de 'Conselho')
-        status: StatusContexto.Publicado, 
+        status: StatusContexto.Publicado,
         estaOculto: false,
         historico: histPublicadoCompleto,
         versoes: [
             { id: 1, nome: "Resolução 20/07/2025 (v1)", data: "2024-07-20", autor: "CMS", status: StatusContexto.Publicado, historico: histPublicadoCompleto }
-        ], 
+        ],
     },
-    { 
-        id: "ger-file-6", 
-        title: "Link para Dashboard Externo (MS)", 
-        type: "link", 
-        insertedDate: "2025-10-13T12:00:00.000Z", 
-        url: "https://www.google.com", 
-        description: "Link de acesso ao painel de monitoramento de indicadores do Ministério da Saúde.", 
-        solicitante: "João Silva (g8)", 
+    {
+        id: "ger-file-6",
+        title: "Link para Dashboard Externo (MS)",
+        type: "link",
+        insertedDate: "2025-10-13T12:00:00.000Z",
+        url: "https://www.google.com",
+        description: "Link de acesso ao painel de monitoramento de indicadores do Ministério da Saúde.",
+        solicitante: "João Silva (g8)",
         gerencia: "Gerência de Insperção Sanitária", // g8
-        status: StatusContexto.Publicado, 
+        status: StatusContexto.Publicado,
         estaOculto: true, // Item oculto para teste
         historico: histPublicadoSimples,
         versoes: [
             { id: 1, nome: "Link MS Saúde (v1)", data: "2024-06-23", autor: "João Silva", status: StatusContexto.Publicado, historico: histPublicadoSimples }
-        ], 
+        ],
     },
-    { 
-        id: "ger-file-7", 
-        title: "Apresentação de Resultados (Planejamento)", 
-        type: "apresentacao", 
-        insertedDate: "2025-09-05", 
-        url: "/docs/mock_resultados_2025.pptx", 
-        description: "Slides com os principais resultados da Diretoria de Gestão do SUS.", 
-        solicitante: "Equipe Planejamento (g6)", 
+    {
+        id: "ger-file-7",
+        title: "Apresentação de Resultados (Planejamento)",
+        type: "apresentacao",
+        insertedDate: "2025-09-05",
+        url: "/docs/mock_resultados_2025.pptx",
+        description: "Slides com os principais resultados da Diretoria de Gestão do SUS.",
+        solicitante: "Equipe Planejamento (g6)",
         gerencia: "Gerência de Planejamento", // g6
-        status: StatusContexto.Publicado, 
+        status: StatusContexto.Publicado,
         estaOculto: false,
         historico: histPublicadoCompleto,
         versoes: [
             { id: 1, nome: "Resultados 2025 (v1).pptx", data: "2025-09-05", autor: "GPU", estaOculta: false, status: StatusContexto.Publicado, historico: histPublicadoCompleto }
-        ], 
+        ],
     },
-    { 
-        id: "ger-file-8", 
-        title: "Plano de Ação Trimestral (Gestão)", 
-        type: "apresentacao", 
-        insertedDate: "2025-10-15", 
-        url: "/docs/mock_plano_acao_trimestral.pptx", 
-        description: "Apresentação do plano de ação para a Diretoria de Gestão.", 
-        solicitante: "Diretoria de Gestão", 
+    {
+        id: "ger-file-8",
+        title: "Plano de Ação Trimestral (Gestão)",
+        type: "apresentacao",
+        insertedDate: "2025-10-15",
+        url: "/docs/mock_plano_acao_trimestral.pptx",
+        description: "Apresentação do plano de ação para a Diretoria de Gestão.",
+        solicitante: "Diretoria de Gestão",
         gerencia: "Gerência de Planejamento", // g6 (Mapeado de 'Gestão do Trabalho')
         status: StatusContexto.AguardandoDiretor, // (Item aberto)
         estaOculto: false,
         historico: histAguardandoDiretor2,
         versoes: [
             { id: 1, nome: "Plano Ação (v1).pptx", data: "2025-10-15", autor: "DGE", estaOculta: false, status: StatusContexto.AguardandoDiretor, historico: histAguardandoDiretor2 }
-        ], 
+        ],
     },
-    { 
-        id: "ger-file-9", 
-        title: "Relatório Parcial de Atividades (GAB)", 
-        type: "doc", 
-        insertedDate: "2025-11-01T10:00:00.000Z", 
+    {
+        id: "ger-file-9",
+        title: "Relatório Parcial de Atividades (GAB)",
+        type: "doc",
+        insertedDate: "2025-11-01T10:00:00.000Z",
         url: "/docs/pas.docx",
-        description: "Versão preliminar para análise gerencial.", 
-        solicitante: "Membro da Gerência (g2)", 
+        description: "Versão preliminar para análise gerencial.",
+        solicitante: "Membro da Gerência (g2)",
         gerencia: "Gerência de Atenção Básica", // g2
         status: StatusContexto.AguardandoGerente, // (Item aberto)
         estaOculto: false,
@@ -387,72 +387,72 @@ export const allContextosMock: Contexto[] = [
         versoes: [
             { id: 1, nome: "Relatório Parcial Nov (v1).docx", data: "2025-11-01", autor: "Membro", status: StatusContexto.AguardandoGerente, historico: histAguardandoGerente, estaOculta: true },
             { id: 2, nome: "Relatório Parcial Nov (v2 - corrigido).docx", data: "2025-11-03", autor: "Membro", status: StatusContexto.AguardandoGerente, historico: histAguardandoGerenteMultiVersao }
-        ], 
+        ],
     },
 
-   // --- (MIGRADO) Indicadores (Origem: gerencia/[id]/page.tsx indicators) ---
-    
-    { 
-        id: "ind-1", 
-        title: "População Atendida", 
+    // --- (MIGRADO) Indicadores (Origem: gerencia/[id]/page.tsx indicators) ---
+
+    {
+        id: "ind-1",
+        title: "População Atendida",
         type: "indicador",
-        insertedDate: "2025-10-13T12:00:00.000Z", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-13T12:00:00.000Z",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Atenção Básica", // g2
-        solicitante: "Ana Lima (g2)", 
-        description: "Atendimento da Rede Municipal", 
+        solicitante: "Ana Lima (g2)",
+        description: "Atendimento da Rede Municipal",
         estaOculto: false,
         historico: histPublicadoCompleto,
         versoes: [
-            { id: 1, nome: "v1 - População Atendida", data: "2025-08-10", autor: "Carlos", status: StatusContexto.Publicado, historico: histPublicadoSimples, estaOculta: true }, 
+            { id: 1, nome: "v1 - População Atendida", data: "2025-08-10", autor: "Carlos", status: StatusContexto.Publicado, historico: histPublicadoSimples, estaOculta: true },
             { id: 2, nome: "v2 - População Atendida", data: "2025-09-15", autor: "Ana", status: StatusContexto.Publicado, historico: histPublicadoCompleto }
-        ], 
+        ],
         payload: {
             description: "Atendimento da Rede Municipal",
             valorAtual: "68 milhões",
             unidade: "Milhões",
             textoComparativo: "+32% em relação ao PMQA",
             cor: "#3B82F6", // blue
-            icone: "Heart" as NomeIcone 
+            icone: "Heart" as NomeIcone
         }
     },
-    { 
-        id: "ind-2", 
-        title: "Unidades de Saúde", 
+    {
+        id: "ind-2",
+        title: "Unidades de Saúde",
         type: "indicador",
-        insertedDate: "2025-09-01", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-09-01",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Planejamento", // g6
-        solicitante: "Carlos Andrade (g6)", 
-        description: "Unidades ativas na rede municipal", 
+        solicitante: "Carlos Andrade (g6)",
+        description: "Unidades ativas na rede municipal",
         estaOculto: false,
         historico: histPublicadoSimples,
         versoes: [
             { id: 1, nome: "v1 - Unidades de Saúde", data: "2025-09-01", autor: "Carlos", status: StatusContexto.Publicado, historico: histPublicadoSimples }
-        ], 
+        ],
         payload: {
             description: "Unidades ativas na rede municipal",
             valorAtual: "200",
             unidade: "Unidades",
             textoComparativo: "— Sem alteração",
             cor: "#22C55E", // green
-            icone: "Building" as NomeIcone 
+            icone: "Building" as NomeIcone
         }
     },
-    { 
-        id: "ind-3", 
-        title: "Profissionais Ativos", 
+    {
+        id: "ind-3",
+        title: "Profissionais Ativos",
         type: "indicador",
-        insertedDate: "2025-10-10T12:00:00.000Z", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-10T12:00:00.000Z",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Planejamento", // g6 (Mapeado de 'Gestão do Trabalho')
-        solicitante: "Mariana Costa (g6)", 
-        description: "Profissionais em toda Secretaria", 
+        solicitante: "Mariana Costa (g6)",
+        description: "Profissionais em toda Secretaria",
         estaOculto: false,
         historico: histPublicadoCompleto,
         versoes: [
             { id: 1, nome: "v3 - Profissionais Ativos", data: "2025-09-20", autor: "Carlos", status: StatusContexto.Publicado, historico: histPublicadoCompleto }
-        ], 
+        ],
         payload: {
             description: "Profissionais em toda Secretaria",
             valorAtual: "2.345",
@@ -462,20 +462,20 @@ export const allContextosMock: Contexto[] = [
             icone: "ClipboardList" as NomeIcone
         }
     },
-    { 
-        id: "ind-4", 
-        title: "Média de Atendimentos (Dia)", 
+    {
+        id: "ind-4",
+        title: "Média de Atendimentos (Dia)",
         type: "indicador",
-        insertedDate: "2025-11-01T12:00:00.000Z", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-11-01T12:00:00.000Z",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Atenção Básica", // g2
-        solicitante: "Ana Lima (g2)", 
-        description: "Consultas e procedimentos diários", 
+        solicitante: "Ana Lima (g2)",
+        description: "Consultas e procedimentos diários",
         estaOculto: false,
         historico: histPublicadoSimples,
         versoes: [
             { id: 1, nome: "v1 - Média Atendimentos", data: "2025-11-01", autor: "Ana", status: StatusContexto.Publicado, historico: histPublicadoSimples }
-        ], 
+        ],
         payload: {
             description: "Consultas e procedimentos diários",
             valorAtual: "4.120",
@@ -485,20 +485,20 @@ export const allContextosMock: Contexto[] = [
             icone: "TrendingUp" as NomeIcone
         }
     },
-    { 
-        id: "ind-5", 
-        title: "Investimento em Saúde", 
+    {
+        id: "ind-5",
+        title: "Investimento em Saúde",
         type: "indicador",
-        insertedDate: "2025-10-28T12:00:00.000Z", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-28T12:00:00.000Z",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Planejamento", // g6
-        solicitante: "Diretoria Financeira (g6)", 
-        description: "Orçamento executado 2025", 
+        solicitante: "Diretoria Financeira (g6)",
+        description: "Orçamento executado 2025",
         estaOculto: false,
         historico: histPublicadoCompleto,
         versoes: [
             { id: 1, nome: "v1 - Investimento", data: "2025-10-28", autor: "Carlos", status: StatusContexto.Publicado, historico: histPublicadoCompleto }
-        ], 
+        ],
         payload: {
             description: "Orçamento executado 2025",
             valorAtual: "R$ 1.2 Bi",
@@ -508,17 +508,17 @@ export const allContextosMock: Contexto[] = [
             icone: "DollarSign" as NomeIcone
         }
     },
-    { 
+    {
         id: "ind-6",
         title: "Taxa de Ocupação de Leitos (Aguardando)",
         type: "indicador",
-        insertedDate: "2025-11-05T12:00:00.000Z", 
+        insertedDate: "2025-11-05T12:00:00.000Z",
         status: StatusContexto.AguardandoGerente, // Item "Aberto"
         gerencia: "Gerência de Leitos", // g3
-        solicitante: "Membro (g3)", 
-        description: "Leitos clínicos", 
+        solicitante: "Membro (g3)",
+        description: "Leitos clínicos",
         estaOculto: false,
-        historico: histAguardandoGerente, 
+        historico: histAguardandoGerente,
         versoes: [
             { id: 1, nome: "v1 - Taxa de Ocupação", data: "2025-11-05", autor: "Membro da Gerência", status: StatusContexto.AguardandoGerente, historico: histAguardandoGerente }
         ],
@@ -535,18 +535,18 @@ export const allContextosMock: Contexto[] = [
     // --- NOVOS MOCKS ADICIONADOS ---
 
     // Gerência de Atenção Básica (g2) - Adicionando 4 (total 6)
-    { 
-        id: "ind-g2-3", 
-        title: "Cobertura Pré-Natal", 
+    {
+        id: "ind-g2-3",
+        title: "Cobertura Pré-Natal",
         type: "indicador",
-        insertedDate: "2025-10-01", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-01",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Atenção Básica", // g2
-        solicitante: "Equipe GAB (g2)", 
-        description: "Gestantes com 6+ consultas", 
+        solicitante: "Equipe GAB (g2)",
+        description: "Gestantes com 6+ consultas",
         estaOculto: false,
         historico: histPublicadoSimples,
-        versoes: [{ id: 1, nome: "v1 - Pré-Natal", data: "2025-10-01", autor: "GAB", status: StatusContexto.Publicado, historico: histPublicadoSimples }], 
+        versoes: [{ id: 1, nome: "v1 - Pré-Natal", data: "2025-10-01", autor: "GAB", status: StatusContexto.Publicado, historico: histPublicadoSimples }],
         payload: {
             description: "Gestantes com 6+ consultas",
             valorAtual: "78",
@@ -556,18 +556,18 @@ export const allContextosMock: Contexto[] = [
             icone: "Heart" as NomeIcone
         }
     },
-    { 
-        id: "ind-g2-4", 
-        title: "Hipertensos Acompanhados", 
+    {
+        id: "ind-g2-4",
+        title: "Hipertensos Acompanhados",
         type: "indicador",
-        insertedDate: "2025-10-02", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-02",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Atenção Básica", // g2
-        solicitante: "Equipe GAB (g2)", 
-        description: "Pacientes com PA aferida no semestre", 
+        solicitante: "Equipe GAB (g2)",
+        description: "Pacientes com PA aferida no semestre",
         estaOculto: false,
         historico: histPublicadoSimples,
-        versoes: [{ id: 1, nome: "v1 - Hipertensos", data: "2025-10-02", autor: "GAB", status: StatusContexto.Publicado, historico: histPublicadoSimples }], 
+        versoes: [{ id: 1, nome: "v1 - Hipertensos", data: "2025-10-02", autor: "GAB", status: StatusContexto.Publicado, historico: histPublicadoSimples }],
         payload: {
             description: "Pacientes com PA aferida no semestre",
             valorAtual: "65",
@@ -577,18 +577,18 @@ export const allContextosMock: Contexto[] = [
             icone: "Heart" as NomeIcone
         }
     },
-    { 
-        id: "ind-g2-5", 
-        title: "Cobertura Vacinal (Pólio)", 
+    {
+        id: "ind-g2-5",
+        title: "Cobertura Vacinal (Pólio)",
         type: "indicador",
-        insertedDate: "2025-10-03", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-03",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Atenção Básica", // g2
-        solicitante: "Equipe GAB (g2)", 
-        description: "Crianças menores de 1 ano", 
+        solicitante: "Equipe GAB (g2)",
+        description: "Crianças menores de 1 ano",
         estaOculto: false,
         historico: histPublicadoCompleto,
-        versoes: [{ id: 1, nome: "v1 - Pólio", data: "2025-10-03", autor: "GAB", status: StatusContexto.Publicado, historico: histPublicadoCompleto }], 
+        versoes: [{ id: 1, nome: "v1 - Pólio", data: "2025-10-03", autor: "GAB", status: StatusContexto.Publicado, historico: histPublicadoCompleto }],
         payload: {
             description: "Crianças menores de 1 ano",
             valorAtual: "91",
@@ -598,18 +598,18 @@ export const allContextosMock: Contexto[] = [
             icone: "Users" as NomeIcone
         }
     },
-    { 
-        id: "ind-g2-6", 
-        title: "Visitas Domiciliares (ACS)", 
+    {
+        id: "ind-g2-6",
+        title: "Visitas Domiciliares (ACS)",
         type: "indicador",
-        insertedDate: "2025-10-04", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-04",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Atenção Básica", // g2
-        solicitante: "Equipe GAB (g2)", 
-        description: "Total de visitas no mês", 
+        solicitante: "Equipe GAB (g2)",
+        description: "Total de visitas no mês",
         estaOculto: true, // Oculto para teste
         historico: histPublicadoSimples,
-        versoes: [{ id: 1, nome: "v1 - Visitas", data: "2025-10-04", autor: "GAB", status: StatusContexto.Publicado, historico: histPublicadoSimples }], 
+        versoes: [{ id: 1, nome: "v1 - Visitas", data: "2025-10-04", autor: "GAB", status: StatusContexto.Publicado, historico: histPublicadoSimples }],
         payload: {
             description: "Total de visitas no mês",
             valorAtual: "12.500",
@@ -621,18 +621,18 @@ export const allContextosMock: Contexto[] = [
     },
 
     // Gerência de Planejamento (g6) - Adicionando 3 (total 6)
-    { 
-        id: "ind-g6-4", 
-        title: "Execução Orçamentária", 
+    {
+        id: "ind-g6-4",
+        title: "Execução Orçamentária",
         type: "indicador",
-        insertedDate: "2025-10-05", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-05",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Planejamento", // g6
-        solicitante: "Equipe GPLAN (g6)", 
-        description: "Percentual do orçamento executado", 
+        solicitante: "Equipe GPLAN (g6)",
+        description: "Percentual do orçamento executado",
         estaOculto: false,
         historico: histPublicadoCompleto,
-        versoes: [{ id: 1, nome: "v1 - Exec Orçam.", data: "2025-10-05", autor: "GPLAN", status: StatusContexto.Publicado, historico: histPublicadoCompleto }], 
+        versoes: [{ id: 1, nome: "v1 - Exec Orçam.", data: "2025-10-05", autor: "GPLAN", status: StatusContexto.Publicado, historico: histPublicadoCompleto }],
         payload: {
             description: "Percentual do orçamento executado",
             valorAtual: "72",
@@ -642,18 +642,18 @@ export const allContextosMock: Contexto[] = [
             icone: "DollarSign" as NomeIcone
         }
     },
-     { 
-        id: "ind-g6-5", 
-        title: "Taxa de Absenteísmo", 
+    {
+        id: "ind-g6-5",
+        title: "Taxa de Absenteísmo",
         type: "indicador",
-        insertedDate: "2025-10-06", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-06",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Planejamento", // g6
-        solicitante: "RH (g6)", 
-        description: "Faltas de servidores (mês)", 
+        solicitante: "RH (g6)",
+        description: "Faltas de servidores (mês)",
         estaOculto: false,
         historico: histPublicadoSimples,
-        versoes: [{ id: 1, nome: "v1 - Absenteísmo", data: "2025-10-06", autor: "RH", status: StatusContexto.Publicado, historico: histPublicadoSimples }], 
+        versoes: [{ id: 1, nome: "v1 - Absenteísmo", data: "2025-10-06", autor: "RH", status: StatusContexto.Publicado, historico: histPublicadoSimples }],
         payload: {
             description: "Faltas de servidores (mês)",
             valorAtual: "4.8",
@@ -663,18 +663,18 @@ export const allContextosMock: Contexto[] = [
             icone: "ClipboardList" as NomeIcone
         }
     },
-     { 
-        id: "ind-g6-6", 
-        title: "Novos Servidores", 
+    {
+        id: "ind-g6-6",
+        title: "Novos Servidores",
         type: "indicador",
-        insertedDate: "2025-10-07", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-07",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Planejamento", // g6
-        solicitante: "RH (g6)", 
-        description: "Contratações no último concurso", 
+        solicitante: "RH (g6)",
+        description: "Contratações no último concurso",
         estaOculto: false,
         historico: histPublicadoCompleto,
-        versoes: [{ id: 1, nome: "v1 - Servidores", data: "2025-10-07", autor: "RH", status: StatusContexto.Publicado, historico: histPublicadoCompleto }], 
+        versoes: [{ id: 1, nome: "v1 - Servidores", data: "2025-10-07", autor: "RH", status: StatusContexto.Publicado, historico: histPublicadoCompleto }],
         payload: {
             description: "Contratações no último concurso",
             valorAtual: "120",
@@ -686,18 +686,18 @@ export const allContextosMock: Contexto[] = [
     },
 
     // Gerência de Leitos (g3) - Adicionando 5 (total 6)
-    { 
-        id: "ind-g3-2", 
-        title: "Ocupação Leitos UTI", 
+    {
+        id: "ind-g3-2",
+        title: "Ocupação Leitos UTI",
         type: "indicador",
-        insertedDate: "2025-10-08", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-08",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Leitos", // g3
-        solicitante: "Equipe GLeitos (g3)", 
-        description: "Leitos de UTI Adulto", 
+        solicitante: "Equipe GLeitos (g3)",
+        description: "Leitos de UTI Adulto",
         estaOculto: false,
         historico: histPublicadoSimples,
-        versoes: [{ id: 1, nome: "v1 - UTI", data: "2025-10-08", autor: "GLeitos", status: StatusContexto.Publicado, historico: histPublicadoSimples }], 
+        versoes: [{ id: 1, nome: "v1 - UTI", data: "2025-10-08", autor: "GLeitos", status: StatusContexto.Publicado, historico: histPublicadoSimples }],
         payload: {
             description: "Leitos de UTI Adulto",
             valorAtual: "92",
@@ -707,18 +707,18 @@ export const allContextosMock: Contexto[] = [
             icone: "Building" as NomeIcone
         }
     },
-    { 
-        id: "ind-g3-3", 
-        title: "Ocupação Leitos Pediátricos", 
+    {
+        id: "ind-g3-3",
+        title: "Ocupação Leitos Pediátricos",
         type: "indicador",
-        insertedDate: "2025-10-09", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-09",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Leitos", // g3
-        solicitante: "Equipe GLeitos (g3)", 
-        description: "Leitos de Pediatria", 
+        solicitante: "Equipe GLeitos (g3)",
+        description: "Leitos de Pediatria",
         estaOculto: false,
         historico: histPublicadoCompleto,
-        versoes: [{ id: 1, nome: "v1 - Pediatria", data: "2025-10-09", autor: "GLeitos", status: StatusContexto.Publicado, historico: histPublicadoCompleto }], 
+        versoes: [{ id: 1, nome: "v1 - Pediatria", data: "2025-10-09", autor: "GLeitos", status: StatusContexto.Publicado, historico: histPublicadoCompleto }],
         payload: {
             description: "Leitos de Pediatria",
             valorAtual: "75",
@@ -728,18 +728,18 @@ export const allContextosMock: Contexto[] = [
             icone: "Building" as NomeIcone
         }
     },
-    { 
-        id: "ind-g3-4", 
-        title: "Média de Permanência", 
+    {
+        id: "ind-g3-4",
+        title: "Média de Permanência",
         type: "indicador",
-        insertedDate: "2025-10-10", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-10",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Leitos", // g3
-        solicitante: "Equipe GLeitos (g3)", 
-        description: "Média de dias (Leitos Clínicos)", 
+        solicitante: "Equipe GLeitos (g3)",
+        description: "Média de dias (Leitos Clínicos)",
         estaOculto: false,
         historico: histPublicadoSimples,
-        versoes: [{ id: 1, nome: "v1 - Permanência", data: "2025-10-10", autor: "GLeitos", status: StatusContexto.Publicado, historico: histPublicadoSimples }], 
+        versoes: [{ id: 1, nome: "v1 - Permanência", data: "2025-10-10", autor: "GLeitos", status: StatusContexto.Publicado, historico: histPublicadoSimples }],
         payload: {
             description: "Média de dias (Leitos Clínicos)",
             valorAtual: "5.2",
@@ -749,18 +749,18 @@ export const allContextosMock: Contexto[] = [
             icone: "TrendingUp" as NomeIcone
         }
     },
-    { 
-        id: "ind-g3-5", 
-        title: "Giro de Leitos", 
+    {
+        id: "ind-g3-5",
+        title: "Giro de Leitos",
         type: "indicador",
-        insertedDate: "2025-10-11", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-11",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Leitos", // g3
-        solicitante: "Equipe GLeitos (g3)", 
-        description: "Índice de renovação de leitos", 
+        solicitante: "Equipe GLeitos (g3)",
+        description: "Índice de renovação de leitos",
         estaOculto: false,
         historico: histPublicadoCompleto,
-        versoes: [{ id: 1, nome: "v1 - Giro", data: "2025-10-11", autor: "GLeitos", status: StatusContexto.Publicado, historico: histPublicadoCompleto }], 
+        versoes: [{ id: 1, nome: "v1 - Giro", data: "2025-10-11", autor: "GLeitos", status: StatusContexto.Publicado, historico: histPublicadoCompleto }],
         payload: {
             description: "Índice de renovação de leitos",
             valorAtual: "0.8",
@@ -770,18 +770,18 @@ export const allContextosMock: Contexto[] = [
             icone: "TrendingUp" as NomeIcone
         }
     },
-    { 
-        id: "ind-g3-6", 
-        title: "Leitos Bloqueados", 
+    {
+        id: "ind-g3-6",
+        title: "Leitos Bloqueados",
         type: "indicador",
-        insertedDate: "2025-10-12", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-12",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Leitos", // g3
-        solicitante: "Equipe GLeitos (g3)", 
-        description: "Manutenção ou infecção", 
+        solicitante: "Equipe GLeitos (g3)",
+        description: "Manutenção ou infecção",
         estaOculto: false,
         historico: histPublicadoSimples,
-        versoes: [{ id: 1, nome: "v1 - Bloqueados", data: "2025-10-12", autor: "GLeitos", status: StatusContexto.Publicado, historico: histPublicadoSimples }], 
+        versoes: [{ id: 1, nome: "v1 - Bloqueados", data: "2025-10-12", autor: "GLeitos", status: StatusContexto.Publicado, historico: histPublicadoSimples }],
         payload: {
             description: "Manutenção ou infecção",
             valorAtual: "8",
@@ -793,18 +793,18 @@ export const allContextosMock: Contexto[] = [
     },
 
     // Gerência de Fluxos Assistenciais (g1) - Adicionando 6
-    { 
-        id: "ind-g1-1", 
-        title: "Repasses COAPES", 
+    {
+        id: "ind-g1-1",
+        title: "Repasses COAPES",
         type: "indicador",
-        insertedDate: "2025-10-13", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-13",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Fluxos Assistenciais", // g1
-        solicitante: "Equipe GFA (g1)", 
-        description: "Valor total repassado (mês)", 
+        solicitante: "Equipe GFA (g1)",
+        description: "Valor total repassado (mês)",
         estaOculto: false,
         historico: histPublicadoCompleto,
-        versoes: [{ id: 1, nome: "v1 - COAPES", data: "2025-10-13", autor: "GFA", status: StatusContexto.Publicado, historico: histPublicadoCompleto }], 
+        versoes: [{ id: 1, nome: "v1 - COAPES", data: "2025-10-13", autor: "GFA", status: StatusContexto.Publicado, historico: histPublicadoCompleto }],
         payload: {
             description: "Valor total repassado (mês)",
             valorAtual: "R$ 2.5 Mi",
@@ -814,18 +814,18 @@ export const allContextosMock: Contexto[] = [
             icone: "DollarSign" as NomeIcone
         }
     },
-    { 
-        id: "ind-g1-2", 
-        title: "Contratos Ativos", 
+    {
+        id: "ind-g1-2",
+        title: "Contratos Ativos",
         type: "indicador",
-        insertedDate: "2025-10-14", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-14",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Fluxos Assistenciais", // g1
-        solicitante: "Equipe GFA (g1)", 
-        description: "Fornecedores e serviços", 
+        solicitante: "Equipe GFA (g1)",
+        description: "Fornecedores e serviços",
         estaOculto: false,
         historico: histPublicadoSimples,
-        versoes: [{ id: 1, nome: "v1 - Contratos", data: "2025-10-14", autor: "GFA", status: StatusContexto.Publicado, historico: histPublicadoSimples }], 
+        versoes: [{ id: 1, nome: "v1 - Contratos", data: "2025-10-14", autor: "GFA", status: StatusContexto.Publicado, historico: histPublicadoSimples }],
         payload: {
             description: "Fornecedores e serviços",
             valorAtual: "45",
@@ -835,18 +835,18 @@ export const allContextosMock: Contexto[] = [
             icone: "ClipboardList" as NomeIcone
         }
     },
-    { 
-        id: "ind-g1-3", 
-        title: "Satisfação (Fluxo)", 
+    {
+        id: "ind-g1-3",
+        title: "Satisfação (Fluxo)",
         type: "indicador",
-        insertedDate: "2025-10-15", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-15",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Fluxos Assistenciais", // g1
-        solicitante: "Equipe GFA (g1)", 
-        description: "Nota média (Ouvidoria)", 
+        solicitante: "Equipe GFA (g1)",
+        description: "Nota média (Ouvidoria)",
         estaOculto: false,
         historico: histPublicadoCompleto,
-        versoes: [{ id: 1, nome: "v1 - Satisfação", data: "2025-10-15", autor: "GFA", status: StatusContexto.Publicado, historico: histPublicadoCompleto }], 
+        versoes: [{ id: 1, nome: "v1 - Satisfação", data: "2025-10-15", autor: "GFA", status: StatusContexto.Publicado, historico: histPublicadoCompleto }],
         payload: {
             description: "Nota média (Ouvidoria)",
             valorAtual: "8.2",
@@ -856,18 +856,18 @@ export const allContextosMock: Contexto[] = [
             icone: "UserCheck" as NomeIcone
         }
     },
-    { 
-        id: "ind-g1-4", 
-        title: "Tempo de Autorização", 
+    {
+        id: "ind-g1-4",
+        title: "Tempo de Autorização",
         type: "indicador",
-        insertedDate: "2025-10-16", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-16",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Fluxos Assistenciais", // g1
-        solicitante: "Equipe GFA (g1)", 
-        description: "Média (procedimentos eletivos)", 
+        solicitante: "Equipe GFA (g1)",
+        description: "Média (procedimentos eletivos)",
         estaOculto: false,
         historico: histPublicadoSimples,
-        versoes: [{ id: 1, nome: "v1 - Autorização", data: "2025-10-16", autor: "GFA", status: StatusContexto.Publicado, historico: histPublicadoSimples }], 
+        versoes: [{ id: 1, nome: "v1 - Autorização", data: "2025-10-16", autor: "GFA", status: StatusContexto.Publicado, historico: histPublicadoSimples }],
         payload: {
             description: "Média (procedimentos eletivos)",
             valorAtual: "48",
@@ -877,18 +877,18 @@ export const allContextosMock: Contexto[] = [
             icone: "TrendingUp" as NomeIcone
         }
     },
-    { 
-        id: "ind-g1-5", 
-        title: "Internações (Reguladas)", 
+    {
+        id: "ind-g1-5",
+        title: "Internações (Reguladas)",
         type: "indicador",
-        insertedDate: "2025-10-17", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-17",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Fluxos Assistenciais", // g1
-        solicitante: "Equipe GFA (g1)", 
-        description: "Total no mês", 
+        solicitante: "Equipe GFA (g1)",
+        description: "Total no mês",
         estaOculto: false,
         historico: histPublicadoCompleto,
-        versoes: [{ id: 1, nome: "v1 - Internações", data: "2025-10-17", autor: "GFA", status: StatusContexto.Publicado, historico: histPublicadoCompleto }], 
+        versoes: [{ id: 1, nome: "v1 - Internações", data: "2025-10-17", autor: "GFA", status: StatusContexto.Publicado, historico: histPublicadoCompleto }],
         payload: {
             description: "Total no mês",
             valorAtual: "1.120",
@@ -898,18 +898,18 @@ export const allContextosMock: Contexto[] = [
             icone: "Building" as NomeIcone
         }
     },
-    { 
-        id: "ind-g1-6", 
-        title: "Protocolos Clínicos", 
+    {
+        id: "ind-g1-6",
+        title: "Protocolos Clínicos",
         type: "indicador",
-        insertedDate: "2025-10-18", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-18",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Fluxos Assistenciais", // g1
-        solicitante: "Equipe GFA (g1)", 
-        description: "Protocolos implantados/revisados", 
+        solicitante: "Equipe GFA (g1)",
+        description: "Protocolos implantados/revisados",
         estaOculto: false,
         historico: histPublicadoSimples,
-        versoes: [{ id: 1, nome: "v1 - Protocolos", data: "2025-10-18", autor: "GFA", status: StatusContexto.Publicado, historico: histPublicadoSimples }], 
+        versoes: [{ id: 1, nome: "v1 - Protocolos", data: "2025-10-18", autor: "GFA", status: StatusContexto.Publicado, historico: histPublicadoSimples }],
         payload: {
             description: "Protocolos implantados/revisados",
             valorAtual: "12",
@@ -919,20 +919,20 @@ export const allContextosMock: Contexto[] = [
             icone: "ClipboardList" as NomeIcone
         }
     },
-    
+
     // Gerência de Insperção Sanitária (g8) - Adicionando 6
-    { 
-        id: "ind-g8-1", 
-        title: "Inspeções Realizadas", 
+    {
+        id: "ind-g8-1",
+        title: "Inspeções Realizadas",
         type: "indicador",
-        insertedDate: "2025-10-19", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-19",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Insperção Sanitária", // g8
-        solicitante: "Equipe GIS (g8)", 
-        description: "Total de inspeções no mês", 
+        solicitante: "Equipe GIS (g8)",
+        description: "Total de inspeções no mês",
         estaOculto: false,
         historico: histPublicadoCompleto,
-        versoes: [{ id: 1, nome: "v1 - Inspeções", data: "2025-10-19", autor: "GIS", status: StatusContexto.Publicado, historico: histPublicadoCompleto }], 
+        versoes: [{ id: 1, nome: "v1 - Inspeções", data: "2025-10-19", autor: "GIS", status: StatusContexto.Publicado, historico: histPublicadoCompleto }],
         payload: {
             description: "Total de inspeções no mês",
             valorAtual: "350",
@@ -942,18 +942,18 @@ export const allContextosMock: Contexto[] = [
             icone: "ClipboardList" as NomeIcone
         }
     },
-    { 
-        id: "ind-g8-2", 
-        title: "Autuações Emitidas", 
+    {
+        id: "ind-g8-2",
+        title: "Autuações Emitidas",
         type: "indicador",
-        insertedDate: "2025-10-20", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-20",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Insperção Sanitária", // g8
-        solicitante: "Equipe GIS (g8)", 
-        description: "Infrações sanitárias registradas", 
+        solicitante: "Equipe GIS (g8)",
+        description: "Infrações sanitárias registradas",
         estaOculto: false,
         historico: histPublicadoSimples,
-        versoes: [{ id: 1, nome: "v1 - Autuações", data: "2025-10-20", autor: "GIS", status: StatusContexto.Publicado, historico: histPublicadoSimples }], 
+        versoes: [{ id: 1, nome: "v1 - Autuações", data: "2025-10-20", autor: "GIS", status: StatusContexto.Publicado, historico: histPublicadoSimples }],
         payload: {
             description: "Infrações sanitárias registradas",
             valorAtual: "42",
@@ -963,18 +963,18 @@ export const allContextosMock: Contexto[] = [
             icone: "ClipboardList" as NomeIcone
         }
     },
-    { 
-        id: "ind-g8-3", 
-        title: "Coletas de Amostras (Água)", 
+    {
+        id: "ind-g8-3",
+        title: "Coletas de Amostras (Água)",
         type: "indicador",
-        insertedDate: "2025-10-21", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-21",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Insperção Sanitária", // g8
-        solicitante: "Equipe GIS (g8)", 
-        description: "Análise de potabilidade", 
+        solicitante: "Equipe GIS (g8)",
+        description: "Análise de potabilidade",
         estaOculto: false,
         historico: histPublicadoCompleto,
-        versoes: [{ id: 1, nome: "v1 - Água", data: "2025-10-21", autor: "GIS", status: StatusContexto.Publicado, historico: histPublicadoCompleto }], 
+        versoes: [{ id: 1, nome: "v1 - Água", data: "2025-10-21", autor: "GIS", status: StatusContexto.Publicado, historico: histPublicadoCompleto }],
         payload: {
             description: "Análise de potabilidade",
             valorAtual: "98",
@@ -984,18 +984,18 @@ export const allContextosMock: Contexto[] = [
             icone: "TrendingUp" as NomeIcone
         }
     },
-    { 
-        id: "ind-g8-4", 
-        title: "Casos de Dengue (Semana)", 
+    {
+        id: "ind-g8-4",
+        title: "Casos de Dengue (Semana)",
         type: "indicador",
-        insertedDate: "2025-10-22", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-22",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Insperção Sanitária", // g8
-        solicitante: "Equipe GIS (g8)", 
-        description: "Novos casos confirmados", 
+        solicitante: "Equipe GIS (g8)",
+        description: "Novos casos confirmados",
         estaOculto: false,
         historico: histPublicadoSimples,
-        versoes: [{ id: 1, nome: "v1 - Dengue", data: "2025-10-22", autor: "GIS", status: StatusContexto.Publicado, historico: histPublicadoSimples }], 
+        versoes: [{ id: 1, nome: "v1 - Dengue", data: "2025-10-22", autor: "GIS", status: StatusContexto.Publicado, historico: histPublicadoSimples }],
         payload: {
             description: "Novos casos confirmados",
             valorAtual: "15",
@@ -1005,18 +1005,18 @@ export const allContextosMock: Contexto[] = [
             icone: "TrendingUp" as NomeIcone
         }
     },
-    { 
-        id: "ind-g8-5", 
-        title: "Licenças Sanitárias Emitidas", 
+    {
+        id: "ind-g8-5",
+        title: "Licenças Sanitárias Emitidas",
         type: "indicador",
-        insertedDate: "2025-10-23", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-23",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Insperção Sanitária", // g8
-        solicitante: "Equipe GIS (g8)", 
-        description: "Novas licenças no mês", 
+        solicitante: "Equipe GIS (g8)",
+        description: "Novas licenças no mês",
         estaOculto: false,
         historico: histPublicadoCompleto,
-        versoes: [{ id: 1, nome: "v1 - Licenças", data: "2025-10-23", autor: "GIS", status: StatusContexto.Publicado, historico: histPublicadoCompleto }], 
+        versoes: [{ id: 1, nome: "v1 - Licenças", data: "2025-10-23", autor: "GIS", status: StatusContexto.Publicado, historico: histPublicadoCompleto }],
         payload: {
             description: "Novas licenças no mês",
             valorAtual: "80",
@@ -1026,18 +1026,18 @@ export const allContextosMock: Contexto[] = [
             icone: "ClipboardList" as NomeIcone
         }
     },
-    { 
-        id: "ind-g8-6", 
-        title: "Controle de Roedores", 
+    {
+        id: "ind-g8-6",
+        title: "Controle de Roedores",
         type: "indicador",
-        insertedDate: "2025-10-24", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-24",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Insperção Sanitária", // g8
-        solicitante: "Equipe GIS (g8)", 
-        description: "Áreas tratadas", 
+        solicitante: "Equipe GIS (g8)",
+        description: "Áreas tratadas",
         estaOculto: false,
         historico: histPublicadoSimples,
-        versoes: [{ id: 1, nome: "v1 - Roedores", data: "2025-10-24", autor: "GIS", status: StatusContexto.Publicado, historico: histPublicadoSimples }], 
+        versoes: [{ id: 1, nome: "v1 - Roedores", data: "2025-10-24", autor: "GIS", status: StatusContexto.Publicado, historico: histPublicadoSimples }],
         payload: {
             description: "Áreas tratadas",
             valorAtual: "25",
@@ -1047,20 +1047,20 @@ export const allContextosMock: Contexto[] = [
             icone: "Landmark" as NomeIcone
         }
     },
-    
+
     // Gerência de Tecnologia da Informação (g7) - Adicionando 6
-    { 
-        id: "ind-g7-1", 
-        title: "Uptime do Sistema (PEC)", 
+    {
+        id: "ind-g7-1",
+        title: "Uptime do Sistema (PEC)",
         type: "indicador",
-        insertedDate: "2025-10-25", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-25",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Tecnologia da Informação", // g7
-        solicitante: "Equipe GTI (g7)", 
-        description: "Disponibilidade do Prontuário", 
+        solicitante: "Equipe GTI (g7)",
+        description: "Disponibilidade do Prontuário",
         estaOculto: false,
         historico: histPublicadoCompleto,
-        versoes: [{ id: 1, nome: "v1 - Uptime PEC", data: "2025-10-25", autor: "GTI", status: StatusContexto.Publicado, historico: histPublicadoCompleto }], 
+        versoes: [{ id: 1, nome: "v1 - Uptime PEC", data: "2025-10-25", autor: "GTI", status: StatusContexto.Publicado, historico: histPublicadoCompleto }],
         payload: {
             description: "Disponibilidade do Prontuário",
             valorAtual: "99.8",
@@ -1070,18 +1070,18 @@ export const allContextosMock: Contexto[] = [
             icone: "TrendingUp" as NomeIcone
         }
     },
-    { 
-        id: "ind-g7-2", 
-        title: "Chamados Atendidos (Helpdesk)", 
+    {
+        id: "ind-g7-2",
+        title: "Chamados Atendidos (Helpdesk)",
         type: "indicador",
-        insertedDate: "2025-10-26", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-26",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Tecnologia da Informação", // g7
-        solicitante: "Equipe GTI (g7)", 
-        description: "Total de chamados resolvidos (mês)", 
+        solicitante: "Equipe GTI (g7)",
+        description: "Total de chamados resolvidos (mês)",
         estaOculto: false,
         historico: histPublicadoSimples,
-        versoes: [{ id: 1, nome: "v1 - Helpdesk", data: "2025-10-26", autor: "GTI", status: StatusContexto.Publicado, historico: histPublicadoSimples }], 
+        versoes: [{ id: 1, nome: "v1 - Helpdesk", data: "2025-10-26", autor: "GTI", status: StatusContexto.Publicado, historico: histPublicadoSimples }],
         payload: {
             description: "Total de chamados resolvidos (mês)",
             valorAtual: "450",
@@ -1091,18 +1091,18 @@ export const allContextosMock: Contexto[] = [
             icone: "ClipboardList" as NomeIcone
         }
     },
-    { 
-        id: "ind-g7-3", 
-        title: "Unidades com PEC", 
+    {
+        id: "ind-g7-3",
+        title: "Unidades com PEC",
         type: "indicador",
-        insertedDate: "2025-10-27", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-27",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Tecnologia da Informação", // g7
-        solicitante: "Equipe GTI (g7)", 
-        description: "Implantação do Prontuário Eletrônico", 
+        solicitante: "Equipe GTI (g7)",
+        description: "Implantação do Prontuário Eletrônico",
         estaOculto: false,
         historico: histPublicadoCompleto,
-        versoes: [{ id: 1, nome: "v1 - PEC", data: "2025-10-27", autor: "GTI", status: StatusContexto.Publicado, historico: histPublicadoCompleto }], 
+        versoes: [{ id: 1, nome: "v1 - PEC", data: "2025-10-27", autor: "GTI", status: StatusContexto.Publicado, historico: histPublicadoCompleto }],
         payload: {
             description: "Implantação do Prontuário Eletrônico",
             valorAtual: "85",
@@ -1112,18 +1112,18 @@ export const allContextosMock: Contexto[] = [
             icone: "Building" as NomeIcone
         }
     },
-    { 
-        id: "ind-g7-4", 
-        title: "Segurança (Tentativas Bloqueadas)", 
+    {
+        id: "ind-g7-4",
+        title: "Segurança (Tentativas Bloqueadas)",
         type: "indicador",
-        insertedDate: "2025-10-28", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-28",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Tecnologia da Informação", // g7
-        solicitante: "Equipe GTI (g7)", 
-        description: "Ataques de rede bloqueados (dia)", 
+        solicitante: "Equipe GTI (g7)",
+        description: "Ataques de rede bloqueados (dia)",
         estaOculto: false,
         historico: histPublicadoSimples,
-        versoes: [{ id: 1, nome: "v1 - Segurança", data: "2025-10-28", autor: "GTI", status: StatusContexto.Publicado, historico: histPublicadoSimples }], 
+        versoes: [{ id: 1, nome: "v1 - Segurança", data: "2025-10-28", autor: "GTI", status: StatusContexto.Publicado, historico: histPublicadoSimples }],
         payload: {
             description: "Ataques de rede bloqueados (dia)",
             valorAtual: "1.200",
@@ -1133,18 +1133,18 @@ export const allContextosMock: Contexto[] = [
             icone: "TrendingUp" as NomeIcone
         }
     },
-    { 
-        id: "ind-g7-5", 
-        title: "Armazenamento (Servidor)", 
+    {
+        id: "ind-g7-5",
+        title: "Armazenamento (Servidor)",
         type: "indicador",
-        insertedDate: "2025-10-29", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-29",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Tecnologia da Informação", // g7
-        solicitante: "Equipe GTI (g7)", 
-        description: "Espaço em disco utilizado", 
+        solicitante: "Equipe GTI (g7)",
+        description: "Espaço em disco utilizado",
         estaOculto: false,
         historico: histPublicadoCompleto,
-        versoes: [{ id: 1, nome: "v1 - Storage", data: "2025-10-29", autor: "GTI", status: StatusContexto.Publicado, historico: histPublicadoCompleto }], 
+        versoes: [{ id: 1, nome: "v1 - Storage", data: "2025-10-29", autor: "GTI", status: StatusContexto.Publicado, historico: histPublicadoCompleto }],
         payload: {
             description: "Espaço em disco utilizado",
             valorAtual: "60",
@@ -1154,18 +1154,18 @@ export const allContextosMock: Contexto[] = [
             icone: "Landmark" as NomeIcone // (Usando um ícone genérico)
         }
     },
-    { 
-        id: "ind-g7-6", 
-        title: "Links de Rede (Ativos)", 
+    {
+        id: "ind-g7-6",
+        title: "Links de Rede (Ativos)",
         type: "indicador",
-        insertedDate: "2025-10-30", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-30",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Tecnologia da Informação", // g7
-        solicitante: "Equipe GTI (g7)", 
-        description: "Conectividade das unidades", 
+        solicitante: "Equipe GTI (g7)",
+        description: "Conectividade das unidades",
         estaOculto: false,
         historico: histPublicadoSimples,
-        versoes: [{ id: 1, nome: "v1 - Rede", data: "2025-10-30", autor: "GTI", status: StatusContexto.Publicado, historico: histPublicadoSimples }], 
+        versoes: [{ id: 1, nome: "v1 - Rede", data: "2025-10-30", autor: "GTI", status: StatusContexto.Publicado, historico: histPublicadoSimples }],
         payload: {
             description: "Conectividade das unidades",
             valorAtual: "100",
@@ -1177,18 +1177,18 @@ export const allContextosMock: Contexto[] = [
     },
 
     // Gerência de Regulação Ambulatorial (g4) - Adicionando 6
-    { 
-        id: "ind-g4-1", 
-        title: "Fila de Espera (Consultas)", 
+    {
+        id: "ind-g4-1",
+        title: "Fila de Espera (Consultas)",
         type: "indicador",
-        insertedDate: "2025-10-01", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-01",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Regulação Ambulatorial", // g4
-        solicitante: "Equipe GRA (g4)", 
-        description: "Pacientes aguardando 1ª consulta", 
+        solicitante: "Equipe GRA (g4)",
+        description: "Pacientes aguardando 1ª consulta",
         estaOculto: false,
         historico: histPublicadoCompleto,
-        versoes: [{ id: 1, nome: "v1 - Fila Consulta", data: "2025-10-01", autor: "GRA", status: StatusContexto.Publicado, historico: histPublicadoCompleto }], 
+        versoes: [{ id: 1, nome: "v1 - Fila Consulta", data: "2025-10-01", autor: "GRA", status: StatusContexto.Publicado, historico: histPublicadoCompleto }],
         payload: {
             description: "Pacientes aguardando 1ª consulta",
             valorAtual: "2.300",
@@ -1198,18 +1198,18 @@ export const allContextosMock: Contexto[] = [
             icone: "Users" as NomeIcone
         }
     },
-    { 
-        id: "ind-g4-2", 
-        title: "Tempo Médio de Espera (Consultas)", 
+    {
+        id: "ind-g4-2",
+        title: "Tempo Médio de Espera (Consultas)",
         type: "indicador",
-        insertedDate: "2025-10-02", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-02",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Regulação Ambulatorial", // g4
-        solicitante: "Equipe GRA (g4)", 
-        description: "Média de dias para consulta", 
+        solicitante: "Equipe GRA (g4)",
+        description: "Média de dias para consulta",
         estaOculto: false,
         historico: histPublicadoSimples,
-        versoes: [{ id: 1, nome: "v1 - TME Consulta", data: "2025-10-02", autor: "GRA", status: StatusContexto.Publicado, historico: histPublicadoSimples }], 
+        versoes: [{ id: 1, nome: "v1 - TME Consulta", data: "2025-10-02", autor: "GRA", status: StatusContexto.Publicado, historico: histPublicadoSimples }],
         payload: {
             description: "Média de dias para consulta",
             valorAtual: "28",
@@ -1219,18 +1219,18 @@ export const allContextosMock: Contexto[] = [
             icone: "TrendingUp" as NomeIcone
         }
     },
-    { 
-        id: "ind-g4-3", 
-        title: "Fila de Espera (Exames)", 
+    {
+        id: "ind-g4-3",
+        title: "Fila de Espera (Exames)",
         type: "indicador",
-        insertedDate: "2025-10-03", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-03",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Regulação Ambulatorial", // g4
-        solicitante: "Equipe GRA (g4)", 
-        description: "Pacientes aguardando exames complexos", 
+        solicitante: "Equipe GRA (g4)",
+        description: "Pacientes aguardando exames complexos",
         estaOculto: false,
         historico: histPublicadoCompleto,
-        versoes: [{ id: 1, nome: "v1 - Fila Exames", data: "2025-10-03", autor: "GRA", status: StatusContexto.Publicado, historico: histPublicadoCompleto }], 
+        versoes: [{ id: 1, nome: "v1 - Fila Exames", data: "2025-10-03", autor: "GRA", status: StatusContexto.Publicado, historico: histPublicadoCompleto }],
         payload: {
             description: "Pacientes aguardando exames complexos",
             valorAtual: "890",
@@ -1240,18 +1240,18 @@ export const allContextosMock: Contexto[] = [
             icone: "Users" as NomeIcone
         }
     },
-    { 
-        id: "ind-g4-4", 
-        title: "Tempo Médio de Espera (Exames)", 
+    {
+        id: "ind-g4-4",
+        title: "Tempo Médio de Espera (Exames)",
         type: "indicador",
-        insertedDate: "2025-10-04", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-04",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Regulação Ambulatorial", // g4
-        solicitante: "Equipe GRA (g4)", 
-        description: "Média de dias para exames", 
+        solicitante: "Equipe GRA (g4)",
+        description: "Média de dias para exames",
         estaOculto: false,
         historico: histPublicadoSimples,
-        versoes: [{ id: 1, nome: "v1 - TME Exames", data: "2025-10-04", autor: "GRA", status: StatusContexto.Publicado, historico: histPublicadoSimples }], 
+        versoes: [{ id: 1, nome: "v1 - TME Exames", data: "2025-10-04", autor: "GRA", status: StatusContexto.Publicado, historico: histPublicadoSimples }],
         payload: {
             description: "Média de dias para exames",
             valorAtual: "45",
@@ -1261,18 +1261,18 @@ export const allContextosMock: Contexto[] = [
             icone: "TrendingUp" as NomeIcone
         }
     },
-    { 
-        id: "ind-g4-5", 
-        title: "Taxa de Atendimento (Regulação)", 
+    {
+        id: "ind-g4-5",
+        title: "Taxa de Atendimento (Regulação)",
         type: "indicador",
-        insertedDate: "2025-10-05", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-05",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Regulação Ambulatorial", // g4
-        solicitante: "Equipe GRA (g4)", 
-        description: "Solicitações atendidas vs total", 
+        solicitante: "Equipe GRA (g4)",
+        description: "Solicitações atendidas vs total",
         estaOculto: false,
         historico: histPublicadoCompleto,
-        versoes: [{ id: 1, nome: "v1 - Taxa Atend.", data: "2025-10-05", autor: "GRA", status: StatusContexto.Publicado, historico: histPublicadoCompleto }], 
+        versoes: [{ id: 1, nome: "v1 - Taxa Atend.", data: "2025-10-05", autor: "GRA", status: StatusContexto.Publicado, historico: histPublicadoCompleto }],
         payload: {
             description: "Solicitações atendidas vs total",
             valorAtual: "92",
@@ -1282,18 +1282,18 @@ export const allContextosMock: Contexto[] = [
             icone: "UserCheck" as NomeIcone
         }
     },
-    { 
-        id: "ind-g4-6", 
-        title: "Consultas Agendadas (Mês)", 
+    {
+        id: "ind-g4-6",
+        title: "Consultas Agendadas (Mês)",
         type: "indicador",
-        insertedDate: "2025-10-06", 
-        status: StatusContexto.Publicado, 
+        insertedDate: "2025-10-06",
+        status: StatusContexto.Publicado,
         gerencia: "Gerência de Regulação Ambulatorial", // g4
-        solicitante: "Equipe GRA (g4)", 
-        description: "Total de agendamentos efetuados", 
+        solicitante: "Equipe GRA (g4)",
+        description: "Total de agendamentos efetuados",
         estaOculto: false,
         historico: histPublicadoSimples,
-        versoes: [{ id: 1, nome: "v1 - Agendamentos", data: "2025-10-06", autor: "GRA", status: StatusContexto.Publicado, historico: histPublicadoSimples }], 
+        versoes: [{ id: 1, nome: "v1 - Agendamentos", data: "2025-10-06", autor: "GRA", status: StatusContexto.Publicado, historico: histPublicadoSimples }],
         payload: {
             description: "Total de agendamentos efetuados",
             valorAtual: "5.100",

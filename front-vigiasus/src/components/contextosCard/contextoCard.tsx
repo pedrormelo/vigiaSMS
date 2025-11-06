@@ -1,38 +1,38 @@
 // src/components/contextosCard/contextoCard.tsx
 "use client"
 
-import { 
-    FileText, FileSpreadsheet, FileSearch, Link, Calendar, ChartNetwork, Gauge, Presentation, 
+import {
+    FileText, FileSpreadsheet, FileSearch, Link, Calendar, ChartNetwork, Gauge, Presentation,
     Clock,
-    MoreVertical, 
-    Eye, EyeOff 
-} from "lucide-react" 
+    MoreVertical,
+    Eye, EyeOff
+} from "lucide-react"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
-import { StatusContexto } from "@/components/validar/typesDados" 
-import StatusBadge from "@/components/alerts/statusBadge" 
-import { Badge } from "@/components/ui/badge" 
+import { StatusContexto } from "@/components/validar/typesDados"
+import StatusBadge from "@/components/alerts/statusBadge"
+import { Badge } from "@/components/ui/badge"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
 // 1. TIPO ATUALIZADO: "excel" -> "planilha"
 export type FileType = "pdf" | "doc" | "dashboard" | "planilha" | "resolucao" | "link" | "leis" | "indicador" | "apresentacao"
 
 interface FileItemProps {
-    id: string; 
+    id: string;
     title: string
     type: FileType
     insertedDate: string
-    status: StatusContexto; 
+    status: StatusContexto;
     className?: string
     onClick?: () => void
-    isEditing?: boolean; 
-    estaOculto?: boolean; 
-    onToggleOculto?: (id: string) => void; 
+    isEditing?: boolean;
+    estaOculto?: boolean;
+    onToggleOculto?: (id: string) => void;
 }
 
 // 2. CONFIG ATUALIZADA: "excel" -> "planilha"
@@ -48,9 +48,9 @@ export const fileTypeConfig = {
         label: "DOC",
     },
     apresentacao: {
-        color: "bg-amber-400 hover:bg-amber-500", 
-        svg: "/icons/CONTEXTOS/PPTX-1.svg", 
-        icon: Presentation, 
+        color: "bg-amber-400 hover:bg-amber-500",
+        svg: "/icons/CONTEXTOS/PPTX-1.svg",
+        icon: Presentation,
         label: "Apresentação",
     },
     dashboard: {
@@ -85,13 +85,13 @@ export const fileTypeConfig = {
     },
 }
 
-export function FileItem({ 
-    id, 
-    title, 
-    type, 
-    insertedDate, 
-    status, 
-    className, 
+export function FileItem({
+    id,
+    title,
+    type,
+    insertedDate,
+    status,
+    className,
     onClick,
     isEditing = false,
     estaOculto = false,
@@ -100,23 +100,23 @@ export function FileItem({
     // (O restante do componente permanece o mesmo, pois ele lê a 'config' dinamicamente)
     const config = fileTypeConfig[type]
     const IconComponent = (config as any).icon
-    
+
     const isPublished = status === StatusContexto.Publicado;
     const isDisabled = !isPublished || estaOculto;
-    const cardColor = config.color; 
-    const textColor = "text-white"; 
+    const cardColor = config.color;
+    const textColor = "text-white";
     const canToggleHide = estaOculto ? true : isPublished;
 
     return (
         <div
             className={cn(
-                "rounded-4xl p-6 cursor-pointer transition-all duration-200 shadow-md flex flex-col justify-between max-h-[200px] max-w-[245px] relative overflow-hidden", 
-                cardColor, 
-                isDisabled && "opacity-70 grayscale-[80%] hover:opacity-100 hover:grayscale-0", 
+                "rounded-4xl p-6 cursor-pointer transition-all duration-200 shadow-md flex flex-col justify-between max-h-[200px] max-w-[245px] relative overflow-hidden",
+                cardColor,
+                isDisabled && "opacity-70 grayscale-[80%] hover:opacity-100 hover:grayscale-0",
                 className,
             )}
             onClick={onClick}
-            title={isPublished ? title : `${title} (Status: ${status})`} 
+            title={isPublished ? title : `${title} (Status: ${status})`}
         >
             {/* --- Container de Badges --- */}
             <div className="absolute top-3 left-3 z-10 flex flex-col items-start gap-1.5">
@@ -130,26 +130,26 @@ export function FileItem({
                     </Badge>
                 )}
             </div>
-            
+
             {/* --- Menu Dropdown --- */}
             {isEditing && (
                 <div className="absolute top-2 right-2 z-20">
                     <DropdownMenu>
                         <DropdownMenuTrigger
                             asChild
-                            onClick={(e) => e.stopPropagation()} 
+                            onClick={(e) => e.stopPropagation()}
                         >
                             <button className="p-1.5 rounded-full text-white/90 hover:bg-white/25 transition-colors">
                                 <MoreVertical className="w-5 h-5" />
                             </button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent 
-                            align="end" 
+                        <DropdownMenuContent
+                            align="end"
                             className="bg-white/90 backdrop-blur-md"
-                            onClick={(e) => e.stopPropagation()} 
+                            onClick={(e) => e.stopPropagation()}
                         >
                             <DropdownMenuItem
-                                disabled={!canToggleHide} 
+                                disabled={!canToggleHide}
                                 onClick={() => onToggleOculto?.(id)}
                                 className="cursor-pointer font-medium"
                                 title={!canToggleHide ? "Apenas contextos publicados podem ser ocultados" : (estaOculto ? "Tornar Visível" : "Ocultar Contexto")}
@@ -164,27 +164,27 @@ export function FileItem({
                     </DropdownMenu>
                 </div>
             )}
-            
+
             {!isPublished && (
-                 <Clock className="absolute -right-2 -bottom-2 w-20 h-20 text-black/10 z-0" strokeWidth={1.5} />
+                <Clock className="absolute -right-2 -bottom-2 w-20 h-20 text-black/10 z-0" strokeWidth={1.5} />
             )}
 
             <div className={cn(
                 "flex justify-center mb-4 z-10",
-                (!isPublished || estaOculto) && "mt-6" 
-            )}> 
-                { (config as any).svg ? (
+                (!isPublished || estaOculto) && "mt-6"
+            )}>
+                {(config as any).svg ? (
                     <Image src={(config as any).svg} alt={config.label} width={40} height={40} />
                 ) : IconComponent ? (
                     <IconComponent className="h-10 w-10 text-white" />
-                ) : null }
+                ) : null}
             </div>
 
             {/* Título e Data */}
-            <div className="text-center mb-4 z-10"> 
+            <div className="text-center mb-4 z-10">
                 <h3 className={cn("font-medium text-lg leading-tight truncate px-2", textColor)} title={title}>{title}</h3>
             </div>
-            <div className={cn("flex items-center justify-center gap-2 z-10", "text-white/90")}> 
+            <div className={cn("flex items-center justify-center gap-2 z-10", "text-white/90")}>
                 <Calendar className="h-4 w-4" />
                 <time dateTime={insertedDate} className="text-sm">
                     {new Date(insertedDate).toLocaleDateString("pt-BR")}

@@ -36,7 +36,7 @@ export const mockData: Contexto[] = [
         email: "pedro.augusto02@gmail.com",
         title: "Monitoramento Financeiro COAPES", // nome -> title
         status: StatusContexto.AguardandoGerente, // situacao -> status
-        type: "excel", // docType -> type
+        type: "planilha", // docType -> type
         gerencia: "Gerência de Gestão Ensino e Serviço",
         insertedDate: "2025-08-02T10:00:00Z", // data -> insertedDate
         description: "Relatório detalhado contendo o monitoramento dos repasses financeiros...", // detalhes -> description
@@ -50,7 +50,7 @@ export const mockData: Contexto[] = [
         email: "luizaalcan_1234@yahoo.com.br",
         title: "Emendas Parlamentares - 2025",
         status: StatusContexto.AguardandoCorrecao,
-        type: "excel",
+        type: "planilha",
         gerencia: "Gerência de Planejamento em Saúde",
         insertedDate: "2025-08-03T11:30:00Z",
         description: "Planilha com a relação de todas as emendas parlamentares...",

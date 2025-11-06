@@ -85,7 +85,7 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="bg-white w-full drop-shadow-md sticky top-0 z-30">
+      <header className="bg-white w-full drop-shadow-md sticky top-0 z-50">
         <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6"> 
           {/* Botão Menu (Esquerda) */}
           <button
