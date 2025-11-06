@@ -30,10 +30,8 @@ import Autoplay from "embla-carousel-autoplay";
 
 // Tipos e Dados
 import type { FileType } from "@/components/contextosCard/contextoCard";
-// CORREÇÃO: Importa IndicadorDetailsPayload para o type guard
-import type { AbaAtiva, DetalhesContexto, NomeIcone, Versao, SubmitData, IndicadorDetailsPayload } from "@/components/popups/addContextoModal/types";
+import type { AbaAtiva, DetalhesContexto, NomeIcone, Versao, SubmitData, IndicadorDetailsPayload, TipoGrafico } from "@/components/popups/addContextoModal/types";
 import { diretoriasConfig } from "@/constants/diretorias"; 
-import { mockGraphs } from "@/constants/graphData"; 
 // Tipos Unificados
 import { Contexto, StatusContexto, HistoricoEvento } from "@/components/validar/typesDados";
 // Importar o Serviço
@@ -80,12 +78,12 @@ export default function GerenciaPage() {
 
     // --- EFEITO PARA BUSCAR DADOS DA GERÊNCIA ---
     useEffect(() => {
-        if (id && resolved?.gerencia.nome) { 
+        if (id) { 
             const carregarDados = async () => {
                 try {
                     setIsLoading(true);
                     setError(null);
-                    const dados = await getContextosPorGerencia(resolved.gerencia.nome); 
+                    const dados = await getContextosPorGerencia(id); 
                     setTodosOsContextos(dados);
                 } catch (err: any) {
                     console.error("Erro ao buscar dados da gerência:", err);
@@ -98,11 +96,8 @@ export default function GerenciaPage() {
         } else if (!id) {
              setError("ID da gerência não encontrado na URL.");
              setIsLoading(false);
-        } else if (id && !resolved) {
-             setError(`Gerência com ID "${id}" não encontrada na configuração.`);
-             setIsLoading(false);
         }
-    }, [id, resolved]); 
+    }, [id]); 
 
 
     // --- HOOK DE STALENESS ---
@@ -132,34 +127,70 @@ export default function GerenciaPage() {
     });
 
 
-    // --- LÓGICA DE FILTRAGEM ---
+    // --- LÓGICA DE FILTRAGEM CORRIGIDA ---
     const handleSelectedTypesChange = (type: FileType) => {
         setSelectedTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]);
     };
 
-    const filteredContexts = useMemo(() => {
+    // FILTRO 1: Para Carrossel de Indicadores
+    const filteredIndicators = useMemo(() => {
+        return todosOsContextos.filter(ctx => {
+            if (ctx.type !== 'indicador') return false;
+            
+            const matchesSearch = ctx.title.toLowerCase().includes(debouncedSearchValue.toLowerCase());
+            // APENAS PUBLICADOS
+            const matchesStatus = ctx.status === StatusContexto.Publicado;
+            // Modo de edição (isEditing=true) mostra os ocultos
+            const matchesVisibility = (modo === 'edicao') || !ctx.estaOculto;
+            
+            return matchesStatus && matchesVisibility && matchesSearch;
+        });
+    }, [todosOsContextos, debouncedSearchValue, modo]); 
+
+    // FILTRO 2: Para Carrossel de Dashboards
+    const filteredDashboards = useMemo(() => {
+        return todosOsContextos.filter(ctx => {
+            if (ctx.type !== 'dashboard') return false;
+            
+            const matchesSearch = ctx.title.toLowerCase().includes(debouncedSearchValue.toLowerCase());
+            // APENAS PUBLICADOS
+            const matchesStatus = ctx.status === StatusContexto.Publicado;
+            // Modo de edição (isEditing=true) mostra os ocultos
+            const matchesVisibility = (modo === 'edicao') || !ctx.estaOculto;
+
+            return matchesStatus && matchesVisibility && matchesSearch;
+        });
+    }, [todosOsContextos, debouncedSearchValue, modo]);
+
+    // FILTRO 3: Para a Grelha de Ficheiros (Painel de Contextos)
+    const filteredFiles = useMemo(() => {
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
         return todosOsContextos.filter(file => {
+
+            // *** CORREÇÃO: Exclui tipos que vão para os carrosséis ***
+            if (file.type === 'dashboard' || file.type === 'indicador') {
+                return false;
+            }
+            // *** FIM DA CORREÇÃO ***
+            
+            // Filtros de Pesquisa, Abas e Tipos (aplicam-se a todos na grelha)
             const matchesSearch = file.title.toLowerCase().includes(debouncedSearchValue.toLowerCase());
             const matchesTab = activeTab === 'todas' || new Date(file.insertedDate) >= sevenDaysAgo;
             const matchesType = selectedTypes.length === 0 || selectedTypes.includes(file.type);
-            
-            const matchesStatus = modo === 'edicao' || file.status === StatusContexto.Publicado;
-            const matchesVisibility = modo === 'edicao' || !file.estaOculto;
 
+            // Filtros de Status e Visibilidade (dependentes do modo)
+            // Em modo de edição, mostra PENDENTES. Em modo de visualização, mostra SÓ PUBLICADOS.
+            const matchesStatus = (modo === 'edicao') || file.status === StatusContexto.Publicado;
+            // Em modo de edição, mostra OCULTOS. Em modo de visualização, mostra SÓ VISÍVEIS.
+            const matchesVisibility = (modo === 'edicao') || !file.estaOculto;
+
+            // Aplicar todos os filtros
             return matchesStatus && matchesVisibility && matchesSearch && matchesTab && matchesType;
         });
     }, [debouncedSearchValue, activeTab, selectedTypes, todosOsContextos, modo]);
-
-    const filteredIndicators = useMemo(() => {
-        return filteredContexts.filter(ctx => ctx.type === 'indicador');
-    }, [filteredContexts]); 
-
-    const filteredFiles = useMemo(() => {
-        return filteredContexts.filter(ctx => ctx.type !== 'indicador');
-    }, [filteredContexts]);
+    // --- FIM DA LÓGICA DE FILTRAGEM CORRIGIDA ---
 
 
     // --- HANDLERS DE EVENTOS ---
@@ -175,13 +206,10 @@ export default function GerenciaPage() {
         setArquivoAnexadoPorDrop(null); 
     };
 
-    // --- (INÍCIO DA CORREÇÃO 1) ---
-    // Adiciona a função que estava faltando
     const handleCloseViewModal = () => {
         setModalVisualizacaoAberto(false);
         setFicheiroSelecionado(null);
     };
-    // --- (FIM DA CORREÇÃO 1) ---
     
     const lidarComCriarNovaVersao = (dadosDoContextoAntigo: DetalhesContexto) => {
         setDadosParaEditar(dadosDoContextoAntigo);
@@ -194,7 +222,6 @@ export default function GerenciaPage() {
     };
 
     const mapContextToIndicatorProps = (indicator: Contexto) => {
-        // CORREÇÃO 5: Usa o type guard 'IndicadorDetailsPayload'
         if (indicator.type !== 'indicador' || !indicator.payload) {
             return {
                 id: indicator.id,
@@ -215,7 +242,6 @@ export default function GerenciaPage() {
             };
         }
         
-        // CORREÇÃO 5: Remove o 'as any'
         const payload = indicator.payload as IndicadorDetailsPayload; 
         
         const iconName = (payload.icone || "Heart") as NomeIcone;
@@ -264,50 +290,51 @@ export default function GerenciaPage() {
         setModalVisualizacaoAberto(true);
     };
 
-    // --- (INÍCIO DA CORREÇÃO 3 & 4) ---
     const aoSubmeterConteudo = (dados: SubmitData) => {
         console.log("Novo conteúdo recebido:", dados);
         
         let title: string | undefined;
         let description: string | undefined;
         let fileType: FileType = dados.type; 
-        let payload: any = null; // 'any' evitado, mas necessário para o payload genérico do Contexto
+        let payload: any = null;
         let url: string | undefined = undefined;
+        let chartType: TipoGrafico | undefined = undefined;
 
-        // Usa 'switch' para verificar 'dados.type' e acessar o payload com segurança
         switch (dados.type) {
             case 'contexto':
                 title = dados.payload.title;
                 description = dados.payload.details;
-                fileType = dados.payload.fileType || 'doc'; // Pega o tipo de arquivo real
+                fileType = dados.payload.fileType || 'doc'; 
                 url = dados.payload.url;
-                payload = dados.payload.file; // Ou o que for relevante
+                payload = dados.payload.file; 
                 break;
             case 'dashboard':
                 title = dados.payload.title;
                 description = dados.payload.details;
                 fileType = 'dashboard';
-                payload = dados.payload.dataset; // Passa o dataset
+                payload = dados.payload.dataset; 
+                chartType = dados.payload.type;
                 break;
             case 'indicador':
                 title = dados.payload.titulo;
                 description = dados.payload.descricao;
                 fileType = 'indicador';
-                payload = dados.payload; // Passa o payload completo do indicador
+                payload = dados.payload; 
                 break;
         }
 
-        if (title) { // Verifica se o título foi encontrado
+        if (title) { 
             const novoContexto: Contexto = {
                  id: `new-ctx-${Math.random()}`,
-                 title: title, // <-- Usa a variável segura
-                 type: fileType, // <-- Usa o tipo de arquivo correto
+                 title: title, 
+                 type: fileType, 
                  insertedDate: new Date().toISOString(),
                  status: StatusContexto.AguardandoGerente,
-                 description: description, // <-- Usa a variável segura
-                 url: url, // <-- Usa a variável segura
-                 payload: payload, // <-- Passa o payload correto
-                 gerencia: resolved?.gerencia.nome,
+                 description: description, 
+                 url: url, 
+                 payload: payload, 
+                 chartType: chartType, 
+                 gerencia: resolved?.gerencia.id, 
                  solicitante: "Usuário Atual (Mock)",
                  email: "usuario@mock.com",
                  estaOculto: false,
@@ -318,14 +345,12 @@ export default function GerenciaPage() {
         }
         fecharModalAdicionar();
     };
-    // --- (FIM DA CORREÇÃO 3 & 4) ---
 
     const aoClicarArquivo = (ficheiro: Contexto) => {
         setFicheiroSelecionado(ficheiro); 
         setModalVisualizacaoAberto(true);
     };
     
-    // (Handlers de visibilidade e drag-n-drop - sem alteração)
     const lidarComAlternarVisibilidadeContexto = (contextoId: string) => {
         const contexto = todosOsContextos.find(f => f.id === contextoId);
         if (!contexto) return;
@@ -394,7 +419,6 @@ export default function GerenciaPage() {
 
     const { diretoria, gerencia } = resolved || {}; 
 
-    // (Função interna de renderização de conteúdo - sem alteração)
     const renderContent = () => {
         if (isLoading) {
             return (
@@ -425,20 +449,29 @@ export default function GerenciaPage() {
                 {/* Seção Indicadores */}
                 <div className="mb-16">
                     {(() => {
-                        if (itemsIndicadores.length === 0 && modo === 'visualizacao') {
-                           return <div className="text-sm text-center text-gray-500 py-4">(Nenhum indicador publicado)</div>;
+                        // Não renderiza a seção se estiver vazia (visualização) ou só tiver o botão (edição)
+                        if (itemsIndicadores.length === 0 || (itemsIndicadores.length === 1 && modo === 'edicao' && itemsIndicadores[0].key === 'add-indicator')) {
+                           if (modo === 'visualizacao') {
+                               return <div className="text-sm text-center text-gray-500 py-4">(Nenhum indicador publicado)</div>;
+                           }
+                           // Em modo de edição, mostra só o botão
+                           return (
+                                <div className="flex justify-center items-center gap-4 flex-wrap">
+                                    {itemsIndicadores}
+                                </div>
+                           );
                         }
+                        
+                        // Se houver mais de 4 (e não for edição), usa carrossel
                         if (itemsIndicadores.length > 4 && modo === 'visualizacao') {
                             return (
-                                // --- (INÍCIO DA CORREÇÃO 2) ---
                                 <Carousel 
                                     plugins={[autoplayPlugin.current]} 
                                     opts={{ align: "start", loop: true }} 
                                     className="w-full max-w-full mx-auto" 
                                     onMouseEnter={autoplayPlugin.current.stop} 
-                                    onMouseLeave={() => autoplayPlugin.current.play()} // <-- Corrigido
+                                    onMouseLeave={autoplayPlugin.current.play}
                                 >
-                                {/* --- (FIM DA CORREÇÃO 2) --- */}
                                     <CarouselContent className="-ml-4">
                                         {itemsIndicadores.map((item, index) => (
                                             <CarouselItem key={index} className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
@@ -449,6 +482,8 @@ export default function GerenciaPage() {
                                 </Carousel>
                             );
                         }
+                        
+                        // Senão, usa grid
                         return (
                             <div className="flex justify-center items-center gap-4 flex-wrap">
                                 {itemsIndicadores}
@@ -480,7 +515,10 @@ export default function GerenciaPage() {
                             <SearchX className="w-16 h-16 text-gray-400 mb-4" />
                             <h3 className="text-xl font-semibold text-gray-700">Nenhum Contexto Encontrado</h3>
                             <p className="text-gray-500 mt-2 max-w-md">
-                                Não há contextos publicados que correspondam aos filtros.
+                                {searchValue || selectedTypes.length > 0 ?
+                                 "Não há contextos que correspondam aos filtros aplicados." :
+                                 "Não há contextos (arquivos, links, etc.) publicados para esta gerência."
+                                }
                             </p>
                         </div>
                     )}
@@ -504,10 +542,9 @@ export default function GerenciaPage() {
                 dadosIniciais={dadosParaEditar}
                 arquivoAnexado={arquivoAnexadoPorDrop} 
             />
-            {/* --- (CORREÇÃO 1: Nome da função) --- */}
             <VisualizarContextoModal 
                 estaAberto={modalVisualizacaoAberto} 
-                aoFechar={handleCloseViewModal}  // <-- Corrigido
+                aoFechar={handleCloseViewModal}
                 dadosDoContexto={ficheiroSelecionado} 
                 aoCriarNovaVersao={lidarComCriarNovaVersao} 
                 perfil={perfil} 
@@ -559,13 +596,16 @@ export default function GerenciaPage() {
                     </button>
                 </div>
 
-                {/* Seção Dashboard (sem alteração) */}
+                {/* Seção Dashboard (Carrossel) */}
                 <div className="flex items-center gap-1 mb-7">
                     <h1 className="text-3xl mr-2 text-blue-600">Dashboard</h1>
                     {modo === 'edicao' && <AddDashboardButton onClick={() => abrirModal('dashboard')} />}
                 </div>
                 <div className="mb-10">
-                    <GerenciaDashboardPreview graphs={mockGraphs} gerencia={id} />
+                    <GerenciaDashboardPreview 
+                        graphs={filteredDashboards} 
+                        gerencia={id} 
+                    />
                 </div>
                 
                 {/* Conteúdo Principal (Indicadores e Contextos) */}

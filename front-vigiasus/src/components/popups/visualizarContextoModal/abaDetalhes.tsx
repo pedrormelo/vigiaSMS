@@ -1,8 +1,7 @@
 // src/components/popups/visualizarContextoModal/AbaDetalhes.tsx
 "use client";
 
-import React, { useState, useEffect } from 'react';
-// 1. IMPORTAÇÕES
+import React, { useState, useEffect, useMemo } from 'react'; // <-- 1. IMPORTAR useMemo
 import {
     Download, Info, MessageCircle, ChevronDown, User,
     FileType as FileIcon, Building, Send, Clock
@@ -13,13 +12,13 @@ import { cn } from '@/lib/utils';
 import StatusBanner from '@/components/ui/status-banner';
 import IconeDocumento from '@/components/validar/iconeDocumento';
 import { VisualizadorDeConteudo } from './visualizadorDeConteudo';
-// 2. TIPAGEM
 import type { DetalhesContexto, Versao } from '@/components/popups/addContextoModal/types';
 import type { DocType } from '@/components/validar/typesDados';
 import { StatusContexto } from '@/components/validar/typesDados';
 import { showSuccessToast } from '@/components/ui/Toasts';
+import { diretoriasConfig } from '@/constants/diretorias'; // <-- 2. IMPORTAR DIRETORIAS
 
-// 3. PROPS
+// Props (Interface permanece a mesma)
 interface AbaDetalhesProps {
     dados: DetalhesContexto;
     aoFazerDownload: () => void;
@@ -29,8 +28,6 @@ interface AbaDetalhesProps {
     zoomLevel: number;
     isFromHistory?: boolean;
     aoAlternarVisibilidadeContexto?: (contextoId: string) => void;
-
-    // Props específicas da Validação
     isValidationView?: boolean;
     podeAgir?: boolean;
     versaoEmJulgamento?: Versao | null;
@@ -48,9 +45,25 @@ const AbaDetalhes = ({
     const [mostrarInputComentario, setMostrarInputComentario] = useState(false);
     const [novoComentario, setNovoComentario] = useState("");
 
+    // --- 3. LÓGICA DE TRADUÇÃO DE ID PARA NOME ---
+    const nomeGerencia = useMemo(() => {
+        if (!dados.gerencia) return 'N/A';
+        // Itera por todas as diretorias
+        for (const key of Object.keys(diretoriasConfig)) {
+            const diretoria = diretoriasConfig[key];
+            // Procura no array de gerências de cada diretoria
+            const gerenciaEncontrada = diretoria.gerencias.find(g => g.id === dados.gerencia);
+            if (gerenciaEncontrada) {
+                return gerenciaEncontrada.nome; // Retorna o nome completo
+            }
+        }
+        return dados.gerencia; // Fallback para o ID se não for encontrado
+    }, [dados.gerencia]);
+    // --- FIM DA LÓGICA DE TRADUÇÃO ---
+
+
     const handleEnviarComentario = () => {
         if (!novoComentario.trim()) return;
-        // Lógica de envio (ex: API call)
         console.log("Enviando comentário para o contexto:", dados.id, "Comentário:", novoComentario);
         showSuccessToast("Comentário enviado.");
         setNovoComentario("");
@@ -66,12 +79,9 @@ const AbaDetalhes = ({
     const [versaoSelecionadaId, setVersaoSelecionadaId] = useState<number | null>(null);
 
     useEffect(() => {
-        // Se estiver na tela de validação e tiver uma versão em julgamento,
-        // força a seleção para essa versão.
         if (isValidationView && versaoEmJulgamento) {
             setVersaoSelecionadaId(versaoEmJulgamento.id);
         } else {
-            // Comportamento padrão (pág. gerência): seleciona a mais recente visível
             const idInicial = versaoMaisRecenteVisivel?.id || versaoMaisRecenteGeral?.id || null;
             setVersaoSelecionadaId(idInicial);
         }
@@ -83,8 +93,7 @@ const AbaDetalhes = ({
     const podeComentar = !isEditing && !isFromHistory;
 
     const isPublished = dados.status === StatusContexto.Publicado;
-    // --- (CORREÇÃO 1) ---
-    const canToggleHide = dados.estaOculto ? true : isPublished; // Corrigido de 'estaOcularo' para 'estaOculto'
+    const canToggleHide = dados.estaOculto ? true : isPublished;
     const tipoLabel = dados.type === 'indicador' ? 'Indicador' : 'Contexto';
 
     return (
@@ -93,9 +102,8 @@ const AbaDetalhes = ({
             <div className="space-y-6 overflow-y-auto pr-4 h-full pb-4 scrollbar-custom">
 
                 {/* --- SEÇÃO DO BANNER --- */}
-
+                {/* (Nenhuma alteração nesta seção) */}
                 {isValidationView && podeAgir && versaoEmJulgamento ? (
-                    // 1. BANNER AMARELO (Validação)
                     <StatusBanner
                         variant='warning'
                         title={`Em Julgamento: ${versaoEmJulgamento.nome}`}
@@ -109,7 +117,6 @@ const AbaDetalhes = ({
                     </StatusBanner>
 
                 ) : !isValidationView && versoesDisponiveis.length > 0 && versaoSelecionada ? (
-                    // 2. BANNER VERDE/LARANJA (Visualização Padrão - pág. Gerência)
                     (() => {
                         const isMostRecent = versaoSelecionadaId === (versaoMaisRecenteGeral?.id || -1);
                         const variant = isMostRecent ? 'success' : 'warning';
@@ -133,6 +140,7 @@ const AbaDetalhes = ({
 
 
                 {/* Dropdown de Seleção de Versão (Desabilitado na validação) */}
+                {/* (Nenhuma alteração nesta seção) */}
                 {listaDropdown.length > 1 && (
                     <div className="mt-4">
                         <label htmlFor="version-select" className={cn(
@@ -165,6 +173,7 @@ const AbaDetalhes = ({
                 )}
 
                 {/* Mensagem de Versões Ocultas */}
+                {/* (Nenhuma alteração nesta seção) */}
                 {listaDropdown.length === 0 && !isEditing && versoesDisponiveis.length > 0 && (
                     <StatusBanner variant='info' title='Versões Ocultas'>
                         <p className="text-sm pl-3">Todas as versões visíveis deste contexto estão ocultas no momento.</p>
@@ -173,6 +182,7 @@ const AbaDetalhes = ({
 
 
                 {/* Card do Arquivo/Contexto (com Switch de Ocultar) */}
+                {/* (Nenhuma alteração nesta seção) */}
                 <div className="bg-gray-50 rounded-2xl border border-gray-200 p-4 space-y-4">
                     <div className="flex items-center justify-between gap-4">
                         <div className="flex items-center gap-4 flex-1 min-w-0">
@@ -184,6 +194,20 @@ const AbaDetalhes = ({
                         </div>
 
                         <div className="flex-shrink-0 flex items-center gap-2">
+                            
+                            {!['indicador', 'link'].includes(dados.type) && (
+                                <Button 
+                                    onClick={aoFazerDownload} 
+                                    variant="default" 
+                                    size="sm" 
+                                    className="rounded-2xl bg-blue-600 hover:bg-blue-700 text-white flex-shrink-0 px-3 py-4.5 text-sm font-semibold" 
+                                    title="Baixar arquivo original"
+                                >
+                                    <Download className="w-4 h-4" />
+                                    <span className="hidden sm:inline">Baixar</span>
+                                </Button>
+                            )}
+
                             {podeComentar && (
                                 <button
                                     type="button"
@@ -192,7 +216,7 @@ const AbaDetalhes = ({
                                     aria-controls="comentario-panel"
                                     aria-expanded={mostrarInputComentario}
                                     className={cn(
-                                        "relative flex items-center gap-2 px-3 py-2 font-semibold rounded-2xl transition-all",
+                                        "relative flex items-center gap-2 px-3 py-2 font-semibold rounded-2xl transition-all text-sm",
                                         mostrarInputComentario
                                             ? "bg-white text-blue-700 border border-blue-300 shadow-sm ring-2 ring-blue-300"
                                             : "bg-blue-600 text-white hover:bg-blue-700"
@@ -210,9 +234,9 @@ const AbaDetalhes = ({
                                 </button>
                             )}
                         </div>
+
                     </div>
 
-                    {/* Switch de Visibilidade (para o Contexto Inteiro) */}
                     {isEditing && aoAlternarVisibilidadeContexto && (
                         <div className="border-t border-gray-200 pt-3 flex items-center justify-between gap-3">
                             <label
@@ -240,6 +264,7 @@ const AbaDetalhes = ({
                 </div>
 
                 {/* --- SEÇÃO DE COMENTÁRIO --- */}
+                {/* (Nenhuma alteração nesta seção) */}
                 {mostrarInputComentario && (
                     <div className="animate-fade-in" id="comentario-panel">
                         <div className="bg-gray-50 rounded-2xl border border-gray-200 p-4 space-y-3 shadow-inner">
@@ -273,12 +298,11 @@ const AbaDetalhes = ({
                     </div>
                 )}
 
-                {/* Detalhes Adicionais (COM CORREÇÕES) */}
+                {/* --- 4. DETALHES ADICIONAIS (MODIFICADO) --- */}
                 <div className="border-t border-gray-200 pt-6">
                     <h3 className="text-base font-semibold text-gray-700 mb-4">Detalhes Adicionais</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
 
-                        {/* --- (CORREÇÃO 2) --- */}
                         <div className="flex items-center gap-3 p-3 rounded-lg">
                             <User className="w-5 h-5 text-gray-500 flex-shrink-0" />
                             <div>
@@ -287,7 +311,6 @@ const AbaDetalhes = ({
                             </div>
                         </div>
 
-                        {/* --- (CORREÇÃO 3) --- */}
                         <div className="flex items-center gap-3 p-3 rounded-lg">
                             <FileIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
                             <div>
@@ -296,19 +319,23 @@ const AbaDetalhes = ({
                             </div>
                         </div>
 
-                        {/* --- (CORREÇÃO 4) --- */}
+                        {/* ESTA É A ALTERAÇÃO PRINCIPAL */}
                         <div className="flex items-center gap-3 p-3 rounded-lg sm:col-span-2">
                             <Building className="w-5 h-5 text-gray-500 flex-shrink-0" />
                             <div>
                                 <p className="font-medium text-gray-800">Gerência Solicitante</p>
-                                <p className="text-gray-600 truncate" title={dados.gerencia}>{dados.gerencia || 'N/A'}</p>
+                                {/* Exibe o nome traduzido (ex: "Gerência de Planejamento") */}
+                                <p className="text-gray-600 truncate" title={nomeGerencia}>{nomeGerencia}</p> 
                             </div>
                         </div>
+                        {/* --- FIM DA ALTERAÇÃO PRINCIPAL --- */}
+
                     </div>
                 </div>
             </div>
 
             {/* Coluna da Direita: Visualizador */}
+            {/* (Nenhuma alteração nesta seção) */}
             <div className="h-full min-h-0">
                 <VisualizadorDeConteudo
                     tipo={dados.type}
