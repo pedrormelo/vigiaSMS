@@ -80,7 +80,7 @@ export const mockData: Contexto[] = [
         gerencia: "Gerência de Vigilância em Saúde",
         data: "2025-08-29T09:00:00Z", // Mudar data
         detalhes: "Dashboard com a apresentação do relatório epidemiológico da última semana.",
-         historico: [
+        historico: [
             { data: "2025-08-29T09:00:00Z", autor: "Carlos Eduardo", acao: "Submetido para análise." },
             // Removido histórico de cancelamento
         ],
