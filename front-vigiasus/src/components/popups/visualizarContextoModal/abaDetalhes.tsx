@@ -1,7 +1,7 @@
 // src/components/popups/visualizarContextoModal/AbaDetalhes.tsx
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react'; // <-- 1. IMPORTAR useMemo
+import React, { useState, useEffect, useMemo } from 'react';
 import {
     Download, Info, MessageCircle, ChevronDown, User,
     FileType as FileIcon, Building, Send, Clock
@@ -16,8 +16,10 @@ import type { DetalhesContexto, Versao } from '@/components/popups/addContextoMo
 import type { DocType } from '@/components/validar/typesDados';
 import { StatusContexto } from '@/components/validar/typesDados';
 import { showSuccessToast } from '@/components/ui/Toasts';
-import { diretoriasConfig } from '@/constants/diretorias'; // <-- 2. IMPORTAR DIRETORIAS
+import { diretoriasConfig } from '@/constants/diretorias'; 
 import { FileType } from '@/components/contextosCard/contextoCard';
+// [MODIFICAÇÃO] Importar o config de status para usar no banner
+import { statusConfig } from '@/components/validar/colunasTable/statusConfig';
 
 // Props (Interface permanece a mesma)
 interface AbaDetalhesProps {
@@ -46,21 +48,17 @@ const AbaDetalhes = ({
     const [mostrarInputComentario, setMostrarInputComentario] = useState(false);
     const [novoComentario, setNovoComentario] = useState("");
 
-    // --- 3. LÓGICA DE TRADUÇÃO DE ID PARA NOME ---
     const nomeGerencia = useMemo(() => {
         if (!dados.gerencia) return 'N/A';
-        // Itera por todas as diretorias
         for (const key of Object.keys(diretoriasConfig)) {
             const diretoria = diretoriasConfig[key];
-            // Procura no array de gerências de cada diretoria
             const gerenciaEncontrada = diretoria.gerencias.find(g => g.id === dados.gerencia);
             if (gerenciaEncontrada) {
-                return gerenciaEncontrada.nome; // Retorna o nome completo
+                return gerenciaEncontrada.nome; 
             }
         }
-        return dados.gerencia; // Fallback para o ID se não for encontrado
+        return dados.gerencia; 
     }, [dados.gerencia]);
-    // --- FIM DA LÓGICA DE TRADUÇÃO ---
 
 
     const handleEnviarComentario = () => {
@@ -71,82 +69,161 @@ const AbaDetalhes = ({
         setMostrarInputComentario(false);
     };
 
-    // --- LÓGICA DE VERSÕES ---
+    // --- LÓGICA DE VERSÕES (REFINADA v3) ---
     const versoesDisponiveis = dados.versoes || [];
-    const versoesVisiveis = isEditing ? versoesDisponiveis : versoesDisponiveis.filter(v => !v.estaOculta);
-    const versaoMaisRecenteGeral = versoesDisponiveis.length > 0 ? versoesDisponiveis.reduce((a, b) => a.id > b.id ? a : b) : null;
-    const versaoMaisRecenteVisivel = versoesVisiveis.length > 0 ? versoesVisiveis.reduce((a, b) => a.id > b.id ? a : b) : null;
+    
+    // 1. Encontrar todas as versões publicadas
+    const versoesPublicadas = useMemo(() => 
+        versoesDisponiveis.filter(v => v.status === StatusContexto.Publicado), 
+        [versoesDisponiveis]
+    );
+
+    // 2. Filtrar publicadas visíveis (respeitando isEditing)
+    // [FIX v4] Apenas publicadas E não ocultas (a menos que editando)
+    const versoesPublicadasEVisiveis = useMemo(() =>
+        versoesPublicadas.filter(v => isEditing || !v.estaOculta),
+        [versoesPublicadas, isEditing]
+    );
+        
+    // 3. Encontrar a MAIS RECENTE GERAL (para fallback e modo edição)
+    const versaoMaisRecenteGeral = useMemo(() => 
+        versoesDisponiveis.length > 0 ? versoesDisponiveis.reduce((a, b) => a.id > b.id ? a : b) : null,
+        [versoesDisponiveis]
+    );
+        
+    // 4. Encontrar a MAIS RECENTE PUBLICADA E VISÍVEL (a "verdadeira" mais recente para visualização)
+    const versaoMaisRecentePublicadaVisivel = useMemo(() =>
+        versoesPublicadasEVisiveis.length > 0 ? versoesPublicadasEVisiveis.reduce((a, b) => a.id > b.id ? a : b) : null,
+        [versoesPublicadasEVisiveis]
+    );
 
     const [versaoSelecionadaId, setVersaoSelecionadaId] = useState<number | null>(null);
 
+    // 5. [FIX v4] useEffect atualizado para selecionar a versão correta no carregamento
     useEffect(() => {
         if (isValidationView && versaoEmJulgamento) {
+            // 1. Prioridade: Modo Validação foca na versão em julgamento
             setVersaoSelecionadaId(versaoEmJulgamento.id);
+        
+        } else if (isEditing && versaoMaisRecenteGeral) { 
+            // 2. Modo Edição: Foca na versão mais recente de *todas* (publicada ou não)
+            setVersaoSelecionadaId(versaoMaisRecenteGeral.id);
+
+        } else if (versaoMaisRecentePublicadaVisivel) { 
+            // 3. Modo Visualização: Foca na mais recente PUBLICADA e VISÍVEL
+            setVersaoSelecionadaId(versaoMaisRecentePublicadaVisivel.id);
+        
+        } else if (versaoMaisRecenteGeral) {
+            // 4. Fallback (ex: Modo Visualização, mas só tem versões pendentes ou ocultas)
+            setVersaoSelecionadaId(versaoMaisRecenteGeral.id);
         } else {
-            const idInicial = versaoMaisRecenteVisivel?.id || versaoMaisRecenteGeral?.id || null;
-            setVersaoSelecionadaId(idInicial);
+            setVersaoSelecionadaId(null);
         }
-    }, [isValidationView, versaoEmJulgamento, versaoMaisRecenteVisivel, versaoMaisRecenteGeral, dados, isEditing]);
+    }, [isValidationView, versaoEmJulgamento, isEditing, versaoMaisRecenteGeral, versaoMaisRecentePublicadaVisivel]);
 
 
     const versaoSelecionada = versoesDisponiveis.find(v => v.id === versaoSelecionadaId);
-    const listaDropdown = (isEditing ? versoesDisponiveis : versoesVisiveis);
-    const podeComentar = !isEditing && !isFromHistory;
+    
+    // 6. [FIX v4] A lista do Dropdown SÓ deve conter versões publicadas e visíveis (no modo visualização)
+    const listaDropdown = isEditing ? versoesDisponiveis : versoesPublicadasEVisiveis;
 
-    const isPublished = dados.status === StatusContexto.Publicado;
-    const canToggleHide = dados.estaOculto ? true : isPublished;
+    const podeComentar = !isEditing && !isFromHistory;
+    const isPublishedGeral = dados.status === StatusContexto.Publicado; // Status GERAL do contexto
+    const canToggleHide = isPublishedGeral; // Switch de Ocultar *Contexto*
     const tipoLabel = dados.type === 'indicador' ? 'Indicador' : 'Contexto';
+
+    // --- [INÍCIO DA MODIFICAÇÃO v4] ---
+    const renderBanner = () => {
+        // 1. Prioridade: Visão de Validação (Obrigatória)
+        if (isValidationView && podeAgir && versaoEmJulgamento) {
+            return (
+                <StatusBanner
+                    variant='warning'
+                    title={`Em Julgamento: ${versaoEmJulgamento.nome}`}
+                >
+                    <div className="text-sm pl-3 leading-relaxed">
+                        <div className="font-medium text-yellow-900">Esta é a versão aguardando sua análise.</div>
+                        <div className="text-xs mt-1 text-yellow-800">
+                            por {versaoEmJulgamento.autor} em {new Date(versaoEmJulgamento.data).toLocaleDateString('pt-BR')}
+                        </div>
+                    </div>
+                </StatusBanner>
+            );
+        }
+
+        // Se nenhuma versão estiver selecionada (carregando/vazio), não mostra banner
+        if (!versaoSelecionada) return null;
+
+        // 2. Prioridade: A versão *selecionada* NÃO está publicada
+        // (Este é o caso da imagem: v2 selecionada, status 'Aguardando Diretor')
+        if (versaoSelecionada.status !== StatusContexto.Publicado) {
+            // Pega a cor/texto do statusConfig
+            const configStatus = statusConfig[versaoSelecionada.status || StatusContexto.AguardandoGerente] || { text: versaoSelecionada.status, className: "bg-yellow-100 text-yellow-800" };
+            
+            // Define o banner com base na cor (vermelho para correção, amarelo para pendente)
+            const variant = (versaoSelecionada.status === StatusContexto.AguardandoCorrecao) ? 'danger' : 'warning';
+            const title = (versaoSelecionada.status === StatusContexto.AguardandoCorrecao) ? 'Aguardando Correção' : 'Contexto em Análise';
+
+            return (
+                <StatusBanner
+                    variant={variant}
+                    title={title}
+                >
+                    <div className="text-sm pl-3 leading-relaxed">
+                        <div className={cn("font-medium", variant === 'danger' ? 'text-red-900' : 'text-yellow-900')}>
+                            {versaoSelecionada.nome}
+                        </div>
+                        <div className={cn("text-xs mt-1", variant === 'danger' ? 'text-red-800' : 'text-yellow-800')}>
+                            Status atual: {configStatus.text}
+                        </div>
+                    </div>
+                </StatusBanner>
+            );
+        }
+
+        // 3. Prioridade: Contexto Publicado (Visão normal de versões)
+        if (!isValidationView) {
+            // [FIX] A comparação de "mais recente" usa 'versaoMaisRecentePublicadaVisivel'
+            const isMostRecentPublicada = versaoSelecionadaId === (versaoMaisRecentePublicadaVisivel?.id || -1);
+            const variant = isMostRecentPublicada ? 'success' : 'warning';
+            const title = isMostRecentPublicada ? 'Visualizando a versão mais recente' : 'Visualizando uma versão anterior';
+
+            return (
+                <StatusBanner
+                    variant={versaoSelecionada.estaOculta ? 'warning' : variant}
+                    title={versaoSelecionada.estaOculta ? 'Versão Oculta' : title}
+                >
+                    <div className="text-sm pl-3 leading-relaxed">
+                        <div className="font-medium">{versaoSelecionada.nome}</div>
+                        <div className="text-xs mt-1">por {versaoSelecionada.autor} em {new Date(versaoSelecionada.data).toLocaleDateString('pt-BR')}</div>
+                        {versaoSelecionada.estaOculta && <p className="text-xs font-semibold text-orange-700 mt-1">Esta versão está oculta.</p>}
+                    </div>
+                </StatusBanner>
+            );
+        }
+        
+        // 4. Fallback (não deve acontecer)
+        return null;
+    };
+    // --- [FIM DA MODIFICAÇÃO v4] ---
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full animate-fade-in p-1">
             {/* Coluna da Esquerda: Informações */}
             <div className="space-y-6 overflow-y-auto pr-4 h-full pb-4 scrollbar-custom">
 
-                {/* --- SEÇÃO DO BANNER --- */}
-                {/* (Nenhuma alteração nesta seção) */}
-                {isValidationView && podeAgir && versaoEmJulgamento ? (
-                    <StatusBanner
-                        variant='warning'
-                        title={`Em Julgamento: ${versaoEmJulgamento.nome}`}
-                    >
-                        <div className="text-sm pl-3 leading-relaxed">
-                            <div className="font-medium text-yellow-900">Esta é a versão aguardando sua análise.</div>
-                            <div className="text-xs mt-1 text-yellow-800">
-                                por {versaoEmJulgamento.autor} em {new Date(versaoEmJulgamento.data).toLocaleDateString('pt-BR')}
-                            </div>
-                        </div>
-                    </StatusBanner>
-
-                ) : !isValidationView && versoesDisponiveis.length > 0 && versaoSelecionada ? (
-                    (() => {
-                        const isMostRecent = versaoSelecionadaId === (versaoMaisRecenteGeral?.id || -1);
-                        const variant = isMostRecent ? 'success' : 'warning';
-                        const title = isMostRecent ? 'Visualizando a versão mais recente' : 'Visualizando uma versão anterior';
-
-                        return (
-                            <StatusBanner
-                                variant={versaoSelecionada.estaOculta ? 'warning' : variant}
-                                title={versaoSelecionada.estaOculta ? 'Versão Oculta' : title}
-                            >
-                                <div className="text-sm pl-3 leading-relaxed">
-                                    <div className="font-medium">{versaoSelecionada.nome}</div>
-                                    <div className="text-xs mt-1">por {versaoSelecionada.autor} em {new Date(versaoSelecionada.data).toLocaleDateString('pt-BR')}</div>
-                                    {versaoSelecionada.estaOculta && <p className="text-xs font-semibold text-orange-700 mt-1">Esta versão está oculta.</p>}
-                                </div>
-                            </StatusBanner>
-                        );
-                    })()
-                ) : null}
+                {/* --- [MODIFICAÇÃO] Renderiza o banner da v4 --- */}
+                {renderBanner()}
                 {/* --- FIM DA SEÇÃO DO BANNER --- */}
 
 
-                {/* Dropdown de Seleção de Versão (Desabilitado na validação) */}
-                {/* (Nenhuma alteração nesta seção) */}
+                {/* Dropdown de Seleção de Versão */}
+                {/* [FIX v4] A lista (listaDropdown) agora é filtrada corretamente para modo visualização */}
                 {listaDropdown.length > 1 && (
                     <div className="mt-4">
                         <label htmlFor="version-select" className={cn(
                             "block text-sm font-medium text-gray-700 mb-1",
-                            isValidationView && "text-gray-400"
+                            (isValidationView) && "text-gray-400"
                         )}>
                             Visualizar outra versão:
                         </label>
@@ -157,10 +234,13 @@ const AbaDetalhes = ({
                                 onChange={(e) => setVersaoSelecionadaId(Number(e.target.value))}
                                 className={cn(
                                     "w-full appearance-none bg-white border border-gray-300 rounded-2xl py-2 px-3 pr-8 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500",
-                                    isValidationView && "disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500"
+                                    (isValidationView) && "disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500"
                                 )}
                                 disabled={isValidationView}
-                                title={isValidationView ? "A seleção de versão é desabilitada durante a validação." : "Selecionar versão"}
+                                title={
+                                    isValidationView ? "A seleção de versão é desabilitada durante a validação." :
+                                    "Selecionar versão"
+                                }
                             >
                                 {listaDropdown.sort((a, b) => b.id - a.id).map(versao => (
                                     <option key={versao.id} value={versao.id}>
@@ -174,20 +254,18 @@ const AbaDetalhes = ({
                 )}
 
                 {/* Mensagem de Versões Ocultas */}
-                {/* (Nenhuma alteração nesta seção) */}
-                {listaDropdown.length === 0 && !isEditing && versoesDisponiveis.length > 0 && (
+                {/* [FIX v4] Compara 'listaDropdown' (filtrada) com 'versoesPublicadas' (não filtrada por oculto) */}
+                {listaDropdown.length === 0 && versoesPublicadas.length > 0 && !isEditing && (
                     <StatusBanner variant='info' title='Versões Ocultas'>
-                        <p className="text-sm pl-3">Todas as versões visíveis deste contexto estão ocultas no momento.</p>
+                        <p className="text-sm pl-3">Todas as versões publicadas deste contexto estão ocultas no momento.</p>
                     </StatusBanner>
                 )}
 
 
                 {/* Card do Arquivo/Contexto (com Switch de Ocultar) */}
-                {/* (Nenhuma alteração nesta seção) */}
                 <div className="bg-gray-50 rounded-2xl border border-gray-200 p-4 space-y-4">
                     <div className="flex items-center justify-between gap-4">
                         <div className="flex items-center gap-4 flex-1 min-w-0">
-                            {/* mudei de doctype para filetype */}
                             <IconeDocumento type={dados.type as FileType} />
                             <div className="min-w-0">
                                 <p className="font-semibold text-gray-800 text-base leading-tight truncate" title={dados.title}>{dados.title}</p>
@@ -245,7 +323,7 @@ const AbaDetalhes = ({
                                 htmlFor="ocultar-contexto"
                                 className={cn(
                                     "text-sm font-medium text-gray-700",
-                                    !canToggleHide && "text-gray-400"
+                                    !canToggleHide && "text-gray-400" 
                                 )}
                             >
                                 Ocultar {tipoLabel}
@@ -254,10 +332,10 @@ const AbaDetalhes = ({
                                 id="ocultar-contexto"
                                 checked={dados.estaOculto || false}
                                 onCheckedChange={() => aoAlternarVisibilidadeContexto(dados.id)}
-                                disabled={!canToggleHide}
+                                disabled={!canToggleHide} 
                                 title={
                                     !canToggleHide
-                                        ? "Apenas contextos publicados podem ser ocultados"
+                                        ? `Apenas ${tipoLabel}s com status 'Publicado' podem ter a visibilidade alterada.`
                                         : (dados.estaOculto ? `Desocultar ${tipoLabel}` : `Ocultar ${tipoLabel}`)
                                 }
                             />
@@ -266,7 +344,6 @@ const AbaDetalhes = ({
                 </div>
 
                 {/* --- SEÇÃO DE COMENTÁRIO --- */}
-                {/* (Nenhuma alteração nesta seção) */}
                 {mostrarInputComentario && (
                     <div className="animate-fade-in" id="comentario-panel">
                         <div className="bg-gray-50 rounded-2xl border border-gray-200 p-4 space-y-3 shadow-inner">
@@ -300,7 +377,7 @@ const AbaDetalhes = ({
                     </div>
                 )}
 
-                {/* --- 4. DETALHES ADICIONAIS (MODIFICADO) --- */}
+                {/* DETALHES ADICIONAIS */}
                 <div className="border-t border-gray-200 pt-6">
                     <h3 className="text-base font-semibold text-gray-700 mb-4">Detalhes Adicionais</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
@@ -321,23 +398,18 @@ const AbaDetalhes = ({
                             </div>
                         </div>
 
-                        {/* ESTA É A ALTERAÇÃO PRINCIPAL */}
                         <div className="flex items-center gap-3 p-3 rounded-lg sm:col-span-2">
                             <Building className="w-5 h-5 text-gray-500 flex-shrink-0" />
                             <div>
                                 <p className="font-medium text-gray-800">Gerência Solicitante</p>
-                                {/* Exibe o nome traduzido (ex: "Gerência de Planejamento") */}
                                 <p className="text-gray-600 truncate" title={nomeGerencia}>{nomeGerencia}</p> 
                             </div>
                         </div>
-                        {/* --- FIM DA ALTERAÇÃO PRINCIPAL --- */}
-
                     </div>
                 </div>
             </div>
 
             {/* Coluna da Direita: Visualizador */}
-            {/* (Nenhuma alteração nesta seção) */}
             <div className="h-full min-h-0">
                 <VisualizadorDeConteudo
                     tipo={dados.type}

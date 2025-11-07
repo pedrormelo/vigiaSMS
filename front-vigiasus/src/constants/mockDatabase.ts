@@ -349,7 +349,9 @@ export const allContextosMock: Contexto[] = [
         estaOculto: false,
         historico: histPublicadoCompleto,
         versoes: [
-            { id: 1, nome: "Resultados 2025 (v1).pptx", data: "2025-09-05", autor: "GPU", estaOculta: false, status: StatusContexto.Publicado, historico: histPublicadoCompleto }
+            { id: 1, nome: "Resultados 2025 (v1).pptx", data: "2025-09-05", autor: "GPU", estaOculta: false, status: StatusContexto.Publicado, historico: histPublicadoCompleto },
+            { id: 2, nome: "Resultados 2025 (v2).pptx", data: "2025-09-05", autor: "GPU", estaOculta: false, status: StatusContexto.AguardandoDiretor, historico: histAguardandoGerente }
+
         ], 
     },
     { 

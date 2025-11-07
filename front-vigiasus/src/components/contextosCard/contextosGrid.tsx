@@ -40,6 +40,7 @@ export function FileGrid({
                 type={file.type} // <-- Correto
                 insertedDate={file.insertedDate} // <-- Correto
                 status={file.status} // <-- Correto
+                versoes={file.versoes} // <--- [MODIFICAÇÃO] Adicionado prop 'versoes'
                 estaOculto={file.estaOculto} 
                 isEditing={isEditing} 
                 onClick={() => onFileClick?.(file)}

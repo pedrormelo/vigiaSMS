@@ -9,9 +9,12 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
-import { StatusContexto } from "@/components/validar/typesDados"
+// [MODIFICAÇÃO] Importar 'Versao'
+import { StatusContexto, Versao } from "@/components/validar/typesDados" 
 import StatusBadge from "@/components/alerts/statusBadge"
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@/components/ui/badge" 
+// [MODIFICAÇÃO] Importar o statusConfig para usar as cores e textos corretos
+import { statusConfig } from "@/components/validar/colunasTable/statusConfig"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -19,7 +22,6 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-// 1. TIPO ATUALIZADO: "excel" -> "planilha"
 export type FileType = "pdf" | "doc" | "dashboard" | "planilha" | "resolucao" | "link" | "leis" | "indicador" | "apresentacao"
 
 interface FileItemProps {
@@ -28,6 +30,7 @@ interface FileItemProps {
     type: FileType
     insertedDate: string
     status: StatusContexto;
+    versoes?: Versao[]; // <-- Prop 'versoes'
     className?: string
     onClick?: () => void
     isEditing?: boolean;
@@ -35,7 +38,7 @@ interface FileItemProps {
     onToggleOculto?: (id: string) => void;
 }
 
-// 2. CONFIG ATUALIZADA: "excel" -> "planilha"
+// Config permanece a mesma...
 export const fileTypeConfig = {
     pdf: {
         color: "bg-[#C53131] hover:bg-[#A02020]",
@@ -63,10 +66,10 @@ export const fileTypeConfig = {
         svg: "/icons/CONTEXTOS/INDC.svg",
         label: "Indicador",
     },
-    planilha: { // <-- Renomeado de "excel"
+    planilha: { 
         color: "bg-[#008C32] hover:bg-[#006B24]",
         svg: "/icons/CONTEXTOS/PLA-1.svg",
-        label: "Planilha", // <-- Label atualizada
+        label: "Planilha", 
     },
     resolucao: {
         color: "bg-[#E2712A] hover:bg-[#C95A2A]",
@@ -91,13 +94,13 @@ export function FileItem({
     type,
     insertedDate,
     status,
+    versoes = [], // <-- Recebe 'versoes'
     className,
     onClick,
     isEditing = false,
     estaOculto = false,
     onToggleOculto
 }: FileItemProps) {
-    // (O restante do componente permanece o mesmo, pois ele lê a 'config' dinamicamente)
     const config = fileTypeConfig[type]
     const IconComponent = (config as any).icon
 
@@ -106,6 +109,36 @@ export function FileItem({
     const cardColor = config.color;
     const textColor = "text-white";
     const canToggleHide = estaOculto ? true : isPublished;
+
+    // <--- [MELHORIA v2] Início da nova lógica de badge (Mais Responsiva)
+    let combinedEditingBadge: React.ReactNode = null;
+    
+    if (isEditing && !isPublished) {
+        // 1. Determinar a versão
+        const numVersoes = versoes?.length || 1;
+        const isNovaVersao = numVersoes > 1;
+
+        // Texto Abreviado (para o badge) e Completo (para o title)
+        const versaoTextoAbreviado = `v${numVersoes}`;
+        const versaoTextoCompleto = isNovaVersao ? `v${numVersoes} - Nova Versão` : `v1 - Novo Envio`;
+
+        // 2. Obter o status config (cor e texto)
+        const configStatus = statusConfig[status] || { text: status, className: "bg-gray-100 text-gray-800" };
+        const statusTexto = configStatus.text;
+        
+        // 3. Criar o badge combinado
+        combinedEditingBadge = (
+            <Badge 
+                className={cn("font-bold", configStatus.className)} 
+                // O title (hover) tem o texto completo
+                title={`${versaoTextoCompleto}. Status: ${statusTexto}`} 
+            >
+                {/* O texto visível é abreviado */}
+                {versaoTextoAbreviado} ({statusTexto})
+            </Badge>
+        );
+    }
+    // <--- [MELHORIA v2] Fim da nova lógica
 
     return (
         <div
@@ -118,11 +151,17 @@ export function FileItem({
             onClick={onClick}
             title={isPublished ? title : `${title} (Status: ${status})`}
         >
-            {/* --- Container de Badges --- */}
+            {/* --- Container de Badges (LÓGICA ATUALIZADA) --- */}
             <div className="absolute top-3 left-3 z-10 flex flex-col items-start gap-1.5">
-                {!isPublished && (
-                    <StatusBadge status={status} />
-                )}
+                
+                {/* [MELHORIA] Renderiza OU o badge de edição OU o badge de status normal */}
+                {combinedEditingBadge ? (
+                    combinedEditingBadge // Mostra "v1 (Aguardando Gerente)"
+                ) : !isPublished ? (
+                    <StatusBadge status={status} /> // Mostra "Aguardando Gerente" (modo visualização)
+                ) : null}
+                
+                {/* Badge de Oculto (Sempre mostra se oculto) */}
                 {estaOculto && (
                     <Badge className="bg-gray-700/80 text-white border-none py-1 px-2" title="Este contexto está oculto">
                         <EyeOff className="w-3.5 h-3.5 mr-1" />
@@ -169,9 +208,11 @@ export function FileItem({
                 <Clock className="absolute -right-2 -bottom-2 w-20 h-20 text-black/10 z-0" strokeWidth={1.5} />
             )}
 
+            {/* [MELHORIA] O padding-top (mt-6) só é aplicado se houver badges visíveis */}
             <div className={cn(
                 "flex justify-center mb-4 z-10",
-                (!isPublished || estaOculto) && "mt-6"
+                // Aplica padding se (não publicado) OU (oculto)
+                (!isPublished || estaOculto) && "mt-6" 
             )}>
                 {(config as any).svg ? (
                     <Image src={(config as any).svg} alt={config.label} width={40} height={40} />

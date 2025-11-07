@@ -37,9 +37,17 @@ const AbaVersoes = ({
     const podeCriarNovaVersao = perfil === 'membro' && isEditing;
     const todasAsVersoes = dados.versoes || [];
     
-    const versoesParaExibir = isEditing ? todasAsVersoes : todasAsVersoes.filter(v => !v.estaOculta);
+    const versoesParaExibir = todasAsVersoes.filter(versao => {
+        if (isEditing) {
+            return true;
+        }
+        if (versao.estaOculta) {
+            return false;
+        }
+        return versao.status === StatusContexto.Publicado;
+    });
     
-    const numeroDeVersoesVisiveis = todasAsVersoes.filter(v => !v.estaOculta).length;
+    // --- [MODIFICAÇÃO] A lógica 'numeroDeVersoesVisiveis' foi movida para dentro do map ---
 
     return (
         <div className="animate-fade-in p-1 sm:p-4 h-full overflow-y-auto scrollbar-custom">
@@ -68,8 +76,37 @@ const AbaVersoes = ({
             {versoesParaExibir.length > 0 ? (
                 <div className="space-y-3">
                     {versoesParaExibir.sort((a, b) => b.id - a.id).map((versao: Versao) => {
-                        const isUltimaVersaoVisivel = !versao.estaOculta && numeroDeVersoesVisiveis === 1;
                         const isExpandida = versao.id === versaoExpandidaId;
+                        
+                        // --- INÍCIO DA CORREÇÃO ---
+                        // 1. Verificar se a versão está publicada
+                        const isVersaoPublicada = versao.status === StatusContexto.Publicado;
+                        
+                        // 2. Calcular o número total de versões que são publicadas E não estão ocultas
+                        const numeroTotalDeVersoesPublicadasVisiveis = todasAsVersoes.filter(
+                            v => v.status === StatusContexto.Publicado && !v.estaOculta
+                        ).length;
+
+                        // 3. O switch só pode ser alterado se a versão estiver publicada
+                        const canToggle = isVersaoPublicada;
+                        
+                        // 4. Também não pode ser alterado se for a única versão visível
+                        const isUnicaVisivel = isVersaoPublicada && !versao.estaOculta && numeroTotalDeVersoesPublicadasVisiveis === 1;
+
+                        // 5. O switch é desabilitado se (não pode ser alternado) OU (é a única visível)
+                        const isSwitchDisabled = !canToggle || isUnicaVisivel;
+
+                        // 6. Determinar o tooltip (title) correto
+                        let switchTitle = "";
+                        if (isUnicaVisivel) {
+                            switchTitle = "Não é possível ocultar a única versão visível.";
+                        } else if (!canToggle) {
+                            // Esta é a nova regra que corrige o problema da imagem
+                            switchTitle = "Apenas versões com status 'Publicado' podem ter a visibilidade alterada.";
+                        } else {
+                            switchTitle = versao.estaOculta ? "Clique para tornar visível" : "Clique para ocultar";
+                        }
+                        // --- FIM DA CORREÇÃO ---
                         
                         return (
                             <div
@@ -102,11 +139,13 @@ const AbaVersoes = ({
                                     {/* Switch de Ocultar Versão (Modo Edição) */}
                                     {isEditing && perfil === 'membro' && aoAlternarVisibilidadeVersao && (
                                         <div
-                                            className={cn("flex items-center gap-2 pr-2", isUltimaVersaoVisivel && "opacity-50 cursor-not-allowed")}
-                                            title={isUltimaVersaoVisivel ? "Não é possível ocultar a única versão visível." : (versao.estaOculta ? "Clique para tornar visível" : "Clique para ocultar")}
+                                            // 7. Aplicar o estilo de desabilitado ao container
+                                            className={cn("flex items-center gap-2 pr-2", isSwitchDisabled && "opacity-50 cursor-not-allowed")}
+                                            // 8. Aplicar o title dinâmico
+                                            title={switchTitle}
                                             onClick={(e) => e.stopPropagation()} 
                                         >
-                                            <label htmlFor={`switch-v${versao.id}`} className={cn(isUltimaVersaoVisivel ? "cursor-not-allowed" : "cursor-pointer")}>
+                                            <label htmlFor={`switch-v${versao.id}`} className={cn(isSwitchDisabled ? "cursor-not-allowed" : "cursor-pointer")}>
                                                 {versao.estaOculta ?
                                                     <EyeOff className="w-4 h-4 text-gray-500" /> :
                                                     <Eye className="w-4 h-4 text-blue-600" />
@@ -116,7 +155,8 @@ const AbaVersoes = ({
                                                 id={`switch-v${versao.id}`}
                                                 checked={!versao.estaOculta}
                                                 onCheckedChange={() => aoAlternarVisibilidadeVersao(versao.id)}
-                                                disabled={isUltimaVersaoVisivel}
+                                                // 9. Aplicar o disabled dinâmico
+                                                disabled={isSwitchDisabled}
                                                 aria-label={versao.estaOculta ? "Tornar versão visível" : "Ocultar versão"}
                                                 className='focus:ring-2 ring-blue-300 ring-offset-1'
                                             />
@@ -139,7 +179,7 @@ const AbaVersoes = ({
                 </div>
             ) : (
                 <p className="text-center text-gray-500 mt-8">
-                    {isEditing ? "Nenhuma versão encontrada." : "Nenhuma versão visível encontrada."}
+                    {isEditing ? "Nenhuma versão encontrada." : "Nenhuma versão publicada encontrada."}
                 </p>
             )}
         </div>
