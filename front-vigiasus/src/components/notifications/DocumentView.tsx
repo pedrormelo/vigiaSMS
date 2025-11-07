@@ -35,7 +35,6 @@ const ContextNotificationDetails: React.FC<Props> = ({
   const { title, description, type, relatedFileType, contextoId } = notification;
 
   const handleConfirmAndMarkAsRead = () => {
-    // ... (lógica existente, sem alterações) ...
      if (isRead) return;
     onMarkAsRead(notification.id);
     showSuccessToast("Notificação marcada como lida.");
@@ -96,7 +95,6 @@ const ContextNotificationDetails: React.FC<Props> = ({
                 <Button
                     onClick={handleConfirmAndMarkAsRead}
                     disabled={isRead}
-                    // --- AJUSTE AQUI: Adicionado rounded-full ---
                     className={cn(
                         "px-4 py-2 text-sm font-semibold rounded-2xl flex items-center gap-1.5 shadow-sm",
                         isRead

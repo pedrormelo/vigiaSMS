@@ -1,57 +1,94 @@
 // src/components/notifications/notificationsModal.tsx
 "use client";
 
-import { useState, useEffect } from "react";
-import { useNotifications } from "@/hooks/useNotifications";
-import { Notification } from "@/constants/types"; // Ajustado para usar types.ts
+import { useState, useEffect, useMemo } from "react";
+// NÃO VAI USAR o 'useNotifications' aqui
+import { Notification } from "@/constants/types";
 
-import NotificationList from "@/components/notifications/notificationList";
+import NotificationList, { type ActiveFilter } from "@/components/notifications/notificationList";
 import NotificationDetailView from "@/components/notifications/NotificationDetailView";
 import { Button } from "@/components/ui/button";
 import { Bell, Inbox, ArrowLeft, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// As props agora vêm do navbar.tsx
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   onOpenContextoDetails: (notification: Notification) => void;
+  
+  // Props que são passadas pelo navbar
+  notifications: Notification[];
+  isLoading: boolean;
+  isError: boolean;
+  readNotifications: Set<number>;
+  onMarkAsRead: (id: number) => void; // A função de marcar como lido
 }
 
-export default function NotificationsModal({ isOpen, onClose, onOpenContextoDetails }: Props) {
-  const { notifications, isLoading, isError } = useNotifications();
+export default function NotificationsModal({ 
+  isOpen, 
+  onClose, 
+  onOpenContextoDetails,
+  //  Receber as props
+  notifications,
+  isLoading,
+  isError,
+  readNotifications,
+  onMarkAsRead
+}: Props) {
+  
+  //  Estados locais (apenas para a UI do modal)
   const [activeNotification, setActiveNotification] =
     useState<Notification | null>(null);
-  const [readNotifications, setReadNotifications] = useState<Set<number>>(
-    new Set()
-  );
+  const [activeFilter, setActiveFilter] = useState<ActiveFilter>("all");
 
-  useEffect(() => {
-    // Mantém a lógica de selecionar a primeira não lida ou a primeira da lista ao abrir
-    if (isOpen && notifications.length > 0 && !activeNotification) {
-        const firstUnread = notifications.find(n => !readNotifications.has(n.id));
-        setActiveNotification(firstUnread || notifications[0]);
-    } else if (!isOpen) {
-        // Limpa a notificação ativa ao fechar o modal
-        setActiveNotification(null);
+  // Lógica de filtro (usa as props 'notifications' e 'readNotifications')
+  const totalUnreadCount = useMemo(() => {
+    return notifications.filter(n => !readNotifications.has(n.id)).length;
+  }, [notifications, readNotifications]);
+
+  const filteredNotifications = useMemo(() => {
+    if (activeFilter === "unread") {
+      return notifications.filter(n => !readNotifications.has(n.id));
     }
-  }, [isOpen, notifications, readNotifications]); // Reage à abertura/fechamento e mudanças
+    if (activeFilter === "system") {
+      return notifications.filter(n => n.type === "sistema");
+    }
+    return notifications; // Filtro "all"
+  }, [notifications, activeFilter, readNotifications]);
 
-  // --- AJUSTE AQUI ---
-  // Esta função agora APENAS define a notificação ativa para visualização interna
+
+  // 6. Handler de seleção (USA A PROP 'onMarkAsRead')
   const handleSelectNotification = (id: number) => {
     const notification = notifications.find((notif) => notif.id === id);
     if (notification) {
-      setActiveNotification(notification); // Apenas atualiza o estado interno
-      // Não chama mais onOpenContextoDetails aqui
+      setActiveNotification(notification);
+      // Regra de negócio: SÓ marca como lido ao CLICAR
+      if (!readNotifications.has(id)) {
+        onMarkAsRead(id); // <--- CHAMA A FUNÇÃO DO NAVBAR
+      }
     }
   };
-  // --- FIM DO AJUSTE ---
 
-  const handleMarkAsRead = (id: number) => {
-    setReadNotifications((prevReadIds) => new Set(prevReadIds).add(id));
-  };
+  // useEffect (para selecionar o primeiro item da lista filtrada)
+  useEffect(() => {
+    if (!isOpen) {
+      setActiveNotification(null);
+      return;
+    }
 
-  // --- Componentes de Estado (EmptyState, LoadingState, ErrorState) - permanecem iguais ---
+    const activeIsFilteredOut = activeNotification && !filteredNotifications.some(n => n.id === activeNotification.id);
+
+    if ((!activeNotification || activeIsFilteredOut) && filteredNotifications.length > 0) {
+      const firstItem = filteredNotifications[0];
+      setActiveNotification(firstItem); 
+    } else if (filteredNotifications.length === 0) {
+      setActiveNotification(null);
+    }
+  }, [isOpen, filteredNotifications, activeNotification]);
+
+
+  // --- Componentes de Estado ---
   const EmptyState = () => (
     <div className="flex flex-col items-center justify-center h-full text-center text-gray-500 p-8">
       <Inbox className="h-16 w-16 mb-4 text-gray-300" />
@@ -77,32 +114,39 @@ export default function NotificationsModal({ isOpen, onClose, onOpenContextoDeta
 
   // --- Renderização do Conteúdo Principal ---
   const renderContent = () => {
+    // Usa 'isLoading' e 'isError' vindos das props
     if (isLoading) return <LoadingState />;
     if (isError) return <ErrorState />;
+    
+    // Usa 'notifications' vindo das props
     if (notifications.length === 0) return <EmptyState />;
 
-    // Não precisamos mais de 'notificationToShow', usamos diretamente 'activeNotification'
      const isCurrentNotificationRead = activeNotification
-      ? readNotifications.has(activeNotification.id)
+      ? readNotifications.has(activeNotification.id) // Usa 'readNotifications' das props
       : false;
 
     return (
         <div className="flex flex-1 min-h-0 h-full">
+            {/* Lista da Esquerda */}
             <div className="w-[400px] flex-shrink-0 border-r border-gray-200 overflow-hidden flex flex-col">
                 <NotificationList
-                    notifications={notifications}
+                    notifications={filteredNotifications} // Lista filtrada
                     activeNotificationId={activeNotification?.id || null}
-                    onSelectNotification={handleSelectNotification} // Continua passando esta
-                    readNotifications={readNotifications}
+                    onSelectNotification={handleSelectNotification} // Handler atualizado
+                    readNotifications={readNotifications} // 'readNotifications' das props
+                    totalUnreadCount={totalUnreadCount} // Contagem local baseada nas props
+                    activeFilter={activeFilter}
+                    onFilterChange={setActiveFilter}
                 />
             </div>
+            {/* Detalhe da Direita */}
             <div className="flex-1 overflow-hidden flex flex-col">
-                {/* Passa a função onOpenContextoDetails do Navbar para o DetailView */}
                 <NotificationDetailView
-                    notification={activeNotification} // Passa a notificação ativa atual
+                    notification={activeNotification}
                     isRead={isCurrentNotificationRead}
-                    onMarkAsRead={handleMarkAsRead}
-                    onOpenContexto={onOpenContextoDetails} // <-- Passando a função recebida do Navbar
+                    onOpenContexto={onOpenContextoDetails}
+                    // A prop 'onMarkAsRead' foi removida daqui,
+                    // pois só o clique na lista (handleSelectNotification) é que marca como lido.
                 />
             </div>
         </div>
@@ -111,16 +155,21 @@ export default function NotificationsModal({ isOpen, onClose, onOpenContextoDeta
 
   if (!isOpen) return null;
 
-  // --- Estrutura do Modal (mantida) ---
+  // --- Estrutura do Modal ---
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+    <div 
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      data-state={isOpen ? "open" : "closed"}
+    >
         <div className={cn(
             "bg-white rounded-[40px] w-full max-w-6xl h-[90vh]",
-            "flex flex-col shadow-2xl overflow-hidden"
+            "flex flex-col shadow-2xl overflow-hidden",
+            "data-[state=open]:animate-in data-[state=open]:fade-in-0",
+            "data-[state=closed]:animate-out data-[state=closed]:fade-out-0"
          )}>
+            
             {/* Cabeçalho */}
              <div className="bg-gradient-to-r from-[#0037C1] to-[#00BDFF] px-8 py-4 flex items-center justify-between rounded-t-[40px] flex-shrink-0">
-                {/* ... (código do cabeçalho) ... */}
                  <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center">
                         <Bell className="w-6 h-6 text-white" />
@@ -130,27 +179,23 @@ export default function NotificationsModal({ isOpen, onClose, onOpenContextoDeta
                     </h2>
                 </div>
                 <Button 
-                size="icon" 
-                variant="ghost"
-                onClick={onClose} 
-                className="w-9 h-9 bg-white/15 text-white hover:bg-white/30 hover:text-white/50 rounded-2xl flex-shrink-0"> <ArrowLeft 
-                className="w-6 h-6" /> </Button>
-               
+                    size="icon" 
+                    variant="ghost"
+                    onClick={onClose} 
+                    className="w-9 h-9 bg-white/15 text-white hover:bg-white/30 hover:text-white/50 rounded-2xl flex-shrink-0"
+                > 
+                    <ArrowLeft className="w-6 h-6" /> 
+                </Button>
             </div>
+            
             {/* Conteúdo */}
             <div className="flex-1 overflow-hidden">
                 {renderContent()}
             </div>
         </div>
+        
+        {/* Estilos */}
         <style>{`
-            /* ... (outros estilos) ... */
-            @keyframes fadeIn {
-                /* REMOVIDO: transform: scale(0.95); */
-                from { opacity: 0; }
-                /* REMOVIDO: transform: scale(1); */
-                to { opacity: 1; }
-            }
-            .animate-fade-in { animation: fadeIn 0.2s ease-out forwards; }
             .scrollbar-custom::-webkit-scrollbar { width: 8px; }
             .scrollbar-custom::-webkit-scrollbar-thumb { background: linear-gradient(to bottom, #60a5fa, #2563eb); border-radius: 8px; }
             .scrollbar-custom::-webkit-scrollbar-track { background: transparent; }

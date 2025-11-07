@@ -2,22 +2,18 @@
 "use client";
 
 import { Notification } from "@/constants/notificationsData";
-import { toast } from "sonner";
 import Image from "next/image";
-import { CheckCircle2, Info } from "lucide-react"; // Usar Info para o ícone principal
-import { Button } from "@/components/ui/button"; // Usar Button
-import { showSuccessToast } from "@/components/ui/Toasts"; // Usar o Toast padrão
+// 1. IMPORTAÇÕES REMOVIDAS (Button, showSuccessToast, CheckCircle2)
+import { Info } from "lucide-react"; // Usar Info para o ícone principal
 
 interface NotificationProps {
   notification: Notification;
 }
 
 export default function SystemUpdateView({ notification }: NotificationProps) {
-  const handleUnderstood = () => {
-    // Lógica para marcar como entendido (pode ser enviada para o backend no futuro)
-    showSuccessToast("Atualização marcada como entendida.");
-    // Aqui você pode querer chamar uma função passada por props para atualizar o estado global
-  };
+  
+  // 2. FUNÇÃO 'handleUnderstood' REMOVIDA
+  // (A lógica agora está no clique da lista, no notificationsModal.tsx)
 
   return (
     // Adicionado padding, flex layout, e scroll se necessário
@@ -45,15 +41,8 @@ export default function SystemUpdateView({ notification }: NotificationProps) {
             </div>
         </div>
 
-        {/* Rodapé com botão */}
-        <div className="flex justify-end pt-4 border-t border-gray-200">
-            <Button
-                onClick={handleUnderstood}
-                className="px-6 py-2.5 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition font-semibold"
-            >
-                Marcar como Lido
-            </Button>
-        </div>
+        {/* 3. RODAPÉ COM BOTÃO REMOVIDO */}
+        
     </div>
   );
 }

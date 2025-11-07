@@ -1,19 +1,15 @@
 // src/components/navbar/navbar.tsx
 "use client";
-import { useState } from "react";
+// 1. ADICIONAR 'useMemo'
+import { useState, useMemo } from "react"; 
 import Image from "next/image";
 import Link from "next/link";
 import Sidebar from "./Sidebar";
 import { Menu, Loader2 } from 'lucide-react';
 import NotificationsModal from "@/components/notifications/notificationsModal";
 
-// --- INÍCIO DA CORREÇÃO ---
-// 1. REMOVER A IMPORTAÇÃO DO MODAL ANTIGO
-// import DetalhesContextoModal from "@/components/popups/detalhesContextoModal"; // <-- REMOVIDO
-
-// 2. ADICIONAR A IMPORTAÇÃO DO MODAL NOVO E CORRIGIDO
+// 2. MODAL NOVO (Sua correção)
 import { VisualizarContextoModal } from "@/components/popups/visualizarContextoModal"; 
-// --- FIM DA CORREÇÃO ---
 
 import { getContextoById } from "@/services/contextoService"; 
 import { Contexto } from "@/components/validar/typesDados"; 
@@ -21,10 +17,15 @@ import { Notification } from "@/constants/types";
 
 import UpdateStatusPopover from "./UpdateStatusPopover";
 
+// 3. ADICIONAR HOOK DE NOTIFICAÇÕES (Minha correção)
+import { useNotifications } from "@/hooks/useNotifications"; 
+
 export default function Navbar() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  // Simulação - buscar dados reais de notificação/atualização
-  const [unreadNotifications, setUnreadNotifications] = useState(5);
+  
+  // 4. REMOVER CONTAGEM FIXA (Minha correção)
+  // const [unreadNotifications, setUnreadNotifications] = useState(5); // <-- REMOVIDO
+  
   const [lastUpdateInfo, setLastUpdateInfo] = useState({
     relative: "há 2 horas", 
     label: "29/10/2025 09:15", 
@@ -38,6 +39,38 @@ export default function Navbar() {
   const [selectedContexto, setSelectedContexto] = useState<Contexto | null>(null);
   const [isLoadingContexto, setIsLoadingContexto] = useState(false);
   const userProfile: "diretor" | "gerente" | "membro" = "gerente";
+  
+  // --- INÍCIO DA CORREÇÃO DO CONTADOR (Minha correção) ---
+  // 5. PUXAR DADOS E ESTADO DE CARREGAMENTO AQUI
+  // (Renomeei para evitar conflito com 'isLoadingContexto')
+  const { 
+    notifications, 
+    isLoading: isLoadingNotifications, 
+    isError: isErrorNotifications 
+  } = useNotifications(); 
+  
+  // 6. LEVANTAR O ESTADO 'readNotifications' PARA CÁ
+  const [readNotifications, setReadNotifications] = useState<Set<number>>(
+    new Set()
+  );
+
+  // 7. DEFINIR A FUNÇÃO DE MARCAR COMO LIDO AQUI
+  const handleMarkAsRead = (id: number) => {
+    setReadNotifications((prevReadIds) => {
+      if (prevReadIds.has(id)) return prevReadIds; 
+      
+      const newSet = new Set(prevReadIds);
+      newSet.add(id);
+      return newSet;
+    });
+  };
+
+  // 8. CALCULAR A CONTAGEM NÃO LIDA AQUI (usando o estado local)
+  const totalUnreadCount = useMemo(() => {
+    return notifications.filter(n => !readNotifications.has(n.id)).length;
+  }, [notifications, readNotifications]);
+  // --- FIM DA CORREÇÃO DO CONTADOR ---
+
 
   const handleNotificationsClick = () => {
     setIsNotificationsOpen(true);
@@ -47,6 +80,7 @@ export default function Navbar() {
     setIsNotificationsOpen(false);
   };
 
+  // Esta função está ótima
   const handleOpenContextoDetails = async (notification: Notification) => {
     if (!notification.contextoId) return;
 
@@ -76,8 +110,6 @@ export default function Navbar() {
   const handleCloseDetalhesContexto = () => {
     setIsDetalhesContextoOpen(false);
     setSelectedContexto(null);
-    // Opcional: Reabrir notificações se desejar voltar para a lista
-    // setIsNotificationsOpen(true);
   };
 
 
@@ -128,7 +160,8 @@ export default function Navbar() {
               <button
                 onClick={handleNotificationsClick}
                 className="hover:opacity-70 p-1 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1" 
-                aria-label={`Notificações (${unreadNotifications} não lidas)`}
+                // 9. USAR A CONTAGEM CORRETA (Minha correção)
+                aria-label={`Notificações (${totalUnreadCount} não lidas)`} 
               >
                 <Image
                   src="/icons/sininho.svg"
@@ -138,12 +171,14 @@ export default function Navbar() {
                   className="w-6 h-6"
                 />
               </button>
-              {unreadNotifications > 0 && (
+              {/* 10. USAR A CONTAGEM CORRETA (Minha correção) */}
+              {totalUnreadCount > 0 && ( 
                 <div
                   className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full border-2 border-white text-white text-[10px] flex items-center justify-center font-bold pointer-events-none" 
                   aria-hidden="true" 
                 >
-                  {unreadNotifications > 9 ? '9+' : unreadNotifications} 
+                  {/* Lógica de 9+ */}
+                  {totalUnreadCount > 9 ? '9+' : totalUnreadCount} 
                 </div>
               )}
             </div>
@@ -155,21 +190,30 @@ export default function Navbar() {
       <Sidebar role={role} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       {/* Modal de Notificações */}
+      {/* 11. PASSAR TODAS AS PROPS (Minha correção) */}
       <NotificationsModal
         isOpen={isNotificationsOpen}
         onClose={handleCloseNotifications}
-        onOpenContextoDetails={handleOpenContextoDetails} 
+        onOpenContextoDetails={handleOpenContextoDetails}
+        
+        // Passar os dados do hook
+        notifications={notifications}
+        isLoading={isLoadingNotifications}
+        isError={isErrorNotifications}
+        
+        // Passar o estado de "lido" e a função para atualizá-lo
+        readNotifications={readNotifications}
+        onMarkAsRead={handleMarkAsRead}
       />
 
-      {/* --- INÍCIO DA CORREÇÃO --- */}
-      {/* 3. Renderizar o MODAL NOVO (VisualizarContextoModal) em vez do antigo */}
+      {/* --- CORREÇÃO DO MODAL (Sua correção) --- */}
+      {/* 12. Renderizar o MODAL NOVO (VisualizarContextoModal) */}
       <VisualizarContextoModal
         estaAberto={isDetalhesContextoOpen}
         aoFechar={handleCloseDetalhesContexto}
         dadosDoContexto={selectedContexto}
         perfil={userProfile} 
         isFromHistory={selectedContexto?.historico && selectedContexto.historico.length > 0} 
-        // Estes handlers são para a pág /validar, então não são necessários aqui
         onDeferir={undefined} 
         onIndeferir={undefined}
         onCorrigir={undefined}
