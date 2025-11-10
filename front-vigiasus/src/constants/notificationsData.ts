@@ -34,24 +34,24 @@ function mapContextoStatusToNotifStatus(status: StatusContexto): NotificationSta
  * @returns Uma string de descrição.
  */
 function generateNotificationDescription(contexto: Contexto): string {
-     switch (contexto.status) {
+    switch (contexto.status) {
         case StatusContexto.AguardandoGerente:
             return `Novo contexto "${contexto.title}" submetido por ${contexto.solicitante}. Aguardando sua análise.`;
         case StatusContexto.AguardandoDiretor:
             return `Contexto "${contexto.title}" aprovado pelo gerente. Aguardando sua análise.`;
         case StatusContexto.AguardandoCorrecao:
-             // Tenta extrair a justificativa do último evento do histórico
-             const ultimoHistorico = contexto.historico?.[contexto.historico.length - 1];
-             const motivo = ultimoHistorico?.acao.includes("Justificativa:")
-                 ? ultimoHistorico.acao.split("Justificativa:")[1]?.trim()
-                 : "Verificar comentários.";
+            // Tenta extrair a justificativa do último evento do histórico
+            const ultimoHistorico = contexto.historico?.[contexto.historico.length - 1];
+            const motivo = ultimoHistorico?.acao.includes("Justificativa:")
+                ? ultimoHistorico.acao.split("Justificativa:")[1]?.trim()
+                : "Verificar comentários.";
             return `Contexto "${contexto.title}" devolvido para correção. Motivo: ${motivo}`;
         case StatusContexto.Publicado:
-             return `O contexto "${contexto.title}" foi publicado com sucesso.`;
+            return `O contexto "${contexto.title}" foi publicado com sucesso.`;
         case StatusContexto.Deferido:
-             return `O contexto "${contexto.title}" foi deferido.`;
+            return `O contexto "${contexto.title}" foi deferido.`;
         case StatusContexto.Indeferido:
-             return `O contexto "${contexto.title}" foi indeferido.`;
+            return `O contexto "${contexto.title}" foi indeferido.`;
         default:
             return `Status do contexto "${contexto.title}": ${contexto.status}`;
     }
@@ -63,12 +63,17 @@ const mockCommentsContexto1: Comment[] = [
     { id: 102, author: "Pedro Augusto Lorenzo", text: "Ok, irei verificar e reenviar.", time: "10:35", date: "04/08/2025", isMyComment: false, role: "user" },
 ];
 const mockCommentsContexto2: Comment[] = [
-     { id: 201, author: "João Silva (Gerente)", text: "Falta a coluna 'Fonte do Recurso'. Por favor, adicione e reenvie.", time: "09:00", date: "04/08/2025", isMyComment: false, role: "gerencia" },
+    { id: 201, author: "Dr. Zelma Pessoa (Secretária Municipal)", text: "Falta a coluna 'Fonte do Recurso'. Por favor, adicione e reenvie.", time: "09:00", date: "04/08/2025", isMyComment: false, role: "secretaria" },
+    { id: 202, author: "Nilton (Diretor)", text: "Por favor, adicione e reenvie.", time: "09:10", date: "04/08/2025", isMyComment: false, role: "diretoria" },
+    { id: 203, author: "Lucas Machado (Gerente)", text: "Falta a coluna .", time: "09:20", date: "04/08/2025", isMyComment: false, role: "gerencia" },
+    { id: 204, author: "teste (zelma)", text: "Falta 'Fonte do Recurso'. Por favor, reenvie.", time: "09:30", date: "04/08/2025", isMyComment: false, role: "zelma" },
+    { id: 205, author: "João Silva (info)", text: "Falta Recurso adicione", time: "09:40", date: "04/08/2025", isMyComment: false, role: "info" },
 ];
 const mockCommentsContextoVoce: Comment[] = [
     { id: 301, author: "João Silva (Gerente)", text: "Aprovado. Encaminhando para diretoria.", time: "10:00", date: "06/08/2025", isMyComment: false, role: "gerencia" },
     { id: 302, author: "Você", text: "Obrigado, João! Fico no aguardo da aprovação final.", time: "10:05", date: "06/08/2025", isMyComment: true, role: "user" },
 ];
+
 
 /**
  * Coleta comentários e eventos de histórico para um determinado contexto.
@@ -88,8 +93,8 @@ function getCommentsForContexto(contexto: Contexto): Comment[] {
         contexto.historico.forEach(event => {
             // Verifica se é um evento de indeferimento/correção com justificativa
             const eDevolucao = event.acao.toLowerCase().includes("devolvido para correção") ||
-                               event.acao.toLowerCase().includes("análise gerente: indeferido") ||
-                               event.acao.toLowerCase().includes("análise diretor: indeferido");
+                event.acao.toLowerCase().includes("análise gerente: indeferido") ||
+                event.acao.toLowerCase().includes("análise diretor: indeferido");
 
             if (eDevolucao) {
                 let text = "Contexto devolvido para correção.";
@@ -98,10 +103,10 @@ function getCommentsForContexto(contexto: Contexto): Comment[] {
                 } else if (event.acao.includes("Motivo:")) {
                     text = event.acao.split("Motivo:")[1]?.trim() || text;
                 }
-                
+
                 const eventDate = new Date(event.data);
                 const commentId = eventDate.getTime() + Math.random();
-                
+
                 // Evita duplicar o comentário se ele já foi adicionado manualmente (ex: mockCommentsContexto2)
                 const alreadyExists = comments.some(c => c.author === event.autor && c.text.includes(text.substring(0, 30)));
 
@@ -114,7 +119,7 @@ function getCommentsForContexto(contexto: Contexto): Comment[] {
                         date: eventDate.toLocaleDateString('pt-BR'),
                         isMyComment: false,
                         role: event.autor.toLowerCase().includes("gerente") ? "gerencia" :
-                              event.autor.toLowerCase().includes("diretor") ? "diretoria" : "info",
+                            event.autor.toLowerCase().includes("diretor") ? "diretoria" : "info",
                     });
                 }
             }
@@ -147,13 +152,13 @@ let notificationIdCounter = 1;
 
 // 3. DEFINIR QUAIS STATUS SÃO "FECHADOS"
 const STATUS_FINALIZADOS = [
-  StatusContexto.Publicado,
-  StatusContexto.Indeferido
+    StatusContexto.Publicado,
+    StatusContexto.Indeferido
 ];
 
 // 4. FILTRAR A FONTE ÚNICA PARA PEGAR APENAS CONTEXTOS "ABERTOS"
 const contextosAbertos = allContextosMock.filter(
-  contexto => !STATUS_FINALIZADOS.includes(contexto.status)
+    contexto => !STATUS_FINALIZADOS.includes(contexto.status)
 );
 
 // 5. MAPEAR OS CONTEXTOS ABERTOS PARA NOTIFICAÇÕES
@@ -164,48 +169,48 @@ const dynamicNotifications: Notification[] = contextosAbertos
         const validRelatedFileTypes: Array<Notification['relatedFileType']> = ["doc", "planilha", "excel", "pdf", "dashboard", "resolucao", "link"];
         let fileTypeForRelated: Notification['relatedFileType'] = undefined;
         if (validRelatedFileTypes.includes(contexto.type as any)) {
-             fileTypeForRelated = contexto.type as Notification['relatedFileType'];
+            fileTypeForRelated = contexto.type as Notification['relatedFileType'];
         }
 
         // Determina o ícone/tipo da notificação
         let notificationType: NotificationType;
         if (contexto.status === StatusContexto.AguardandoCorrecao) {
-             notificationType = 'comentario'; // Notificações de correção usam ícone de comentário
+            notificationType = 'comentario'; // Notificações de correção usam ícone de comentário
         } else if (contexto.type === 'excel') {
             notificationType = 'planilha';
         } else {
-             const validNotificationTypes: NotificationType[] = ["doc", "excel", "pdf", "comentario", "sistema", "dashboard", "resolucao", "link"];
-             if (validNotificationTypes.includes(contexto.type as any)) {
-                  notificationType = contexto.type as NotificationType;
-             } else {
-                 notificationType = 'doc'; // Tipo padrão
-             }
+            const validNotificationTypes: NotificationType[] = ["doc", "excel", "pdf", "comentario", "sistema", "dashboard", "resolucao", "link"];
+            if (validNotificationTypes.includes(contexto.type as any)) {
+                notificationType = contexto.type as NotificationType;
+            } else {
+                notificationType = 'doc'; // Tipo padrão
+            }
         }
 
         const notification: Notification = {
             id: notificationIdCounter++,
-            type: notificationType, 
-            title: contexto.title, 
+            type: notificationType,
+            title: contexto.title,
             description: generateNotificationDescription(contexto),
-            status: mapContextoStatusToNotifStatus(contexto.status), 
+            status: mapContextoStatusToNotifStatus(contexto.status),
             contextoId: contexto.id,
             url: contexto.url, // URL para visualização direta (se aplicável)
             comments: getCommentsForContexto(contexto),
-            relatedFileType: fileTypeForRelated, 
+            relatedFileType: fileTypeForRelated,
         };
         return notification;
     });
 
 // --- NOTIFICAÇÕES ESTÁTICAS (Ex: Atualizações do Sistema) ---
 const staticNotifications: Notification[] = [
-  {
-    id: notificationIdCounter++,
-    type: "sistema",
-    title: "Nova atualização do Sistema VigiaSUS",
-    description: "Versão 0.1.1 disponível! Inclui melhorias na visualização de PDFs e correções de bugs.",
-    status: "visto",
-    comments: [],
-  },
+    {
+        id: notificationIdCounter++,
+        type: "sistema",
+        title: "Nova atualização do Sistema VigiaSUS",
+        description: "Versão 0.1.1 disponível! Inclui melhorias na visualização de PDFs e correções de bugs.",
+        status: "visto",
+        comments: [],
+    },
 ];
 
 // --- EXPORTAÇÃO FINAL ---

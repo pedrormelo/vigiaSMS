@@ -11,22 +11,31 @@ export default function CommentItem({ comment }: CommentItemProps) {
   let roleStyle = "";
   switch (role) {
     case "info":
-      roleStyle = "bg-gray-100 border-gray-300 text-gray-700";
+      roleStyle = "bg-white border-gray-300 text-gray-600 font-semibold";
       break;
     case "secretaria":
-      roleStyle = "bg-blue-100 border-blue-300 text-gray-700";
+      roleStyle = "bg-gradient-to-r from-indigo-400/30 to-indigo-600/30 border-indigo-300 text-gray-800";
       break;
+    // case "secretaria":
+    //   roleStyle = "bg-gradient-to-r from-blue-400/30 to-blue-500/30 border-blue-400 text-gray-800";
+    //   break;
     case "diretoria":
-      roleStyle = "bg-purple-100 border-purple-300 text-gray-700";
+      roleStyle = "bg-gradient-to-r from-emerald-300/30 to-emerald-400/30 border-emerald-300 text-gray-800";
       break;
     case "gerencia":
-      roleStyle = "bg-green-100 border-green-300 text-gray-700";
+      roleStyle = "bg-gradient-to-r from-blue-400/30 to-blue-500/30 border-blue-400 text-gray-800";
       break;
+    // case "gerencia":
+    //   roleStyle = "bg-gradient-to-r from-rose-300/30 to-rose-400/30 border-rose-300 text-gray-800";
+    //   break;
+    // case "gerencia":
+    //   roleStyle = "bg-gradient-to-r from-orange-300/30 to-orange-400/30 border-orange-300 text-gray-800";
+    //   break;
     case "user":
-      roleStyle = "bg-sky-50 border-blue-100 text-gray-700";
+      roleStyle = "bg-gradient-to-r from-white/70 to-white/80 border-gray-100 text-gray-800";
       break;
     case "zelma":
-      roleStyle = "bg-blue-200 border-blue-300 text-gray-700";
+      roleStyle = "bg-gradient-to-r from-indigo-400/30 to-indigo-600/30 border-indigo-300 text-gray-800";
       break;
     default:
       roleStyle = "bg-blue-100 border-gray-200 text-gray-800";

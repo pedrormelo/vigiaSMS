@@ -26,6 +26,33 @@ const ContextNotificationDetails: React.FC<Props> = ({
   const [localComments, setLocalComments] = useState<Comment[]>([]);
   const [showQuickReplies, setShowQuickReplies] = useState(false);
   const [newMessage, setNewMessage] = useState("");
+  const [useChatBg, setUseChatBg] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('notifications.useChatBg') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
+  const [showSettingsPanel, setShowSettingsPanel] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('notifications.showSettings') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'notifications.useChatBg') {
+        setUseChatBg(e.newValue === 'true');
+      }
+      if (e.key === 'notifications.showSettings') {
+        setShowSettingsPanel(e.newValue === 'true');
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
 
   useEffect(() => {
     setLocalComments(notification?.comments || []);
@@ -107,13 +134,13 @@ const ContextNotificationDetails: React.FC<Props> = ({
     <div className="flex flex-col h-full bg-white">
 
       {/* Cabeçalho (Sem alteração) */}
-      <div className="p-4 border-b border-gray-200 flex-shrink-0 bg-white">
+      <div className="p-4 border-b border-gray-200 flex-shrink-0 bg-gray-50/30">
         <div className="flex items-start gap-4">
           <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-white border border-gray-200 shadow-inner flex-shrink-0 p-3">
             <IconeDocumento type={docTypeForIcon} />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-lg text-blue-800 line-clamp-2" title={title}>
+            <h3 className="font-semibold text-lg text-blue-700 line-clamp-2" title={title}>
               {title}
             </h3>
             <p className="text-sm text-gray-600 mt-1 line-clamp-3" title={description}>
@@ -134,15 +161,79 @@ const ContextNotificationDetails: React.FC<Props> = ({
       </div>
 
       {/* Área de Comentários (Scroll) (Sem alteração) */}
-      <div className="flex-1 p-4 flex flex-col gap-3 overflow-y-auto scrollbar-custom bg-white">
-        {localComments.length > 0 ? (
-          localComments.map((comment) => (
-            <CommentItem key={comment.id} comment={comment} />
-          ))
-        ) : (
-          <div className="flex-1 flex items-center justify-center text-center text-gray-500">
-            <p>Não há comentários para esta notificação.</p>
+      <div
+        className={cn(
+          "flex-1 p-4 flex flex-col gap-3 overflow-y-auto scrollbar-custom",
+          useChatBg ? "bg-cover bg-center bg-no-repeat" : "bg-gradient-to-b from-white to-blue-50"
+        )}
+        style={useChatBg ? { backgroundImage: "url('/chat/bg-chat-3.png')" } : undefined}
+      >
+        {showSettingsPanel ? (
+          <div className="w-full h-full flex flex-col">
+            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-lg">Configurações de Notificações</h3>
+                <p className="text-sm text-gray-500">Ajuste filtros e o visual do chat</p>
+              </div>
+              <div>
+                <button
+                  onClick={() => {
+                    try { localStorage.setItem('notifications.showSettings', 'false'); } catch (e) {}
+                    setShowSettingsPanel(false);
+                  }}
+                  className="text-sm text-gray-600 px-3 py-1 rounded hover:bg-gray-100"
+                >Fechar</button>
+              </div>
+            </div>
+
+            <div className="p-4 flex-1 overflow-auto">
+              <div className="mb-4">
+                <p className="text-sm font-medium">Filtros</p>
+                <div className="flex gap-2 mt-2">
+                  {['all','unread','system'].map((f) => (
+                    <button
+                      key={f}
+                      onClick={() => {
+                        try { localStorage.setItem('notifications.activeFilter', f); } catch (e) {}
+                        // The list listens to storage changes and will apply the filter
+                      }}
+                      className="px-3 py-1 rounded-xl bg-gray-100 text-sm"
+                    >{f === 'all' ? 'Todas' : f === 'unread' ? 'Não Lidas' : 'Sistema'}</button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <p className="text-sm font-medium">Fundo do chat</p>
+                <p className="text-xs text-gray-500">Ativar o fundo personalizado para a área de comentários</p>
+                <div className="mt-2">
+                  <label className="inline-flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={useChatBg}
+                      onChange={(e) => {
+                        const next = e.target.checked;
+                        try { localStorage.setItem('notifications.useChatBg', next ? 'true' : 'false'); } catch (err) {}
+                        setUseChatBg(next);
+                      }}
+                      className="form-checkbox h-4 w-4 text-blue-600"
+                    />
+                    <span className="text-sm">Usar fundo personalizado</span>
+                  </label>
+                </div>
+              </div>
+            </div>
           </div>
+        ) : (
+          localComments.length > 0 ? (
+            localComments.map((comment) => (
+              <CommentItem key={comment.id} comment={comment} />
+            ))
+          ) : (
+            <div className="flex-1 flex items-center justify-center text-center text-gray-500">
+              <p>Não há comentários para esta notificação.</p>
+            </div>
+          )
         )}
       </div>
 
@@ -185,7 +276,7 @@ const ContextNotificationDetails: React.FC<Props> = ({
                 onClick={() => setShowQuickReplies(prev => !prev)}
                 aria-label="Mostrar respostas rápidas"
                 className={cn(
-                  "p-2 rounded-full bg-gray-50 border border-gray-200 hover:bg-blue-100 transition-colors",
+                  "p-2 rounded-full bg-gray-50 border border-gray-200",
                   !canUserReply && "opacity-50 cursor-not-allowed"
                 )}
                 disabled={!canUserReply}
@@ -194,14 +285,14 @@ const ContextNotificationDetails: React.FC<Props> = ({
               </button>
 
               {showQuickReplies && (
-                <div className="absolute left-0 bottom-full mb-2 bg-white/20 backdrop-blur-md border-gray-200 shadow-xl rounded-2xl z-20">
+                <div className="absolute left-0 bottom-full mb-2 bg-white/50 backdrop-blur-md border-gray-200 shadow-xl rounded-2xl z-20">
                   <div className="flex flex-col p-2">
                     {quickReplies.map((qr) => (
                       <button
                         key={qr}
                         onClick={() => { handleQuickReply(qr); setShowQuickReplies(false); }}
                         className={cn(
-                          "text-left px-3 py-2 text-sm rounded-xl hover:bg-gray-100",
+                          "text-left px-3 py-2 text-sm rounded-xl hover:bg-white/60 transition-colors",
                           !canUserReply && "opacity-50 cursor-not-allowed"
                         )}
                         disabled={!canUserReply}

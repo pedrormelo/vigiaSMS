@@ -36,7 +36,7 @@ export default function NotificationItem({
 
     // Se for um tipo de arquivo válido, usa o IconeDocumento
     if (validFileTypes.includes(iconTypeForFile)) {
-      return <IconeDocumento type={iconTypeForFile} />;
+      return <IconeDocumento type={iconTypeForFile}/>;
     }
 
     // Fallback para 'comentario' sem arquivo relacionado
@@ -77,22 +77,22 @@ export default function NotificationItem({
 
       {/* Container do Ícone */}
       <div className={cn(
-        "w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-md mt-0.5",
+        "w-11 h-11 flex-shrink-0 flex items-center justify-center rounded-md mt-0.5",
         isActive ? "bg-white" : "bg-gray-100/60", // Fundo do ícone
         !isRead ? "ml-4" : "" // Adiciona margem se a bolinha "não lido" estiver presente
       )}>
         {/* CHAMA A NOVA FUNÇÃO DE RENDERIZAÇÃO */}
-        {renderIcon()}
+          {renderIcon()}  
       </div>
 
       {/* Textos */}
       <div className="flex-1 min-w-0">
         <h3
           className={cn(
-            "font-semibold text-sm leading-snug line-clamp-2",
+            "font-semibold text-sm leading-snug line-clamp-1",
             // Texto branco quando ativo, caso contrário usa cinza escuro
-            isActive ? "text-white" : "text-gray-800",
-            !isRead && "font-bold" // Título mais grosso se não lido
+            isActive ? "text-white" : "text-blue-700",
+            !isRead && "font-semibold" // Título mais grosso se não lido
           )}
           title={title}
         >
@@ -100,7 +100,7 @@ export default function NotificationItem({
         </h3>
         <p
           className={cn(
-            "text-xs leading-snug mt-1 line-clamp-2", // Descrição menor
+            "text-xs leading-snug mt-1 line-clamp-1", // Descrição menor
             // Se ativo, descrição também fica branca; caso contrário, mostrar cor por status
             isActive ? "text-white" : statusColor
           )}

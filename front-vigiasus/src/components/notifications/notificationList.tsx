@@ -1,9 +1,11 @@
 // src/components/notifications/notificationList.tsx
+"use client";
+import React, { useEffect, useState } from "react";
 import { Notification } from "@/constants/types";
 import NotificationItem from "@/components/notifications/notificationItem";
 // IMPORTAR ÍCONES E UTILITÁRIOS
 import { cn } from "@/lib/utils";
-import { Inbox, CheckCircle, Settings, MessageCircleMore } from "lucide-react";
+import { Inbox, CheckCircle, Settings, MessageCircleMore, Settings2 } from "lucide-react";
 
 // EXPORTAR O TIPO DE FILTRO
 export type ActiveFilter = "all" | "unread" | "system";
@@ -62,6 +64,49 @@ export default function NotificationList({
   activeFilter,
   onFilterChange,
 }: NotificationListProps) {
+  const [showSettings, setShowSettings] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('notifications.showSettings') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
+  const [chatBgEnabled, setChatBgEnabled] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('notifications.useChatBg') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'notifications.useChatBg') {
+        setChatBgEnabled(e.newValue === 'true');
+      }
+      if (e.key === 'notifications.showSettings') {
+        setShowSettings(e.newValue === 'true');
+      }
+      if (e.key === 'notifications.activeFilter') {
+        const v = e.newValue as ActiveFilter | null;
+        if (v && v !== activeFilter) onFilterChange(v);
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
+  const toggleChatBg = (value?: boolean) => {
+    const next = typeof value === 'boolean' ? value : !chatBgEnabled;
+    setChatBgEnabled(next);
+    try { localStorage.setItem('notifications.useChatBg', next ? 'true' : 'false'); } catch (e) { }
+  };
+
+  const toggleSettings = (value?: boolean) => {
+    const next = typeof value === 'boolean' ? value : !showSettings;
+    setShowSettings(next);
+    try { localStorage.setItem('notifications.showSettings', next ? 'true' : 'false'); } catch (e) { }
+  };
 
   return (
     <div className="flex flex-col h-full w-full bg-white shadow-sm">
@@ -72,32 +117,28 @@ export default function NotificationList({
           <h3 className="text-lg font-semibold text-blue-800">
             Caixa de Entrada
           </h3>
-          <MessageCircleMore className="h-5 w-5"/>
+          {/* <MessageCircleMore className="h-5 w-5"/> */}
+
+          {/* botão para configurações das notificações */}
+          <button
+            onClick={() => toggleSettings()}
+            aria-expanded={showSettings}
+            className={cn(
+              "rounded-full p-1 border border-gray-200 hover:bg-gray-100 transition-colors",
+              showSettings ? "bg-gray-100" : ""
+            )}
+          >
+            <Settings2 className="h-5 w-5"/>
+          </button>
         </div>
-        {/* USA O totalUnreadCount (vinda do modal) */}
+        {/* usa o totalUnreadCount (vinda do modal) */}
         <p className="text-sm text-gray-600">
           {totalUnreadCount > 0
             ? `${totalUnreadCount} ${totalUnreadCount === 1 ? 'não lida' : 'não lidas'} no total`
             : 'Nenhuma notificação nova'}
         </p>
 
-        {/*  BARRA DE FILTROS ADICIONADA */}
-        <div className="flex justify-center items-center bg-gray-100 rounded-xl gap-2 p-1 mt-3">
-          {filters.map((filter) => (
-            <button
-              key={filter.id}
-              onClick={() => onFilterChange(filter.id)}
-              className={cn(
-                "px-4 py-1.5 rounded-xl shadow-2xs text-sm font-semibold transition-colors",
-                activeFilter === filter.id
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "bg-white/80 text-gray-70 hover:bg-gray-300"
-              )}
-            >
-              {filter.label}
-            </button>
-          ))}
-        </div>
+        {/* settings open in chat area (controlled via localStorage) */}
       </div>
 
       {/* LISTA COM SCROLL E LÓGICA DE ESTADO VAZIO */}
