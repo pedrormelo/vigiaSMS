@@ -3,7 +3,7 @@ import { Notification } from "@/constants/types";
 import NotificationItem from "@/components/notifications/notificationItem";
 // IMPORTAR ÍCONES E UTILITÁRIOS
 import { cn } from "@/lib/utils";
-import { Inbox, CheckCircle, Settings } from "lucide-react"; 
+import { Inbox, CheckCircle, Settings, MessageCircleMore } from "lucide-react";
 
 // EXPORTAR O TIPO DE FILTRO
 export type ActiveFilter = "all" | "unread" | "system";
@@ -64,29 +64,34 @@ export default function NotificationList({
 }: NotificationListProps) {
 
   return (
-    <div className="flex flex-col h-full w-full bg-gray-50/50">
-      
+    <div className="flex flex-col h-full w-full bg-white shadow-sm">
+
       {/* Cabeçalho Fixo da Lista */}
       <div className="flex-shrink-0 p-4 border-b border-gray-200 bg-white">
-        <h3 className="text-lg font-semibold text-blue-800">Caixa de Entrada</h3>
+        <div className="inline-flex items-center gap-2 mb-1 text-blue-800">
+          <h3 className="text-lg font-semibold text-blue-800">
+            Caixa de Entrada
+          </h3>
+          <MessageCircleMore className="h-5 w-5"/>
+        </div>
         {/* USA O totalUnreadCount (vinda do modal) */}
         <p className="text-sm text-gray-600">
           {totalUnreadCount > 0
             ? `${totalUnreadCount} ${totalUnreadCount === 1 ? 'não lida' : 'não lidas'} no total`
             : 'Nenhuma notificação nova'}
         </p>
-        
+
         {/*  BARRA DE FILTROS ADICIONADA */}
-        <div className="flex items-center gap-2 mt-3">
+        <div className="flex justify-center items-center bg-gray-100 rounded-xl gap-2 p-1 mt-3">
           {filters.map((filter) => (
             <button
               key={filter.id}
               onClick={() => onFilterChange(filter.id)}
               className={cn(
-                "px-4 py-1.5 rounded-full shadow-2xs text-sm font-semibold transition-colors",
+                "px-4 py-1.5 rounded-xl shadow-2xs text-sm font-semibold transition-colors",
                 activeFilter === filter.id
                   ? "bg-blue-600 text-white shadow-sm"
-                  : "bg-gray-100 text-gray-70 hover:bg-gray-300"
+                  : "bg-white/80 text-gray-70 hover:bg-gray-300"
               )}
             >
               {filter.label}
@@ -99,7 +104,7 @@ export default function NotificationList({
       <div className="flex-1 w-full h-full overflow-y-auto scrollbar-custom">
         {notifications.length > 0 ? (
           // Se houver itens no filtro, renderiza a lista
-          <div className="flex flex-col gap-2 p-3"> 
+          <div className="flex flex-col gap-2 p-3">
             {notifications.map((notification) => {
               const isRead = readNotifications.has(notification.id);
               return (

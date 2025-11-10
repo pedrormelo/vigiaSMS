@@ -5,7 +5,7 @@ import React, { useEffect, useState } from "react";
 import { Notification, Comment } from "@/constants/types";
 import SystemUpdateView from "@/components/systemUpdate/systemUpdateNotification";
 import CommentItem from "@/components/notifications/commentItem";
-import { Loader2, Info, Eye, MessageSquare } from "lucide-react"; 
+import { Loader2, Info, Eye, MessageSquare, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import IconeDocumento from '@/components/validar/iconeDocumento';
@@ -15,7 +15,7 @@ import { showSuccessToast } from "@/components/ui/Toasts";
 // Props (Sem onMarkAsRead, como na última versão)
 interface Props {
   notification: Notification | null;
-  isRead: boolean; 
+  isRead: boolean;
   onOpenContexto: (notification: Notification) => void;
 }
 
@@ -24,13 +24,15 @@ const ContextNotificationDetails: React.FC<Props> = ({
   notification, isRead, onOpenContexto
 }) => {
   const [localComments, setLocalComments] = useState<Comment[]>([]);
+  const [showQuickReplies, setShowQuickReplies] = useState(false);
+  const [newMessage, setNewMessage] = useState("");
 
   useEffect(() => {
     setLocalComments(notification?.comments || []);
   }, [notification]);
 
   // --- INÍCIO DA MODIFICAÇÃO (Lógica de "Pode Responder") ---
-  
+
   // (Request 2 - da iteração anterior)
   //  Verifica se a outra parte já iniciou a conversa.
   const hasOthersComments = localComments.some(comment => !comment.isMyComment);
@@ -57,12 +59,12 @@ const ContextNotificationDetails: React.FC<Props> = ({
   const handleQuickReply = (replyText: string) => {
     // (Request 3) Confiança no estado do botão (disabled), 
     // mas uma verificação extra não faz mal.
-    if (!canUserReply) return; 
+    if (!canUserReply) return;
 
     // Simula o envio do comentário
     const now = new Date();
     const comment: Comment = {
-      id: Math.random(), 
+      id: Math.random(),
       author: "Você",
       text: replyText,
       time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -76,92 +78,156 @@ const ContextNotificationDetails: React.FC<Props> = ({
     showSuccessToast(`Resposta "${replyText}" enviada.`);
   };
 
+  const quickReplies = ["Ciente.", "Obrigado(a).", "Recebido.", "Entendido."];
+
+  const handleSendMessage = () => {
+    if (!canUserReply) return;
+    const text = newMessage.trim();
+    if (!text) return;
+    const now = new Date();
+    const comment: Comment = {
+      id: Math.random(),
+      author: "Você",
+      text,
+      time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      date: now.toLocaleDateString('pt-BR'),
+      isMyComment: true, role: "user",
+    };
+    setLocalComments(prev => [...prev, comment]);
+    setNewMessage("");
+    setShowQuickReplies(false);
+    showSuccessToast("Mensagem enviada.");
+  };
+
 
   const docTypeForIcon = (relatedFileType || type) as FileType;
-  const canViewContexto = !!(onOpenContexto && contextoId);
+  const canViewContexto = !!contextoId;
 
   return (
     <div className="flex flex-col h-full bg-white">
-      
+
       {/* Cabeçalho (Sem alteração) */}
       <div className="p-4 border-b border-gray-200 flex-shrink-0 bg-white">
-         <div className="flex items-start gap-4">
-            <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-blue-100 flex-shrink-0 p-2">
-                <IconeDocumento type={docTypeForIcon} />
-            </div>
-            <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-lg text-blue-800 line-clamp-2" title={title}>
-                    {title}
-                </h3>
-                <p className="text-sm text-gray-600 mt-1 line-clamp-3" title={description}>
-                    {description}
-                </p>
-            </div>
-            {canViewContexto && (
-                <Button
-                    onClick={() => onOpenContexto(notification)}
-                    size="sm"
-                    className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-4 py-2 flex items-center gap-1.5 flex-shrink-0 ml-auto shadow-sm"
-                >
-                    <Eye className="w-4 h-4" />
-                    Abrir
-                </Button>
-            )}
-         </div>
+        <div className="flex items-start gap-4">
+          <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-white border border-gray-200 shadow-inner flex-shrink-0 p-3">
+            <IconeDocumento type={docTypeForIcon} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-lg text-blue-800 line-clamp-2" title={title}>
+              {title}
+            </h3>
+            <p className="text-sm text-gray-600 mt-1 line-clamp-3" title={description}>
+              {description}
+            </p>
+          </div>
+          {canViewContexto && (
+            <Button
+              onClick={() => onOpenContexto(notification)}
+              size="sm"
+              className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-4 py-2 flex items-center gap-1.5 flex-shrink-0 ml-auto shadow-sm"
+            >
+              <Eye className="w-4 h-4" />
+              Abrir
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Área de Comentários (Scroll) (Sem alteração) */}
-      <div className="flex-1 p-4 flex flex-col gap-3 overflow-y-auto scrollbar-custom bg-gray-50/70">
-          {localComments.length > 0 ? (
-              localComments.map((comment) => (
-                  <CommentItem key={comment.id} comment={comment} />
-              ))
-          ) : (
-              <div className="flex-1 flex items-center justify-center text-center text-gray-500">
-                  <p>Não há comentários para esta notificação.</p>
-              </div>
-          )}
+      <div className="flex-1 p-4 flex flex-col gap-3 overflow-y-auto scrollbar-custom bg-white">
+        {localComments.length > 0 ? (
+          localComments.map((comment) => (
+            <CommentItem key={comment.id} comment={comment} />
+          ))
+        ) : (
+          <div className="flex-1 flex items-center justify-center text-center text-gray-500">
+            <p>Não há comentários para esta notificação.</p>
+          </div>
+        )}
       </div>
 
       {/* --- INÍCIO DA MODIFICAÇÃO (Rodapé com Tooltip e Lógica 'disabled' atualizados) --- */}
-      <div 
+      <div
         className="p-4 border-t border-gray-200 bg-white flex-shrink-0"
         // (Request 3) O tooltip agora reflete as duas condições
         title={
-            !hasOthersComments 
-                ? "Respostas rápidas são habilitadas após o primeiro comentário da outra parte."
+          !hasOthersComments
+            ? "Respostas rápidas são habilitadas após o primeiro comentário da outra parte."
             : userSpokeLast
-                ? "Você já respondeu a esta interação. Aguarde uma nova mensagem."
-            : "Enviar uma resposta rápida"
+              ? "Você já respondeu a esta interação. Aguarde uma nova mensagem."
+              : "Enviar uma resposta rápida"
         }
       >
-        <div className="flex items-center gap-2">
-            
-            {/* Resposta Rápida "Ciente." */}
-            <Button 
-                onClick={() => handleQuickReply("Ciente.")} 
-                variant="outline" 
-                size="sm" 
-                // (Request 3) Desabilitado se não puder responder
-                disabled={!canUserReply} 
-                className="rounded-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+        <div className="flex items-center gap-3">
+
+          {/* Input + send area */}
+          <div className="flex items-center gap-2 flex-1">
+            <input
+              type="text"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyDown={(e) => {
+                // Enviar com Enter (Shift+Enter preservado caso se mude para textarea no futuro)
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+              placeholder={canUserReply ? "Escreva sua resposta..." : "Aguarde a outra parte iniciar a conversa"}
+              disabled={!canUserReply}
+              className="flex-1 px-3 py-2 rounded-full border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 ring-offset disabled:opacity-60"
+            />
+
+            {/* Chat icon button (side of send) */}
+            <div className="relative">
+
+              <button
+                onClick={() => setShowQuickReplies(prev => !prev)}
+                aria-label="Mostrar respostas rápidas"
+                className={cn(
+                  "p-2 rounded-full bg-gray-50 border border-gray-200 hover:bg-blue-100 transition-colors",
+                  !canUserReply && "opacity-50 cursor-not-allowed"
+                )}
+                disabled={!canUserReply}
+              >
+                <MessageSquare className="w-4 h-4 text-gray-600" />
+              </button>
+
+              {showQuickReplies && (
+                <div className="absolute left-0 bottom-full mb-2 bg-white/20 backdrop-blur-md border-gray-200 shadow-xl rounded-2xl z-20">
+                  <div className="flex flex-col p-2">
+                    {quickReplies.map((qr) => (
+                      <button
+                        key={qr}
+                        onClick={() => { handleQuickReply(qr); setShowQuickReplies(false); }}
+                        className={cn(
+                          "text-left px-3 py-2 text-sm rounded-xl hover:bg-gray-100",
+                          !canUserReply && "opacity-50 cursor-not-allowed"
+                        )}
+                        disabled={!canUserReply}
+                      >
+                        {qr}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <Button
+              onClick={handleSendMessage}
+              size="sm"
+              className={cn(
+                "rounded-full text-white bg-blue-500 px-4 py-2 text-sm font-medium flex items-center gap-2 hover:bg-blue-600",
+                !canUserReply && "opacity-50 cursor-not-allowed"
+              )}
+              disabled={!canUserReply || newMessage.trim() === ""}
             >
-                <MessageSquare className="w-4 h-4 mr-1.5" />
-                Ciente.
+              <Send className="w-4 h-4" />
+              Enviar
             </Button>
-            
-            {/* Resposta Rápida "Obrigado(a)." */}
-            <Button 
-                onClick={() => handleQuickReply("Obrigado(a).")} 
-                variant="outline" 
-                size="sm" 
-                // (Request 3) Desabilitado se não puder responder
-                disabled={!canUserReply} 
-                className="rounded-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-                Obrigado(a).
-            </Button>
-             
+          </div>
+
         </div>
       </div>
       {/* --- FIM DA MODIFICAÇÃO --- */}
@@ -173,13 +239,13 @@ const ContextNotificationDetails: React.FC<Props> = ({
 // --- COMPONENTE PRINCIPAL (Wrapper - Sem alterações) ---
 export default function NotificationDetailView({
   notification, isRead, onOpenContexto
-}: Props) { 
-     const [loading, setLoading] = useState(false);
+}: Props) {
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!notification) return;
     setLoading(true);
-    const timer = setTimeout(() => setLoading(false), 150); 
+    const timer = setTimeout(() => setLoading(false), 150);
     return () => clearTimeout(timer);
   }, [notification]);
 
@@ -204,22 +270,22 @@ export default function NotificationDetailView({
 
   if (notification?.type === "sistema") {
     return (
-        <div className="flex-1 flex flex-col h-full overflow-hidden">
-            <SystemUpdateView notification={notification} />
-        </div>
+      <div className="flex-1 flex flex-col h-full overflow-hidden">
+        <SystemUpdateView notification={notification} />
+      </div>
     );
   }
   else if (notification) {
-     return (
-        <div className="flex-1 flex flex-col h-full overflow-hidden">
-            <ContextNotificationDetails
-                notification={notification}
-                isRead={isRead}
-                onOpenContexto={onOpenContexto}
-            />
-        </div>
-     );
+    return (
+      <div className="flex-1 flex flex-col h-full overflow-hidden">
+        <ContextNotificationDetails
+          notification={notification}
+          isRead={isRead}
+          onOpenContexto={onOpenContexto}
+        />
+      </div>
+    );
   }
-  
+
   return null;
 }
