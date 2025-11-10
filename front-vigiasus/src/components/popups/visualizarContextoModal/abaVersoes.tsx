@@ -17,6 +17,7 @@ interface AbaVersoesProps {
     dados: DetalhesContexto;
     perfil: 'diretor' | 'gerente' | 'membro';
     isEditing?: boolean;
+    isValidationView?: boolean; // <-- PROP ADICIONADA
     aoAlternarVisibilidadeVersao?: (versaoId: number) => void;
 }
 
@@ -25,6 +26,7 @@ const AbaVersoes = ({
     dados,
     perfil,
     isEditing,
+    isValidationView = false, // <-- PROP RECEBIDA
     aoAlternarVisibilidadeVersao
 }: AbaVersoesProps) => {
 
@@ -37,17 +39,23 @@ const AbaVersoes = ({
     const podeCriarNovaVersao = perfil === 'membro' && isEditing;
     const todasAsVersoes = dados.versoes || [];
     
+    // --- CORREÇÃO APLICADA AQUI ---
     const versoesParaExibir = todasAsVersoes.filter(versao => {
-        if (isEditing) {
+        // Se estiver no modo de edição OU no modo de validação, mostra TUDO.
+        if (isEditing || isValidationView) {
             return true;
         }
+
+        // Modo de visualização normal (nem edição, nem validação):
         if (versao.estaOculta) {
             return false;
         }
         return versao.status === StatusContexto.Publicado;
     });
+    // --- FIM DA CORREÇÃO ---
     
-    // --- [MODIFICAÇÃO] A lógica 'numeroDeVersoesVisiveis' foi movida para dentro do map ---
+
+    // --- (Lógica de contagem de versões visíveis movida para dentro do map) ---
 
     return (
         <div className="animate-fade-in p-1 sm:p-4 h-full overflow-y-auto scrollbar-custom">
@@ -78,35 +86,26 @@ const AbaVersoes = ({
                     {versoesParaExibir.sort((a, b) => b.id - a.id).map((versao: Versao) => {
                         const isExpandida = versao.id === versaoExpandidaId;
                         
-                        // --- INÍCIO DA CORREÇÃO ---
-                        // 1. Verificar se a versão está publicada
+                        // --- Lógica do Switch (mantida da sua versão anterior, está correta) ---
                         const isVersaoPublicada = versao.status === StatusContexto.Publicado;
                         
-                        // 2. Calcular o número total de versões que são publicadas E não estão ocultas
                         const numeroTotalDeVersoesPublicadasVisiveis = todasAsVersoes.filter(
                             v => v.status === StatusContexto.Publicado && !v.estaOculta
                         ).length;
 
-                        // 3. O switch só pode ser alterado se a versão estiver publicada
                         const canToggle = isVersaoPublicada;
-                        
-                        // 4. Também não pode ser alterado se for a única versão visível
                         const isUnicaVisivel = isVersaoPublicada && !versao.estaOculta && numeroTotalDeVersoesPublicadasVisiveis === 1;
-
-                        // 5. O switch é desabilitado se (não pode ser alternado) OU (é a única visível)
                         const isSwitchDisabled = !canToggle || isUnicaVisivel;
 
-                        // 6. Determinar o tooltip (title) correto
                         let switchTitle = "";
                         if (isUnicaVisivel) {
                             switchTitle = "Não é possível ocultar a única versão visível.";
                         } else if (!canToggle) {
-                            // Esta é a nova regra que corrige o problema da imagem
                             switchTitle = "Apenas versões com status 'Publicado' podem ter a visibilidade alterada.";
                         } else {
                             switchTitle = versao.estaOculta ? "Clique para tornar visível" : "Clique para ocultar";
                         }
-                        // --- FIM DA CORREÇÃO ---
+                        // --- Fim da lógica do Switch ---
                         
                         return (
                             <div
@@ -128,6 +127,7 @@ const AbaVersoes = ({
                                             <p className={cn("font-medium", versao.estaOculta ? "text-gray-600" : "text-gray-800")}>{versao.nome}</p>
                                             <p className="text-sm text-gray-500">por {versao.autor} em {new Date(versao.data).toLocaleDateString('pt-BR')}</p>
                                         </div>
+                                        {/* StatusBadge agora exibe o status pendente */}
                                         <StatusBadge status={(versao as any).status || StatusContexto.AguardandoGerente} />
                                         {versao.estaOculta && (
                                             <Badge className="bg-gray-700/80 text-white border-none py-1 px-2" title="Esta versão está oculta">
@@ -139,9 +139,7 @@ const AbaVersoes = ({
                                     {/* Switch de Ocultar Versão (Modo Edição) */}
                                     {isEditing && perfil === 'membro' && aoAlternarVisibilidadeVersao && (
                                         <div
-                                            // 7. Aplicar o estilo de desabilitado ao container
                                             className={cn("flex items-center gap-2 pr-2", isSwitchDisabled && "opacity-50 cursor-not-allowed")}
-                                            // 8. Aplicar o title dinâmico
                                             title={switchTitle}
                                             onClick={(e) => e.stopPropagation()} 
                                         >
@@ -155,7 +153,6 @@ const AbaVersoes = ({
                                                 id={`switch-v${versao.id}`}
                                                 checked={!versao.estaOculta}
                                                 onCheckedChange={() => aoAlternarVisibilidadeVersao(versao.id)}
-                                                // 9. Aplicar o disabled dinâmico
                                                 disabled={isSwitchDisabled}
                                                 aria-label={versao.estaOculta ? "Tornar versão visível" : "Ocultar versão"}
                                                 className='focus:ring-2 ring-blue-300 ring-offset-1'
@@ -179,7 +176,7 @@ const AbaVersoes = ({
                 </div>
             ) : (
                 <p className="text-center text-gray-500 mt-8">
-                    {isEditing ? "Nenhuma versão encontrada." : "Nenhuma versão publicada encontrada."}
+                    {isEditing || isValidationView ? "Nenhuma versão encontrada." : "Nenhuma versão publicada encontrada."}
                 </p>
             )}
         </div>

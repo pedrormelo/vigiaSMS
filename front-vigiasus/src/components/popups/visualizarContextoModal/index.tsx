@@ -268,6 +268,7 @@ export function VisualizarContextoModal({
                                     dados={normalizedData}
                                     perfil={perfil}
                                     isEditing={isEditing}
+                                    isValidationView={isValidationView} 
                                     aoAlternarVisibilidadeVersao={handleToggleVersao} 
                                 />
                             )}

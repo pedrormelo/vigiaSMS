@@ -1,6 +1,6 @@
 // src/components/navbar/navbar.tsx
 "use client";
-// 1. ADICIONAR 'useMemo'
+// ADICIONAR 'useMemo'
 import { useState, useMemo } from "react"; 
 import Image from "next/image";
 import Link from "next/link";
@@ -8,7 +8,7 @@ import Sidebar from "./Sidebar";
 import { Menu, Loader2 } from 'lucide-react';
 import NotificationsModal from "@/components/notifications/notificationsModal";
 
-// 2. MODAL NOVO (Sua correção)
+//  MODAL NOVO (Sua correção)
 import { VisualizarContextoModal } from "@/components/popups/visualizarContextoModal"; 
 
 import { getContextoById } from "@/services/contextoService"; 
@@ -23,7 +23,7 @@ import { useNotifications } from "@/hooks/useNotifications";
 export default function Navbar() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
-  // 4. REMOVER CONTAGEM FIXA (Minha correção)
+  // REMOVER CONTAGEM FIXA (Minha correção)
   // const [unreadNotifications, setUnreadNotifications] = useState(5); // <-- REMOVIDO
   
   const [lastUpdateInfo, setLastUpdateInfo] = useState({
@@ -40,8 +40,7 @@ export default function Navbar() {
   const [isLoadingContexto, setIsLoadingContexto] = useState(false);
   const userProfile: "diretor" | "gerente" | "membro" = "gerente";
   
-  // --- INÍCIO DA CORREÇÃO DO CONTADOR (Minha correção) ---
-  // 5. PUXAR DADOS E ESTADO DE CARREGAMENTO AQUI
+  //  PUXAR DADOS E ESTADO DE CARREGAMENTO AQUI
   // (Renomeei para evitar conflito com 'isLoadingContexto')
   const { 
     notifications, 
@@ -49,12 +48,12 @@ export default function Navbar() {
     isError: isErrorNotifications 
   } = useNotifications(); 
   
-  // 6. LEVANTAR O ESTADO 'readNotifications' PARA CÁ
+  // LEVANTAR O ESTADO 'readNotifications' PARA CÁ
   const [readNotifications, setReadNotifications] = useState<Set<number>>(
     new Set()
   );
 
-  // 7. DEFINIR A FUNÇÃO DE MARCAR COMO LIDO AQUI
+  //  DEFINIR A FUNÇÃO DE MARCAR COMO LIDO AQUI
   const handleMarkAsRead = (id: number) => {
     setReadNotifications((prevReadIds) => {
       if (prevReadIds.has(id)) return prevReadIds; 
@@ -65,7 +64,7 @@ export default function Navbar() {
     });
   };
 
-  // 8. CALCULAR A CONTAGEM NÃO LIDA AQUI (usando o estado local)
+  //  CALCULAR A CONTAGEM NÃO LIDA AQUI (usando o estado local)
   const totalUnreadCount = useMemo(() => {
     return notifications.filter(n => !readNotifications.has(n.id)).length;
   }, [notifications, readNotifications]);
@@ -117,7 +116,7 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="bg-white w-full drop-shadow-md sticky top-0 z-50">
+      <header className="bg-white w-full drop-shadow-md sticky top-0 z-40">
         <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6"> 
           {/* Botão Menu (Esquerda) */}
           <button
