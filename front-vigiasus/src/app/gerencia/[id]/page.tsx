@@ -24,6 +24,11 @@ import StatusBadge from "@/components/alerts/statusBadge";
 import StatusBanner from "@/components/ui/status-banner";
 import { useStaleness } from "@/hooks/useStaleness";
 
+// --- NOVO: Imports para o modal ---
+import OcultarContextoModal from "@/components/popups/ocultarContextoModal";
+import { showSuccessToast } from "@/components/ui/Toasts";
+// --- FIM NOVO ---
+
 // Componentes do Carrossel
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
@@ -71,6 +76,11 @@ export default function GerenciaPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [todosOsContextos, setTodosOsContextos] = useState<Contexto[]>([]); 
+    
+    // --- NOVO: Estados para o modal de ocultar ---
+    const [modalOcultarAberto, setModalOcultarAberto] = useState(false);
+    const [contextoParaOcultar, setContextoParaOcultar] = useState<Contexto | null>(null);
+    // --- Fim dos novos estados ---
     
     const autoplayPlugin = useRef(
         Autoplay({ delay: 3000, stopOnInteraction: false, stopOnMouseEnter: true })
@@ -139,10 +149,8 @@ export default function GerenciaPage() {
             
             const matchesSearch = ctx.title.toLowerCase().includes(debouncedSearchValue.toLowerCase());
             
-            // --- CORREÇÃO AQUI ---
             // Apenas itens Publicados aparecem no carrossel de indicadores
             const matchesStatus = ctx.status === StatusContexto.Publicado;
-            // --- FIM DA CORREÇÃO ---
 
             // Modo de edição (isEditing=true) mostra os *publicados* que estão *ocultos*
             const matchesVisibility = (modo === 'edicao') || !ctx.estaOculto;
@@ -158,10 +166,8 @@ export default function GerenciaPage() {
             
             const matchesSearch = ctx.title.toLowerCase().includes(debouncedSearchValue.toLowerCase());
             
-            // --- CORREÇÃO AQUI ---
             // Apenas itens Publicados aparecem no carrossel de dashboard
             const matchesStatus = ctx.status === StatusContexto.Publicado;
-            // --- FIM DA CORREÇÃO ---
 
             // Modo de edição (isEditing=true) mostra os *publicados* que estão *ocultos*
             const matchesVisibility = (modo === 'edicao') || !ctx.estaOculto;
@@ -171,7 +177,6 @@ export default function GerenciaPage() {
     }, [todosOsContextos, debouncedSearchValue, modo]);
 
     // FILTRO 3: Para a Grelha de Ficheiros (Painel de Contextos)
-    // (Esta lógica está correta como na versão anterior)
     const filteredFiles = useMemo(() => {
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -356,21 +361,62 @@ export default function GerenciaPage() {
         setModalVisualizacaoAberto(true);
     };
     
+    // --- ATUALIZADO: lidarComAlternarVisibilidadeContexto ---
     const lidarComAlternarVisibilidadeContexto = (contextoId: string) => {
         const contexto = todosOsContextos.find(f => f.id === contextoId);
         if (!contexto) return;
-        const estaOcultando = !contexto.estaOculto;
-        if (window.confirm(`Tem certeza que deseja ${estaOcultando ? 'ocultar' : 'tornar visível'} o contexto "${contexto.title}"?`)) {
+
+        if (contexto.estaOculto) {
+            // Ação de REEXIBIR (não precisa de modal)
             setTodosOsContextos(prev =>
                 prev.map(ctx => 
-                    ctx.id === contextoId ? { ...ctx, estaOculto: !ctx.estaOculto } : ctx
+                    ctx.id === contextoId ? { ...ctx, estaOculto: false } : ctx
                 )
             );
             if (ficheiroSelecionado && ficheiroSelecionado.id === contextoId) {
-                setFicheiroSelecionado(prev => prev ? ({ ...prev, estaOculto: !prev.estaOculto }) : null);
+                setFicheiroSelecionado(prev => prev ? ({ ...prev, estaOculto: false }) : null);
             }
+            showSuccessToast("Contexto reexibido com sucesso.");
+            // TODO: API call para reexibir
+            console.log(`API Call: Reexibir contexto ${contextoId}`);
+        } else {
+            // Ação de OCULTAR (abre o modal)
+            setContextoParaOcultar(contexto);
+            setModalOcultarAberto(true);
         }
     };
+    
+    // --- NOVO: Handlers para o modal de ocultar ---
+    const handleConfirmarOcultar = () => {
+        if (!contextoParaOcultar) return;
+        
+        const contextoId = contextoParaOcultar.id;
+        
+        // Aplica a lógica de ocultar
+        setTodosOsContextos(prev =>
+            prev.map(ctx => 
+                ctx.id === contextoId ? { ...ctx, estaOculto: true } : ctx
+            )
+        );
+        if (ficheiroSelecionado && ficheiroSelecionado.id === contextoId) {
+            setFicheiroSelecionado(prev => prev ? ({ ...prev, estaOculto: true }) : null);
+        }
+        
+        showSuccessToast("Contexto ocultado com sucesso.");
+        // TODO: API call para ocultar
+        console.log(`API Call: Ocultar contexto ${contextoId}`);
+
+        // Fecha e limpa o modal
+        setModalOcultarAberto(false);
+        setContextoParaOcultar(null);
+    };
+
+    const handleCancelarOcultar = () => {
+        setModalOcultarAberto(false);
+        setContextoParaOcultar(null);
+    };
+    // --- FIM NOVO ---
+    
     const lidarComAlternarVisibilidadeVersao = (contextoId: string, versaoId: number) => {
         console.log("API Call: Toggle Visibilidade (Versão)", contextoId, versaoId);
         setTodosOsContextos(prev => prev.map(ctx => {
@@ -440,6 +486,9 @@ export default function GerenciaPage() {
                 <IndicatorCard 
                     key={props.id} 
                     {...props} 
+                    // Note: As props de edição (onEdit, onToggleOculto) não são passadas aqui
+                    // conforme o código que você forneceu. O clique vai para visualização.
+                    id={indicatorCtx.id} // <-- ID é necessário para o mapContext
                     onClick={() => lidarComVisualizarIndicador(indicatorCtx)} 
                 />
             );
@@ -511,7 +560,7 @@ export default function GerenciaPage() {
                             onFileClick={aoClicarArquivo} 
                             isEditing={modo === 'edicao'} 
                             onAddContextClick={() => abrirModal('contexto')} 
-                            onToggleOculto={lidarComAlternarVisibilidadeContexto} 
+                            onToggleOculto={lidarComAlternarVisibilidadeContexto} // <-- Este handler agora usa o MODAL
                         />
                     ) : (
                         <div className="flex flex-col items-center justify-center text-center p-6">
@@ -555,6 +604,16 @@ export default function GerenciaPage() {
                 aoAlternarVisibilidadeVersao={lidarComAlternarVisibilidadeVersao}
                 aoAlternarVisibilidadeIndicador={lidarComAlternarVisibilidadeContexto} 
             />
+
+            {/* --- NOVO: Renderização do modal de ocultar --- */}
+            <OcultarContextoModal
+                open={modalOcultarAberto}
+                onOpenChange={setModalOcultarAberto}
+                onCancel={handleCancelarOcultar}
+                onConfirm={handleConfirmarOcultar}
+                contextoNome={contextoParaOcultar?.title || ''}
+            />
+            {/* --- FIM NOVO --- */}
 
 
             {/* Header Dinâmico */}
