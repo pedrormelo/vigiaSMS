@@ -166,7 +166,7 @@ const dynamicNotifications: Notification[] = contextosAbertos
     .map(contexto => {
 
         // Mapeia o 'type' do contexto para o 'relatedFileType' da notificação
-        const validRelatedFileTypes: Array<Notification['relatedFileType']> = ["doc", "planilha", "excel", "pdf", "dashboard", "resolucao", "link"];
+        const validRelatedFileTypes: Array<Notification['relatedFileType']> = ["doc", "planilha", "pdf", "dashboard", "resolucao", "link"];
         let fileTypeForRelated: Notification['relatedFileType'] = undefined;
         if (validRelatedFileTypes.includes(contexto.type as any)) {
             fileTypeForRelated = contexto.type as Notification['relatedFileType'];
@@ -176,10 +176,10 @@ const dynamicNotifications: Notification[] = contextosAbertos
         let notificationType: NotificationType;
         if (contexto.status === StatusContexto.AguardandoCorrecao) {
             notificationType = 'comentario'; // Notificações de correção usam ícone de comentário
-        } else if (contexto.type === 'excel') {
+        } else if (contexto.type === 'planilha') {
             notificationType = 'planilha';
         } else {
-            const validNotificationTypes: NotificationType[] = ["doc", "excel", "pdf", "comentario", "sistema", "dashboard", "resolucao", "link"];
+            const validNotificationTypes: NotificationType[] = ["doc", "planilha", "pdf", "comentario", "sistema", "dashboard", "resolucao", "link"];
             if (validNotificationTypes.includes(contexto.type as any)) {
                 notificationType = contexto.type as NotificationType;
             } else {
