@@ -56,18 +56,31 @@ export function loadGoogleCharts(packages: string[] = ['corechart', 'bar']): Pro
                         debug('loader script onload')
                         try {
                             (window as any).google.charts.load('current', { packages })
+
+                            const timeoutMs = 12000
+                            let timeoutId: number | undefined
+
+                            const clear = () => {
+                                if (timeoutId) {
+                                    clearTimeout(timeoutId)
+                                    timeoutId = undefined
+                                }
+                            }
+
                             ;(window as any).google.charts.setOnLoadCallback(() => {
+                                clear()
                                 debug('google.charts.setOnLoadCallback fired')
                                 ;(window as any).__googleChartsLoaderStatus = 'ready'
                                 resolve((window as any).google)
                             })
-                            
-                            // --- CORREÇÃO: REMOVIDA A CHAMADA DUPLA ---
-                            // Não chamamos mais o polling aqui, pois ele causa a condição de corrida.
-                            // Confiamos apenas no setOnLoadCallback.
-                            // finishWhenVisualizationReady() // <-- LINHA REMOVIDA
-                            // --- FIM DA CORREÇÃO ---
 
+                            timeoutId = window.setTimeout(() => {
+                                debug('timeout waiting google.charts.setOnLoadCallback')
+                                ;(window as any).__googleChartsLoaderStatus = 'timeout'
+                                reject(new Error('Timed out loading Google Charts'))
+                            }, timeoutMs)
+
+                            // Not calling finishWhenVisualizationReady() here to avoid double-callbacks.
                         } catch (err) {
                             debug('error during onload handling', err)
                             ;(window as any).__googleChartsLoaderStatus = 'error'

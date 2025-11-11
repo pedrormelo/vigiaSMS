@@ -25,7 +25,10 @@ type AbaDashboardProps = Pick<
     | 'descricaoVersao'
     | 'setDescricaoVersao'
     | 'atualizarFormatoColuna' // <-- Prop corrigida (estava faltando)
+    | 'dashboardRefreshKey'
 >;
+
+// 3B82F6
 
 const coresPredefinidas = {
     blue: '#3B82F6', green: '#22C55E', red: '#EF4444',
@@ -41,7 +44,8 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
         atualizarCelula, adicionarLinha, removerLinha, adicionarColuna, removerColuna, atualizarNomeColuna,
         arquivoDeDados, setArquivoDeDados, baixarModelo,
         isNewVersionMode, selectedVersion, tipoVersao, setTipoVersao, descricaoVersao, setDescricaoVersao,
-        atualizarFormatoColuna
+        atualizarFormatoColuna,
+        dashboardRefreshKey
     } = props;
 
     const [graficoEmTelaCheia, setGraficoEmTelaCheia] = useState(false);
@@ -82,25 +86,20 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
             return `#${f(0)}${f(8)}${f(4)}`;
         };
         const [h, s, l] = hexToHsl(baseColor);
-        return [ baseColor, hslToHex((h + 60) % 360, Math.max(s - 20, 30), Math.min(l + 10, 80)), hslToHex((h + 120) % 360, Math.max(s - 10, 40), Math.max(l - 15, 25)), hslToHex((h + 180) % 360, Math.max(s - 15, 35), Math.min(l + 5, 75)), hslToHex((h + 240) % 360, Math.max(s - 5, 45), Math.max(l - 10, 30)), ];
+        return [baseColor, hslToHex((h + 60) % 360, Math.max(s - 20, 30), Math.min(l + 10, 80)), hslToHex((h + 120) % 360, Math.max(s - 10, 40), Math.max(l - 15, 25)), hslToHex((h + 180) % 360, Math.max(s - 15, 35), Math.min(l + 5, 75)), hslToHex((h + 240) % 360, Math.max(s - 5, 45), Math.max(l - 10, 30)),];
     };
     const handleColorClick = (corHex: string) => { const novoTema = generateColorTheme(corHex); definirCoresDoGrafico(novoTema); };
     const corTemaAtiva = conjuntoDeDados.cores?.[0] || '#3B82F6';
 
     return (
         <>
-            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,_1fr)_minmax(0,_1.5fr)_minmax(0,_1fr)] gap-6 h-full animate-fade-in pb-4">
+            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,_1fr)_minmax(0,_1.5fr)_minmax(0,_1fr)] gap-6 min-h-full animate-fade-in pb-4">
                 {/* Coluna Esquerda */}
-                <div className="flex flex-col space-y-6 pt-1">
-                     <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-x-6 gap-y-2 items-end">
+                <div className="flex flex-col space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-x-6 gap-y-2 items-end">
                         <div>
                             <label className="block text-lg font-medium text-gray-700 mb-2">
                                 Título do Gráfico
-                                {isNewVersionMode && (
-                                    <span className="ml-2 text-xs font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-md align-middle">
-                                        NOVA VERSÃO
-                                    </span>
-                                )}
                             </label>
                             <input
                                 type="text" value={tituloGrafico} onChange={(e) => setTituloGrafico(e.target.value)}
@@ -119,6 +118,14 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                         )}
                     </div>
 
+                    {isNewVersionMode && (
+                        <div className="flex justify-center text-center">
+                            <h3 className="text-xs w-full font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-md align-middle">
+                                NOVA VERSÃO
+                            </h3>
+                        </div>
+                    )}
+                    
                     {/* --- CAMPO DE DETALHES ATUALIZADO --- */}
                     {!isNewVersionMode && (
                         <div>
@@ -140,11 +147,11 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                                 rows={4}
                                 className={cn(
                                     "w-full px-4 py-3 border bg-gray-50/25 border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none",
-                                    showDetalhesWarning ? 
-                                    "border-red-300 focus:ring-red-500" : 
-                                    (isDetalhesValido ? 
-                                    "border-green-300 focus:ring-green-500" : 
-                                    "border-gray-200 focus:ring-blue-500"),
+                                    showDetalhesWarning ?
+                                        "border-red-300 focus:ring-red-500" :
+                                        (isDetalhesValido ?
+                                            "border-green-300 focus:ring-green-500" :
+                                            "border-gray-200 focus:ring-blue-500"),
                                     isNewVersionMode && "disabled:bg-gray-100 disabled:cursor-not-allowed"
                                 )}
                                 disabled={isNewVersionMode}
@@ -159,7 +166,7 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                     {/* --- FIM DA ATUALIZAÇÃO --- */}
 
 
-                     <div>
+                    <div>
                         <label className="block text-lg font-medium text-gray-700 mb-2">Tema de Cores</label>
                         <div className="space-y-2">
                             <div className="flex items-center gap-2 flex-wrap p-2 rounded-2xl">
@@ -180,7 +187,7 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                         </div>
                     </div>
 
-                     {isNewVersionMode && (
+                    {isNewVersionMode && (
                         <div className="space-y-4 rounded-2xl border border-blue-200 bg-blue-50/50 p-4">
                             <h3 className="text-lg font-semibold text-blue-800">Detalhes da Nova Versão</h3>
                             <div>
@@ -235,14 +242,15 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                 </div>
 
                 {/* Coluna Direita */}
-                <div className="flex flex-col space-y-4 h-full pt-1">
-                     <label className="block text-lg font-medium text-gray-700 flex-shrink-0">Pré-visualização</label>
-                     <div className="flex-1 min-h-0 h-full">
+                <div className="flex flex-col space-y-2 h-full">
+                    <label className="block text-lg font-medium text-gray-700 flex-shrink-0">Pré-visualização</label>
+                    <div className="flex-1 min-h-0 h-full">
                         <PrevisualizacaoGrafico
-                            tipoGrafico={tipoGrafico} 
+                            tipoGrafico={tipoGrafico}
                             conjuntoDeDados={conjuntoDeDados}
                             titulo={tituloGrafico}
                             aoAlternarTelaCheia={alternarTelaCheia}
+                            refreshKey={dashboardRefreshKey}
                         />
                     </div>
                 </div>
@@ -250,17 +258,18 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
 
             {/* Modal Tela Cheia */}
             {graficoEmTelaCheia && (
-                 <div className="fixed inset-0 bg-white z-[60] p-4 lg:p-8 flex flex-col animate-fade-in">
+                <div className="fixed inset-0 bg-white z-[60] p-4 lg:p-8 flex flex-col animate-fade-in">
                     <div className="flex justify-between items-center mb-4 flex-shrink-0">
                         <h2 className="text-2xl font-semibold text-gray-800">{tituloGrafico || "Gráfico em Tela Cheia"}</h2>
                         <button onClick={alternarTelaCheia} className="p-3 bg-gray-100 rounded-full text-gray-700 hover:bg-gray-200 transition-colors" title="Fechar tela cheia"><Minimize className="w-6 h-6" /></button>
                     </div>
                     <div className="flex-1 min-h-0 w-full h-full">
-                        <PrevisualizacaoGrafico 
-                            tipoGrafico={tipoGrafico} 
+                        <PrevisualizacaoGrafico
+                            tipoGrafico={tipoGrafico}
                             conjuntoDeDados={conjuntoDeDados}
-                            titulo={tituloGrafico} 
+                            titulo={tituloGrafico}
                             emTelaCheia={true}
+                            refreshKey={dashboardRefreshKey}
                         />
                     </div>
                 </div>

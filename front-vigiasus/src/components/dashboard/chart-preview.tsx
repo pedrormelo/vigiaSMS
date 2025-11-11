@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { loadGoogleCharts } from "@/lib/googleCharts"; // Certifique-se que o caminho está correto
+import { loadGoogleCharts, isGoogleChartsLoaded } from "@/lib/googleCharts"; // Usa util único
 import type { GraphType } from "./graficoCard"; // Ajuste o caminho se necessário
 import { Info, Loader2, AlertTriangle } from "lucide-react"; // Adicionado AlertTriangle
 import { cn } from "@/lib/utils"; // Adicionado cn
@@ -38,7 +38,8 @@ export function ChartPreview({ type, title, data, colors, isHighlighted, editMod
             if (!chartRef.current || !isMounted) return;
 
             // Define o estado de carregamento e limpa erros anteriores
-            setIsLoading(true);
+            // Define loading apenas se a lib ainda não estiver pronta
+            if (!isGoogleChartsLoaded()) setIsLoading(true);
             setDrawError(null);
 
             // Verifica a estrutura dos dados antes de tentar carregar a lib

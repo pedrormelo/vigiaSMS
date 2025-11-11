@@ -8,9 +8,8 @@ import {
     ContextoPayload, DashboardPayload, IndicadorPayload,
     SubmitData
 } from "./types";
-import { showWarningToast, showErrorToast, showDispatchToast } from "@/components/ui/Toasts";
+import { showWarningToast, showErrorToast, showDispatchToast, showSuccessToast } from "@/components/ui/Toasts";
 import { FileType } from "@/components/contextosCard/contextoCard";
-import { cn } from "@/lib/utils";
 
 // --- DEFINIÇÕES DE TIPO DE ARQUIVO ---
 const FILE_TYPE_DEFINITIONS: Record<FileType, { mimes: string[], extensions: string[], label: string }> = {
@@ -80,7 +79,11 @@ export const useModalAdicionarConteudo = ({
     const [arquivoContexto, setArquivoContexto] = useState<File | null>(null);
     const [urlContexto, setUrlContexto] = useState("");
     const [tipoArquivoDetectado, setTipoArquivoDetectado] = useState<FileType | null>(null); 
+    // Controle do modal de link
+    const [linkModalAberto, setLinkModalAberto] = useState(false);
     
+    // Força refresh da pré-visualização do gráfico quando abrimos nova versão / modal
+    const [dashboardRefreshKey, setDashboardRefreshKey] = useState(0);
     // --- ESTADOS DE NOVA VERSÃO ---
     const [isNewVersionMode, setIsNewVersionMode] = useState(false);
     const [selectedVersion, setSelectedVersion] = useState("");
@@ -99,7 +102,6 @@ export const useModalAdicionarConteudo = ({
         cores: ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444'],
         formatos: ['text', 'number'],
     });
-
     // --- ESTADOS DE INDICADOR ---
     const [tituloIndicador, setTituloIndicador] = useState("");
     const [descricaoIndicador, setDescricaoIndicador] = useState("");
@@ -174,18 +176,20 @@ export const useModalAdicionarConteudo = ({
                             ...(payloadDash.colunas?.slice(1).map(() => 'number' as FormatoColuna) || ['number' as FormatoColuna])
                         ],
                     });
+                    // refresh key será incrementado após finalizar reinicialização global
                 }
 
                 if (dadosIniciais.type === 'indicador' && dadosIniciais.payload) {
-                    const payloadIndicador = dadosIniciais.payload as any; 
+                    type IndicadorPayloadAny = import('./types').IndicadorDetailsPayload & { valorAlvo?: string };
+                    const payloadIndicador = dadosIniciais.payload as IndicadorPayloadAny; 
                     setTituloIndicador(dadosIniciais.title || "");
                     setDescricaoIndicador(payloadIndicador.description || dadosIniciais.description || "");
-                    setValorAtualIndicador(payloadIndicador.valorAtual || dadosIniciais.valorAtual || "");
-                    setValorAlvoIndicador(dadosIniciais.valorAlvo || "");
-                    setUnidadeIndicador(payloadIndicador.unidade || dadosIniciais.unidade || "Nenhum");
-                    setTextoComparativoIndicador(payloadIndicador.textoComparativo || dadosIniciais.textoComparativo || "");
-                    setCorIndicador(payloadIndicador.cor || dadosIniciais.cor || "#3B82F6");
-                    setIconeIndicador(payloadIndicador.icone || dadosIniciais.icone || "Heart");
+                    setValorAtualIndicador(payloadIndicador.valorAtual || "");
+                    setValorAlvoIndicador(payloadIndicador.valorAlvo || "");
+                    setUnidadeIndicador(payloadIndicador.unidade || "Nenhum");
+                    setTextoComparativoIndicador(payloadIndicador.textoComparativo || "");
+                    setCorIndicador(payloadIndicador.cor || "#3B82F6");
+                    setIconeIndicador(payloadIndicador.icone || "Heart");
                 }
             
             } else if (arquivoAnexado) {
@@ -207,7 +211,10 @@ export const useModalAdicionarConteudo = ({
                     showErrorToast("Arquivo inválido", "O arquivo solto não é um tipo de contexto válido (PDF, DOC, etc).");
                     setArquivoContexto(null);
                 }
+                // refresh key será incrementado após reinicialização global
             }
+            // Incrementa apenas uma vez ao final de toda preparação, evitando múltiplos renders extras
+            setDashboardRefreshKey(k => k + 1);
         }
     }, [estaAberto, dadosIniciais, abaInicial, reiniciarTodoOEstado, arquivoAnexado]);
 
@@ -300,13 +307,29 @@ export const useModalAdicionarConteudo = ({
             showErrorToast("Ação não permitida", "Você não pode alterar o tipo de 'Arquivo' para 'Link' em uma nova versão.");
             return;
         }
-        const url = prompt("Por favor, insira a URL:");
-        if (url) { 
-            setUrlContexto(url); 
-            setArquivoContexto(null); 
-            setTipoArquivoDetectado("link");
-        }
+        setLinkModalAberto(true);
     };
+
+    const aoConfirmarLink = (url: string) => {
+        const trimmed = url.trim();
+        try {
+            const parsed = new URL(trimmed);
+            if (!/^https?:$/.test(parsed.protocol)) {
+                showErrorToast("URL inválida", "Use http:// ou https://");
+                return;
+            }
+        } catch {
+            showErrorToast("URL inválida", "Formato incorreto");
+            return;
+        }
+        setUrlContexto(trimmed);
+        setArquivoContexto(null);
+        setTipoArquivoDetectado("link");
+        setLinkModalAberto(false);
+        showSuccessToast("Link adicionado ao contexto.");
+    };
+
+    const aoCancelarLink = () => setLinkModalAberto(false);
 
     const aoEntrarNaArea = (e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); setArrastandoSobre(true); };
     const aoSairDaArea = (e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); setArrastandoSobre(false); };
@@ -511,10 +534,13 @@ export const useModalAdicionarConteudo = ({
         adicionarLinha, removerLinha, atualizarCelula, adicionarColuna, removerColuna, atualizarNomeColuna,
         atualizarFormatoColuna,
         baixarModelo, 
+    dashboardRefreshKey,
         
         // Indicador
         tituloIndicador, setTituloIndicador, descricaoIndicador, setDescricaoIndicador, valorAtualIndicador,
         setValorAtualIndicador, valorAlvoIndicador, setValorAlvoIndicador, unidadeIndicador, setUnidadeIndicador,
         textoComparativoIndicador, setTextoComparativoIndicador, corIndicador, setCorIndicador, iconeIndicador, setIconeIndicador,
+        // Link modal
+        linkModalAberto, aoConfirmarLink, aoCancelarLink, setLinkModalAberto,
     };
 };

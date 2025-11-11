@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Eye, Expand, Loader2, AlertTriangle } from "lucide-react";
 import { TipoGrafico, ConjuntoDeDadosGrafico, FormatoColuna } from "./types";
-import { loadGoogleCharts } from "@/lib/googleCharts";
+import { loadGoogleCharts, isGoogleChartsLoaded } from "@/lib/googleCharts";
 
 interface PrevisualizacaoGraficoProps {
     tipoGrafico: TipoGrafico;
@@ -12,6 +12,7 @@ interface PrevisualizacaoGraficoProps {
     titulo: string;
     aoAlternarTelaCheia?: () => void;
     emTelaCheia?: boolean;
+    refreshKey?: number; // força redesenho quando muda
 }
 
 export const PrevisualizacaoGrafico: React.FC<PrevisualizacaoGraficoProps> = ({
@@ -20,16 +21,60 @@ export const PrevisualizacaoGrafico: React.FC<PrevisualizacaoGraficoProps> = ({
     titulo,
     aoAlternarTelaCheia,
     emTelaCheia = false,
+    refreshKey,
 }) => {
     const chartRef = useRef<HTMLDivElement>(null);
     const [isLoadingLibs, setIsLoadingLibs] = useState(false);
     const [drawError, setDrawError] = useState<string | null>(null);
+    const timeoutRef = useRef<number | null>(null);
+    const [retryToken, setRetryToken] = useState(0);
+    const rafIdRef = useRef<number | null>(null);
 
     // 🔧 --- Preparação e saneamento de dados ---
     const dadosGrafico = useMemo(() => {
         if (!conjuntoDeDados) return null;
 
         try {
+            const parseLocaleNumber = (raw: string, formato?: FormatoColuna): number | null => {
+                if (raw == null) return null;
+                let s = String(raw).trim();
+                if (!s) return null;
+                // Detect percent sign explicitly present
+                const hadPercent = /%/.test(s);
+                // Remove currency prefixes/suffixes and any non-digit separators except , . -
+                s = s.replace(/[R$\s]/gi, "");
+                s = s.replace(/[^0-9,.-]/g, "");
+                if (!s) return null;
+                let normalized = s;
+                const hasComma = normalized.includes(",");
+                const hasDot = normalized.includes(".");
+                if (hasComma && hasDot) {
+                    // Choose the last separator as decimal; remove the other as thousands
+                    const lastComma = normalized.lastIndexOf(",");
+                    const lastDot = normalized.lastIndexOf(".");
+                    if (lastComma > lastDot) {
+                        // comma decimal, dots thousand
+                        normalized = normalized.replace(/\./g, "").replace(",", ".");
+                    } else {
+                        // dot decimal, commas thousand
+                        normalized = normalized.replace(/,/g, "");
+                    }
+                } else if (hasComma) {
+                    // Treat comma as decimal
+                    normalized = normalized.replace(/\./g, "");
+                    normalized = normalized.replace(",", ".");
+                } else {
+                    // Dot as decimal; remove stray commas just in case
+                    normalized = normalized.replace(/,/g, "");
+                }
+                const num = Number(normalized);
+                if (isNaN(num)) return null;
+                let val = num;
+                const shouldBePercent = formato === "percent" || hadPercent;
+                if (shouldBePercent && Math.abs(val) >= 1) val = val / 100;
+                return val;
+            };
+
             const linhasFormatadas = conjuntoDeDados.linhas.map((linha, linhaIndex) =>
                 linha.map((celula, colIndex) => {
                     // Primeira coluna: categorias (mantém texto)
@@ -37,16 +82,16 @@ export const PrevisualizacaoGrafico: React.FC<PrevisualizacaoGraficoProps> = ({
 
                     let valor = celula;
 
-                    // Converte string numérica (ex: "12,5") → number
-                    if (typeof valor === "string" && valor.trim() !== "") {
-                        const num = Number(valor.replace(",", "."));
-                        if (!isNaN(num)) valor = num;
+                    // Converte strings diversas ("12,5", "1.234,56", "10%", "R$ 1.234,00") para number
+                    if (typeof valor === "string") {
+                        const formatoColuna = conjuntoDeDados.formatos?.[colIndex];
+                        const parsed = parseLocaleNumber(valor, formatoColuna);
+                        valor = parsed ?? null; // Mantém null para valores não numéricos
                     }
 
-                    // Inicializa valores vazios
-                    if (valor === "" || valor === undefined || valor === null) {
-                        // Primeira linha recebe null (mantém tipo numérico sem alterar o gráfico)
-                        valor = linhaIndex === 0 ? null : 0;
+                    // Inicializa valores vazios (valor agora é number | null após parsing)
+                    if (valor === null || valor === undefined) {
+                        valor = null;
                     }
 
                     // Normaliza percentuais
@@ -117,27 +162,71 @@ export const PrevisualizacaoGrafico: React.FC<PrevisualizacaoGraficoProps> = ({
         let chartInstance: any = null;
         let isMounted = true;
         let googleVisualization: any = null;
+        let runId = Math.random();
 
         const draw = async () => {
             if (!chartRef.current || !isMounted) return;
+            const containerEl = chartRef.current; // fixa o container alvo deste draw
             if (!possuiDadosValidos()) {
                 setDrawError(null);
                 setIsLoadingLibs(false);
-                chartRef.current.innerHTML = "";
+                try { if (containerEl) containerEl.innerHTML = ""; } catch {}
                 return;
             }
 
-            setIsLoadingLibs(true);
+            // Inicia loading apenas se a biblioteca ainda não estiver carregada
+            const libLoaded = isGoogleChartsLoaded();
+            if (!libLoaded) setIsLoadingLibs(true);
+            // limpa o container antes de redesenhar
+            try { if (containerEl) containerEl.innerHTML = ""; } catch {}
+
+            // Aguarda um frame para estabilizar o DOM (evita corrida com StrictMode/mudança de ref)
+            await new Promise<void>((resolve) => {
+                rafIdRef.current = requestAnimationFrame(() => resolve());
+            });
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+                timeoutRef.current = null;
+            }
+            timeoutRef.current = window.setTimeout(() => {
+                if (!isMounted) return;
+                console.warn("[previsualizacaoGrafico] Timeout ao carregar Google Charts. Exibindo mensagem de erro.");
+                setDrawError("Tempo excedido ao carregar bibliotecas do gráfico. Verifique sua conexão e tente novamente.");
+                setIsLoadingLibs(false);
+            }, 15000);
             setDrawError(null);
 
             try {
                 const google = await loadGoogleCharts(["corechart"]);
+                // Se houver corrida ou desmontagem, aborta e limpa loading/timeout
+                if (!isMounted || runId === null) {
+                    if (timeoutRef.current) { clearTimeout(timeoutRef.current); timeoutRef.current = null; }
+                    setIsLoadingLibs(false);
+                    return;
+                }
                 googleVisualization = google.visualization;
 
                 if (!isMounted) return;
                 if (!googleVisualization) throw new Error("Biblioteca Google Charts não carregada.");
 
-                const chartData = googleVisualization.arrayToDataTable(dadosGrafico);
+                // Constrói DataTable com tipos explícitos para evitar inferência incorreta
+                if (!dadosGrafico) throw new Error("Dados do gráfico ausentes");
+                const header = dadosGrafico[0] as string[];
+                const rows = dadosGrafico.slice(1);
+                const chartData = new googleVisualization.DataTable();
+                chartData.addColumn('string', header[0]);
+                for (let c = 1; c < header.length; c++) {
+                    chartData.addColumn('number', header[c]);
+                }
+                const safeRows = rows.map((r) => {
+                    const row: (string | number | null)[] = [String(r[0] ?? '')];
+                    for (let c = 1; c < header.length; c++) {
+                        const v = r[c];
+                        row.push(typeof v === 'number' && Number.isFinite(v) ? v : null);
+                    }
+                    return row;
+                });
+                chartData.addRows(safeRows);
 
                 // Aplicar formatações (%, R$, etc.)
                 if (conjuntoDeDados?.formatos && chartData) {
@@ -207,39 +296,74 @@ export const PrevisualizacaoGrafico: React.FC<PrevisualizacaoGraficoProps> = ({
                 // --- INÍCIO DA CORREÇÃO ---
                 // Verificamos se a 'ref' (chartRef.current) ainda existe *antes*
                 // de passá-la para o construtor do Google Charts.
-                if (!chartRef.current || !isMounted) {
+                if (!containerEl || !isMounted || chartRef.current !== containerEl) {
                     console.warn("[previsualizacaoGrafico] A referência do gráfico (chartRef.current) tornou-se nula durante o desenho. Abortando.");
+                    if (timeoutRef.current) { clearTimeout(timeoutRef.current); timeoutRef.current = null; }
                     if (isMounted) setIsLoadingLibs(false); // Garante que o loading pare
                     return; // Aborta a função de desenho
                 }
                 // --- FIM DA CORREÇÃO ---
 
-                chartInstance = new ChartClass(chartRef.current); // Esta era a linha 207
-                googleVisualization.events.addListener(chartInstance, "error", (err: any) => {
-                    console.error("[previsualizacaoGrafico] Erro no desenho do Google Charts:", err);
-                    if (isMounted) setDrawError(`Erro ao desenhar: ${err.message || String(err)}`);
-                });
-
+                chartInstance = new ChartClass(containerEl); // prende ao container do início do draw
+                if (googleVisualization?.events) {
+                    googleVisualization.events.addListener(chartInstance, 'ready', () => {
+                        if (isMounted) setIsLoadingLibs(false);
+                    });
+                    googleVisualization.events.addListener(chartInstance, "error", (err: any) => {
+                        console.error("[previsualizacaoGrafico] Erro no desenho do Google Charts:", err);
+                        if (isMounted) {
+                            setDrawError(`Erro ao desenhar: ${err.message || String(err)}`);
+                            setIsLoadingLibs(false);
+                        }
+                    });
+                } else {
+                    // Fallback se events não existir
+                    setTimeout(() => { if (isMounted) setIsLoadingLibs(false); }, 500);
+                }
                 chartInstance.draw(chartData, currentOptions);
             } catch (err: any) {
                 console.error("[previsualizacaoGrafico] Falha no processo de desenho:", err);
                 if (isMounted && !drawError) {
                     setDrawError(`Erro ao gerar gráfico: ${err.message || String(err)}`);
+                    setIsLoadingLibs(false);
                 }
             } finally {
-                if (isMounted) setIsLoadingLibs(false);
+                if (timeoutRef.current) {
+                    clearTimeout(timeoutRef.current);
+                    timeoutRef.current = null;
+                }
+                if (isMounted && isLoadingLibs && isGoogleChartsLoaded()) {
+                    // Caso 'ready' não tenha disparado (ex: gráfico sem listeners), garantimos fim do loading
+                    setIsLoadingLibs(false);
+                }
             }
+    };
+        const scheduleDraw = () => {
+            if (rafIdRef.current) {
+                cancelAnimationFrame(rafIdRef.current);
+                rafIdRef.current = null;
+            }
+            rafIdRef.current = requestAnimationFrame(() => { draw(); });
         };
 
-        draw();
+        scheduleDraw();
 
         if (chartRef.current && (window as any).ResizeObserver) {
-            resizeObserver = new ResizeObserver(() => isMounted && draw());
+            resizeObserver = new ResizeObserver(() => isMounted && scheduleDraw());
             resizeObserver.observe(chartRef.current);
         }
 
         return () => {
             isMounted = false;
+            runId = null as any;
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+                timeoutRef.current = null;
+            }
+            if (rafIdRef.current) {
+                cancelAnimationFrame(rafIdRef.current);
+                rafIdRef.current = null;
+            }
             if (resizeObserver && chartRef.current) {
                 try {
                     resizeObserver.unobserve(chartRef.current);
@@ -257,7 +381,7 @@ export const PrevisualizacaoGrafico: React.FC<PrevisualizacaoGraficoProps> = ({
                 }
             }
         };
-    }, [tipoGrafico, dadosGrafico, titulo, opcoesFinais, conjuntoDeDados?.formatos]);
+    }, [tipoGrafico, dadosGrafico, titulo, opcoesFinais, conjuntoDeDados?.formatos, retryToken, refreshKey]);
 
     // --- Renderização condicional ---
     if (isLoadingLibs) {
@@ -275,7 +399,11 @@ export const PrevisualizacaoGrafico: React.FC<PrevisualizacaoGraficoProps> = ({
                 <AlertTriangle className="w-10 h-10 mb-3" />
                 <p className="font-semibold mb-1">Erro na Pré-visualização</p>
                 <p className="text-xs">{drawError}</p>
-                <p className="text-xs mt-2 text-gray-500">Verifique os dados ou o console (F12).</p>
+                <p className="text-xs mt-2 text-gray-500">Verifique os dados ou o console (F12). Você também pode tentar novamente.</p>
+                <button
+                    onClick={() => { setDrawError(null); setRetryToken((t) => t + 1); }}
+                    className="mt-3 px-3 py-1.5 text-xs rounded-md bg-red-600 text-white hover:bg-red-700"
+                >Tentar novamente</button>
             </div>
         );
     }

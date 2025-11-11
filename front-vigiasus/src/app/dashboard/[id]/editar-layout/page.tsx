@@ -7,6 +7,7 @@ import { SelecioneGraficoModal } from "@/components/popups/selecioneGrafico-moda
 import { diretoriasConfig } from "@/constants/diretorias";
 import { Button } from "@/components/ui/button"
 import { useParams, useRouter } from "next/dist/client/components/navigation"
+import { showSuccessToast, showWarningToast } from "@/components/ui/Toasts";
 
 import { Info, LayoutDashboard } from "lucide-react";
 
@@ -162,7 +163,7 @@ export default function DashboardBuilder() {
             const isGraphAlreadyInLayout = layoutGraphs.some((layoutGraph) => layoutGraph?.id === graph.id)
 
             if (isGraphAlreadyInLayout) {
-                alert("Este gráfico já está presente no layout. Cada gráfico pode ser adicionado apenas uma vez.")
+                showWarningToast("Este gráfico já está presente no layout. Cada gráfico pode ser adicionado apenas uma vez.")
                 setSelectedPosition(null)
                 return
             }
@@ -198,7 +199,7 @@ export default function DashboardBuilder() {
             const currentHighlighted = prev.filter((g) => g?.isHighlighted).length
             if (highlighted && currentHighlighted >= 3) {
                 // Limite de 3 destaques
-                alert("Cada diretoria pode destacar no máximo 3 gráficos.")
+                showWarningToast("Cada diretoria pode destacar no máximo 3 gráficos.")
                 return prev
             }
             return prev.map((graph) => (graph?.id === id ? { ...graph, isHighlighted: highlighted } : graph))
@@ -214,10 +215,12 @@ export default function DashboardBuilder() {
 
     const handleSaveDashboard = () => {
         const filledGraphs = layoutGraphs.filter((graph) => graph !== null)
+        // Exibir feedback imediato de sucesso
+        showSuccessToast("Dashboard salvo com sucesso!")
         router.push(`/dashboard/${id}`);
         console.log("Saving dashboard:", { layout: selectedLayout, graphs: filledGraphs })
         // Here you would typically save to a backend
-        alert("Dashboard salvo com sucesso!")
+        // Toast já exibido acima; removido alert bloqueante
     }
 
     const params = useParams();

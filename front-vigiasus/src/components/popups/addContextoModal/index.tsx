@@ -3,11 +3,12 @@
 
 import React from "react";
 import { FilePlus2, LayoutDashboard, FileSymlink, Gauge, ArrowLeft } from "lucide-react";
-import { ModalAdicionarConteudoProps } from "@/components/popups/addContextoModal/types"; 
+import { ModalAdicionarConteudoProps } from "@/components/popups/addContextoModal/types";
 import { useModalAdicionarConteudo } from "@/components/popups/addContextoModal/useAddContentModal";
-import { AbaContexto } from "@/components/popups/addContextoModal/abaContexto"; 
+import { AbaContexto } from "@/components/popups/addContextoModal/abaContexto";
 import { AbaDashboard } from "@/components/popups/addContextoModal/abaDashboard";
-import { AbaIndicador } from "@/components/popups/addContextoModal/abaIndicador"; 
+import { AbaIndicador } from "@/components/popups/addContextoModal/abaIndicador";
+import { AddLinkModal } from "@/components/popups/addContextoModal/addLinkModal";
 
 const EstilosModal = () => (
     <style>{`
@@ -33,10 +34,10 @@ export function ModalAdicionarConteudo(props: ModalAdicionarConteudoProps) {
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                 {/* Largura e altura consistentes para todas as abas */}
                 <div className={`bg-white rounded-[40px] w-full max-w-7xl h-[90vh] flex flex-col shadow-2xl transition-all duration-300`}>
-                    
+
                     <header className="bg-gradient-to-r from-[#0037C1] to-[#00BDFF] px-8 py-4 flex items-center justify-between rounded-t-[40px] flex-shrink-0">
                         <div className="flex items-center gap-3">
-                            
+
                             {/* --- INÍCIO DA MODIFICAÇÃO --- */}
                             {/* O 'div' branco arredondado foi removido daqui. */}
                             {/* Os ícones agora são renderizados diretamente. */}
@@ -48,8 +49,8 @@ export function ModalAdicionarConteudo(props: ModalAdicionarConteudoProps) {
                             <h2 className="text-2xl font-regular text-white">
                                 {isNewVersionMode ? 'Criar Nova Versão' : (
                                     abaAtiva === 'contexto' ? 'Adicionar Novo Contexto' :
-                                    abaAtiva === 'dashboard' ? 'Criar Novo Dashboard' :
-                                    'Adicionar Novo Indicador'
+                                        abaAtiva === 'dashboard' ? 'Criar Novo Dashboard' :
+                                            'Adicionar Novo Indicador'
                                 )}
                             </h2>
                         </div>
@@ -57,14 +58,14 @@ export function ModalAdicionarConteudo(props: ModalAdicionarConteudoProps) {
                     </header>
 
                     <div className="flex-1 p-8 flex flex-col min-h-0 overflow-y-auto">
-                       {!isNewVersionMode && (
+                        {!isNewVersionMode && (
                             <div className="flex space-x-2 mb-8 bg-gray-100 rounded-2xl p-2 flex-shrink-0">
                                 <button onClick={() => setAbaAtiva("contexto")} className={`flex-1 py-3 px-6 rounded-2xl font-semibold transition-all flex justify-center items-center ${abaAtiva === "contexto" ? "bg-white text-blue-600 shadow-md" : "text-gray-600 hover:text-gray-800"}`}><FilePlus2 className="w-5 h-5 mr-2" /> Contexto</button>
                                 <button onClick={() => setAbaAtiva("dashboard")} className={`flex-1 py-3 px-6 rounded-2xl font-semibold transition-all flex justify-center items-center ${abaAtiva === "dashboard" ? "bg-white text-blue-600 shadow-md" : "text-gray-600 hover:text-gray-800"}`}><LayoutDashboard className="w-5 h-5 mr-2" /> Dashboard</button>
                                 <button onClick={() => setAbaAtiva("indicador")} className={`flex-1 py-3 px-6 rounded-2xl font-semibold transition-all flex justify-center items-center ${abaAtiva === "indicador" ? "bg-white text-blue-600 shadow-md" : "text-gray-600 hover:text-gray-800"}`}><Gauge className="w-5 h-5 mr-2" /> Indicador</button>
                             </div>
                         )}
-                        
+
                         <div className="flex-1 min-h-0">
                             {abaAtiva === 'contexto' && <AbaContexto {...retornosDoHook} isNewVersionMode={isNewVersionMode} />}
                             {abaAtiva === 'dashboard' && <AbaDashboard {...retornosDoHook} isNewVersionMode={isNewVersionMode} />}
@@ -81,6 +82,13 @@ export function ModalAdicionarConteudo(props: ModalAdicionarConteudoProps) {
                     </footer>
                 </div>
             </div>
+            {/* Modal de Link */}
+            <AddLinkModal
+                open={retornosDoHook.linkModalAberto}
+                onClose={retornosDoHook.aoCancelarLink}
+                onConfirm={retornosDoHook.aoConfirmarLink}
+                initialUrl={retornosDoHook.urlContexto}
+            />
         </>
     );
 }
