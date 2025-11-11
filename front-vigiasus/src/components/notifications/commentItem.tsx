@@ -1,11 +1,12 @@
-import { Comment } from "@/constants/notificationsData"; // Certifique-se de que o caminho para o seu mock de dados está correto
+import { Comment } from "@/constants/types";
+import { Lock, User } from "lucide-react";
 
 interface CommentItemProps {
   comment: Comment;
 }
 
 export default function CommentItem({ comment }: CommentItemProps) {
-  const { author, text, time, date, isMyComment, role } = comment;
+  const { author, text, time, date, isMyComment, role, isPrivate, toAuthor } = comment;
 
   // Style by role
   let roleStyle = "";
@@ -44,14 +45,20 @@ export default function CommentItem({ comment }: CommentItemProps) {
   return (
     <div
       className={`max-w-[75%] p-3 rounded-2xl shadow-sm border text-sm ${
-        isMyComment
-          ? "self-end rounded-br-none"
-          : "self-start rounded-bl-none"
+        isMyComment ? "self-end rounded-br-none" : "self-start rounded-bl-none"
       } ${roleStyle}`}
     >
-      <p className="font-semibold text-xs mb-1 text-gray-600">{author}</p>
+      <div className="flex items-center justify-between gap-2 mb-1">
+        <p className="font-semibold text-xs text-gray-600">{author}</p>
+        {isPrivate && (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-800 text-white">
+            <Lock className="w-3 h-3" />
+            {toAuthor ? `Privado para ${toAuthor}` : "Privado"}
+          </span>
+        )}
+      </div>
       <p>{text}</p>
-      <span className={`block text-xs text-right mt-2 text-gray-500`}>
+      <span className="block text-xs text-right mt-2 text-gray-500">
         {date} - {time}
       </span>
     </div>

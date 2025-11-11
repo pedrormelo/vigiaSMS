@@ -78,23 +78,17 @@ export default function NotificationList({
       {/* Cabeçalho Fixo da Lista */}
       <div className="flex-shrink-0 p-4 border-b border-gray-200 bg-white">
         <div className="inline-flex items-center gap-2 mb-1 text-blue-800">
-          <h3 className="text-lg font-semibold text-blue-800">
-            Caixa de Entrada
-          </h3>
-
-          {/* --- BOTÃO DE CONFIGURAÇÕES ATUALIZADO --- */}
+          <h3 className="text-lg font-semibold text-blue-800">Caixa de Entrada</h3>
           <button
-            onClick={onToggleSettings} // <--- CHAMA A PROP
-            aria-expanded={isSettingsActive} // <--- USA A PROP
+            onClick={onToggleSettings}
+            aria-expanded={isSettingsActive}
             className={cn(
               "rounded-full p-1 border border-gray-200 hover:bg-gray-100 transition-colors",
-              isSettingsActive ? "bg-gray-100" : "" // <--- USA A PROP
+              isSettingsActive ? "bg-gray-100" : ""
             )}
           >
-            <Settings2 className="h-5 w-5"/>
+            <Settings2 className="h-5 w-5" />
           </button>
-          {/* --- FIM DA ATUALIZAÇÃO --- */}
-
         </div>
         <p className="text-sm text-gray-600">
           {totalUnreadCount > 0
@@ -102,8 +96,7 @@ export default function NotificationList({
             : 'Nenhuma notificação nova'}
         </p>
       </div>
-
-      {/* Área de Scroll (inalterada) */}
+      {/* Área de Scroll */}
       <div className="flex-1 w-full h-full overflow-y-auto scrollbar-custom">
         {notifications.length > 0 ? (
           <div className="flex flex-col gap-2 p-3">

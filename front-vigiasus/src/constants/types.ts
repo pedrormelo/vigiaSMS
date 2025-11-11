@@ -19,6 +19,8 @@ export interface Comment {
   date: string; // Ex: "04/08/2025"
   isMyComment: boolean;
   role?: CommentRole; // Role opcional para estilização
+  isPrivate?: boolean; // Mensagem enviada em privado (apenas local/visual)
+  toAuthor?: string; // Destinatário específico quando mensagem é privada
 }
 
 // Interface principal para uma Notificação

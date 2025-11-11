@@ -51,7 +51,7 @@ const ContextNotificationDetails: React.FC<Props> = ({
   };
 
   const docTypeForIcon = relatedFileType || type;
-  const canViewContexto = !!(onOpenContexto && contextoId);
+  const canViewContexto = !!contextoId;
 
   return (
     <div className="flex flex-col h-full bg-white">
