@@ -2,17 +2,16 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Notification, Comment } from "@/constants/types";
-import SystemUpdateView from "@/components/systemUpdate/systemUpdateNotification";
-import CommentItem from "@/components/notifications/commentItem";
+// ... (imports inalterados: Notification, Comment, SystemUpdateView, etc.)
 import { Loader2, Info, Eye, MessageSquare, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import IconeDocumento from '@/components/validar/iconeDocumento';
 import { FileType } from "@/components/contextosCard/contextoCard";
 import { showSuccessToast } from "@/components/ui/Toasts";
+import CommentItem from "./commentItem";
+import { Notification, Comment } from "@/constants/types";
 
-// Props (Sem onMarkAsRead, como na última versão)
 interface Props {
   notification: Notification | null;
   isRead: boolean;
@@ -26,6 +25,8 @@ const ContextNotificationDetails: React.FC<Props> = ({
   const [localComments, setLocalComments] = useState<Comment[]>([]);
   const [showQuickReplies, setShowQuickReplies] = useState(false);
   const [newMessage, setNewMessage] = useState("");
+  
+  // Estado de 'useChatBg' é lido do localStorage
   const [useChatBg, setUseChatBg] = useState<boolean>(() => {
     try {
       return localStorage.getItem('notifications.useChatBg') === 'true';
@@ -33,22 +34,16 @@ const ContextNotificationDetails: React.FC<Props> = ({
       return false;
     }
   });
-  const [showSettingsPanel, setShowSettingsPanel] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem('notifications.showSettings') === 'true';
-    } catch (e) {
-      return false;
-    }
-  });
 
+  // REMOVIDO: Estado 'showSettingsPanel'
+
+  // Ouve o localStorage apenas para 'useChatBg'
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
       if (e.key === 'notifications.useChatBg') {
         setUseChatBg(e.newValue === 'true');
       }
-      if (e.key === 'notifications.showSettings') {
-        setShowSettingsPanel(e.newValue === 'true');
-      }
+      // REMOVIDO: Listener para 'showSettings'
     };
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
@@ -58,64 +53,38 @@ const ContextNotificationDetails: React.FC<Props> = ({
     setLocalComments(notification?.comments || []);
   }, [notification]);
 
-  // --- INÍCIO DA MODIFICAÇÃO (Lógica de "Pode Responder") ---
-
-  // (Request 2 - da iteração anterior)
-  //  Verifica se a outra parte já iniciou a conversa.
+  // --- Lógica "Pode Responder" (inalterada) ---
   const hasOthersComments = localComments.some(comment => !comment.isMyComment);
-
-  // (Request 3 - Novo)
-  //  Verifica se o ÚLTIMO comentário foi do usuário.
   const lastComment = localComments.length > 0 ? localComments[localComments.length - 1] : null;
   const userSpokeLast = lastComment ? lastComment.isMyComment : false;
-
-  //  O usuário SÓ PODE RESPONDER se:
-  //    a) A outra parte já falou (hasOthersComments)
-  //    E
-  //    b) O usuário NÃO foi o último a falar (!userSpokeLast)
   const canUserReply = hasOthersComments && !userSpokeLast;
-
-  // --- FIM DA MODIFICAÇÃO ---
-
+  // --- Fim da Lógica ---
 
   if (!notification) return null;
 
   const { title, description, type, relatedFileType, contextoId } = notification;
 
-  // Função de Resposta Rápida
+  // --- Funções de Chat (handleQuickReply, handleSendMessage) (inalteradas) ---
   const handleQuickReply = (replyText: string) => {
-    // (Request 3) Confiança no estado do botão (disabled), 
-    // mas uma verificação extra não faz mal.
     if (!canUserReply) return;
-
-    // Simula o envio do comentário
     const now = new Date();
     const comment: Comment = {
-      id: Math.random(),
-      author: "Você",
-      text: replyText,
+      id: Math.random(), author: "Você", text: replyText,
       time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       date: now.toLocaleDateString('pt-BR'),
       isMyComment: true, role: "user",
     };
-    // Ao adicionar este comentário, o useEffect não será acionado, 
-    // mas o re-render fará com que 'userSpokeLast' seja 'true',
-    // desabilitando os botões.
     setLocalComments(prev => [...prev, comment]);
     showSuccessToast(`Resposta "${replyText}" enviada.`);
   };
-
   const quickReplies = ["Ciente.", "Obrigado(a).", "Recebido.", "Entendido."];
-
   const handleSendMessage = () => {
     if (!canUserReply) return;
     const text = newMessage.trim();
     if (!text) return;
     const now = new Date();
     const comment: Comment = {
-      id: Math.random(),
-      author: "Você",
-      text,
+      id: Math.random(), author: "Você", text,
       time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       date: now.toLocaleDateString('pt-BR'),
       isMyComment: true, role: "user",
@@ -125,15 +94,14 @@ const ContextNotificationDetails: React.FC<Props> = ({
     setShowQuickReplies(false);
     showSuccessToast("Mensagem enviada.");
   };
-
+  // --- Fim das Funções de Chat ---
 
   const docTypeForIcon = (relatedFileType || type) as FileType;
   const canViewContexto = !!contextoId;
 
   return (
     <div className="flex flex-col h-full bg-white">
-
-      {/* Cabeçalho (Sem alteração) */}
+      {/* Cabeçalho (inalterado) */}
       <div className="p-4 border-b border-gray-200 flex-shrink-0 bg-gray-50/30">
         <div className="flex items-start gap-4">
           <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-white border border-gray-200 shadow-inner flex-shrink-0 p-3">
@@ -160,7 +128,10 @@ const ContextNotificationDetails: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* Área de Comentários (Scroll) (Sem alteração) */}
+      {/* *** INÍCIO DA MODIFICAÇÃO PRINCIPAL ***
+        Removemos o 'showSettingsPanel ? (...) : (...)'
+        Agora esta seção *sempre* renderiza os comentários.
+      */}
       <div
         className={cn(
           "flex-1 p-4 flex flex-col gap-3 overflow-y-auto scrollbar-custom",
@@ -168,79 +139,22 @@ const ContextNotificationDetails: React.FC<Props> = ({
         )}
         style={useChatBg ? { backgroundImage: "url('/chat/bg-chat-3.png')" } : undefined}
       >
-        {showSettingsPanel ? (
-          <div className="w-full h-full flex flex-col">
-            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold text-lg">Configurações de Notificações</h3>
-                <p className="text-sm text-gray-500">Ajuste filtros e o visual do chat</p>
-              </div>
-              <div>
-                <button
-                  onClick={() => {
-                    try { localStorage.setItem('notifications.showSettings', 'false'); } catch (e) {}
-                    setShowSettingsPanel(false);
-                  }}
-                  className="text-sm text-gray-600 px-3 py-1 rounded hover:bg-gray-100"
-                >Fechar</button>
-              </div>
-            </div>
-
-            <div className="p-4 flex-1 overflow-auto">
-              <div className="mb-4">
-                <p className="text-sm font-medium">Filtros</p>
-                <div className="flex gap-2 mt-2">
-                  {['all','unread','system'].map((f) => (
-                    <button
-                      key={f}
-                      onClick={() => {
-                        try { localStorage.setItem('notifications.activeFilter', f); } catch (e) {}
-                        // The list listens to storage changes and will apply the filter
-                      }}
-                      className="px-3 py-1 rounded-xl bg-gray-100 text-sm"
-                    >{f === 'all' ? 'Todas' : f === 'unread' ? 'Não Lidas' : 'Sistema'}</button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mb-4">
-                <p className="text-sm font-medium">Fundo do chat</p>
-                <p className="text-xs text-gray-500">Ativar o fundo personalizado para a área de comentários</p>
-                <div className="mt-2">
-                  <label className="inline-flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={useChatBg}
-                      onChange={(e) => {
-                        const next = e.target.checked;
-                        try { localStorage.setItem('notifications.useChatBg', next ? 'true' : 'false'); } catch (err) {}
-                        setUseChatBg(next);
-                      }}
-                      className="form-checkbox h-4 w-4 text-blue-600"
-                    />
-                    <span className="text-sm">Usar fundo personalizado</span>
-                  </label>
-                </div>
-              </div>
-            </div>
-          </div>
+        {localComments.length > 0 ? (
+          localComments.map((comment) => (
+            <CommentItem key={comment.id} comment={comment} />
+          ))
         ) : (
-          localComments.length > 0 ? (
-            localComments.map((comment) => (
-              <CommentItem key={comment.id} comment={comment} />
-            ))
-          ) : (
-            <div className="flex-1 flex items-center justify-center text-center text-gray-500">
-              <p>Não há comentários para esta notificação.</p>
-            </div>
-          )
+          <div className="flex-1 flex items-center justify-center text-center text-gray-500">
+            <p>Não há comentários para esta notificação.</p>
+          </div>
         )}
       </div>
+      {/* *** FIM DA MODIFICAÇÃO PRINCIPAL *** */}
 
-      {/* --- INÍCIO DA MODIFICAÇÃO (Rodapé com Tooltip e Lógica 'disabled' atualizados) --- */}
+
+      {/* Rodapé de Resposta (inalterado) */}
       <div
         className="p-4 border-t border-gray-200 bg-white flex-shrink-0"
-        // (Request 3) O tooltip agora reflete as duas condições
         title={
           !hasOthersComments
             ? "Respostas rápidas são habilitadas após o primeiro comentário da outra parte."
@@ -250,15 +164,12 @@ const ContextNotificationDetails: React.FC<Props> = ({
         }
       >
         <div className="flex items-center gap-3">
-
-          {/* Input + send area */}
           <div className="flex items-center gap-2 flex-1">
             <input
               type="text"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyDown={(e) => {
-                // Enviar com Enter (Shift+Enter preservado caso se mude para textarea no futuro)
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
                   handleSendMessage();
@@ -268,10 +179,8 @@ const ContextNotificationDetails: React.FC<Props> = ({
               disabled={!canUserReply}
               className="flex-1 px-3 py-2 rounded-full border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 ring-offset disabled:opacity-60"
             />
-
-            {/* Chat icon button (side of send) */}
+            {/* Botão de Respostas Rápidas (inalterado) */}
             <div className="relative">
-
               <button
                 onClick={() => setShowQuickReplies(prev => !prev)}
                 aria-label="Mostrar respostas rápidas"
@@ -283,7 +192,6 @@ const ContextNotificationDetails: React.FC<Props> = ({
               >
                 <MessageSquare className="w-4 h-4 text-gray-600" />
               </button>
-
               {showQuickReplies && (
                 <div className="absolute left-0 bottom-full mb-2 bg-white/50 backdrop-blur-md border-gray-200 shadow-xl rounded-2xl z-20">
                   <div className="flex flex-col p-2">
@@ -304,7 +212,7 @@ const ContextNotificationDetails: React.FC<Props> = ({
                 </div>
               )}
             </div>
-
+            {/* Botão Enviar (inalterado) */}
             <Button
               onClick={handleSendMessage}
               size="sm"
@@ -318,16 +226,13 @@ const ContextNotificationDetails: React.FC<Props> = ({
               Enviar
             </Button>
           </div>
-
         </div>
       </div>
-      {/* --- FIM DA MODIFICAÇÃO --- */}
-
     </div>
   );
 };
 
-// --- COMPONENTE PRINCIPAL (Wrapper - Sem alterações) ---
+// --- COMPONENTE PRINCIPAL (Wrapper - inalterado) ---
 export default function NotificationDetailView({
   notification, isRead, onOpenContexto
 }: Props) {
@@ -359,6 +264,7 @@ export default function NotificationDetailView({
     );
   }
 
+  // Se for 'sistema', renderiza SystemUpdateView (inalterado)
   if (notification?.type === "sistema") {
     return (
       <div className="flex-1 flex flex-col h-full overflow-hidden">
@@ -366,6 +272,7 @@ export default function NotificationDetailView({
       </div>
     );
   }
+  // Se for qualquer outra notificação, renderiza ContextNotificationDetails (inalterado)
   else if (notification) {
     return (
       <div className="flex-1 flex flex-col h-full overflow-hidden">
