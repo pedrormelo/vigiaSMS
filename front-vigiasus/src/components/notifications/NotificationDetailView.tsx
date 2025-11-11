@@ -33,21 +33,11 @@ const ContextNotificationDetails: React.FC<Props> = ({
       return false;
     }
   });
-  const [showSettingsPanel, setShowSettingsPanel] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem('notifications.showSettings') === 'true';
-    } catch (e) {
-      return false;
-    }
-  });
 
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
       if (e.key === 'notifications.useChatBg') {
         setUseChatBg(e.newValue === 'true');
-      }
-      if (e.key === 'notifications.showSettings') {
-        setShowSettingsPanel(e.newValue === 'true');
       }
     };
     window.addEventListener('storage', onStorage);
@@ -168,72 +158,14 @@ const ContextNotificationDetails: React.FC<Props> = ({
         )}
         style={useChatBg ? { backgroundImage: "url('/chat/bg-chat-3.png')" } : undefined}
       >
-        {showSettingsPanel ? (
-          <div className="w-full h-full flex flex-col">
-            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold text-lg">Configurações de Notificações</h3>
-                <p className="text-sm text-gray-500">Ajuste filtros e o visual do chat</p>
-              </div>
-              <div>
-                <button
-                  onClick={() => {
-                    try { localStorage.setItem('notifications.showSettings', 'false'); } catch (e) {}
-                    setShowSettingsPanel(false);
-                  }}
-                  className="text-sm text-gray-600 px-3 py-1 rounded hover:bg-gray-100"
-                >Fechar</button>
-              </div>
-            </div>
-
-            <div className="p-4 flex-1 overflow-auto">
-              <div className="mb-4">
-                <p className="text-sm font-medium">Filtros</p>
-                <div className="flex gap-2 mt-2">
-                  {['all','unread','system'].map((f) => (
-                    <button
-                      key={f}
-                      onClick={() => {
-                        try { localStorage.setItem('notifications.activeFilter', f); } catch (e) {}
-                        // The list listens to storage changes and will apply the filter
-                      }}
-                      className="px-3 py-1 rounded-xl bg-gray-100 text-sm"
-                    >{f === 'all' ? 'Todas' : f === 'unread' ? 'Não Lidas' : 'Sistema'}</button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mb-4">
-                <p className="text-sm font-medium">Fundo do chat</p>
-                <p className="text-xs text-gray-500">Ativar o fundo personalizado para a área de comentários</p>
-                <div className="mt-2">
-                  <label className="inline-flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={useChatBg}
-                      onChange={(e) => {
-                        const next = e.target.checked;
-                        try { localStorage.setItem('notifications.useChatBg', next ? 'true' : 'false'); } catch (err) {}
-                        setUseChatBg(next);
-                      }}
-                      className="form-checkbox h-4 w-4 text-blue-600"
-                    />
-                    <span className="text-sm">Usar fundo personalizado</span>
-                  </label>
-                </div>
-              </div>
-            </div>
-          </div>
+        {localComments.length > 0 ? (
+          localComments.map((comment) => (
+            <CommentItem key={comment.id} comment={comment} />
+          ))
         ) : (
-          localComments.length > 0 ? (
-            localComments.map((comment) => (
-              <CommentItem key={comment.id} comment={comment} />
-            ))
-          ) : (
-            <div className="flex-1 flex items-center justify-center text-center text-gray-500">
-              <p>Não há comentários para esta notificação.</p>
-            </div>
-          )
+          <div className="flex-1 flex items-center justify-center text-center text-gray-500">
+            <p>Não há comentários para esta notificação.</p>
+          </div>
         )}
       </div>
 

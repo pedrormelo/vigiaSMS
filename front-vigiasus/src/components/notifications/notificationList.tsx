@@ -64,13 +64,7 @@ export default function NotificationList({
   activeFilter,
   onFilterChange,
 }: NotificationListProps) {
-  const [showSettings, setShowSettings] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem('notifications.showSettings') === 'true';
-    } catch (e) {
-      return false;
-    }
-  });
+  const [showSettings, setShowSettings] = useState(false);
   const [chatBgEnabled, setChatBgEnabled] = useState<boolean>(() => {
     try {
       return localStorage.getItem('notifications.useChatBg') === 'true';
@@ -84,13 +78,6 @@ export default function NotificationList({
       if (e.key === 'notifications.useChatBg') {
         setChatBgEnabled(e.newValue === 'true');
       }
-      if (e.key === 'notifications.showSettings') {
-        setShowSettings(e.newValue === 'true');
-      }
-      if (e.key === 'notifications.activeFilter') {
-        const v = e.newValue as ActiveFilter | null;
-        if (v && v !== activeFilter) onFilterChange(v);
-      }
     };
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
@@ -100,12 +87,6 @@ export default function NotificationList({
     const next = typeof value === 'boolean' ? value : !chatBgEnabled;
     setChatBgEnabled(next);
     try { localStorage.setItem('notifications.useChatBg', next ? 'true' : 'false'); } catch (e) { }
-  };
-
-  const toggleSettings = (value?: boolean) => {
-    const next = typeof value === 'boolean' ? value : !showSettings;
-    setShowSettings(next);
-    try { localStorage.setItem('notifications.showSettings', next ? 'true' : 'false'); } catch (e) { }
   };
 
   return (
@@ -121,7 +102,7 @@ export default function NotificationList({
 
           {/* botão para configurações das notificações */}
           <button
-            onClick={() => toggleSettings()}
+            onClick={() => setShowSettings(prev => !prev)}
             aria-expanded={showSettings}
             className={cn(
               "rounded-full p-1 border border-gray-200 hover:bg-gray-100 transition-colors",
@@ -138,7 +119,50 @@ export default function NotificationList({
             : 'Nenhuma notificação nova'}
         </p>
 
-        {/* settings open in chat area (controlled via localStorage) */}
+        {/*  NOTE: filters moved into settings panel. */}
+        {showSettings && (
+          <div className="mt-3 p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-sm font-semibold">Configurações</h4>
+              <button onClick={() => setShowSettings(false)} className="text-sm text-gray-500">Fechar</button>
+            </div>
+
+            <div className="mb-3">
+              <p className="text-xs text-gray-600 mb-2">Filtros</p>
+              <div className="flex gap-2">
+                {filters.map((filter) => (
+                  <button
+                    key={filter.id}
+                    onClick={() => onFilterChange(filter.id)}
+                    className={cn(
+                      "px-3 py-1 rounded-xl text-sm font-medium transition-colors",
+                      activeFilter === filter.id ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    )}
+                  >
+                    {filter.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">Plano de Fundo do Chat</p>
+                <p className="text-xs text-gray-500">Ativa o fundo personalizado para a área de comentários</p>
+              </div>
+              <div>
+                <label className="inline-flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={chatBgEnabled}
+                    onChange={(e) => toggleChatBg(e.target.checked)}
+                    className="form-checkbox h-4 w-4 text-blue-600"
+                  />
+                </label>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* LISTA COM SCROLL E LÓGICA DE ESTADO VAZIO */}
