@@ -26,6 +26,10 @@ export default function NotificationSettingsView({
     { id: 'bg-chat', label: 'Fundo 1', src: '/chat/bg-chat.png', type: 'image' },
     { id: 'bg-chat-2', label: 'Fundo 2', src: '/chat/bg-chat-2.png', type: 'image' },
     { id: 'bg-chat-3', label: 'Fundo 3', src: '/chat/bg-chat-3.png', type: 'image' },
+    { id: 'bg-chat-4', label: 'Fundo 4', src: '/chat/bg-chat-4.png', type: 'image' },
+    { id: 'bg-chat-5', label: 'Fundo 5', src: '/chat/bg-chat-5.png', type: 'image' },
+    { id: 'bg-chat-6', label: 'Fundo 6', src: '/chat/bg-chat-6.png', type: 'image' },
+    { id: 'bg-chat-7', label: 'Fundo 7', src: '/chat/bg-chat-7.png', type: 'image' },
   ];
 
   const [selectedBg, setSelectedBg] = useState<string>(() => {
