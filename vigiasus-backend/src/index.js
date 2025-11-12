@@ -13,6 +13,9 @@ const contextosRoutes = require('./routes/contextosRoutes');
 const diretoriasRoutes = require('./routes/diretoriasRoutes');
 const gerenciaRoutes = require('./routes/gerenciaRoutes');
 const usuariosRoutes = require('./routes/usuariosRoutes');
+const notificacaoRoutes = require('./routes/notificacaoRoutes');
+const comentarioRoutes = require('./routes/comentarioRoutes');
+const dashboardLayoutRoutes = require('./routes/dashboardLayoutRoutes');
 
 const app = express();
 
@@ -46,6 +49,9 @@ app.use('/usuarios', usuariosRoutes);
 app.use('/diretorias', diretoriasRoutes);
 app.use('/gerencias', gerenciaRoutes);
 app.use('/contextos', contextosRoutes);
+app.use('/notificacoes', notificacaoRoutes);
+app.use('/comentarios', comentarioRoutes);
+app.use('/dashboardlayout', dashboardLayoutRoutes);
 
 //constante de porta do servidor backend
 const PORT = 3000;
