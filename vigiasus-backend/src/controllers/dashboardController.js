@@ -1,14 +1,11 @@
-const express = require('express');
-const { PrismaClient } = require('@prisma/client');
-
-const prisma = new PrismaClient();
-const router = express.Router();
+const prisma = require('../config/prismaClient');
+const crypto = require('crypto');
 
 /**
  * Rota para BUSCAR o layout do dashboard de uma diretoria
  * GET /dashboardlayout/:diretoriaId
  */
-router.get('/:diretoriaId', async (req, res) => {
+exports.getLayout = async (req, res) => {
     const { diretoriaId } = req.params;
 
     try {
@@ -45,14 +42,13 @@ router.get('/:diretoriaId', async (req, res) => {
         if (!layout) {
             return res.status(200).json(null);
         }
-
-        res.status(200).json(layout);
+        return res.status(200).json(layout);
 
     } catch (error) {
         console.error('Erro ao buscar layout do dashboard:', error);
-        res.status(500).json({ message: 'Erro interno no servidor.' });
+    return res.status(500).json({ message: 'Erro interno no servidor.' });
     }
-});
+};
 
 /**
  * Rota para SALVAR (Criar/Atualizar) o layout do dashboard
@@ -63,7 +59,7 @@ router.get('/:diretoriaId', async (req, res) => {
  * 2. Deletar TODOS os 'dashboardlayoutitem' antigos
  * 3. Criar TODOS os 'dashboardlayoutitem' novos que vieram do frontend
  */
-router.post('/:diretoriaId', async (req, res) => {
+exports.saveLayout = async (req, res) => {
     const { diretoriaId } = req.params;
     // O frontend deve enviar o tipo de layout e um array de itens
     // ex: { tipoLayout: 'GRID', items: [{ contextoVersaoId: 'uuid-1', slotIndex: 0 }, ...] }
@@ -123,11 +119,10 @@ router.post('/:diretoriaId', async (req, res) => {
             return layout;
         });
 
-        res.status(201).json({ message: 'Layout salvo com sucesso!', layout: resultado });
+    return res.status(201).json({ message: 'Layout salvo com sucesso!', layout: resultado });
 
     } catch (error) {
         console.error('Erro ao salvar layout do dashboard:', error);
-        res.status(500).json({ message: 'Erro interno no servidor.' });
+    return res.status(500).json({ message: 'Erro interno no servidor.' });
     }
-});
-
+};

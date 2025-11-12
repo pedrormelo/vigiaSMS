@@ -9,6 +9,7 @@ function mapUser(model) {
     if (!model) return null;
     return {
         id: model.id,
+        cpf: model.cpf,
         name: model.nome,
         email: model.email,
         role: model.role.toLowerCase(),
@@ -19,7 +20,8 @@ function mapUser(model) {
 }
 
 // GET /usuarios
-async function list(req, res) {
+    
+exports.list = async (req, res) => {
     try {
         const users = await prisma.user.findMany({ orderBy: { createdAt: 'desc' } });
         return res.json({ data: users.map(mapUser) });
@@ -31,18 +33,18 @@ async function list(req, res) {
 
 // POST /usuarios
 // body: { nome, email, password, role, diretoriaId?, gerenciaId? }
-async function create(req, res) {
+exports.create = async (req, res) => {
     try {
-        const { nome, email, password, role, diretoriaId, gerenciaId } = req.body || {};
-        if (!nome || !email || !password || !role) {
-            return res.status(400).json({ message: 'nome, email, password e role são obrigatórios' });
+        const { nome, cpf, email, password, role, diretoriaId, gerenciaId } = req.body || {};
+        if (!nome || !cpf || !email || !password || !role) {
+            return res.status(400).json({ message: 'nome, cpf, email, password e role são obrigatórios' });
         }
         const exists = await prisma.user.findUnique({ where: { email } });
         if (exists) return res.status(409).json({ message: 'Email já cadastrado' });
 
         const passwordHash = await bcrypt.hash(password, 10);
         const created = await prisma.user.create({
-            data: { nome, email, passwordHash, role, diretoriaId: diretoriaId || null, gerenciaId: gerenciaId || null },
+            data: { nome, cpf, email, passwordHash, role, diretoriaId: diretoriaId || null, gerenciaId: gerenciaId || null },
         });
         return res.status(201).json({ user: mapUser(created) });
     } catch (err) {
@@ -50,5 +52,7 @@ async function create(req, res) {
         return res.status(500).json({ message: 'Erro interno' });
     }
 }
+
+
 
 

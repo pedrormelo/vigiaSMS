@@ -10,8 +10,12 @@ const auth = require('./middlewares/authMiddleware.js');
 // Rotas existentes (algumas ainda serão implementadas)
 const authRoutes = require('./routes/authRoutes');
 const usuariosRoutes = require('./routes/usuariosRoutes');
-// TODO: implementar e então ativar estas rotas abaixo
-// const contextoRoutes = require('./routes/contextoRoutes');
+const contextoRoutes = require('./routes/contextoRoutes');
+const notificacaoRoutes = require('./routes/notificacaoRoutes');
+const diretoriasRoutes = require('./routes/diretoriasRoutes');
+const gerenciasRoutes = require('./routes/gerenciasRoutes');
+const comentarioRoutes = require('./routes/comentarioRoutes');
+const dashboardLayoutRoutes = require('./routes/dashboardLayoutRoutes');
 // const diretoriasRoutes = require('./routes/diretoriasRoutes');
 // const gerenciasRoutes = require('./routes/gerenciasRoutes');
 // const notificacaoRoutes = require('./routes/notificacaoRoutes');
@@ -48,14 +52,12 @@ app.use('/auth', authRoutes);
 // Rotas protegidas. Chamamos auth() SEM roles => qualquer usuário autenticado.
 // Para restringir: app.use('/usuarios', auth(['SECRETARIA','DIRETOR']), usuariosRoutes)
 app.use('/usuarios', auth(), usuariosRoutes);
-
-// Placeholder para futuras rotas protegidas:
-// app.use('/contextos', auth(), contextoRoutes);
-// app.use('/diretorias', auth(), diretoriasRoutes);
-// app.use('/gerencias', auth(), gerenciasRoutes);
-// app.use('/notificacoes', auth(), notificacaoRoutes);
-// app.use('/comentarios', auth(), comentarioRoutes);
-// app.use('/dashboardlayout', auth(), dashboardLayoutRoutes);
+app.use('/contextos', contextoRoutes); // cada rota define seu próprio guard
+app.use('/diretorias', diretoriasRoutes); // leitura pública; futuros writes exigirão auth
+app.use('/gerencias', gerenciasRoutes); // leitura pública
+app.use('/notificacoes', notificacaoRoutes); // auth handled inside route definitions
+app.use('/comentarios', comentarioRoutes); // auth enforced per-route
+app.use('/dashboardlayout', dashboardLayoutRoutes);
 
 // Porta configurável via .env (fallback 3000)
 const PORT = process.env.PORT || 3000;

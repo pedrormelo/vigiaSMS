@@ -1,14 +1,12 @@
-const express = require('express');
-const { PrismaClient } = require('@prisma/client');
-
-const prisma = new PrismaClient();
-const router = express.Router();
+const prisma = require('../config/prismaClient');
+const crypto = require('crypto');
 
 /**
  * Rota para LISTAR comentários de uma versão
  * GET /comentarios/:versaoId
  */
-router.get('/:versaoId', async (req, res) => {
+
+exports.listByVersao = async (req, res) => {
     const { versaoId } = req.params;
 
     try {
@@ -31,18 +29,18 @@ router.get('/:versaoId', async (req, res) => {
                 }
             }
         });
-        res.status(200).json(comentarios);
+        return res.status(200).json(comentarios);
     } catch (error) {
         console.error('Erro ao listar comentários:', error);
-        res.status(500).json({ message: 'Erro interno no servidor.' });
+        return res.status(500).json({ message: 'Erro interno no servidor.' });
     }
-});
+}
 
 /**
  * Rota para ADICIONAR um comentário
  * POST /comentarios/:versaoId
  */
-router.post('/:versaoId', async (req, res) => {
+exports.addComentario = async (req, res) => {
     const { versaoId } = req.params;
     const { texto } = req.body;
     const autorId = req.user.id; // ID do usuário logado
@@ -73,11 +71,10 @@ router.post('/:versaoId', async (req, res) => {
 
         // (Opcional: Criar notificação para os outros participantes)
 
-        res.status(201).json(novoComentario);
+    return res.status(201).json(novoComentario);
 
     } catch (error) {
         console.error('Erro ao adicionar comentário:', error);
-        res.status(500).json({ message: 'Erro interno no servidor.' });
+    return res.status(500).json({ message: 'Erro interno no servidor.' });
     }
-});
-
+}

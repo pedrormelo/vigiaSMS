@@ -1,7 +1,10 @@
 const express = require('express');
 const router = express.Router();
+const auth = require('../middlewares/authMiddleware');
+const ctrl = require('../controllers/diretoriasController');
 
-// TODO: implementar endpoints reais
+router.get('/', ctrl.listAll);
+router.get('/:id', ctrl.getById);
 router.get('/health', (req, res) => res.json({ ok: true }));
 
 module.exports = router;

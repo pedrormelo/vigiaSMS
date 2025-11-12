@@ -6,6 +6,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const prisma = require('../config/prismaClient');
+const e = require('express');
 
 // Mapeia modelo do banco (campos em português) para DTO amigável ao frontend
 function mapUser(model) {
@@ -13,6 +14,7 @@ function mapUser(model) {
     return {
         id: model.id,
         name: model.nome,
+        cpf: model.cpf,
         email: model.email,
         role: model.role.toLowerCase(), // enum no prisma vem em CAIXA ALTA
         diretoriaId: model.diretoriaId || null,

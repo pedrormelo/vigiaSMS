@@ -15,7 +15,7 @@ module.exports = function authMiddleware(allowedRoles) {
 
             const secret = process.env.JWT_SECRET || 'dev-secret-change-me';
             const payload = jwt.verify(token, secret);
-            req.user = payload; // { id, email, role, ... }
+            req.user = payload; // { id, cpf, role, ... }
 
             if (Array.isArray(allowedRoles) && allowedRoles.length > 0) {
                 if (!payload.role || !allowedRoles.includes(payload.role)) {
