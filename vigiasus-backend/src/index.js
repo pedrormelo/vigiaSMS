@@ -1,34 +1,36 @@
-//config
+// Inicialização de variáveis de ambiente
 require('dotenv').config();
-//req
+// Dependências principais
 const cors = require('cors');
 const express = require('express');
 
-//middlewares
+// Middleware de autenticação (factory que aceita lista de roles)
 const auth = require('./middlewares/authMiddleware.js');
 
-//rotas
+// Rotas existentes (algumas ainda serão implementadas)
 const authRoutes = require('./routes/authRoutes');
-const contextosRoutes = require('./routes/contextosRoutes');
-const diretoriasRoutes = require('./routes/diretoriasRoutes');
-const gerenciaRoutes = require('./routes/gerenciaRoutes');
 const usuariosRoutes = require('./routes/usuariosRoutes');
-const notificacaoRoutes = require('./routes/notificacaoRoutes');
-const comentarioRoutes = require('./routes/comentarioRoutes');
-const dashboardLayoutRoutes = require('./routes/dashboardLayoutRoutes');
+// TODO: implementar e então ativar estas rotas abaixo
+// const contextoRoutes = require('./routes/contextoRoutes');
+// const diretoriasRoutes = require('./routes/diretoriasRoutes');
+// const gerenciasRoutes = require('./routes/gerenciasRoutes');
+// const notificacaoRoutes = require('./routes/notificacaoRoutes');
+// const comentarioRoutes = require('./routes/comentarioRoutes');
+// const dashboardLayoutRoutes = require('./routes/dashboardLayoutRoutes');
 
 const app = express();
 
-//origins permitidas
+// Lista de origens permitidas. Adicionamos localhost:3000 (Next.js) além das já existentes.
 const allowedOrigins = [
+    'http://localhost:3000',
     'http://localhost:3001',
     'http://10.87.20.9:3006',
 ];
 
-//função de só permitir requisições de origens específicas
-app.use(cors({ 
+// CORS com whitelist simples + suporte a cookies (credentials)
+app.use(cors({
     origin: function (origin, callback) {
-        if (!origin) return callback(null, true);
+        if (!origin) return callback(null, true); // requests sem origin (ex: curl) são liberadas
         if (allowedOrigins.includes(origin)) {
             return callback(null, true);
         } else {
@@ -38,23 +40,25 @@ app.use(cors({
     credentials: true,
 }));
 
-app.use(express.json());
+app.use(express.json()); // parse de JSON no corpo das requisições
 
-app.use('/auth', authRoutes); //rota login
+// Rota pública de autenticação (login & me)
+app.use('/auth', authRoutes);
 
-app.use(auth); //middleware de autenticação
+// Rotas protegidas. Chamamos auth() SEM roles => qualquer usuário autenticado.
+// Para restringir: app.use('/usuarios', auth(['SECRETARIA','DIRETOR']), usuariosRoutes)
+app.use('/usuarios', auth(), usuariosRoutes);
 
-//rotas protegidas
-app.use('/usuarios', usuariosRoutes);
-app.use('/diretorias', diretoriasRoutes);
-app.use('/gerencias', gerenciaRoutes);
-app.use('/contextos', contextosRoutes);
-app.use('/notificacoes', notificacaoRoutes);
-app.use('/comentarios', comentarioRoutes);
-app.use('/dashboardlayout', dashboardLayoutRoutes);
+// Placeholder para futuras rotas protegidas:
+// app.use('/contextos', auth(), contextoRoutes);
+// app.use('/diretorias', auth(), diretoriasRoutes);
+// app.use('/gerencias', auth(), gerenciasRoutes);
+// app.use('/notificacoes', auth(), notificacaoRoutes);
+// app.use('/comentarios', auth(), comentarioRoutes);
+// app.use('/dashboardlayout', auth(), dashboardLayoutRoutes);
 
-//constante de porta do servidor backend
-const PORT = 3000;
+// Porta configurável via .env (fallback 3000)
+const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
     console.log(`Servidor rodando em http://localhost:${PORT}`);
