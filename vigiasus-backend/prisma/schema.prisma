@@ -90,7 +90,9 @@ model dashboardlayoutitem {
 
 model diretoria {
   id              String           @id
+  slug            String?          @unique(map: "Diretoria_slug_key")
   nome            String
+  sobre           String?
   corFrom         String?
   corTo           String?
   bannerImage     String?
@@ -102,8 +104,11 @@ model diretoria {
 
 model gerencia {
   id          String     @id
+  slug        String?    @unique(map: "Gerencia_slug_key")
   nome        String
   sigla       String?
+  descricao   String?
+  image       String?
   diretoriaId String
   createdAt   DateTime   @default(now())
   contexto    contexto[]

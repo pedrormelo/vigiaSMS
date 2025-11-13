@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { notificationsData, Notification } from "@/constants/notificationsData";
+import { getNotificationsWithComments, Notification } from "@/services/notificationsService";
 
 export const useNotifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -9,23 +9,21 @@ export const useNotifications = () => {
   const [isError, setIsError] = useState<boolean>(false);
 
   useEffect(() => {
-    // Simula uma chamada à API
-    const fetchNotifications = () => {
+    let active = true;
+    async function load() {
+      setIsLoading(true);
       try {
-        setNotifications(notificationsData);
-      } catch (error) {
-        setIsError(true);
-        console.error("Erro ao carregar notificações: ", error);
+        const data = await getNotificationsWithComments();
+        if (active) setNotifications(data);
+      } catch (e) {
+        console.error("Erro ao carregar notificações", e);
+        if (active) setIsError(true);
       } finally {
-        setIsLoading(false);
+        if (active) setIsLoading(false);
       }
-    };
-
-    // Usamos um pequeno timeout para simular a latência da rede
-    const timer = setTimeout(fetchNotifications, 1000);
-    
-    // Limpa o timeout se o componente for desmontado
-    return () => clearTimeout(timer);
+    }
+    load();
+    return () => { active = false; };
   }, []);
 
   return { notifications, isLoading, isError };

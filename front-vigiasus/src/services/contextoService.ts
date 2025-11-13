@@ -1,4 +1,4 @@
-// src/services/contextoService.ts
+// src/services/contextoService.ts (API-backed)
 import { Contexto, StatusContexto } from "@/components/validar/typesDados";
 import { authService } from "./authService";
 
@@ -7,7 +7,6 @@ function apiBase() {
 }
 
 function statusLabelToEnum(code: string): StatusContexto {
-  // backend uses codes: AGUARDANDO_GERENTE, AGUARDANDO_DIRETOR, AGUARDANDO_CORRECAO, PUBLICADO, INDEFERIDO
   switch (code) {
     case 'AGUARDANDO_GERENTE': return StatusContexto.AguardandoGerente;
     case 'AGUARDANDO_DIRETOR': return StatusContexto.AguardandoDiretor;
@@ -19,7 +18,6 @@ function statusLabelToEnum(code: string): StatusContexto {
 }
 
 function mapDocType(tipo: string | null | undefined): Contexto["type"] {
-  // Map backend contexto.tipo +/or versao content to frontend FileType
   switch (tipo) {
     case 'ARQUIVO_LINK': return 'link';
     case 'DASHBOARD': return 'dashboard';
@@ -35,29 +33,20 @@ function withAuth(init: RequestInit = {}): RequestInit {
   return { ...init, headers };
 }
 
-interface HistoricoResponse {
+export interface HistoricoResponse {
   data: Contexto[];
   total: number;
 }
 
-const STATUS_FINALIZADOS: StatusContexto[] = [
-  StatusContexto.Publicado,
-  StatusContexto.Indeferido,
-];
-
-/**
- * Busca contextos "Abertos" (para a página /validar).
- */
+// Abertos (pendentes) preferindo endpoint autenticado; fallback para publicados
 export const getContextos = async (): Promise<Contexto[]> => {
   const base = apiBase();
   if (!base) return [];
-  // Try pendentes (requires gerente/diretor) and fallback to publicados for public view
   try {
     const res = await fetch(`${base}/contextos/pendentes`, withAuth());
     if (!res.ok) throw new Error(`status ${res.status}`);
     const body = await res.json();
     const versoes: any[] = body.data || [];
-    // Map and de-duplicate by contexto.id keeping the most recent updatedAt
     const mapped = versoes.map((v) => ({
       id: v.contexto.id,
       title: v.titulo || v.contexto.tituloConceitual,
@@ -68,15 +57,15 @@ export const getContextos = async (): Promise<Contexto[]> => {
       gerencia: v.contexto.gerenciaDonaId,
       versoes: [{ id: v.versaoNumero, nome: v.titulo, data: v.updatedAt, autor: '', status: statusLabelToEnum(v.statusValidacao) }],
     }));
-    const byId = new Map<string, any>();
+    const byId = new Map<string, Contexto>();
     for (const item of mapped) {
       const prev = byId.get(item.id);
       if (!prev) {
-        byId.set(item.id, item);
+        byId.set(item.id, item as any);
       } else {
         const prevDate = new Date(prev.insertedDate).getTime();
         const currDate = new Date(item.insertedDate).getTime();
-        if (currDate > prevDate) byId.set(item.id, item);
+        if (currDate > prevDate) byId.set(item.id, item as any);
       }
     }
     return Array.from(byId.values());
@@ -84,7 +73,7 @@ export const getContextos = async (): Promise<Contexto[]> => {
     const res = await fetch(`${base}/contextos/publicados`);
     if (!res.ok) return [];
     const body = await res.json();
-    const items: any[] = body.data || [];
+    const items: any[] = body.data || body || [];
     return items.map((it) => ({
       id: it.id,
       title: it.tituloConceitual,
@@ -96,9 +85,7 @@ export const getContextos = async (): Promise<Contexto[]> => {
   }
 };
 
-/**
- * Busca contextos "Fechados" (para a página /validar/historico).
- */
+// Histórico via busca paginada
 export const getHistoricoContextos = async (
   searchQuery?: string,
   dateRange?: { from: Date | undefined; to: Date | undefined },
@@ -113,32 +100,27 @@ export const getHistoricoContextos = async (
   if (dateRange?.to) params.set('to', dateRange.to.toISOString());
   params.set('page', String(page));
   params.set('pageSize', String(limit));
-  // Only finalized statuses by default
-  // We could call twice for PUBLICADO and INDEFERIDO or rely on q/date filters
   const res = await fetch(`${base}/contextos/buscar?${params.toString()}`, withAuth());
   if (!res.ok) return { data: [], total: 0 };
   const body = await res.json();
-  const rows: any[] = body.data || [];
+  const rows: any[] = body.data || body || [];
   const out: Contexto[] = rows.map(r => ({
-    id: r.contextoId,
-    title: r.tituloConceitual,
+    id: r.contextoId || r.id,
+    title: r.tituloConceitual || r.titulo,
     type: 'pdf',
-    insertedDate: r.updatedAt,
-    status: statusLabelToEnum(r.status),
+    insertedDate: r.updatedAt || r.createdAt,
+    status: statusLabelToEnum(r.status || r.statusValidacao),
   }));
   return { data: out, total: body.total || out.length };
 };
 
-/**
- * Busca um contexto específico pelo ID.
- */
+// Detalhes por ID
 export const getContextoById = async (id: string): Promise<Contexto | null> => {
   const base = apiBase();
   if (!base) return null;
   const res = await fetch(`${base}/contextos/detalhes/${id}`, withAuth());
   if (!res.ok) return null;
   const body = await res.json();
-  // body is mapContextoDetalhe
   const latest = body.versoes?.[0];
   const ctx: Contexto = {
     id: body.id,
@@ -149,32 +131,20 @@ export const getContextoById = async (id: string): Promise<Contexto | null> => {
     description: latest?.descricao || undefined,
     gerencia: body.gerenciaDonaId,
     versoes: (body.versoes || []).map((v: any) => ({ id: v.numero, nome: v.titulo, data: v.updatedAt, autor: '', status: statusLabelToEnum(v.status) })),
-    historico: (body.historico || []).map((h: any) => ({ data: h.timestamp, autor: '', acao: h.statusNovoLabel + (h.justificativa ? `: ${h.justificativa}` : '') })),
+    historico: (body.historico || []).map((h: any) => ({ data: h.timestamp, autor: '', acao: (h.statusNovoLabel || h.statusNovo) + (h.justificativa ? `: ${h.justificativa}` : '') })),
   };
   return ctx;
 };
 
-
-// --- (FUNÇÃO CORRIGIDA) ---
-
-/**
- * Busca todos os contextos associados a uma Gerência específica PELO ID.
- * AGORA RETORNA TODOS OS STATUS (pendentes, publicados, etc.)
- * @param idGerencia O ID da gerência (ex: "g6", "g7").
- */
+// Publicados por gerência (filtro client-side por enquanto)
 export const getContextosPorGerencia = async (idGerencia: string): Promise<Contexto[]> => {
-  console.log(`Service: buscando TODOS os contextos para a gerência ID: ${idGerencia}`);
-
-  if (!idGerencia) {
-      console.warn(`Service: getContextosPorGerencia chamado com ID indefinido.`);
-      return []; // Retorna vazio se o ID não for fornecido
-  }
+  if (!idGerencia) return [];
   const base = apiBase();
   if (!base) return [];
   const res = await fetch(`${base}/contextos/publicados`);
   if (!res.ok) return [];
   const body = await res.json();
-  const items: any[] = body.data || [];
+  const items: any[] = body.data || body || [];
   return items
     .filter((it) => it.gerenciaDonaId === idGerencia)
     .map((it) => ({

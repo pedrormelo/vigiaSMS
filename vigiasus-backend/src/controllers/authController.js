@@ -9,8 +9,19 @@ const prisma = require('../config/prismaClient');
 const e = require('express');
 
 // Mapeia modelo do banco (campos em português) para DTO amigável ao frontend
-function mapUser(model) {
+async function mapUser(model) {
     if (!model) return null;
+    // Buscar slugs das relações (diretoria / gerencia) para evitar outra chamada no frontend
+    let diretoriaSlug = null;
+    let gerenciaSlug = null;
+    if (model.diretoriaId) {
+        const d = await prisma.diretoria.findUnique({ where: { id: model.diretoriaId }, select: { slug: true } });
+        diretoriaSlug = d?.slug || null;
+    }
+    if (model.gerenciaId) {
+        const g = await prisma.gerencia.findUnique({ where: { id: model.gerenciaId }, select: { slug: true } });
+        gerenciaSlug = g?.slug || null;
+    }
     return {
         id: model.id,
         name: model.nome,
@@ -19,6 +30,8 @@ function mapUser(model) {
         role: model.role.toLowerCase(), // enum no prisma vem em CAIXA ALTA
         diretoriaId: model.diretoriaId || null,
         gerenciaId: model.gerenciaId || null,
+        diretoriaSlug,
+        gerenciaSlug,
         createdAt: model.createdAt,
     };
 }
@@ -39,8 +52,9 @@ async function login(req, res) {
         }
         const secret = process.env.JWT_SECRET || 'dev-secret-change-me';
         // Payload mínimo. Evite colocar dados sensíveis aqui.
-        const token = jwt.sign({ id: user.id, cpf: user.cpf, role: user.role }, secret, { expiresIn: '1h' });
-        return res.json({ user: mapUser(user), token });
+    const token = jwt.sign({ id: user.id, cpf: user.cpf, role: user.role }, secret, { expiresIn: '1h' });
+    const mapped = await mapUser(user);
+    return res.json({ user: mapped, token });
     } catch (err) {
         console.error('Erro login:', err);
         return res.status(500).json({ message: 'Erro interno' });
@@ -53,7 +67,8 @@ async function me(req, res) {
     try {
         const user = await prisma.user.findUnique({ where: { id: req.user.id } });
         if (!user) return res.status(404).json({ message: 'Usuário não encontrado' });
-        return res.json({ user: mapUser(user) });
+    const mapped = await mapUser(user);
+    return res.json({ user: mapped });
     } catch (err) {
         console.error('Erro me:', err);
         return res.status(500).json({ message: 'Erro interno' });

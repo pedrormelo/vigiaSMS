@@ -13,6 +13,8 @@ interface Diretoria {
   nome: string;
   /** token de cor para UI ("blue" | "green" | "orange" | "red" | "cyan") */
   corUI?: "blue" | "green" | "orange" | "red" | "cyan";
+  // texto curto explicando o propósito/escopo da diretoria (exibido no popover de informação)
+  sobre?: string;
   // objeto com as cores do gradiente
   cores: {
     from: string; // Cor inicial em hexadecimal
@@ -30,6 +32,7 @@ export const diretoriasConfig: { [key: string]: Diretoria } = {
     id: "atencao-saude",
     nome: "Diretoria de Atenção à Saúde",
     corUI: "blue",
+    sobre: "Coordena a rede de cuidados, organizando fluxos assistenciais e promovendo a continuidade do cuidado entre os diferentes níveis de atenção.",
     cores: { from: "#1745FF", to: "#002BDB" },
     gerencias: [
       { 
@@ -52,6 +55,7 @@ export const diretoriasConfig: { [key: string]: Diretoria } = {
     id: "regulacao-sus",
     nome: "Diretoria de Regulação do SUS",
     corUI: "cyan",
+    sobre: "Gerencia o acesso a serviços (consultas, exames, internações) e regula a ocupação de leitos para garantir atendimento oportuno e equitativo.",
     cores: { from: "#00BDFF", to: "#07ABE4" },
     gerencias: [
       { 
@@ -81,6 +85,7 @@ export const diretoriasConfig: { [key: string]: Diretoria } = {
     id: "gestao-sus",
     nome: "Diretoria de Gestão do SUS",
     corUI: "green",
+    sobre: "Planeja e integra processos, pessoas e recursos para apoiar decisões da gestão, com foco em eficiência e melhoria contínua.",
     cores: { from: "#109326", to: "#008C32" }, 
     gerencias: [
         { 
@@ -104,6 +109,7 @@ export const diretoriasConfig: { [key: string]: Diretoria } = {
     id: "vigilancia-saude",
     nome: "Diretoria de Vigilância em Saúde",
       corUI: "orange",
+        sobre: "Previne e controla riscos à saúde pública por meio da vigilância epidemiológica, sanitária e ambiental.",
       cores: { from: "#FF8500", to: "#FD8400" }, 
     gerencias: [
         { 
@@ -120,6 +126,7 @@ export const diretoriasConfig: { [key: string]: Diretoria } = {
     id: "administrativo-financeira",
     nome: "Diretoria Administrativa Financeiro",
       corUI: "red",
+      sobre: "Conduz a gestão orçamentária, financeira e administrativa, garantindo suporte aos processos e contratos da Secretaria.",
     cores: { from: "#FB4242", to: "#EF2828" }, 
     gerencias: [
         { 
@@ -136,6 +143,7 @@ export const diretoriasConfig: { [key: string]: Diretoria } = {
     id: "secretaria",
     nome: "Página da Secretária",
       corUI: "orange",
+      sobre: "Painel geral com destaques, indicadores e métricas estratégicas de toda a Secretaria de Saúde.",
     // Mantemos as cores por compatibilidade, mas prefira usar bannerImage quando disponível
     cores: { from: "#ffcb3e", to: "#f7721c" },
     // Imagem localizada em /public/secretaria/images/banner1.png
