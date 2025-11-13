@@ -134,17 +134,17 @@ export default function NovoGraficoPage({ onSubmit }: NovoGraficoPageProps) {
         router.back();
     };
 
-    const graphIcons = {
-        "pie-icon": () => (
-            <ChartPie className="h-9 w-9 text-white"></ChartPie>
-        ),
-        "bar-icon": () => (
-            <ChartBar className="h-9 w-9 text-white"></ChartBar>
-        ),
-        "line-icon": () => (
-            <ChartLine className="h-9 w-9 text-white"></ChartLine>
-        ),
-    };
+    //const graphIcons = {
+      //  "pie-icon": () => (
+//<ChartPie className="h-9 w-9 text-white"></ChartPie>
+     //   ),
+     //   "bar-icon": () => (
+//<ChartBar className="h-9 w-9 text-white"></ChartBar>
+       // ),
+//"line-icon": () => (
+       //     <ChartLine className="h-9 w-9 text-white"></ChartLine>
+     //   ),
+   // };
 
     return (
         <main className="min-h-screen bg-gray-50 py-8">

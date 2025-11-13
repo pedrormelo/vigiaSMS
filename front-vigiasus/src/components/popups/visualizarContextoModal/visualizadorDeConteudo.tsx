@@ -24,7 +24,7 @@ interface VisualizadorProps {
     tipo: FileType;
     url?: string;
     titulo: string;
-    payload?: any; 
+    payload?: any;
     chartType?: DetalhesContexto['chartType'];
     aoAlternarTelaCheia?: () => void;
     emTelaCheia?: boolean;
@@ -32,21 +32,21 @@ interface VisualizadorProps {
 }
 
 export const VisualizadorDeConteudo: React.FC<VisualizadorProps> = ({ tipo, url, titulo, payload, chartType, aoAlternarTelaCheia, emTelaCheia = false, zoomLevel = 1 }) => {
-    
+
     const renderFallback = () => (
         <div className="animate-fade-in h-full flex flex-col items-center justify-center bg-gray-50 rounded-2xl p-6 text-center">
             <FileText className="w-12 h-12 text-gray-400 mb-4" />
             <h3 className="text-xl font-semibold text-gray-700">Pré-visualização não disponível</h3>
             <p className="text-gray-500 my-2">A pré-visualização para ficheiros do tipo '{tipo}' não é suportada.</p>
             {url && (
-                <a href={url} download className="mt-4 flex items-center gap-2 px-6 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors">
+                <a href={url} download className="mt-4 flex items-center gap-2 px-6 py-2 bg-green-600 text-white font-semibold rounded-2xl hover:bg-green-700 transition-colors">
                     <Download className="w-4 h-4" /> Baixar Ficheiro
                 </a>
             )}
         </div>
     );
 
-    switch(tipo) {
+    switch (tipo) {
         case 'link':
             return (
                 <div className="animate-fade-in h-full flex flex-col items-center justify-center bg-gray-50 rounded-2xl p-6 text-center">
@@ -58,16 +58,16 @@ export const VisualizadorDeConteudo: React.FC<VisualizadorProps> = ({ tipo, url,
                     </a>
                 </div>
             );
-        
+
         case 'dashboard':
             const dadosDoDashboard = payload as ConjuntoDeDadosGrafico;
 
             return (
                 <div className="animate-fade-in h-full w-full">
                     {dadosDoDashboard ? (
-                        <PrevisualizacaoGrafico 
-                            tipoGrafico={chartType || 'chart'} 
-                            conjuntoDeDados={dadosDoDashboard} 
+                        <PrevisualizacaoGrafico
+                            tipoGrafico={chartType || 'chart'}
+                            conjuntoDeDados={dadosDoDashboard}
                             titulo={titulo}
                             previsualizacaoGerada={true}
                             aoAlternarTelaCheia={aoAlternarTelaCheia}
@@ -83,7 +83,7 @@ export const VisualizadorDeConteudo: React.FC<VisualizadorProps> = ({ tipo, url,
             return (
                 <div className="animate-fade-in h-full w-full flex items-center justify-center">
                     {payload ? (
-                        <VisualizadorIndicador 
+                        <VisualizadorIndicador
                             title={titulo}
                             description={payload.description}
                             valorAtual={payload.valorAtual}
@@ -93,7 +93,7 @@ export const VisualizadorDeConteudo: React.FC<VisualizadorProps> = ({ tipo, url,
                             icone={payload.icone}
                         />
                     ) : (
-                         <div className="flex flex-col items-center justify-center p-6 text-center bg-yellow-50 border-2 border-dashed border-yellow-200 rounded-2xl h-full">
+                        <div className="flex flex-col items-center justify-center p-6 text-center bg-yellow-50 border-2 border-dashed border-yellow-200 rounded-2xl h-full">
                             <FileText className="w-12 h-12 text-yellow-500 mb-3" />
                             <h3 className="font-semibold text-yellow-700">Dados do Indicador Indisponíveis</h3>
                             <p className="text-sm text-yellow-600">Não foi possível carregar os detalhes para este indicador.</p>
@@ -105,10 +105,10 @@ export const VisualizadorDeConteudo: React.FC<VisualizadorProps> = ({ tipo, url,
         case 'pdf':
             if (!url) return renderFallback();
             return (
-                <VisualizadorPdf 
-                    url={url} 
-                    emTelaCheia={emTelaCheia} 
-                    aoAlternarTelaCheia={aoAlternarTelaCheia} 
+                <VisualizadorPdf
+                    url={url}
+                    emTelaCheia={emTelaCheia}
+                    aoAlternarTelaCheia={aoAlternarTelaCheia}
                     zoomLevel={zoomLevel}
                 />
             );
@@ -116,14 +116,14 @@ export const VisualizadorDeConteudo: React.FC<VisualizadorProps> = ({ tipo, url,
         case 'doc':
             if (!url) return renderFallback();
             return (
-                <VisualizadorDocx 
-                    url={url} 
+                <VisualizadorDocx
+                    url={url}
                     emTelaCheia={emTelaCheia}
                     aoAlternarTelaCheia={aoAlternarTelaCheia}
                     zoomLevel={zoomLevel}
                 />
             );
-            
+
         default:
             return renderFallback();
     }

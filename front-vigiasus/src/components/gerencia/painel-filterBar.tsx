@@ -20,18 +20,18 @@ interface GerenciasFilterBarProps {
   clearTypeFilter: () => void;
 }
 
-// Mapeamento de ícones (Baseado em NotificationItem)
+// ATUALIZADO: "excel" -> "planilha"
 const filterIconMap: Record<FileType, string | React.ElementType | null> = {
-    doc: "/icons/CONTEXTOS/DOC.svg",
-    excel: "/icons/CONTEXTOS/PLA.svg",
-    pdf: "/icons/CONTEXTOS/PDF.svg",
-    //comentario: "/icons/comentario-icon.svg",
-    //sistema: "/icons/system.svg",
-    dashboard:"/icons/CONTEXTOS/GRA.svg",
-    link: fileTypeConfig.link.icon,
-    resolucao: "/icons/CONTEXTOS/RES.svg", // Fallback
-    indicador: null,
-    //leis: fileTypeConfig.leis.icon,
+  doc: "/icons/CONTEXTOS/DOC.svg",
+  planilha: "/icons/CONTEXTOS/PLA.svg", // <-- Renomeado
+  pdf: "/icons/CONTEXTOS/PDF.svg",
+  dashboard: "/icons/CONTEXTOS/GRA.svg",
+  link: "/icons/CONTEXTOS/LINK.svg",
+  resolucao: "/icons/CONTEXTOS/RES.svg",
+  apresentacao: "/icons/CONTEXTOS/PPTX.svg",
+  // Tipos que não podem ser filtrados (provavelmente)
+  indicador: null,
+  leis: null, // <-- Deixado como null para segurança
 };
 
 export default function GerenciasFilterBar({
@@ -44,13 +44,13 @@ export default function GerenciasFilterBar({
   clearTypeFilter,
 }: GerenciasFilterBarProps) {
 
-   const filterableTypes = Object.keys(filterIconMap).filter(
-        type => filterIconMap[type as FileType] !== null
-    ) as FileType[];
+  const filterableTypes = Object.keys(filterIconMap).filter(
+    type => filterIconMap[type as FileType] !== null
+  ) as FileType[];
 
   return (
     <div className="mb-6">
-      {/* LINHA 1 */}
+      {/* (Linha 1 - Título e SearchBar - sem alteração) */}
       <div className="flex items-center mb-4">
         <h2 className="text-3xl font-extralight text-[#1745FF]">Painel de Contextos</h2>
         <div className="flex-1 relative ml-6 max-w-[75%]">
@@ -58,18 +58,17 @@ export default function GerenciasFilterBar({
         </div>
       </div>
 
-      {/* LINHA 2 */}
+      {/* (Linha 2 - Filtros e Tabs - sem alteração na lógica, apenas no render) */}
       <div className="flex items-center gap-3">
         {/* Popover */}
         <Popover>
           <PopoverTrigger asChild>
-        {/* Botão de filtro */}
-        <Button
-          className="h-10 p-2 bg-blue-600 hover:bg-blue-500 border-blue-500 text-white hover:text-blue-50 rounded-2xl shadow-sm cursor-pointer transition-transform duration-200 ease-in-out hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-200"
-          aria-label="Abrir filtros"
-        >
-          <Funnel className="!h-5 !w-5" />
-        </Button>
+            <Button
+              className="h-10 p-2 bg-blue-600 hover:bg-blue-500 border-blue-500 text-white hover:text-blue-50 rounded-2xl shadow-sm cursor-pointer transition-transform duration-200 ease-in-out hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-200"
+              aria-label="Abrir filtros"
+            >
+              <Funnel className="!h-5 !w-5" />
+            </Button>
           </PopoverTrigger>
           <PopoverContent className="w-64 bg-white/80 backdrop-blur-md border-gray-200 shadow-xl rounded-2xl" align="start">
             <div className="space-y-3">
@@ -81,27 +80,22 @@ export default function GerenciasFilterBar({
               </div>
               <div className="space-y-1">
                 {filterableTypes.map((type) => {
-                  // --- CORREÇÃO AQUI ---
-                  // Obter config PRIMEIRO e verificar se existe
-                  const config = fileTypeConfig[type];
+                  const config = fileTypeConfig[type]; // fileTypeConfig já foi atualizado
                   if (!config) {
-                      console.error(`Configuração não encontrada para o tipo: ${type}`);
-                      return null; // Pula a renderização deste item se a config não existir
+                    return null;
                   }
-                  // --- FIM DA CORREÇÃO ---
 
                   const iconSource = filterIconMap[type];
                   const isSelected = selectedTypes.includes(type);
 
                   let IconComponent: React.ReactNode = null;
                   if (typeof iconSource === 'string') {
-                      // Usa config.label (agora sabemos que config existe)
-                      IconComponent = <Image src={iconSource} alt={config.label} width={16} height={16} className="w-4 h-4 flex-shrink-0" />;
+                    IconComponent = <Image src={iconSource} alt={config.label} width={16} height={16} className="w-4 h-4 flex-shrink-0" />;
                   } else if (iconSource) {
-                      const LucideIcon = iconSource as React.ElementType;
-                      IconComponent = <LucideIcon className="w-4 h-4 flex-shrink-0 text-gray-600" />;
+                    const LucideIcon = iconSource as React.ElementType;
+                    IconComponent = <LucideIcon className="w-4 h-4 flex-shrink-0 text-gray-600" />;
                   } else {
-                      IconComponent = <FileQuestion className="w-4 h-4 flex-shrink-0 text-gray-400" />
+                    IconComponent = <FileQuestion className="w-4 h-4 flex-shrink-0 text-gray-400" />
                   }
 
                   return (
@@ -115,7 +109,6 @@ export default function GerenciasFilterBar({
                     >
                       <div className="flex items-center gap-3">
                         {IconComponent}
-                        {/* Usa config.label */}
                         <span>{config.label}</span>
                       </div>
                       <div className={cn("w-4 h-4 flex items-center justify-center rounded-full border-2", isSelected ? 'border-blue-600 bg-blue-600' : 'border-gray-300')}>
@@ -130,8 +123,8 @@ export default function GerenciasFilterBar({
         </Popover>
 
         {/* Botões de abas */}
-        <button onClick={() => onTabChange("recente")} className={cn( "px-6 py-2 cursor-pointer rounded-full font-medium transition shadow-sm", activeTab === "recente" ? "bg-blue-600 text-white" : "bg-white text-gray-500 hover:bg-gray-50" )}>Recentes</button>
-        <button onClick={() => onTabChange("todas")} className={cn( "px-6 py-2 cursor-pointer rounded-full font-medium transition shadow-sm", activeTab === "todas" ? "bg-blue-600 text-white" : "bg-white text-gray-500 hover:bg-gray-50" )}>Todas</button>
+        <button onClick={() => onTabChange("recente")} className={cn("px-6 py-2 cursor-pointer rounded-full font-medium transition shadow-sm", activeTab === "recente" ? "bg-blue-600 text-white" : "bg-white text-gray-500 hover:bg-gray-50")}>Recentes</button>
+        <button onClick={() => onTabChange("todas")} className={cn("px-6 py-2 cursor-pointer rounded-full font-medium transition shadow-sm", activeTab === "todas" ? "bg-blue-600 text-white" : "bg-white text-gray-500 hover:bg-gray-50")}>Todas</button>
       </div>
     </div>
   );

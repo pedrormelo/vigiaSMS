@@ -1,17 +1,18 @@
+// src/app/conselho/page.tsx
 "use client";
 
 import EventsSection from "@/components/conselho/eventSection";
-//import DatasImportantes from "@/components/conselho/datasImportantes";
-//import Galeria from "@/components/conselho/galeria";
 import HeroCMS from "@/components/conselho/heroCMS";
-import { ModalAdicionarConteudo as AddContextoModal } from "@/components/popups/addContextoModal";
+import { AddContentModal } from "@/components/popups/addContexto-modal";
 //import Resolutions from "@/components/conselho/resolutions";
 import { FileGrid } from "@/components/contextosCard/contextosGrid";
 import FilterBar from "@/components/gerencia/painel-filterBar";
 import { FileType } from "@/components/contextosCard/contextoCard";
+
+// 1. IMPORTAÇÕES ADICIONADAS
 import * as React from "react"
-import { useMemo, useState } from "react";
-import AgendaLeis from "@/components/conselho/cardLeis";
+import { useState } from "react";
+// import AgendaLeis from "@/components/conselho/cardLeis";
 
 const sampleFiles = [
     {
@@ -90,23 +91,31 @@ export default function CMSpage() {
     const [selectedTypes, setSelectedTypes] = useState<FileType[]>([]);
 
     const handleSelectedTypesChange = (type: FileType) => {
-        setSelectedTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]);
+        setSelectedTypes((prev) =>
+            prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+        );
     };
 
-    const filteredFiles = useMemo(() => {
-        return sampleFiles.filter(f => {
-            const matchesSearch = searchValue.trim() === "" || f.title.toLowerCase().includes(searchValue.toLowerCase());
-            const matchesType = selectedTypes.length === 0 || selectedTypes.includes(f.type);
-            return matchesSearch && matchesType;
+    const clearTypeFilter = () => setSelectedTypes([]);
+
+    const filteredFiles = sampleFiles
+        .filter((f) =>
+            f.title.toLowerCase().includes(searchValue.toLowerCase())
+        )
+        .filter((f) => (selectedTypes.length ? selectedTypes.includes(f.type) : true))
+        .sort((a, b) => {
+            if (activeTab === "recente") {
+                return new Date(b.insertedDate).getTime() - new Date(a.insertedDate).getTime();
+            }
+            return 0;
         });
-    }, [searchValue, selectedTypes]);
     return (
 
         <main className="flex-1 bg-white mx-auto min-h-screen">
-            <AddContextoModal
-                estaAberto={showAddContexto}
-                aoFechar={() => setShowAddContexto(false)}
-                aoSubmeter={() => setShowAddContexto(false)}
+            <AddContentModal
+                isOpen={showAddContexto}
+                onClose={() => setShowAddContexto(false)}
+                onSubmit={() => setShowAddContexto(false)}
             />
             <HeroCMS />
             <EventsSection />
@@ -118,12 +127,13 @@ export default function CMSpage() {
                     onTabChange={setActiveTab}
                     selectedTypes={selectedTypes}
                     onSelectedTypesChange={handleSelectedTypesChange}
-                    clearTypeFilter={() => setSelectedTypes([])}
+                    clearTypeFilter={clearTypeFilter}
                 />
                 <FileGrid
                     files={filteredFiles}
                     onFileClick={handleFileClick}
                     onAddContextClick={() => setShowAddContexto(true)}
+                    isEditing
                 />
             </div>
         </main>

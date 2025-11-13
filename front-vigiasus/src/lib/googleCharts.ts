@@ -9,8 +9,9 @@ export function loadGoogleCharts(packages: string[] = ['corechart', 'bar']): Pro
         return Promise.reject(new Error('Google Charts can only be loaded in the browser'));
     }
 
-    // If google.visualization already exists, resolve immediately
-    if ((window as any).google && (window as any).google.visualization) {
+    // If google.visualization already exists AND the core packages seem loaded, resolve immediately.
+    // (Esta verificação é otimista, mas agora verifica PieChart)
+    if ((window as any).google && (window as any).google.visualization && (window as any).google.visualization.PieChart) {
         return Promise.resolve((window as any).google);
     }
 
@@ -55,13 +56,31 @@ export function loadGoogleCharts(packages: string[] = ['corechart', 'bar']): Pro
                         debug('loader script onload')
                         try {
                             (window as any).google.charts.load('current', { packages })
+
+                            const timeoutMs = 12000
+                            let timeoutId: number | undefined
+
+                            const clear = () => {
+                                if (timeoutId) {
+                                    clearTimeout(timeoutId)
+                                    timeoutId = undefined
+                                }
+                            }
+
                             ;(window as any).google.charts.setOnLoadCallback(() => {
+                                clear()
                                 debug('google.charts.setOnLoadCallback fired')
                                 ;(window as any).__googleChartsLoaderStatus = 'ready'
                                 resolve((window as any).google)
                             })
-                            // also use polling fallback
-                            finishWhenVisualizationReady()
+
+                            timeoutId = window.setTimeout(() => {
+                                debug('timeout waiting google.charts.setOnLoadCallback')
+                                ;(window as any).__googleChartsLoaderStatus = 'timeout'
+                                reject(new Error('Timed out loading Google Charts'))
+                            }, timeoutMs)
+
+                            // Not calling finishWhenVisualizationReady() here to avoid double-callbacks.
                         } catch (err) {
                             debug('error during onload handling', err)
                             ;(window as any).__googleChartsLoaderStatus = 'error'
@@ -76,9 +95,9 @@ export function loadGoogleCharts(packages: string[] = ['corechart', 'bar']): Pro
                     document.head.appendChild(script)
                 } else {
                     debug('loader script already present')
-                    // If google is already present and visualization available, resolve
-                    if ((window as any).google && (window as any).google.visualization) {
-                        debug('google.visualization already available')
+                    // Se o script já existe, a lógica de fallback (com polling) é aceitável
+                    if ((window as any).google && (window as any).google.visualization && (window as any).google.visualization.PieChart) {
+                        debug('google.visualization.PieChart already available')
                         resolve((window as any).google)
                     } else if ((window as any).google && (window as any).google.charts) {
                         debug('google.charts present, calling load')
@@ -89,14 +108,14 @@ export function loadGoogleCharts(packages: string[] = ['corechart', 'bar']): Pro
                                 ;(window as any).__googleChartsLoaderStatus = 'ready'
                                 resolve((window as any).google)
                             })
-                            finishWhenVisualizationReady()
+                            // O polling aqui é OK como fallback caso o callback falhe
+                            finishWhenVisualizationReady() 
                         } catch (err) {
                                     debug('error while calling google.charts.load', err)
                                     ;(window as any).__googleChartsLoaderStatus = 'error'
                                     reject(err)
                         }
                     } else {
-                        // script present but google not yet attached; wait for the script load event
                         debug('waiting for existing script load event')
                         const onLoad = () => {
                             try {
@@ -120,7 +139,7 @@ export function loadGoogleCharts(packages: string[] = ['corechart', 'bar']): Pro
             }
         })
         .catch((err) => {
-            // Reset so callers can retry later
+            // Reseta para que possa tentar novamente
             loaderPromise = null;
             throw err;
         });
@@ -129,5 +148,5 @@ export function loadGoogleCharts(packages: string[] = ['corechart', 'bar']): Pro
 }
 
 export function isGoogleChartsLoaded(): boolean {
-    return !!((window as any).google && (window as any).google.visualization);
+    return !!((window as any).google && (window as any).google.visualization && (window as any).google.visualization.PieChart);
 }

@@ -7,6 +7,10 @@ import type { LayoutType } from "./selecionarLayout"
 import { cn } from "@/lib/utils"
 
 import { Trash } from "lucide-react"
+import { useMemo, useState } from "react"
+import { VisualizarContextoModal } from "@/components/popups/visualizarContextoModal"
+import type { DetalhesContexto, ConjuntoDeDadosGrafico, TipoGrafico } from "@/components/popups/addContextoModal/types"
+import type { FileType } from "@/components/contextosCard/contextoCard"
 
 export interface GraphData {
     id: string
@@ -40,6 +44,38 @@ export function DashboardPreview({
     editMode = false,
     renderVersion,
 }: DashboardPreviewProps) {
+    const [modalAberto, setModalAberto] = useState(false)
+    const [detalhesSelecionados, setDetalhesSelecionados] = useState<DetalhesContexto | null>(null)
+
+    const mapGraphToDetalhes = (graph: GraphData): DetalhesContexto => {
+        // GraphData.data expected as Google Charts array: [columns, ...rows]
+        const cols = Array.isArray(graph.data) && graph.data.length > 0 ? (graph.data[0] as string[]) : []
+        const rows = Array.isArray(graph.data) && graph.data.length > 1 ? (graph.data.slice(1) as (string | number)[][]) : []
+        const dataset: ConjuntoDeDadosGrafico = {
+            colunas: cols,
+            linhas: rows,
+            cores: graph.colors,
+        }
+        const chartType = (graph.type as TipoGrafico) ?? "chart"
+
+        const detalhes: DetalhesContexto = {
+            id: graph.id,
+            title: graph.title,
+            type: "dashboard" as FileType,
+            insertedDate: graph.insertedDate,
+            payload: dataset,
+            chartType,
+            description: undefined,
+            solicitante: undefined,
+        }
+        return detalhes
+    }
+
+    const abrirDetalhes = (graph: GraphData) => {
+        const det = mapGraphToDetalhes(graph)
+        setDetalhesSelecionados(det)
+        setModalAberto(true)
+    }
     const getLayoutClasses = () => {
         switch (layout) {
             case "asymmetric":
@@ -101,6 +137,7 @@ export function DashboardPreview({
                                         colors={graph.colors}
                                         editMode={editMode}
                                         renderVersion={renderVersion}
+                                        onShowDetails={() => abrirDetalhes(graph)}
                                     />
                                     {editMode && (
                                         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2 items-center">
@@ -137,6 +174,13 @@ export function DashboardPreview({
                     )
                 })}
             </div>
+            {/* Modal de Visualização do Contexto para gráficos */}
+            <VisualizarContextoModal
+                estaAberto={modalAberto}
+                aoFechar={() => setModalAberto(false)}
+                dadosDoContexto={detalhesSelecionados}
+                perfil="membro"
+            />
         </div>
     )
 }

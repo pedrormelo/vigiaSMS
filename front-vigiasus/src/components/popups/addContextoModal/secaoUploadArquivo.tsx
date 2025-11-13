@@ -1,7 +1,14 @@
+// src/components/popups/addContextoModal/secaoUploadArquivo.tsx
 import React, { useState } from "react";
 import { UploadCloud, Download } from "lucide-react";
 import { SecaoUploadArquivoProps } from "@/components/popups/addContextoModal/types";
 import { showErrorToast } from "@/components/ui/Toasts";
+
+// ATUALIZADO: Definições de validação
+const DASHBOARD_ACCEPT_STRING = ".csv,.xls,.xlsx";
+const DASHBOARD_ALLOWED_EXTENSIONS = [".csv", ".xls", ".xlsx"];
+const LIMITE_TAMANHO_MB = 15; 
+const LIMITE_TAMANHO_BYTES = LIMITE_TAMANHO_MB * 1024 * 1024;
 
 export const SecaoUploadArquivo: React.FC<SecaoUploadArquivoProps> = ({ arquivoDeDados, setArquivoDeDados, aoBaixarModelo }) => {
     const [arrastandoSobre, setArrastandoSobre] = useState(false);
@@ -11,17 +18,16 @@ export const SecaoUploadArquivo: React.FC<SecaoUploadArquivoProps> = ({ arquivoD
             return;
         }
 
-        const LIMITE_TAMANHO_MB = 0.0001;
-        const LIMITE_TAMANHO_BYTES = LIMITE_TAMANHO_MB * 1024 * 1024;
-
         if (arquivo.size > LIMITE_TAMANHO_BYTES) {
             showErrorToast("Arquivo muito grande", `O tamanho máximo permitido é de ${LIMITE_TAMANHO_MB} MB.`);
             setArquivoDeDados(null);
             return;
         }
 
-        if (!arquivo.name.toLowerCase().endsWith('.csv')) {
-            showErrorToast("Formato de arquivo inválido", "Por favor, selecione um arquivo no formato .csv.");
+        // ATUALIZADO: Validação de extensão
+        const extensao = "." + arquivo.name.split('.').pop()?.toLowerCase();
+        if (!DASHBOARD_ALLOWED_EXTENSIONS.includes(extensao)) {
+            showErrorToast("Formato de arquivo inválido", "Por favor, selecione um arquivo .csv, .xls ou .xlsx.");
             setArquivoDeDados(null);
             return;
         }
@@ -60,14 +66,15 @@ export const SecaoUploadArquivo: React.FC<SecaoUploadArquivoProps> = ({ arquivoD
                         {arquivoDeDados ? `Arquivo selecionado: ${arquivoDeDados.name}` : "Arraste e solte o arquivo"}
                     </span>
                     <span className="text-sm text-gray-500 mt-1">
-                        ou <span className="text-blue-600 font-semibold">clique para selecionar (.csv)</span>
+                        ou <span className="text-blue-600 font-semibold">clique para selecionar ({DASHBOARD_ACCEPT_STRING})</span>
                     </span>
-                    <span className="text-xs text-gray-400 mt-2">Tamanho máximo: 15 MB</span>
+                    <span className="text-xs text-gray-400 mt-2">Tamanho máximo: {LIMITE_TAMANHO_MB} MB</span>
                 </label>
-                <input id="chart-file-upload" type="file" className="hidden" accept=".csv" onChange={aoAlterarArquivo} />
+                {/* ATUALIZADO: 'accept' string */}
+                <input id="chart-file-upload" type="file" className="hidden" accept={DASHBOARD_ACCEPT_STRING} onChange={aoAlterarArquivo} />
             </div>
             <button onClick={aoBaixarModelo} className="text-sm w-full flex items-center justify-center gap-2 text-gray-600 hover:text-blue-600 font-medium hover:underline transition-all">
-                <Download className="w-4 h-4"/> Baixar template de exemplo
+                <Download className="w-4 h-4"/> Baixar template de exemplo (.csv)
             </button>
         </div>
     );

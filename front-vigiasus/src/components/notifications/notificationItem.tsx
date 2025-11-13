@@ -1,8 +1,10 @@
 // src/components/notifications/notificationItem.tsx
-import Image from "next/image";
-// Certifique-se que o tipo Notification inclui 'relatedFileType'
-import { Notification } from "@/constants/types"; // Importar do novo types.ts
+import { Notification } from "@/constants/types";
 import { cn } from "@/lib/utils";
+import IconeDocumento from '@/components/validar/iconeDocumento';
+import { FileType } from "@/components/contextosCard/contextoCard";
+//  IMPORTAR ÍCONES PARA TIPOS QUE NÃO SÃO ARQUIVOS
+import { Settings, MessageSquare } from "lucide-react";
 
 interface NotificationItemProps {
   notification: Notification;
@@ -17,86 +19,80 @@ export default function NotificationItem({
   onClick,
   isRead,
 }: NotificationItemProps) {
-  // Desestruturar type e relatedFileType da notificação
   const { title, description, status, type, relatedFileType } = notification;
 
-  const getStatusColor = () => {
-    switch (status) {
-      case "deferido": return "text-green-600";
-      case "indeferido": return "text-red-600";
-      default: return "text-blue-600";
+  //  LÓGICA DE RENDERIZAÇÃO DO ÍCONE ATUALIZADA
+  const renderIcon = () => {
+    // Se for 'sistema', usa o ícone de Configurações
+    if (type === 'sistema') {
+      return <Settings className="w-5 h-5 text-blue-600" />;
     }
+
+    // Tenta obter o tipo de arquivo (se for comentário, usa o arquivo relacionado)
+    const iconTypeForFile = (type === 'comentario' && relatedFileType ? relatedFileType : type) as FileType;
+
+    // Lista de tipos de arquivo que o IconeDocumento conhece
+    const validFileTypes: FileType[] = ["doc", "planilha", "pdf", "dashboard", "resolucao", "link", "apresentacao", "indicador", "leis"];
+
+    // Se for um tipo de arquivo válido, usa o IconeDocumento
+    if (validFileTypes.includes(iconTypeForFile)) {
+      return <IconeDocumento type={iconTypeForFile}/>;
+    }
+
+    // Fallback para 'comentario' sem arquivo relacionado
+    if (type === 'comentario') {
+      return <MessageSquare className="w-5 h-5 text-gray-600" />;
+    }
+
+    // Fallback genérico (caso algum tipo novo apareça)
+    return <IconeDocumento type={'doc'} />;
   };
 
-  // --- FUNÇÃO getIcon ATUALIZADA ---
-  const getIcon = () => {
-    // Determina qual tipo usar para o ícone. Se for 'comentario', usa o relatedFileType se existir.
-    const iconType = type === 'comentario' && relatedFileType ? relatedFileType : type;
-
-    switch (iconType) {
-      // Mapeamento para os ícones de /icons/CONTEXTOS/
-      case "doc":
-        return "/icons/CONTEXTOS/DOC.svg";
-      case "planilha": // Mapeia 'planilha' para o ícone de Excel
-      case "excel":
-        return "/icons/CONTEXTOS/PLA.svg";
-      case "pdf":
-        return "/icons/CONTEXTOS/PDF.svg";
-      case "dashboard": // Adiciona o tipo dashboard
-        return "/icons/CONTEXTOS/GRA.svg";
-      case "resolucao": // Adiciona o tipo resolucao
-        return "/icons/CONTEXTOS/RES.svg";
-
-      // Mantém ícones específicos para notificação
-      case "comentario": // Fallback se não houver relatedFileType
-        return "/icons/comentario-icon.svg"; // Ou pode usar um ícone genérico de contexto
-      case "sistema":
-        return "/icons/system.svg";
-
-      // Fallback genérico
-      default:
-        return "/icons/default-icon.svg"; // Ou /icons/CONTEXTOS/DOC.svg como padrão?
-    }
-  };
-  // --- FIM DA ATUALIZAÇÃO ---
+  // Define a cor da descrição baseada no status (sem alteração)
+  const statusColor = status === 'deferido'
+    ? 'text-green-600'
+    : status === 'indeferido'
+      ? 'text-red-600'
+      : 'text-gray-600'; // Cor padrão
 
   return (
     <button
       onClick={onClick}
       className={cn(
-        "flex items-start cursor-pointer gap-4 p-4 rounded-2xl text-left transition w-full",
+        "flex items-start cursor-pointer gap-3 p-3 rounded-xl text-left transition-all w-full relative",
+        "border border-transparent",
         isActive
-          ? "bg-blue-600 text-white shadow-md"
-          : "bg-white text-gray-800 hover:bg-gray-100",
+          ? "bg-blue-500 border-blue-500 text-white shadow-sm"
+          : "hover:bg-gray-100",
         isRead && !isActive && "opacity-70 hover:opacity-100"
       )}
     >
+      {/* Indicador não lido (bolinha azul) */}
+      {!isRead && (
+        <span
+          className="absolute top-3 left-6 block h-2.5 w-2.5 rounded-full bg-blue-500 ring-2 ring-white"
+          aria-label="Não lida"
+        />
+      )}
+
       {/* Container do Ícone */}
-      <div className="relative flex-shrink-0">
-         <div className={cn(
-            "w-10 h-10 flex items-center justify-center rounded-full",
-             isActive ? "bg-white" : "bg-blue-50"
-         )}>
-            <Image
-              src={getIcon()} // Chama a função atualizada
-              alt="Ícone da notificação" // Alt pode ser mais descritivo se necessário
-              width={24} // Ajustado para talvez acomodar melhor os ícones de contexto
-              height={24}
-              className="object-contain" // Garante que o ícone caiba sem distorcer
-            />
-         </div>
-         {/* Indicador não lido */}
-         {!isRead && (
-            <span className="absolute top-0 right-0 block h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white" />
-         )}
+      <div className={cn(
+        "w-11 h-11 flex-shrink-0 flex items-center justify-center rounded-md mt-0.5",
+        isActive ? "bg-white" : "bg-gray-100/60", // Fundo do ícone
+        !isRead ? "ml-4" : "" // Adiciona margem se a bolinha "não lido" estiver presente
+      )}>
+        {/* CHAMA A NOVA FUNÇÃO DE RENDERIZAÇÃO */}
+          {renderIcon()}  
       </div>
 
       {/* Textos */}
       <div className="flex-1 min-w-0">
         <h3
           className={cn(
-            "font-semibold text-base leading-tight truncate",
-            isActive ? "text-white" : "text-blue-700"
+            "font-semibold text-sm leading-snug line-clamp-1",
+            // Texto branco quando ativo, caso contrário usa cinza escuro
+            isActive ? "text-white" : "text-blue-700",
+            !isRead && "font-semibold" // Título mais grosso se não lido
           )}
           title={title}
         >
@@ -104,10 +100,11 @@ export default function NotificationItem({
         </h3>
         <p
           className={cn(
-            "text-sm leading-tight mt-1 truncate",
-            isActive ? "text-blue-100" : getStatusColor()
+            "text-xs leading-snug mt-1 line-clamp-1", // Descrição menor
+            // Se ativo, descrição também fica branca; caso contrário, mostrar cor por status
+            isActive ? "text-white" : statusColor
           )}
-           title={description}
+          title={description}
         >
           {description}
         </p>

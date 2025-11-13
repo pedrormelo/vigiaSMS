@@ -1,22 +1,26 @@
+// src/app/validar/historico/page.tsx
 "use client";
 
-import { useState, useCallback } from "react"; // Importamos o useCallback
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useHistoricoContextos } from "@/hooks/useHistoricoContextos";
 
 import ContextoTable from "@/components/validar/ContextoTable";
-import DetalhesContextoModal from "@/components/popups/detalhesContextoModal";
+// 1. IMPORTAÇÃO ATUALIZADA
+// import DetalhesContextoModal from "@/components/popups/detalhesContextoModal"; // <-- REMOVIDO
+import { VisualizarContextoModal } from "@/components/popups/visualizarContextoModal"; // <-- ADICIONADO
+
 import { Button } from "@/components/ui/button";
 import Paginacao from "@/components/ui/paginacao";
 import { SearchBar } from "@/components/ui/search-bar";
+import DateInputFilter from "@/components/validar/dateInputFilter"; 
+import { ArrowLeft, Eye, Loader2, SearchX } from "lucide-react"; 
 
 import { membroColumns } from "@/components/validar/colunasTable/membroColumns";
 import { gerenteColumns } from "@/components/validar/colunasTable/gerenteColumns";
 import { diretorColumns } from "@/components/validar/colunasTable/diretorColumns";
 import { Contexto } from "@/components/validar/typesDados";
-
-import { ArrowLeft, Eye } from "lucide-react";
 
 export default function HistoricoPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -27,8 +31,10 @@ export default function HistoricoPage() {
     to: undefined,
   });
 
-  // No futuro, o hook receberá também o dateRange
-  const { data, error, currentPage, totalPages, setCurrentPage } = useHistoricoContextos(debouncedSearchQuery);
+  const { data, error, isLoading, currentPage, totalPages, setCurrentPage } = useHistoricoContextos(
+    debouncedSearchQuery,
+    dateRange
+  );
 
   const [perfil, setPerfil] = useState<"diretor" | "gerente" | "membro">("gerente");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -39,8 +45,6 @@ export default function HistoricoPage() {
     setIsModalOpen(true);
   };
 
-  // A função agora está "memorizada" pelo useCallback.
-  // Ela só será recriada se as suas dependências (que estão vazias []) mudarem.
   const handleDateFilterChange = useCallback((range: { from: Date | undefined; to: Date | undefined }) => {
     setDateRange(range);
     console.log("Novo filtro de datas selecionado:", range);
@@ -75,8 +79,30 @@ export default function HistoricoPage() {
     return <div className="p-8 text-red-500">{error}</div>;
   }
 
+  const renderTableContent = () => {
+    if (isLoading) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[200px] text-gray-500">
+          <Loader2 className="w-8 h-8 animate-spin" />
+          <p className="mt-2 font-medium">A carregar histórico...</p>
+        </div>
+      );
+    }
+    if (data.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[200px] text-gray-500 border-2 border-dashed border-gray-300 rounded-2xl bg-gray-50/50">
+          <SearchX className="w-12 h-12" />
+          <p className="mt-2 font-semibold">Nenhum resultado encontrado</p>
+          <p className="text-sm">Tente ajustar os filtros de pesquisa ou data.</p>
+        </div>
+      );
+    }
+    return <ContextoTable data={data} columns={getColumns()} />;
+  };
+
   return (
     <div className="p-8 bg-white min-h-screen">
+      {/* Simulação de Perfil... (sem alteração) */}
       <div className="flex gap-2 mb-4 bg-yellow-100 p-2 rounded-md text-sm">
         <p className="font-bold my-auto">Simulação de Perfil:</p>
         <button onClick={() => setPerfil("diretor")} className={`px-3 py-1 rounded-md ${perfil === 'diretor' && 'bg-blue-200 font-semibold'}`}>Diretor</button>
@@ -84,6 +110,7 @@ export default function HistoricoPage() {
         <button onClick={() => setPerfil("membro")} className={`px-3 py-1 rounded-md ${perfil === 'membro' && 'bg-blue-200 font-semibold'}`}>Membro</button>
       </div>
       
+      {/* Cabeçalho... (sem alteração) */}
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-[#1745FF]">Histórico de Contextos</h1>
         <Link href="/validar">
@@ -94,31 +121,36 @@ export default function HistoricoPage() {
         </Link>
       </div>
 
+      {/* Conteúdo da Tabela... (sem alteração) */}
       <div className="bg-gray-100/25 rounded-[2rem] p-6 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
           <SearchBar
             value={searchQuery}
             onChange={setSearchQuery}
-            placeholder="Pesquise por nome do contexto ou solicitante..."
+            placeholder="Pesquise por nome ou solicitante..."
             className="w-full md:w-auto md:flex-1"
           />
+          <DateInputFilter onDateChange={handleDateFilterChange} />
         </div>
         
-        <ContextoTable data={data} columns={getColumns()} />
+        {renderTableContent()}
 
-        <Paginacao 
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-        />
+        {!isLoading && data.length > 0 && totalPages > 1 && (
+          <Paginacao 
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        )}
       </div>
 
-      <DetalhesContextoModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        contexto={selectedContexto}
+      {/* 2. MODAL ATUALIZADO */}
+      <VisualizarContextoModal
+        estaAberto={isModalOpen}
+        aoFechar={() => setIsModalOpen(false)}
+        dadosDoContexto={selectedContexto}
         perfil={perfil}
-        isFromHistory={true}
+        isFromHistory={true} // <-- Importante: Mantém o modo "somente leitura"
       />
     </div>
   );

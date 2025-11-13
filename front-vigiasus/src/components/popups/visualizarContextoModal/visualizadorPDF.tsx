@@ -61,8 +61,8 @@ export const VisualizadorPdf: React.FC<VisualizadorPdfProps> = ({ url, emTelaChe
     );
 
     return (
-        <div className="w-full h-full bg-gray-100 rounded-2xl flex flex-col relative group">
-            <div className="flex-1 overflow-auto flex justify-center p-4">
+        <div className="w-full h-full bg-gray-100 rounded-2xl flex flex-col relative group z-0">
+            <div className="flex-1 overflow-auto flex justify-center p-4 relative z-0">
                 <Document
                     file={url}
                     onLoadSuccess={aoCarregarDocumento}
@@ -81,7 +81,7 @@ export const VisualizadorPdf: React.FC<VisualizadorPdfProps> = ({ url, emTelaChe
             </div>
             
             {!carregando && numPaginas && !pdfError && (
-                <div className="flex-shrink-0 flex items-center justify-center gap-4 p-2 bg-gray-200/50 backdrop-blur-sm rounded-b-2xl border-t">
+                <div className="flex-shrink-0 flex items-center justify-center gap-4 p-2 bg-gray-200/50 backdrop-blur-sm rounded-b-2xl border-t relative z-10">
                     <button onClick={paginaAnterior} disabled={paginaAtual <= 1} className="p-2 rounded-full hover:bg-gray-300 disabled:opacity-50">
                         <ChevronLeft className="w-5 h-5" />
                     </button>
@@ -97,7 +97,7 @@ export const VisualizadorPdf: React.FC<VisualizadorPdfProps> = ({ url, emTelaChe
             {!emTelaCheia && aoAlternarTelaCheia && !carregando && !pdfError && (
                 <button
                     onClick={aoAlternarTelaCheia}
-                    className="absolute top-2 right-2 p-2 bg-white/50 backdrop-blur-sm border border-gray-200 rounded-full text-gray-600 hover:bg-gray-200 hover:text-gray-900 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all"
+                    className="absolute top-2 right-2 p-2 bg-white/70 backdrop-blur-sm border border-gray-200 rounded-full text-gray-700 hover:bg-white hover:text-gray-900 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all z-20 pointer-events-auto shadow-sm"
                     title="Ver em tela cheia"
                 >
                     <Expand className="w-4 h-4" />

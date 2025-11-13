@@ -2,22 +2,18 @@
 "use client";
 
 import { Notification } from "@/constants/notificationsData";
-import { toast } from "sonner";
 import Image from "next/image";
-import { CheckCircle2, Info } from "lucide-react"; // Usar Info para o ícone principal
-import { Button } from "@/components/ui/button"; // Usar Button
-import { showSuccessToast } from "@/components/ui/Toasts"; // Usar o Toast padrão
+// 1. IMPORTAÇÕES REMOVIDAS (Button, showSuccessToast, CheckCircle2)
+import { Info } from "lucide-react"; // Usar Info para o ícone principal
 
 interface NotificationProps {
   notification: Notification;
 }
 
 export default function SystemUpdateView({ notification }: NotificationProps) {
-  const handleUnderstood = () => {
-    // Lógica para marcar como entendido (pode ser enviada para o backend no futuro)
-    showSuccessToast("Atualização marcada como entendida.");
-    // Aqui você pode querer chamar uma função passada por props para atualizar o estado global
-  };
+  
+  // 2. FUNÇÃO 'handleUnderstood' REMOVIDA
+  // (A lógica agora está no clique da lista, no notificationsModal.tsx)
 
   return (
     // Adicionado padding, flex layout, e scroll se necessário
@@ -33,7 +29,7 @@ export default function SystemUpdateView({ notification }: NotificationProps) {
             <p className="text-gray-600 leading-relaxed max-w-md">{notification.description}</p>
 
             {/* Caixa de Novidades */}
-            <div className="w-full mt-4 p-4 border border-blue-200 rounded-xl bg-blue-50/50 text-left">
+            <div className="w-full mt-4 p-4 border border-blue-200 rounded-3xl bg-blue-50/50 text-left">
                 <p className="font-semibold mb-2 text-blue-800">O que há de novo:</p>
                 {/* Exemplo de lista, pode vir do backend */}
                 <ul className="list-disc list-inside text-sm text-blue-700 space-y-1">
@@ -45,15 +41,8 @@ export default function SystemUpdateView({ notification }: NotificationProps) {
             </div>
         </div>
 
-        {/* Rodapé com botão */}
-        <div className="flex justify-end pt-4 border-t border-gray-200">
-            <Button
-                onClick={handleUnderstood}
-                className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold"
-            >
-                Entendido
-            </Button>
-        </div>
+        {/* 3. RODAPÉ COM BOTÃO REMOVIDO */}
+        
     </div>
   );
 }

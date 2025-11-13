@@ -3,9 +3,8 @@
 //import type { Metadata } from 'next';
 import { Montserrat } from 'next/font/google';
 import './globals.css';
-// Navbar 
-import Navbar from '@/components/navbar/navbar';
-import Footer from '../components/footer/footer';
+// App shell (handles Navbar/Footer visibility)
+import AppShell from '@/components/layout/AppShell';
 import { PanelRightOpen, Scroll } from 'lucide-react';
 import GlobalScrollArea from '@/components/ui/global-scroll-area';
 import { Toaster } from "sonner"; 
@@ -29,12 +28,10 @@ export default function RootLayout({
     <html lang="pt-BR">
       <body className={`${montserrat.className} antialiased flex flex-col selection:bg-green-400 selection:text-white`}>
         <GlobalScrollArea>
-          {/* A Navbar é renderizada aqui */}
-          <Navbar className="sticky" />
-          {/* O conteúdo da página (nossa {homePage} será renderizado aqui quando a gentr construir, Pedro*/}
-          <main className="flex-1">{children}</main>
+          <AppShell>
+            {children}
+          </AppShell>
           <Toaster />
-          <Footer />
         </GlobalScrollArea>
       </body>
     </html>

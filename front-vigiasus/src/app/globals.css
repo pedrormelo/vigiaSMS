@@ -6,50 +6,31 @@
 @custom-variant dark (&:is(.dark *));
 @tailwind utilities;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
+/* Ensure ring color variable is always defined (used by focus:ring-ring) */
+:root {
+  --ring: #2563eb; /* default focus ring color */
+}
+.dark :root, .dark {
+  --ring: #60a5fa; /* lighter ring for dark mode */
+}
+
+/* NOTE: The project previously used a custom @theme at-rule which is not
+   supported by the current PostCSS/Tailwind setup and caused a build error
+   (Unknown at rule @theme). Removed the unsupported block and added a small
+   fallback mapping so colors used by components (like --color-ring) resolve.
+*/
+
+:root {
+  /* Map our ring token to a color variable expected by some components */
   --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
 }
 
 @media (prefers-color-scheme: light) {
   :root {
     --background:#f2f2f2;
     --foreground: #0a0a0a;
+    /* Color token used by Tailwind ring utilities (ring-ring) */
+    --ring: #2563eb; /* Azul padrão para foco */
   }
 }
 
@@ -113,3 +94,41 @@ button, a{
     animation: fadeInUp 0.6s ease-out forwards;
     opacity: 0; 
   }
+
+  .rdp,
+.rdp-root,
+.rdp * {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none;
+}
+
+/* Remover bordas da tabela e células */
+.rdp table,
+.rdp tbody,
+.rdp thead,
+.rdp tr,
+.rdp td,
+.rdp th {
+  border: none !important;
+  border-collapse: collapse !important;
+  border-spacing: 0 !important;
+  padding: 0;
+}
+
+/* Remover bordas dos botões */
+.rdp-button,
+.rdp-button_next,
+.rdp-button_previous,
+.rdp-day,
+.rdp-day_button {
+  border: none !important;
+  outline: none !important;
+}
+
+/* Estados de foco sem bordas */
+.rdp *:focus,
+.rdp *:focus-visible {
+  outline: none !important;
+  border: none !important;
+}

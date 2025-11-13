@@ -1,57 +1,125 @@
 // src/components/notifications/notificationsModal.tsx
 "use client";
 
-import { useState, useEffect } from "react";
-import { useNotifications } from "@/hooks/useNotifications";
-import { Notification } from "@/constants/types"; // Ajustado para usar types.ts
-
-import NotificationList from "@/components/notifications/notificationList";
+import { useState, useEffect, useMemo } from "react";
+import { Notification } from "@/constants/types";
+import NotificationList, { type ActiveFilter } from "@/components/notifications/notificationList";
 import NotificationDetailView from "@/components/notifications/NotificationDetailView";
+// --- 1. IMPORTAR O NOVO PAINEL DE CONFIGURAÇÕES ---
+import NotificationSettingsView from "./notificationSettingsView";
 import { Button } from "@/components/ui/button";
 import { Bell, Inbox, ArrowLeft, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// Props (inalteradas)
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   onOpenContextoDetails: (notification: Notification) => void;
+  notifications: Notification[];
+  isLoading: boolean;
+  isError: boolean;
+  readNotifications: Set<number>;
+  onMarkAsRead: (id: number) => void;
 }
 
-export default function NotificationsModal({ isOpen, onClose, onOpenContextoDetails }: Props) {
-  const { notifications, isLoading, isError } = useNotifications();
-  const [activeNotification, setActiveNotification] =
-    useState<Notification | null>(null);
-  const [readNotifications, setReadNotifications] = useState<Set<number>>(
-    new Set()
-  );
+export default function NotificationsModal({
+  isOpen, onClose, onOpenContextoDetails,
+  notifications, isLoading, isError,
+  readNotifications, onMarkAsRead
+}: Props) {
 
-  useEffect(() => {
-    // Mantém a lógica de selecionar a primeira não lida ou a primeira da lista ao abrir
-    if (isOpen && notifications.length > 0 && !activeNotification) {
-        const firstUnread = notifications.find(n => !readNotifications.has(n.id));
-        setActiveNotification(firstUnread || notifications[0]);
-    } else if (!isOpen) {
-        // Limpa a notificação ativa ao fechar o modal
-        setActiveNotification(null);
+  const [activeNotification, setActiveNotification] = useState<Notification | null>(null);
+
+  // --- 2. ADICIONAR ESTADO PARA O PAINEL DE CONFIGURAÇÕES ---
+  const [showSettingsPanel, setShowSettingsPanel] = useState(false);
+
+  // Tenta ler o filtro salvo no localStorage ao iniciar
+  const [activeFilter, setActiveFilter] = useState<ActiveFilter>(() => {
+    try {
+      const savedFilter = localStorage.getItem('notifications.activeFilter');
+      if (savedFilter === 'unread' || savedFilter === 'system') {
+        return savedFilter;
+      }
+      return 'all';
+    } catch (e) {
+      return 'all';
     }
-  }, [isOpen, notifications, readNotifications]); // Reage à abertura/fechamento e mudanças
+  });
 
-  // --- AJUSTE AQUI ---
-  // Esta função agora APENAS define a notificação ativa para visualização interna
+  // Lógica de filtro (inalterada)
+  const totalUnreadCount = useMemo(() => {
+    return notifications.filter(n => !readNotifications.has(n.id)).length;
+  }, [notifications, readNotifications]);
+
+  const filteredNotifications = useMemo(() => {
+    if (activeFilter === "unread") {
+      return notifications.filter(n => !readNotifications.has(n.id));
+    }
+    if (activeFilter === "system") {
+      return notifications.filter(n => n.type === "sistema");
+    }
+    return notifications;
+  }, [notifications, activeFilter, readNotifications]);
+
+
+  // --- 3. ATUALIZAR HANDLER DE SELEÇÃO ---
   const handleSelectNotification = (id: number) => {
     const notification = notifications.find((notif) => notif.id === id);
     if (notification) {
-      setActiveNotification(notification); // Apenas atualiza o estado interno
-      // Não chama mais onOpenContextoDetails aqui
+      setActiveNotification(notification);
+      setShowSettingsPanel(false); // <--- Esconde as configs ao selecionar notif
+      if (!readNotifications.has(id)) {
+        onMarkAsRead(id);
+      }
     }
   };
-  // --- FIM DO AJUSTE ---
 
-  const handleMarkAsRead = (id: number) => {
-    setReadNotifications((prevReadIds) => new Set(prevReadIds).add(id));
+  // --- 4. ADICIONAR HANDLER PARA O BOTÃO DE CONFIGS ---
+  const handleToggleSettings = () => {
+    setShowSettingsPanel(prev => {
+      const isOpening = !prev;
+      // Se estiver abrindo as configs, des-seleciona a notificação
+      if (isOpening) {
+        setActiveNotification(null);
+      }
+      return isOpening;
+    });
   };
 
-  // --- Componentes de Estado (EmptyState, LoadingState, ErrorState) - permanecem iguais ---
+  // --- 5. ATUALIZAR FILTRO (passado para o SettingsView) ---
+  const handleFilterChange = (filter: ActiveFilter) => {
+    setActiveFilter(filter);
+    try {
+      localStorage.setItem('notifications.activeFilter', filter);
+    } catch (e) { }
+  };
+
+
+  // useEffect (inalterado, mas agora 'activeNotification' pode ser null
+  // se as configs estiverem abertas)
+  useEffect(() => {
+    if (!isOpen) {
+      setActiveNotification(null);
+      setShowSettingsPanel(false); // <--- Reseta ao fechar o modal
+      return;
+    }
+
+    // Se as configs estiverem abertas, não faz nada
+    if (showSettingsPanel) return;
+
+    const activeIsFilteredOut = activeNotification && !filteredNotifications.some(n => n.id === activeNotification.id);
+
+    if ((!activeNotification || activeIsFilteredOut) && filteredNotifications.length > 0) {
+      const firstItem = filteredNotifications[0];
+      setActiveNotification(firstItem);
+    } else if (filteredNotifications.length === 0) {
+      setActiveNotification(null);
+    }
+  }, [isOpen, filteredNotifications, activeNotification, showSettingsPanel]); // <--- Adiciona showSettingsPanel
+
+
+  // --- Componentes de Estado (EmptyState, LoadingState, ErrorState) (inalterados) ---
   const EmptyState = () => (
     <div className="flex flex-col items-center justify-center h-full text-center text-gray-500 p-8">
       <Inbox className="h-16 w-16 mb-4 text-gray-300" />
@@ -68,85 +136,110 @@ export default function NotificationsModal({ isOpen, onClose, onOpenContextoDeta
     </div>
   );
   const ErrorState = () => (
-     <div className="flex items-center justify-center h-full">
-        <p className="text-red-500">
-            Ocorreu um erro ao carregar as notificações.
-        </p>
-     </div>
+    <div className="flex items-center justify-center h-full">
+      <p className="text-red-500">
+        Ocorreu um erro ao carregar as notificações.
+      </p>
+    </div>
   );
 
-  // --- Renderização do Conteúdo Principal ---
+
+  // --- 6. ATUALIZAR RENDERCONTENT ---
   const renderContent = () => {
     if (isLoading) return <LoadingState />;
     if (isError) return <ErrorState />;
     if (notifications.length === 0) return <EmptyState />;
 
-    // Não precisamos mais de 'notificationToShow', usamos diretamente 'activeNotification'
-     const isCurrentNotificationRead = activeNotification
+    const isCurrentNotificationRead = activeNotification
       ? readNotifications.has(activeNotification.id)
       : false;
 
     return (
-        <div className="flex flex-1 min-h-0 h-full">
-            <div className="w-[400px] flex-shrink-0 border-r border-gray-200 overflow-hidden flex flex-col">
-                <NotificationList
-                    notifications={notifications}
-                    activeNotificationId={activeNotification?.id || null}
-                    onSelectNotification={handleSelectNotification} // Continua passando esta
-                    readNotifications={readNotifications}
-                />
-            </div>
-            <div className="flex-1 overflow-hidden flex flex-col">
-                {/* Passa a função onOpenContextoDetails do Navbar para o DetailView */}
-                <NotificationDetailView
-                    notification={activeNotification} // Passa a notificação ativa atual
-                    isRead={isCurrentNotificationRead}
-                    onMarkAsRead={handleMarkAsRead}
-                    onOpenContexto={onOpenContextoDetails} // <-- Passando a função recebida do Navbar
-                />
-            </div>
+      <div className="flex flex-1 min-h-0 h-full">
+        {/* Lista da Esquerda */}
+        <div className="w-[400px] flex-shrink-0 border-r border-gray-200 overflow-hidden flex flex-col">
+          <NotificationList
+            notifications={filteredNotifications}
+            // Se as configs estiverem ativas, NENHUMA notificação é "active"
+            activeNotificationId={showSettingsPanel ? null : activeNotification?.id || null}
+            onSelectNotification={handleSelectNotification}
+            readNotifications={readNotifications}
+            totalUnreadCount={totalUnreadCount}
+            activeFilter={activeFilter}
+            onFilterChange={handleFilterChange} // <--- Passa o handler de filtro
+
+            // --- Passa as novas props ---
+            onToggleSettings={handleToggleSettings}
+            isSettingsActive={showSettingsPanel}
+          />
         </div>
+
+        {/* *** INÍCIO DA MODIFICAÇÃO PRINCIPAL ***
+              O painel da direita agora renderiza OU as Configurações OU os Detalhes
+            */}
+        <div className="flex-1 overflow-hidden flex flex-col">
+          {showSettingsPanel ? (
+            <NotificationSettingsView
+              onClose={() => setShowSettingsPanel(false)}
+              onFilterChange={handleFilterChange}
+              activeFilter={activeFilter}
+            />
+          ) : (
+            <NotificationDetailView
+              notification={activeNotification}
+              isRead={isCurrentNotificationRead}
+              onOpenContexto={onOpenContextoDetails}
+            />
+          )}
+        </div>
+        {/* *** FIM DA MODIFICAÇÃO PRINCIPAL *** */}
+      </div>
     );
   };
 
   if (!isOpen) return null;
 
-  // --- Estrutura do Modal (mantida) ---
+  // --- Estrutura do Modal (inalterada) ---
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
-        <div className={cn(
-            "bg-white rounded-[40px] w-full max-w-6xl h-[90vh]",
-            "flex flex-col shadow-2xl overflow-hidden"
-         )}>
-            {/* Cabeçalho */}
-             <div className="bg-gradient-to-r from-[#0037C1] to-[#00BDFF] px-8 py-4 flex items-center justify-between rounded-t-[40px] flex-shrink-0">
-                {/* ... (código do cabeçalho) ... */}
-                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                        <Bell className="w-5 h-5 text-white" />
-                    </div>
-                    <h2 className="text-2xl font-regular text-white">
-                        Central de Notificações
-                    </h2>
-                </div>
-                <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={onClose}
-                    className="w-8 h-8 bg-white/20 text-white hover:bg-white/30 rounded-full flex-shrink-0"
-                >
-                    <ArrowLeft className="w-5 h-5" />
-                </Button>
+    <div
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      data-state={isOpen ? "open" : "closed"}
+    >
+      <div className={cn(
+        "bg-white rounded-[40px] w-full max-w-6xl h-[90vh]",
+        "flex flex-col shadow-2xl overflow-hidden",
+        "data-[state=open]:animate-in data-[state=open]:fade-in-0",
+        "data-[state=closed]:animate-out data-[state=closed]:fade-out-0"
+      )}>
+
+        {/* Cabeçalho (inalterado) */}
+        <div className="bg-gradient-to-r from-[#0037C1] to-[#00BDFF] px-8 py-4 flex items-center justify-between rounded-t-[40px] flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center">
+              <Bell className="w-6 h-6 text-white" />
             </div>
-            {/* Conteúdo */}
-            <div className="flex-1 overflow-hidden">
-                {renderContent()}
-            </div>
+            <h2 className="text-2xl font-semibold text-white">
+              Central de Notificações
+            </h2>
+          </div>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={onClose}
+            className="w-9 h-9 bg-white/15 text-white hover:bg-white/30 hover:text-white/50 rounded-2xl flex-shrink-0"
+          >
+            <ArrowLeft className="w-6 h-6" />
+          </Button>
         </div>
-        <style>{`
-            /* ... (estilos) ... */
-            @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-            .animate-fade-in { animation: fadeIn 0.2s ease-out forwards; }
+
+        {/* Conteúdo */}
+        <div className="flex-1 overflow-hidden">
+          {renderContent()}
+        </div>
+      </div>
+
+      {/* Estilos (inalterados) */}
+      <style>{`
             .scrollbar-custom::-webkit-scrollbar { width: 8px; }
             .scrollbar-custom::-webkit-scrollbar-thumb { background: linear-gradient(to bottom, #60a5fa, #2563eb); border-radius: 8px; }
             .scrollbar-custom::-webkit-scrollbar-track { background: transparent; }

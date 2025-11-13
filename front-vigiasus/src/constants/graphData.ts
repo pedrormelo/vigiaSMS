@@ -112,8 +112,8 @@ export const mockGraphs: GraphData[] = [
         data: [
             ["Indicador", "Meta", "Realizado"],
             ["Cobertura ESF", 85, 82],
-            ["Vacinação", 90, 88],
-            ["Pré-natal", 80, 85],
+            ["Vacinação", 50, 88],
+            ["Pré-natal", 30, 95],
         ],
     },
 

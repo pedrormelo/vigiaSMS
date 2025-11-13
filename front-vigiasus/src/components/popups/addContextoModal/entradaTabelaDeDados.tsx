@@ -1,7 +1,9 @@
+// src/components/popups/addContextoModal/entradaTabelaDeDados.tsx
 import React from 'react';
 
 interface EntradaTabelaDeDadosProps {
-    valor: string | number;
+    // Atualizado para aceitar null, pois as células do banco/estado podem ser nulas
+    valor: string | number | null; 
     aoMudar: (valor: string) => void;
     placeholder?: string;
     tipo?: "text" | "number";
@@ -26,7 +28,8 @@ export const EntradaTabelaDeDados: React.FC<EntradaTabelaDeDadosProps> = ({
     return (
         <input
             type={tipo}
-            value={valor}
+            // Converte null para string vazia para evitar warnings do React (uncontrolled input)
+            value={valor ?? ""} 
             onChange={(e) => aoMudar(e.target.value)}
             placeholder={placeholder}
             className={`${estiloBase} ${eCabecalho ? estiloCabecalho : estiloCelula} ${className}`}

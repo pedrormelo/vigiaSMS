@@ -1,35 +1,50 @@
+// src/components/contextosCard/contextosGrid.tsx
 "use client"
 
 import { FileItem, type FileType } from "../contextosCard/contextoCard"
 import { AddContextButton } from "./adicionarContexto"
 import ScrollArea from "@/components/ui/scroll-area"
+// 1. IMPORTAR O TIPO UNIFICADO
+import { Contexto, StatusContexto } from "@/components/validar/typesDados" 
 
-interface FileData {
-    id: string
-    title: string
-    type: FileType
-    insertedDate: string
-}
+// 2. ATUALIZAR INTERFACE FileData para ser Contexto
+// (Removemos FileData e usamos Contexto diretamente)
 
+// 3. ATUALIZAR INTERFACE FileGridProps
 interface FileGridProps {
-    files: FileData[]
-    onFileClick?: (file: FileData) => void
+    files: Contexto[] // <-- Usa o tipo unificado Contexto
+    onFileClick?: (file: Contexto) => void // <-- Usa o tipo unificado Contexto
     onAddContextClick?: () => void
     className?: string
-    isEditing?: boolean 
+    isEditing?: boolean;
+    onToggleOculto?: (id: string) => void; 
 }
 
-export function FileGrid({ files, onFileClick, onAddContextClick, className, isEditing }: FileGridProps) {
-    //  O botão de adicionar só é incluído na lista se 'isEditing' for verdadeiro
+export function FileGrid({ 
+    files, 
+    onFileClick, 
+    onAddContextClick, 
+    className, 
+    isEditing,
+    onToggleOculto 
+}: FileGridProps) {
+    
+    // 4. ATUALIZAR O .map() para ler do Contexto
     const gridItems = [
         ...(isEditing ? [<AddContextButton key="add-context" onClick={() => onAddContextClick?.()} />] : []),
         ...files.map((file) => (
             <FileItem
                 key={file.id}
-                title={file.title}
-                type={file.type}
-                insertedDate={file.insertedDate}
+                id={file.id} 
+                title={file.title} // <-- Correto
+                type={file.type} // <-- Correto
+                insertedDate={file.insertedDate} // <-- Correto
+                status={file.status} // <-- Correto
+                versoes={file.versoes} // <--- [MODIFICAÇÃO] Adicionado prop 'versoes'
+                estaOculto={file.estaOculto} 
+                isEditing={isEditing} 
                 onClick={() => onFileClick?.(file)}
+                onToggleOculto={onToggleOculto} 
                 className="w-full"
             />
         ))

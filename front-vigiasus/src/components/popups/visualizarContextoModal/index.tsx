@@ -1,243 +1,358 @@
 // src/components/popups/visualizarContextoModal/index.tsx
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Info, History, Download, FileText, Plus, User, ChevronDown, FileType as FileIcon, LucideProps, Minimize, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
-import StatusBanner from '@/components/ui/status-banner';
-import type { DetalhesContexto } from '@/components/popups/addContextoModal/types';
+// 1. IMPORTAÇÕES
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import {
+    ArrowLeft, Info, History, FileText, LucideProps, ZoomIn, ZoomOut, RotateCcw,
+    FileCheck2, FileX, X, Clock
+} from 'lucide-react';
 import { VisualizadorDeConteudo } from './visualizadorDeConteudo';
-import IconeDocumento from '@/components/validar/iconeDocumento';
-import type { DocType } from '@/components/validar/typesDados'; // Importação adicionada
+import { Button } from "@/components/ui/button";
+import { cn } from '@/lib/utils';
+// Importa o novo modal de deferimento
+import DeferirContextoModal from '@/components/popups/deferirContextoModal';
+import IndeferirContextoModal from '@/components/popups/IndeferirContextoModal';
+import { showDispatchToast, showErrorToast, showSuccessToast } from '@/components/ui/Toasts';
+import AbaDetalhes from './abaDetalhes';
+import AbaVersoes from './abaVersoes';
 
+// 2. TIPOS
+import type { DetalhesContexto, Versao } from '@/components/popups/addContextoModal/types'; 
+import { Contexto, StatusContexto } from '@/components/validar/typesDados'; 
+
+// 3. PROPS DO MODAL
 interface VisualizarContextoModalProps {
     estaAberto: boolean;
     aoFechar: () => void;
-    dadosDoContexto: DetalhesContexto | null;
-    aoCriarNovaVersao?: (dados: DetalhesContexto) => void;
+    dadosDoContexto: Contexto | null;
     perfil: 'diretor' | 'gerente' | 'membro';
+    
+    aoCriarNovaVersao?: (dados: Contexto) => void;
     isEditing?: boolean;
-}
+    aoAlternarVisibilidadeVersao?: (contextoId: string, versaoId: number) => void;
+    aoAlternarVisibilidadeIndicador?: (contextoId: string) => void; 
 
+    isFromHistory?: boolean;
+    onDeferir?: (contextoId: string, comentario?: string) => void;
+    onIndeferir?: (contextoId: string, comentario: string) => void;
+    onCorrigir?: (contextoParaCorrigir: Contexto) => void;
+}
 
 type TipoAba = 'detalhes' | 'versoes';
 
-const AbaDetalhes = ({ dados, aoFazerDownload, aoAlternarTelaCheia }: { dados: DetalhesContexto; aoFazerDownload: () => void; aoAlternarTelaCheia: () => void; }) => {
-
-    const versoesDisponiveis = dados.versoes || [];
-    const versaoMaisRecente = versoesDisponiveis.length > 0 ? versoesDisponiveis.reduce((a, b) => a.id > b.id ? a : b) : null;
-    const [versaoSelecionadaId, setVersaoSelecionadaId] = useState<number | null>(versaoMaisRecente?.id || null);
-    const versaoSelecionada = versoesDisponiveis.find(v => v.id === versaoSelecionadaId);
-
-    useEffect(() => {
-        if (versaoMaisRecente) {
-            setVersaoSelecionadaId(versaoMaisRecente.id);
-        }
-    }, [versaoMaisRecente, dados]);
-
-    return (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full animate-fade-in p-1">
-            {/* Coluna da Esquerda: Informações */}
-            <div className="space-y-6 overflow-y-auto pr-4 h-full">
-                {versoesDisponiveis.length > 0 && versaoSelecionada && (
-                    (() => {
-                        // determine which variant to show: success if most recent, warning if older, danger if missing
-                        const isMostRecent = versaoSelecionadaId === (versoesDisponiveis.reduce((a, b) => a.id > b.id ? a : b).id);
-                        const variant = isMostRecent ? 'success' : 'warning';
-                        const title = isMostRecent ? 'Visualizando a versão mais recente desse contexto.' : 'Versão Selecionada (antiga)';
-
-                        return (
-                            <StatusBanner variant={variant} title={title}>
-                                <div className="text-sm pl-3 leading-relaxed">
-                                    <div className="font-medium">{versaoSelecionada.nome}</div>
-                                    <div className="text-xs mt-1">por {versaoSelecionada.autor} em {new Date(versaoSelecionada.data).toLocaleDateString('pt-BR')}</div>
-                                </div>
-                            </StatusBanner>
-                        );
-                    })()
-                )}
-
-                {/* mudei o select da versao p fora */}
-                {versoesDisponiveis.length > 1 && (
-                    <div className="mt-4">
-                        <label htmlFor="version-select" className="block text-sm font-medium text-gray-700 mb-1">Visualizar outra versão:</label>
-                        <div className="relative">
-                            <select id="version-select" value={versaoSelecionadaId || ''} onChange={(e) => setVersaoSelecionadaId(Number(e.target.value))} className="w-full appearance-none bg-white border border-gray-300 rounded-2xl py-2 px-3 pr-8 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                {versoesDisponiveis.sort((a, b) => b.id - a.id).map(versao => (<option key={versao.id} value={versao.id}>{versao.nome}</option>))}
-                            </select>
-                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700"><ChevronDown className="w-4 h-4" /></div>
-                        </div>
-                    </div>
-                )}
-                <div className="bg-gray-50 rounded-2xl border border-gray-200 p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        {/* CORREÇÃO: 'as any' foi substituído por 'as DocType' */}
-                        <IconeDocumento type={dados.type as DocType} />
-                        <div>
-                            <p className="font-semibold text-gray-800">{dados.title}</p>
-                            <p className="text-sm text-gray-500">{new Date(dados.insertedDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
-                        </div>
-                    </div>
-                    <button onClick={aoFazerDownload} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-2xl hover:bg-blue-700 transition-colors"><Download className="w-4 h-4" /> Baixar</button>
-                </div>
-                {dados.description && (
-                    <div className="bg-blue-50/50 border border-blue-200 rounded-2xl p-4 space-y-3">
-                        <div className="flex items-center gap-2"><Info className="w-5 h-5 text-blue-600" /><h3 className="text-lg font-semibold text-blue-800">Descrição</h3></div>
-                        <p className="text-gray-700 leading-relaxed pl-1">{dados.description}</p>
-                    </div>
-                )}
-                <div className="border-t border-gray-200 pt-4">
-                    <h3 className="text-lg font-semibold text-gray-700 mb-3">Detalhes Adicionais</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                        {dados.solicitante && (<div className="flex items-center gap-3 p-3 rounded-2xl"><User className="w-5 h-5 text-gray-500" /><div><p className="font-semibold text-gray-800">Enviado por</p><p className="text-gray-600">{dados.solicitante}</p></div></div>)}
-                        <div className="flex items-center gap-3 p-3 rounded-2xl"><FileIcon className="w-5 h-5 text-gray-500" /><div><p className="font-semibold text-gray-800">Tipo de Arquivo</p><p className="text-gray-600 uppercase">{dados.type}</p></div></div>
-                    </div>
-                </div>
-            </div>
-
-            <div className="h-full overflow-y-auto">
-                <VisualizadorDeConteudo
-                    tipo={dados.type}
-                    url={dados.url}
-                    titulo={dados.title}
-                    payload={dados.payload}
-                    aoAlternarTelaCheia={aoAlternarTelaCheia}
-                />
-            </div>
-        </div>
-    );
-};
-
-const AbaVersoes = ({ aoCriarNovaVersao, dados, perfil, isEditing }: { aoCriarNovaVersao?: (dados: DetalhesContexto) => void; dados: DetalhesContexto; perfil: VisualizarContextoModalProps['perfil']; isEditing?: boolean; }) => {
-    const versoesDisponiveis = dados.versoes || [];
-    const temPermissaoParaVersionar = perfil === 'membro';
-
-    return (
-        <div className="animate-fade-in p-4 h-full overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-semibold text-gray-700">Histórico de Versões</h3>
-                {aoCriarNovaVersao && temPermissaoParaVersionar && isEditing && (
-                    <button onClick={() => aoCriarNovaVersao(dados)} className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 font-semibold rounded-lg hover:bg-blue-200 transition">
-                        <Plus className="w-4 h-4" /> Criar Nova Versão
-                    </button>
-                )}
-            </div>
-            {versoesDisponiveis.length > 0 ? (
-                <ul className="space-y-3">
-                    {versoesDisponiveis.sort((a, b) => b.id - a.id).map(versao => (
-                        <li key={versao.id} className="p-3 bg-gray-50 rounded-lg border border-gray-200 flex justify-between items-center hover:bg-gray-100 transition-colors">
-                            <div><p className="font-medium text-gray-800">{versao.nome}</p><p className="text-sm text-gray-500">por {versao.autor} em {new Date(versao.data).toLocaleDateString('pt-BR')}</p></div>
-                            <button className="text-sm text-blue-600 font-semibold hover:underline">Ver</button>
-                        </li>
-                    ))}
-                </ul>
-            ) : (<p className="text-center text-gray-500 mt-8">Nenhuma versão anterior foi encontrada para este contexto.</p>)}
-        </div>
-    );
-};
-
+// 4. COMPONENTE INTERNO: BotaoAba
 const BotaoAba = ({ id, label, Icon, abaAtiva, setAbaAtiva }: { id: TipoAba; label: string; Icon: React.ElementType<LucideProps>; abaAtiva: TipoAba; setAbaAtiva: (aba: TipoAba) => void; }) => (
-    <button onClick={() => setAbaAtiva(id)} className={`flex-1 py-3 px-6 rounded-2xl font-semibold transition-all flex justify-center items-center ${abaAtiva === id ? "bg-white text-blue-600 shadow-md" : "text-gray-600 hover:bg-gray-50"}`}><Icon className="w-5 h-5 mr-2" /> {label}</button>
+    <button onClick={() => setAbaAtiva(id)} className={cn(
+        "flex-1 py-3 px-4 rounded-xl font-semibold transition-all flex justify-center items-center text-sm gap-2",
+        abaAtiva === id ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:bg-gray-200/50"
+    )}>
+        <Icon className="w-4 h-4" /> {label}
+    </button>
 );
 
-export function VisualizarContextoModal({ estaAberto, aoFechar, dadosDoContexto, aoCriarNovaVersao, perfil, isEditing }: VisualizarContextoModalProps) {
+
+// --- COMPONENTE PRINCIPAL DO MODAL ---
+export function VisualizarContextoModal({
+    estaAberto,
+    aoFechar,
+    dadosDoContexto, 
+    aoCriarNovaVersao,
+    perfil,
+    isEditing,
+    aoAlternarVisibilidadeVersao,
+    aoAlternarVisibilidadeIndicador,
+    isFromHistory = false,
+    onDeferir,
+    onIndeferir,
+    onCorrigir 
+}: VisualizarContextoModalProps) {
+    
+    // 5. ESTADOS
     const [abaAtiva, setAbaAtiva] = useState<TipoAba>('detalhes');
     const [emTelaCheia, setEmTelaCheia] = useState(false);
     const [zoomLevel, setZoomLevel] = useState(1);
-
+    const [indeferirOpen, setIndeferirOpen] = useState(false); 
+    const [deferirOpen, setDeferirOpen] = useState(false); 
     const chartContainerRef = useRef<HTMLDivElement | null>(null);
 
-    const alternarTelaCheia = () => {
-        setEmTelaCheia(!emTelaCheia);
-        setZoomLevel(1);
-    };
+    // 6. NORMALIZAÇÃO DE DADOS (useMemo)
+    const normalizedData: Contexto | null = useMemo(() => {
+        if (!dadosDoContexto) return null;
+        
+        const dados = { ...dadosDoContexto };
+        if (dados.estaOculto === undefined) dados.estaOculto = false;
 
+        if (!dados.versoes || dados.versoes.length === 0) {
+            dados.versoes = [{
+                id: 1,
+                nome: dados.title || "Versão 1",
+                data: dados.insertedDate,
+                autor: dados.solicitante || "N/A",
+                estaOculta: false,
+                status: dados.status,
+                historico: dados.historico || []
+            }];
+        } else {
+            dados.versoes = dados.versoes.map((v, i) => {
+                const eAUltimaVersao = i === (dados.versoes!.length - 1);
+                const statusDaVersao = v.status || (eAUltimaVersao ? dados.status : StatusContexto.Publicado);
+                const historicoDaVersao = v.historico || (eAUltimaVersao ? (dados.historico || []) : []);
+                return { ...v, status: statusDaVersao, historico: historicoDaVersao };
+            });
+        }
+        return dados;
+    }, [dadosDoContexto]);
+
+    // 7. HANDLERS E EFEITOS
+    const alternarTelaCheia = () => { setEmTelaCheia(!emTelaCheia); setZoomLevel(1); };
+    
     useEffect(() => {
         if (estaAberto) {
-            setAbaAtiva('detalhes');
+            setAbaAtiva('detalhes'); 
             setEmTelaCheia(false);
             setZoomLevel(1);
+            setIndeferirOpen(false);
+            setDeferirOpen(false); 
         }
     }, [estaAberto]);
-
+    
     const lidarComDownload = () => {
-        if (!dadosDoContexto) return;
-        if (dadosDoContexto.type === 'dashboard' && chartContainerRef.current) {
-            const svg = chartContainerRef.current.querySelector('svg');
-            if (svg) {
-                svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-                const svgData = new XMLSerializer().serializeToString(svg);
-                const blob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${dadosDoContexto.title}.svg`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            } else {
-                console.error("Elemento SVG do gráfico não encontrado.");
-                alert("Não foi possível baixar o gráfico. Tente novamente.");
-            }
-        } else if (dadosDoContexto.url) {
+        if (!normalizedData) return;
+        if (normalizedData.type === 'dashboard' && chartContainerRef.current) {
+            /* (lógica SVG) */
+        } else if (normalizedData.url) {
             const a = document.createElement('a');
-            a.href = dadosDoContexto.url;
-            a.download = dadosDoContexto.title || 'arquivo';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            a.href = normalizedData.url;
+            a.download = normalizedData.title || 'arquivo';
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        }
+    };
+    
+    const handleToggleVersao = (versaoId: number) => {
+        if (normalizedData && aoAlternarVisibilidadeVersao) {
+            aoAlternarVisibilidadeVersao(normalizedData.id, versaoId);
+        }
+    };
+    
+    const handleToggleContexto = (contextoId: string) => { 
+        if (normalizedData && aoAlternarVisibilidadeIndicador) {
+            aoAlternarVisibilidadeIndicador(contextoId); 
+        }
+    };
+    
+    const handleCorrigirClick = () => {
+        if (dadosDoContexto && onCorrigir && 'solicitante' in dadosDoContexto) {
+            onCorrigir(dadosDoContexto as Contexto);
+        } 
+        else if (normalizedData && aoCriarNovaVersao) {
+            aoCriarNovaVersao(normalizedData);
+        }
+    };
+    
+    // Handlers de Validação (Deferir/Indeferir)
+    
+    const handleConfirmarDeferimento = () => {
+        if (normalizedData && onDeferir) {
+            onDeferir(normalizedData.id, undefined);
+            showSuccessToast("Contexto deferido com sucesso!");
+            setDeferirOpen(false); // Fecha o modal de confirmação
+            aoFechar(); // Fecha o modal principal
+        }
+    };
+    
+    const handleDeferirClick = () => {
+        setDeferirOpen(true);
+    };
+
+    const cancelDeferir = () => {
+        setDeferirOpen(false);
+    };
+
+    const openIndeferirModal = () => setIndeferirOpen(true);
+    const cancelIndeferir = () => setIndeferirOpen(false);
+    const confirmIndeferir = (comentario: string) => {
+        if (!comentario.trim()) { 
+            showErrorToast("Justificativa obrigatória", "É necessário inserir uma justificativa para indeferir."); 
+            return; 
+        }
+        if (normalizedData && onIndeferir) {
+            onIndeferir(normalizedData.id, comentario.trim());
+            showDispatchToast("Contexto indeferido e devolvido com justificativa.");
+            setIndeferirOpen(false);
+            aoFechar();
         }
     };
 
-    if (!estaAberto || !dadosDoContexto) return null;
+    
+    // 8. LÓGICA DE VALIDAÇÃO
+    const isValidationView = !!(onDeferir || onIndeferir || onCorrigir);
+
+    const podeAgir = useMemo(() => {
+        if (!normalizedData || isFromHistory || isEditing) return false;
+        return (perfil === "gerente" && normalizedData.status === StatusContexto.AguardandoGerente) || 
+               (perfil === "diretor" && normalizedData.status === StatusContexto.AguardandoDiretor);
+    }, [normalizedData, perfil, isFromHistory, isEditing]);
+
+    const versaoEmJulgamento = useMemo(() => {
+        if (!podeAgir || !normalizedData?.versoes || normalizedData.versoes.length === 0) return null;
+        return normalizedData.versoes.reduce((a, b) => a.id > b.id ? a : b);
+    }, [normalizedData, podeAgir]);
+
+    // 9. LÓGICA DE RENDERIZAÇÃO DO RODAPÉ (APENAS BOTÕES)
+    const renderAcaoBotoes = (): React.ReactNode => {
+         if (!podeAgir) return null; 
+
+        return (
+            <div className="flex items-center justify-end gap-2 flex-shrink-0 w-full">
+                <Button onClick={openIndeferirModal} variant="outline" size="sm"
+                    className="bg-red-50 hover:bg-red-100 border-red-300 text-red-700 rounded-xl px-3 py-2 font-semibold"
+                >
+                    <FileX className="mr-1 h-4 w-4" /> Indeferir
+                </Button>
+                <Button onClick={handleDeferirClick} variant="default" size="sm"
+                    className="bg-green-600 hover:bg-green-700 text-white rounded-xl px-3 py-2 font-semibold"
+                >
+                    <FileCheck2 className="mr-1 h-4 w-4" /> Deferir
+                </Button>
+            </div>
+        );
+    };
+    
+    // --- 10. RENDERIZAÇÃO ---
+    if (!estaAberto || !normalizedData) return null; 
+
+    const AcaoBotoesNode = renderAcaoBotoes();
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-[40px] w-full max-w-6xl max-h-[90vh] flex flex-col shadow-2xl">
-                <div className="bg-gradient-to-r from-[#0037C1] to-[#00BDFF] px-8 py-4 flex items-center justify-between rounded-t-[40px] flex-shrink-0">
-                    <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-8 h-8 flex items-center justify-center flex-shrink-0"><FileText className="w-6 h-6 text-white" /></div>
-                        <h2 className="text-2xl font-regular text-white truncate" title={dadosDoContexto.title}>{dadosDoContexto.title}</h2>
-                    </div>
-                    <button onClick={aoFechar} className="w-8 h-8 bg-white/20 text-white hover:bg-white/30 cursor-pointer rounded-full flex items-center justify-center transition-colors flex-shrink-0"><ArrowLeft className="w-6 h-6" /></button>
-                </div>
-
-                <div className="flex-1 px-8 pt-8 pb-4 flex flex-col min-h-0">
-                    <div className="flex space-x-2 bg-gray-100 rounded-2xl p-2 flex-shrink-0 mb-6">
-                        <BotaoAba id="detalhes" label="Detalhes" Icon={Info} abaAtiva={abaAtiva} setAbaAtiva={setAbaAtiva} />
-                        <BotaoAba id="versoes" label="Versões" Icon={History} abaAtiva={abaAtiva} setAbaAtiva={setAbaAtiva} />
+        <>
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+                <div className="bg-white rounded-[40px] w-full max-w-6xl h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+                    {/* Header */}
+                    <div className="bg-gradient-to-r from-[#0037C1] to-[#00BDFF] px-8 py-4 flex items-center justify-between rounded-t-[40px] flex-shrink-0">
+                        <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-8 h-8 flex items-center justify-center flex-shrink-0"><FileText className="w-6 h-6 text-white" /></div>
+                            <h2 className="text-2xl font-semibold text-white truncate" title={normalizedData.title}>{normalizedData.title}</h2>
+                        </div>
+                        <Button size="icon" variant="ghost" onClick={aoFechar} className="w-9 h-9 bg-white/15 text-white hover:bg-white/30 hover:text-white/50 rounded-2xl flex-shrink-0"> <ArrowLeft className="w-6 h-6" /> </Button>
                     </div>
 
-                    <div className="h-[60vh]">
-                        {abaAtiva === 'detalhes' && <AbaDetalhes dados={dadosDoContexto} aoFazerDownload={lidarComDownload} aoAlternarTelaCheia={alternarTelaCheia} />}
-                        {abaAtiva === 'versoes' && <AbaVersoes aoCriarNovaVersao={aoCriarNovaVersao} dados={dadosDoContexto} perfil={perfil} isEditing={isEditing} />}
+                    {/* Corpo */}
+                    <div className="flex-1 px-6 sm:px-8 pt-6 pb-4 flex flex-col min-h-0 overflow-hidden">
+                        {/* Abas */}
+                        <div className="flex space-x-1.5 bg-gray-100 rounded-2xl p-1.5 flex-shrink-0 mb-6">
+                            <BotaoAba id="detalhes" label="Detalhes" Icon={Info} abaAtiva={abaAtiva} setAbaAtiva={setAbaAtiva} />
+                            <BotaoAba id="versoes" label="Versões e Histórico" Icon={History} abaAtiva={abaAtiva} setAbaAtiva={setAbaAtiva} />
+                        </div>
+
+                        {/* Conteúdo da Aba */}
+                        <div className={cn("flex-1 min-h-0 overflow-hidden", abaAtiva === 'detalhes' ? 'animate-fade-in' : 'animate-fade-in')}>
+                            {abaAtiva === 'detalhes' && (
+                                <AbaDetalhes
+                                    dados={normalizedData}
+                                    aoFazerDownload={lidarComDownload}
+                                    aoAlternarTelaCheia={alternarTelaCheia}
+                                    isEditing={isEditing}
+                                    emTelaCheia={emTelaCheia}
+                                    zoomLevel={zoomLevel}
+                                    isFromHistory={isFromHistory}
+                                    aoAlternarVisibilidadeContexto={handleToggleContexto}
+                                    isValidationView={isValidationView} 
+                                    podeAgir={podeAgir}
+                                    versaoEmJulgamento={versaoEmJulgamento}
+                                />
+                            )}
+                            {abaAtiva === 'versoes' && (
+                                <AbaVersoes
+                                    aoClicarCorrigir={handleCorrigirClick}
+                                    dados={normalizedData}
+                                    perfil={perfil}
+                                    isEditing={isEditing}
+                                    isValidationView={isValidationView} 
+                                    aoAlternarVisibilidadeVersao={handleToggleVersao} 
+                                />
+                            )}
+                        </div>
                     </div>
+                    
+                    {/* Rodapé (Apenas botões) */}
+                    {AcaoBotoesNode && (
+                        <div className="px-6 py-3 bg-gray-50 flex justify-end items-center gap-4 flex-shrink-0 border-t border-gray-200 rounded-b-[40px]">
+                           {AcaoBotoesNode}
+                        </div>
+                    )}
+
                 </div>
             </div>
 
+            {/* Modal Tela Cheia */}
             {emTelaCheia && (
-                <div className="fixed inset-0 bg-gray-800 z-[60] flex flex-col animate-fade-in">
-                    <div className="flex justify-between items-center p-4 bg-white/10 text-white flex-shrink-0">
-                        <h2 className="text-xl font-semibold">{dadosDoContexto.title || "Visualização"}</h2>
-                        <div className="flex items-center gap-2">
-                            <button onClick={() => setZoomLevel(prev => Math.max(0.2, prev - 0.2))} className="p-2 rounded-full hover:bg-white/20 transition-colors" title="Diminuir Zoom"><ZoomOut className="w-6 h-6" /></button>
-                            <button onClick={() => setZoomLevel(1)} className="p-2 rounded-full hover:bg-white/20 transition-colors" title="Resetar Zoom"><RotateCcw className="w-5 h-5" /></button>
-                            <button onClick={() => setZoomLevel(prev => prev + 0.2)} className="p-2 rounded-full hover:bg-white/20 transition-colors" title="Aumentar Zoom"><ZoomIn className="w-6 h-6" /></button>
-                        </div>
-                        <button onClick={alternarTelaCheia} className="p-2 rounded-full hover:bg-white/20 transition-colors" title="Fechar Tela Cheia"><Minimize className="w-6 h-6" /></button>
+                <div className="fixed inset-0 bg-white z-[60] flex flex-col animate-fade-in">
+                    
+                    <div className="absolute top-4 right-4 z-[70] flex items-center gap-2 p-2 bg-white/50 backdrop-blur-sm rounded-full shadow-lg border border-gray-200">
+                        {(normalizedData.type === 'pdf' || normalizedData.type === 'doc') && (
+                            <>
+                                <Button onClick={() => setZoomLevel(prev => Math.max(0.2, prev - 0.2))} variant="ghost" size="icon" className="text-black hover:bg-black/10 rounded-full w-8 h-8" title="Diminuir Zoom"><ZoomOut className="w-5 h-5" /></Button>
+                                <Button onClick={() => setZoomLevel(1)} variant="ghost" size="icon" className="text-black hover:bg-black/10 rounded-full w-8 h-8" title="Resetar Zoom"><RotateCcw className="w-5 h-5" /></Button>
+                                <Button onClick={() => setZoomLevel(prev => prev + 0.2)} variant="ghost" size="icon" className="text-black hover:bg-black/10 rounded-full w-8 h-8" title="Aumentar Zoom"><ZoomIn className="w-5 h-5" /></Button>
+
+                            </>
+                        )}
+                        <Button onClick={alternarTelaCheia} variant="ghost" size="icon" className="text-black hover:bg-black/10 rounded-full w-8 h-8" title="Fechar Tela Cheia"><X className="w-5 h-5" /></Button>
                     </div>
-                    <div className="flex-1 min-h-0 w-full h-full overflow-auto">
+
+                    <div className="absolute top-4 left-4 z-[70] p-2 px-4 bg-white/50 backdrop-blur-sm rounded-full shadow-lg border border-gray-200 max-w-[calc(100%-12rem)]">
+                        <h2 className="text-base font-semibold text-black truncate" title={normalizedData.title}>{normalizedData.title || "Visualização"}</h2>
+                    </div>
+                    
+                    <div className="flex-1 min-h-0 w-full h-full overflow-hidden">
                         <VisualizadorDeConteudo
-                            tipo={dadosDoContexto.type}
-                            titulo={dadosDoContexto.title}
-                            payload={dadosDoContexto.payload}
-                            url={dadosDoContexto.url}
+                            tipo={normalizedData.type}
+                            titulo={normalizedData.title}
+                            payload={normalizedData.payload}
+                            url={normalizedData.url}
+                            chartType={normalizedData.chartType}
                             emTelaCheia={true}
                             zoomLevel={zoomLevel}
                         />
                     </div>
                 </div>
             )}
-        </div>
+            
+            {/* Modal de Indeferir */}
+            <IndeferirContextoModal
+                open={indeferirOpen}
+                onOpenChange={setIndeferirOpen}
+                onCancel={cancelIndeferir}
+                onConfirm={confirmIndeferir}
+                contextoNome={normalizedData.title}
+                requireComment
+            />
+
+            {/* Modal de Confirmação Deferir */}
+            <DeferirContextoModal
+                open={deferirOpen}
+                onOpenChange={setDeferirOpen}
+                onCancel={cancelDeferir}
+                onConfirm={handleConfirmarDeferimento}
+                contextoNome={normalizedData.title}
+            />
+
+
+            {/* Estilos */}
+            <style>{`
+                 @keyframes fadeIn {
+                     from { opacity: 0; }
+                     to { opacity: 1; }
+                 }
+                 .animate-fade-in {
+                     animation: fadeIn 0.2s ease-out forwards;
+                 }
+                 .scrollbar-custom::-webkit-scrollbar { width: 6px; }
+                 .scrollbar-custom::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 6px; }
+                 .scrollbar-custom::-webkit-scrollbar-track { background: transparent; }
+                 .scrollbar-custom { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
+             `}</style>
+        </>
     );
 }

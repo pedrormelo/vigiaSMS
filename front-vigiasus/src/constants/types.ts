@@ -1,7 +1,8 @@
 // src/constants/types.ts
 
-// Tipos possíveis para uma notificação (baseado nos ícones usados)
-export type NotificationType = "doc" | "excel" | "pdf" | "dashboard" | "resoucao" | "comentario" | "sistema";
+// 1. CORRIGIDO: Removido "excel", "planilha" e "link" estão presentes.
+// 2. CORRIGIDO: "resoucao" -> "resolucao"
+export type NotificationType = "doc" | "pdf" | "dashboard" | "resolucao" | "comentario" | "sistema" | "planilha" | "link";
 
 // Status visuais que podem ser aplicados (ex: cor no item da lista)
 export type NotificationStatus = "deferido" | "indeferido" | "visto";
@@ -18,6 +19,8 @@ export interface Comment {
   date: string; // Ex: "04/08/2025"
   isMyComment: boolean;
   role?: CommentRole; // Role opcional para estilização
+  isPrivate?: boolean; // Mensagem enviada em privado (apenas local/visual)
+  toAuthor?: string; // Destinatário específico quando mensagem é privada
 }
 
 // Interface principal para uma Notificação
@@ -28,7 +31,10 @@ export interface Notification {
   description: string;
   status?: NotificationStatus; // Status é opcional
   comments: Comment[]; // Array de comentários
-  relatedFileType?: "doc" | "planilha" | "pdf"; // Tipo de arquivo associado, se houver
+  
+  // 3. CORRIGIDO: Removido "excel", "planilha" e outros tipos estão presentes
+  relatedFileType?: "doc" | "planilha" | "pdf" | "link" | "dashboard" | "resolucao";
+  
   contextoId?: string; // ID do contexto relacionado (se aplicável)
   url?: string; // URL do documento/link (se aplicável)
 }

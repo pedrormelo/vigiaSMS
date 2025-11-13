@@ -7,6 +7,7 @@ import {
     UploadCloud, FileText, Plus, Database, Upload, Download
 } from "lucide-react";
 import { saveAs } from "file-saver";
+import { AddLinkModal } from "@/components/popups/addLinkModal";
 
 // --- TIPOS E INTERFACES ---
 
@@ -171,12 +172,15 @@ export function AddContentModal({ isOpen, onClose, onSubmit, initialTab = 'conte
         onClose();
     };
     
+    const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
     const handleUrlButtonClick = () => {
-        const url = prompt("Por favor, insira a URL:");
-        if (url) {
-            setContextUrl(url);
-            setContextFile(null);
-        }
+        setIsLinkModalOpen(true);
+    };
+    const handleConfirmLink = (url: string) => {
+        // Modal já dispara toast de sucesso; aqui apenas ajustamos estado
+        setContextUrl(url);
+        setContextFile(null);
+        setIsLinkModalOpen(false);
     };
     
     const handleFileSelected = (file: File | null) => {
@@ -349,7 +353,17 @@ export function AddContentModal({ isOpen, onClose, onSubmit, initialTab = 'conte
                     </button>
                 </div>
             </div>
-        </div>
+                </div>
+        );
+}
+
+{/* Modal de Link renderizado em nível superior para evitar conflito de z-index.
+        NOTA: Este export separado permite uso em outros locais se necessário. */}
+export function AddContentModalWithLinkWrapper(props: AddContentModalProps) {
+    return (
+        <>
+            <AddContentModal {...props} />
+        </>
     );
 }
 
