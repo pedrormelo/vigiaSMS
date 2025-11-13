@@ -1,175 +1,171 @@
-export type NotificationType = "doc" | "planilha" | "comentario" | "sistema" | "pdf";
+// src/constants/notificationsData.ts
+import { Notification, NotificationType, NotificationStatus, Comment, CommentRole } from "./types"; // Importe os tipos corrigidos
+import { mockData as contextosAbertos } from "./contextos";
+import { Contexto, StatusContexto, DocType } from "@/components/validar/typesDados";
 
-export type NotificationStatus = "deferido" | "indeferido" | "visto";
-
-export interface Comment {
-  id: number;
-  author: string;
-  text: string;
-  time: string;
-  date: string;
-  isMyComment: boolean;
-  role: "info" | "secretaria" | "diretoria" | "gerencia" | "user" | "zelma";
+// Função mapContextoStatusToNotifStatus (sem alterações)
+function mapContextoStatusToNotifStatus(status: StatusContexto): NotificationStatus | undefined {
+    switch (status) {
+        case StatusContexto.Deferido:
+        case StatusContexto.Publicado:
+            return "deferido";
+        case StatusContexto.Indeferido:
+        case StatusContexto.AguardandoCorrecao:
+            return "indeferido";
+        case StatusContexto.AguardandoGerente:
+        case StatusContexto.AguardandoDiretor:
+            return undefined;
+        default:
+            return undefined;
+    }
 }
 
-export interface Notification {
-  id: number;
-  type: NotificationType;
-  title: string;
-  description: string;
-  status?: NotificationStatus;
-  comments: Comment[];
-  relatedFileType?: "doc" | "planilha" | "pdf";
+// Função generateNotificationDescription (sem alterações)
+function generateNotificationDescription(contexto: Contexto): string {
+     switch (contexto.situacao) {
+        case StatusContexto.AguardandoGerente:
+            return `Novo contexto "${contexto.nome}" submetido por ${contexto.solicitante}. Aguardando sua análise.`;
+        case StatusContexto.AguardandoDiretor:
+            return `Contexto "${contexto.nome}" aprovado pelo gerente. Aguardando sua análise.`;
+        case StatusContexto.AguardandoCorrecao:
+             const ultimoHistorico = contexto.historico?.[contexto.historico.length - 1];
+             const motivo = ultimoHistorico?.acao.includes("Justificativa:")
+                 ? ultimoHistorico.acao.split("Justificativa:")[1]?.trim()
+                 : "Verificar comentários.";
+            return `Contexto "${contexto.nome}" devolvido para correção. Motivo: ${motivo}`;
+        case StatusContexto.Publicado:
+             return `O contexto "${contexto.nome}" foi publicado com sucesso.`;
+        case StatusContexto.Deferido:
+             return `O contexto "${contexto.nome}" foi deferido.`;
+        case StatusContexto.Indeferido:
+             return `O contexto "${contexto.nome}" foi indeferido.`;
+        default:
+            return `Status do contexto "${contexto.nome}": ${contexto.situacao}`;
+    }
 }
 
-export const notificationsData: Notification[] = [
+// --- COMENTÁRIOS MOCKADOS ORIGINAIS ---
+const mockCommentsContexto1: Comment[] = [
+    { id: 101, author: "Gerência Financeira", text: "O documento foi rejeitado devido a divergências no valor.", time: "10:30", date: "04/08/2025", isMyComment: false, role: "gerencia" },
+    { id: 102, author: "Pedro Augusto Lorenzo", text: "Ok, irei verificar e reenviar.", time: "10:35", date: "04/08/2025", isMyComment: false, role: "user" },
+];
+const mockCommentsContexto2: Comment[] = [
+     { id: 201, author: "João Silva (Gerente)", text: "Falta a coluna 'Fonte do Recurso'. Por favor, adicione e reenvie.", time: "09:00", date: "04/08/2025", isMyComment: false, role: "gerencia" },
+];
+// --- FIM DOS COMENTÁRIOS MOCKADOS ---
+
+// Função getCommentsForContexto (sem alterações na lógica interna, apenas na tipagem do argumento)
+function getCommentsForContexto(contexto: Contexto): Comment[] {
+    let comments: Comment[] = [];
+    if (contexto.id === "1") comments = [...mockCommentsContexto1];
+    if (contexto.id === "2") comments = [...mockCommentsContexto2];
+
+    if (contexto.situacao === StatusContexto.AguardandoCorrecao && contexto.historico) {
+        const rejectionEvent = contexto.historico.find(
+            h => h.acao.toLowerCase().includes("devolvido para correção") || h.acao.toLowerCase().includes("análise gerente: indeferido") || h.acao.toLowerCase().includes("análise diretor: indeferido")
+        );
+        if (rejectionEvent) {
+             let text = "Contexto devolvido para correção.";
+            if (rejectionEvent.acao.includes("Justificativa:")) {
+                text = rejectionEvent.acao.split("Justificativa:")[1]?.trim() || text;
+            } else if (rejectionEvent.acao.includes("Motivo:")) {
+                 text = rejectionEvent.acao.split("Motivo:")[1]?.trim() || text;
+            }
+            const eventDate = new Date(rejectionEvent.data);
+            const extractedCommentId = Date.now() + Math.random();
+            const alreadyExists = comments.some(c => c.author === rejectionEvent.autor && c.text.includes(text.substring(0, 30)));
+
+            if (!alreadyExists) {
+                comments.push({
+                    id: extractedCommentId, author: rejectionEvent.autor, text: text,
+                    time: eventDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+                    date: eventDate.toLocaleDateString('pt-BR'), isMyComment: false,
+                    role: rejectionEvent.autor.toLowerCase().includes("gerente") ? "gerencia" :
+                          rejectionEvent.autor.toLowerCase().includes("diretor") ? "diretoria" : "info",
+                });
+            }
+        }
+    }
+    try {
+        comments.sort((a, b) => {
+            const dateTimeStringA = `${a.date.split('/').reverse().join('-')}T${a.time}:00`;
+            const dateTimeStringB = `${b.date.split('/').reverse().join('-')}T${b.time}:00`;
+            const dateA = new Date(dateTimeStringA);
+            const dateB = new Date(dateTimeStringB);
+            if (!isNaN(dateA.getTime()) && !isNaN(dateB.getTime())) {
+                return dateA.getTime() - dateB.getTime();
+            }
+            console.warn("Data inválida encontrada ao ordenar comentários:", a, b);
+            return 0;
+        });
+    } catch (e) {
+        console.error("Erro ao ordenar comentários:", e, comments);
+    }
+    return comments;
+}
+
+// --- GERAÇÃO DAS NOTIFICAÇÕES DINÂMICAS ---
+let notificationIdCounter = 1;
+const dynamicNotifications: Notification[] = contextosAbertos
+    .map(contexto => {
+
+        // --- CORREÇÃO NA ATRIBUIÇÃO DE TIPOS ---
+        // Garante que o tipo do contexto seja um tipo válido para relatedFileType
+        const validRelatedFileTypes: Array<Notification['relatedFileType']> = ["doc", "planilha", "excel", "pdf", "dashboard", "resolucao", "link"];
+        let fileTypeForRelated: Notification['relatedFileType'] = undefined;
+        if (validRelatedFileTypes.includes(contexto.docType as any)) {
+             fileTypeForRelated = contexto.docType as Notification['relatedFileType'];
+        }
+
+        // Determina o tipo principal da notificação
+        let notificationType: NotificationType;
+        if (contexto.situacao === StatusContexto.AguardandoCorrecao) {
+             notificationType = 'comentario';
+        // Mapeia 'excel' para 'planilha' no tipo principal da notificação
+        } else if (contexto.docType === 'excel') {
+            notificationType = 'planilha';
+        } else {
+            // Garante que apenas tipos válidos de NotificationType sejam usados
+             const validNotificationTypes: NotificationType[] = ["doc", "excel", "pdf", "comentario", "sistema", "dashboard", "resolucao", "link"];
+             if (validNotificationTypes.includes(contexto.docType as any)) {
+                  notificationType = contexto.docType as NotificationType;
+             } else {
+                 notificationType = 'doc'; // Usa 'doc' como fallback se o docType não for reconhecido
+             }
+        }
+        // --- FIM DA CORREÇÃO ---
+
+        const notification: Notification = {
+            id: notificationIdCounter++,
+            type: notificationType, // Usa o tipo principal ajustado
+            title: contexto.nome,
+            description: generateNotificationDescription(contexto),
+            status: mapContextoStatusToNotifStatus(contexto.situacao),
+            contextoId: contexto.id,
+            url: contexto.url,
+            comments: getCommentsForContexto(contexto),
+            relatedFileType: fileTypeForRelated, // Usa o tipo validado para relatedFileType
+        };
+        return notification;
+    });
+
+// --- NOTIFICAÇÕES ESTÁTICAS (Ex: Sistema) ---
+const staticNotifications: Notification[] = [
   {
-    id: 1,
-    type: "doc",
-    title: "Pagamento ESF / ESB",
-    description: "O documento foi indeferido",
-    status: "indeferido",
-    comments: [
-      {
-        id: 1,
-        author: "Gerência Financeira",
-        text: "O documento foi rejeitado devido a divergências no valor.",
-        time: "10:30",
-        date: "04/08/2025",
-        isMyComment: false,
-        role: "gerencia",
-      },
-    ],
-  },
-  {
-    id: 2,
+    id: notificationIdCounter++,
     type: "sistema",
-    title: "Nova atualização do Sistema",
-    description: "Veja as novidades desta nova versão!",
+    title: "Nova atualização do Sistema VigiaSUS",
+    description: "Versão 0.1.1 disponível! Inclui melhorias na visualização de PDFs e correções de bugs.",
     status: "visto",
     comments: [],
   },
-  {
-    id: 3,
-    type: "planilha",
-    title: "Servidores Ativos (efetivos, co...)",
-    description: "O documento foi indeferido",
-    status: "indeferido",
-    comments: [
-      {
-        id: 1,
-        author: "Departamento de RH",
-        text: "Planilha indeferida por falta de dados de alguns colaboradores.",
-        time: "14:00",
-        date: "04/08/2025",
-        isMyComment: false,
-        role: "gerencia",
-      },
-      {
-        id: 2,
-        author: "Diretoria RH",
-        text: "Precisamos de mais informações para analisar a planilha.",
-        time: "15:00",
-        date: "04/08/2025",
-        isMyComment: false,
-        role: "secretaria",
-      },
-    ],
-  },
-  {
-    id: 4,
-    type: "pdf",
-    title: "Pagamento ESF / ESB",
-    description: "O documento foi deferido",
-    status: "deferido",
-    comments: [],
-  },
-  {
-    id: 5,
-    type: "doc",
-    title: "TESTE",
-    description: "TESTE 1",
-    status: "indeferido",
-    relatedFileType: "doc",
-    comments: [
-      {
-        id: 1,
-        author: "Zelma Pessoa",
-        text: "Não gostei, contexto muito desorganizado, melhorem por favor.",
-        time: "20:00",
-        date: "04/08/2025",
-        isMyComment: false,
-        role: "zelma",
-      },
-      {
-        id: 2,
-        author: "Nilton Carvalho",
-        text: "Rapaz, ajude aí. Precisamos rever esse documento, Zelma encontrou alguns erros no documento.",
-        time: "21:00",
-        date: "04/08/2025",
-        isMyComment: false,
-        role: "diretoria",
-      },
-      {
-        id: 3,
-        author: "Gerência de Tecnologia da Informação",
-        text: "Precisamos de mais informações para analisar o documento.",
-        time: "22:00",
-        date: "04/08/2025",
-        isMyComment: false,
-        role: "gerencia",
-      },
-      {
-        id: 4,
-        author: "Secretário 1",
-        text: "xaropagem.",
-        time: "22:10",
-        date: "04/08/2025",
-        isMyComment: false,
-        role: "secretaria",
-      },
-    ],
-  },
-  {
-    id: 6,
-    type: "doc",
-    title: "Pagamento ESF / ESB",
-    description: "O documento foi indeferido",
-    status: "indeferido",
-    comments: [
-      {
-        id: 1,
-        author: "Gerência de Planejamento",
-        text: "Este documento não corresponde ao padrão esperado. Favor, revisar.",
-        time: "16:45",
-        date: "04/08/2025",
-        isMyComment: false,
-        role: "gerencia",
-      },
-    ],
-  },
-  {
-    id: 7,
-    type: "pdf",
-    title: "teste 2",
-    description: "O documento foi deferido",
-    status: "deferido",
-    comments: [],
-  },
-  {
-    id: 8,
-    type: "planilha",
-    title: "teste 2",
-    description: "O documento foi deferido",
-    status: "deferido",
-    comments: [],
-  },
-    {
-    id: 9,
-    type: "sistema",
-    title: "teste 2",
-    description: "O documento foi deferido",
-    status: "deferido",
-    comments: [],
-  },
 ];
+
+// --- COMBINA E EXPORTA ---
+export const notificationsData: Notification[] = [
+    ...dynamicNotifications,
+    ...staticNotifications,
+];
+
+// Reexporta os tipos
+export type { Notification, NotificationType, NotificationStatus, Comment };

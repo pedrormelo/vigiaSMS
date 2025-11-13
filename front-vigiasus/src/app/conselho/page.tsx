@@ -4,13 +4,13 @@ import EventsSection from "@/components/conselho/eventSection";
 //import DatasImportantes from "@/components/conselho/datasImportantes";
 //import Galeria from "@/components/conselho/galeria";
 import HeroCMS from "@/components/conselho/heroCMS";
-import { ContextModal as AddContextoModal } from "@/components/popups/addContexto-modal";
+import { ModalAdicionarConteudo as AddContextoModal } from "@/components/popups/addContextoModal";
 //import Resolutions from "@/components/conselho/resolutions";
 import { FileGrid } from "@/components/contextosCard/contextosGrid";
 import FilterBar from "@/components/gerencia/painel-filterBar";
 import { FileType } from "@/components/contextosCard/contextoCard";
 import * as React from "react"
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import AgendaLeis from "@/components/conselho/cardLeis";
 
 const sampleFiles = [
@@ -85,20 +85,43 @@ const handleFileClick = (file: unknown) => {
 
 export default function CMSpage() {
     const [showAddContexto, setShowAddContexto] = useState(false);
+    const [searchValue, setSearchValue] = useState("");
+    const [activeTab, setActiveTab] = useState<"recente" | "todas">("recente");
+    const [selectedTypes, setSelectedTypes] = useState<FileType[]>([]);
+
+    const handleSelectedTypesChange = (type: FileType) => {
+        setSelectedTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]);
+    };
+
+    const filteredFiles = useMemo(() => {
+        return sampleFiles.filter(f => {
+            const matchesSearch = searchValue.trim() === "" || f.title.toLowerCase().includes(searchValue.toLowerCase());
+            const matchesType = selectedTypes.length === 0 || selectedTypes.includes(f.type);
+            return matchesSearch && matchesType;
+        });
+    }, [searchValue, selectedTypes]);
     return (
 
         <main className="flex-1 bg-white mx-auto min-h-screen">
             <AddContextoModal
-                isOpen={showAddContexto}
-                onClose={() => setShowAddContexto(false)}
-                onSubmit={() => setShowAddContexto(false)}
+                estaAberto={showAddContexto}
+                aoFechar={() => setShowAddContexto(false)}
+                aoSubmeter={() => setShowAddContexto(false)}
             />
             <HeroCMS />
             <EventsSection />
             <div className="pt-12 container justify-center mx-auto pb-2">
-                <FilterBar />
+                <FilterBar
+                    searchValue={searchValue}
+                    onSearchChange={setSearchValue}
+                    activeTab={activeTab}
+                    onTabChange={setActiveTab}
+                    selectedTypes={selectedTypes}
+                    onSelectedTypesChange={handleSelectedTypesChange}
+                    clearTypeFilter={() => setSelectedTypes([])}
+                />
                 <FileGrid
-                    files={sampleFiles}
+                    files={filteredFiles}
                     onFileClick={handleFileClick}
                     onAddContextClick={() => setShowAddContexto(true)}
                 />

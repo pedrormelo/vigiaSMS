@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import {diretoriasConfig} from "@/constants/diretorias";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 import Image from "next/image";
 import {
   HiHome,
@@ -45,17 +47,21 @@ const icons = {
 };
 
 
+const defaultDiretoriaId = diretoriasConfig["gestao-sus"]
+  ? "gestao-sus"
+  : (Object.keys(diretoriasConfig).find((k) => k !== "secretaria") || "secretaria");
+
 const menuOptions = {
   secretario: [
     { label: "Página Inicial", icon: icons.home, href: "/" },
-    { label: "Dashboard", icon: icons.dashboard, href: `/dashboard/${diretoriasConfig[0]?.id || ""}` },
+    { label: "Dashboard", icon: icons.dashboard, href: `/dashboard/secretaria` },
     { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
     { label: "Meus Comentários", icon: icons.comentarios, href: "/comentarios" },
     { label: "Sair do Sistema", icon: icons.logout, href: "/logout" },
   ],
   diretor: [
     { label: "Página Inicial", icon: icons.home, href: "/" },
-    { label: "Dashboard da Diretoria", icon: icons.dashboard, href: `/dashboard/${diretoriasConfig[0]?.id || ""}` },
+    { label: "Dashboard da Diretoria", icon: icons.dashboard, href: `/dashboard/${defaultDiretoriaId}` },
     { label: "Minhas Gerências", icon: icons.minhasGerencias, href: "/diretorias" },
     { label: "Validar Contextos", icon: icons.contextos, href: "/validar" },
     { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
@@ -64,7 +70,7 @@ const menuOptions = {
   ],
   gerente: [
     { label: "Página Inicial", icon: icons.home, href: "/" },
-    { label: "Dashboard da Gerência", icon: icons.dashboard, href: "/dashboard" },
+    { label: "Dashboard da Gerência", icon: icons.dashboard, href: `/dashboard/${defaultDiretoriaId}` },
     { label: "Validar Contextos", icon: icons.contextos, href: "/validar" },
     { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
     { label: "Meus Comentários", icon: icons.comentarios, href: "/comentarios" },
@@ -80,6 +86,18 @@ const menuOptions = {
 };
 
 export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
+  const pathname = usePathname();
+
+  const isActive = (href: string) => {
+    if (!pathname) return false;
+    if (href === "/") return pathname === "/";
+    // Treat dynamic dashboard routes as a group: any /dashboard/* activates it
+    if (href.startsWith("/dashboard")) {
+      return pathname.startsWith("/dashboard");
+    }
+    return pathname === href || pathname.startsWith(href + "/");
+  };
+
   return (
     <>
       {/* Overlay escuro no fundo */}
@@ -121,16 +139,25 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
 
         {/* Menu com scroll */}
         <nav className="flex flex-col gap-2 w-full overflow-y-auto px-2 pr-1 scrollbar-thin scrollbar-thumb-blue-300 scrollbar-track-transparent">
-          {menuOptions[role].map(({ label, icon: Icon, href }) => (
-            <Link
-              key={label}
-              href={href}
-              className="flex items-center gap-2 px-3 py-2 rounded-[15px] bg-blue-600 text-white text-sm hover:bg-blue-700 justify-center w-full"
-            >
-              <Icon size={18} />
-              <span className="w-full text-center">{label}</span>
-            </Link>
-          ))}
+          {menuOptions[role].map(({ label, icon: Icon, href }) => {
+            const active = isActive(href);
+            return (
+              <Link
+                key={label}
+                href={href}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "flex items-center gap-2 px-3 py-2 rounded-[15px] text-sm justify-center w-full border transition-colors",
+                  active
+                    ? "bg-blue-400/70 text-blue-700 font-medium border-blue-400/50 shadow-sm hover:bg-blue-300 hover:border-blue-400/30"
+                    : "bg-blue-600 text-white border-blue-700/20 hover:bg-blue-700"
+                )}
+              >
+                <Icon size={18} className={cn(active ? "text-blue-700" : "text-white")} />
+                <span className="w-full text-center">{label}</span>
+              </Link>
+            );
+          })}
         </nav>
 
       </motion.aside>

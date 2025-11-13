@@ -6,13 +6,16 @@ import { ChartPreview } from "./chart-preview"
 import type { LayoutType } from "./selecionarLayout"
 import { cn } from "@/lib/utils"
 
+import { Trash } from "lucide-react"
+
 export interface GraphData {
     id: string
     title: string
     type: GraphType
     gerencia: string
     insertedDate: string
-    data: any[]        // <-- novo campo
+    data: any[]        
+    colors?: string[]  // Add colors support
     isHighlighted?: boolean
     editMode?: boolean
 }
@@ -95,23 +98,34 @@ export function DashboardPreview({
                                         title={graph.title}
                                         isHighlighted={graph.isHighlighted}
                                         data={graph.data}
-                                        editMode={graph.editMode}
+                                        colors={graph.colors}
+                                        editMode={editMode}
                                         renderVersion={renderVersion}
                                     />
                                     {editMode && (
-                                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                                            <button
-                                                onClick={() => onHighlightToggle(graph.id, !graph.isHighlighted)}
-                                                className={`px-2 py-1 text-xs rounded ${graph.isHighlighted ? "bg-blue-500 text-white" : "bg-white text-gray-700 border"
+                                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2 items-center">
+                                            <div className="flex items-center gap-1">
+                                                <p className="text-xs text-gray-500 font-medium pr-2">Marcar como <span className="font-bold">Destaque</span></p>
+                                                <button
+                                                    onClick={() => onHighlightToggle(graph.id, !graph.isHighlighted)}
+                                                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                                                        graph.isHighlighted ? 'bg-blue-500' : 'bg-gray-300'
                                                     }`}
-                                            >
-                                                {graph.isHighlighted ? "Destacado" : "Marcar como Destaque"}
-                                            </button>
+                                                    title={graph.isHighlighted ? "Remover destaque" : "Marcar como destaque"}
+                                                >
+                                                    <span
+                                                        className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform duration-200 ${
+                                                            graph.isHighlighted ? 'translate-x-5' : 'translate-x-1'
+                                                        }`}
+                                                    />
+                                                </button>
+                                            </div>
                                             <button
                                                 onClick={() => onGraphRemove(graph.id)}
-                                                className="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600"
+                                                className="p-2 text-gray-400 rounded-2xl hover:bg-red-50 hover:text-red-600 transition-colors duration-200"
+                                                title="Remover gráfico"
                                             >
-                                                Remover
+                                                <Trash className="h-5 w-5" />
                                             </button>
                                         </div>
                                     )}

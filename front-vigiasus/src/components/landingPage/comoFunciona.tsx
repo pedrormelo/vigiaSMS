@@ -24,7 +24,7 @@ function FeatureCard({ icon, title, description, className, style }: FeatureCard
       style={style}
     >
       {/* Ícone com fundo gradiente para destaque */}
-      <div className="bg-gradient-to-br from-cyan-400 to-blue-600 p-3 rounded-xl mb-6 shadow-md">
+      <div className="bg-gradient-to-br from-cyan-400 to-blue-600 p-3 rounded-2xl mb-6 shadow-md">
         {icon}
       </div>
       

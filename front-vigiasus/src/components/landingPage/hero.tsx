@@ -4,12 +4,32 @@ import { Button } from "@/components/ui/button";
 import Metrics from "./metrics"; 
 import { Plus } from "lucide-react";
 import Link from 'next/link';
+import type { UserRole } from "@/hooks/useCurrentUser";
 
 interface HeroProps {
-  role?: string;
+  role?: UserRole;
+  userName?: string;
+  diretoriaId?: string;
+  gerenciaId?: string;
 }
 
-export default function Hero({ role = "Usuário" }: HeroProps) {
+export default function Hero({ role = "usuario", userName = "Visitante", diretoriaId, gerenciaId }: HeroProps) {
+  const targetHref = (() => {
+    if (role === "diretor") {
+      const id = diretoriaId || "gestao-sus"; // fallback
+      return `/dashboard/${id}`;
+    }
+    if (role === "secretaria") {
+      return "/dashboard/secretaria";
+    }
+    // usuario (padrão)
+    if (gerenciaId) return `/gerencia/${gerenciaId}`;
+    return "/dados"; // fallback seguro
+  })();
+
+  const roleLabel = role === "diretor" ? "Diretoria"
+    : role === "secretaria" ? "Secretaria"
+    : "Usuário";
   return ( 
     <section className="relative overflow-hidden bg-gradient-to-r from-[#1745FF] to-cyan-600 text-white pt-16 pb-24 px-6">
 
@@ -26,7 +46,7 @@ export default function Hero({ role = "Usuário" }: HeroProps) {
         <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
           {/* Lado Esquerdo com o conteúdo principal */}
           <div className="flex-1 lg:max-w-2xl">
-            <h2 className="text-lg font-medium text-blue-100">👋 Olá, {role}, Seja bem-vinda(o) ao: </h2>
+            <h2 className="text-lg font-medium text-blue-100">👋 Olá, {userName} ({roleLabel}), seja bem-vinda(o) ao:</h2>
             <h1 className="text-5xl font-bold mt-2">VigiaSUS</h1>
             <p className="mt-4 text-lg text-blue-100">
               Plataforma digital da Secretaria de Saúde de Jaboatão dos Guararapes que 
@@ -39,9 +59,11 @@ export default function Hero({ role = "Usuário" }: HeroProps) {
                 Acesse os Dados Gerais
               </Button>
               </Link>
-              <Button className="bg-white hover:bg-gray-100 text-blue-700 rounded-2xl px-8 py-6 font-semibold">
-                Acesse o Painel de Gráficos
-              </Button>
+              <Link href={targetHref}>
+                <Button className="bg-white hover:bg-gray-100 text-blue-700 rounded-2xl px-8 py-6 font-semibold">
+                  Acesse o Painel de Gráficos
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
