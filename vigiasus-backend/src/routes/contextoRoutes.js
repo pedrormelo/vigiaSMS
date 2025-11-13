@@ -8,7 +8,8 @@ const ctrl = require('../controllers/contextoController');
 router.get('/publicados', ctrl.listPublicados);
 
 // Protegidos
-router.get('/pendentes', auth(['GERENTE', 'DIRETOR']), ctrl.listPendentes);
+// Permite MEMBRO visualizar suas pendências de correção, e GERENTE/DIRETOR suas filas de aprovação
+router.get('/pendentes', auth(['GERENTE', 'DIRETOR', 'MEMBRO']), ctrl.listPendentes);
 router.post('/', auth(['MEMBRO']), ctrl.createContexto);
 router.post('/:contextoId/versoes', auth(['MEMBRO']), ctrl.createVersao);
 

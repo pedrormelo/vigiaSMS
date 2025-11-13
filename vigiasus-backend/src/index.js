@@ -23,6 +23,9 @@ const dashboardLayoutRoutes = require('./routes/dashboardLayoutRoutes');
 // const dashboardLayoutRoutes = require('./routes/dashboardLayoutRoutes');
 
 const app = express();
+// DB clients
+const prisma = require('./config/prismaClient');
+const mysqlRaw = require('./config/db');
 
 // Lista de origens permitidas. Adicionamos localhost:3000 (Next.js) além das já existentes.
 const allowedOrigins = [
@@ -59,8 +62,65 @@ app.use('/notificacoes', notificacaoRoutes); // auth handled inside route defini
 app.use('/comentarios', comentarioRoutes); // auth enforced per-route
 app.use('/dashboardlayout', dashboardLayoutRoutes);
 
-// Porta configurável via .env (fallback 3000)
-const PORT = process.env.PORT || 3000;
+// Rotas básicas úteis (root + health) antes das rotas de negócio
+app.get('/', (req, res) => {
+    res.json({
+        name: 'VigiaSUS API',
+        version: '1.0.0',
+        time: new Date().toISOString(),
+        endpoints: [
+            'GET /auth/me',
+            'POST /auth/login',
+            'GET /usuarios',
+            'GET /contextos/publicados',
+            'GET /contextos/pendentes',
+            'GET /diretorias',
+            'GET /gerencias',
+            'GET /notificacoes',
+            'GET /dashboardlayout/:diretoriaId'
+        ]
+    });
+});
+
+app.get('/health', async (req, res) => {
+    const start = Date.now();
+    let prismaStatus = 'up';
+    let prismaLatency = null;
+    let mysqlStatus = 'up';
+    let mysqlLatency = null;
+    let errorDetails = null;
+    try {
+        const pStart = Date.now();
+        await prisma.$queryRaw`SELECT 1`;
+        prismaLatency = Date.now() - pStart;
+    } catch (e) {
+        prismaStatus = 'error';
+        errorDetails = errorDetails || {};
+        errorDetails.prisma = e.message;
+    }
+    try {
+        const mStart = Date.now();
+        await mysqlRaw.query('SELECT 1');
+        mysqlLatency = Date.now() - mStart;
+    } catch (e) {
+        mysqlStatus = 'error';
+        errorDetails = errorDetails || {};
+        errorDetails.mysql = e.message;
+    }
+    const overall = (prismaStatus === 'up' && mysqlStatus === 'up') ? 'ok' : 'degraded';
+    res.status(overall === 'ok' ? 200 : 503).json({
+        status: overall,
+        uptimeSeconds: process.uptime(),
+        timestamp: Date.now(),
+        prisma: { status: prismaStatus, latencyMs: prismaLatency },
+        mysql: { status: mysqlStatus, latencyMs: mysqlLatency },
+        durationMs: Date.now() - start,
+        errors: errorDetails || undefined,
+    });
+});
+
+// Porta configurável via .env (fallback 3001 para não colidir com Next.js em 3000)
+const PORT = process.env.PORT || 3001;
 
 app.listen(PORT, () => {
     console.log(`Servidor rodando em http://localhost:${PORT}`);

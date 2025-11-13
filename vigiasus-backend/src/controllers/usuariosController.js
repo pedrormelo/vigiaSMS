@@ -32,19 +32,27 @@ exports.list = async (req, res) => {
 }
 
 // POST /usuarios
-// body: { nome, email, password, role, diretoriaId?, gerenciaId? }
+// body: { nome, cpf, email?, password, role, diretoriaId?, gerenciaId? }
 exports.create = async (req, res) => {
     try {
         const { nome, cpf, email, password, role, diretoriaId, gerenciaId } = req.body || {};
-        if (!nome || !cpf || !email || !password || !role) {
-            return res.status(400).json({ message: 'nome, cpf, email, password e role são obrigatórios' });
+        if (!nome || !cpf || !password || !role) {
+            return res.status(400).json({ message: 'nome, cpf, password e role são obrigatórios' });
         }
-        const exists = await prisma.user.findUnique({ where: { email } });
-        if (exists) return res.status(409).json({ message: 'Email já cadastrado' });
+        // Basic cpf normalization (remove non-digits)
+        const normCpf = String(cpf).replace(/\D/g, '');
+        if (normCpf.length !== 11) return res.status(400).json({ message: 'CPF inválido' });
+
+        const existsCpf = await prisma.user.findUnique({ where: { cpf: normCpf } });
+        if (existsCpf) return res.status(409).json({ message: 'CPF já cadastrado' });
+        if (email) {
+            const existsEmail = await prisma.user.findUnique({ where: { email } });
+            if (existsEmail) return res.status(409).json({ message: 'Email já cadastrado' });
+        }
 
         const passwordHash = await bcrypt.hash(password, 10);
         const created = await prisma.user.create({
-            data: { nome, cpf, email, passwordHash, role, diretoriaId: diretoriaId || null, gerenciaId: gerenciaId || null },
+            data: { nome, cpf: normCpf, email: email || null, passwordHash, role, diretoriaId: diretoriaId || null, gerenciaId: gerenciaId || null },
         });
         return res.status(201).json({ user: mapUser(created) });
     } catch (err) {

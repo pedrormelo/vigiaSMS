@@ -100,3 +100,53 @@ src/
 ├── lib/                  # Funções utilitárias (ex: cn)
 └── services/             # Lógica de busca de dados (simula uma API)
 ```
+
+-----
+
+## 🗄️ Backend (vigiasus-backend)
+
+O backend em Express + Prisma está em `vigiasus-backend/` e fornece a API consumida pelo front.
+
+### Configuração
+
+- Crie um arquivo `.env` em `vigiasus-backend/` com as variáveis de banco:
+  - `DATABASE_URL` (string de conexão do Prisma, ex.: `mysql://user:pass@localhost:3306/vigiasus_db`)
+  - Ou, para o cliente MySQL raw (`src/config/db.js`), defina: `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`.
+
+### Rodar servidor
+
+```bash
+cd vigiasus-backend
+npm install
+npm run dev
+```
+
+### Migrar e gerar Prisma Client
+
+```bash
+# gerar client
+npm run prisma:generate
+
+# criar/aplicar migrações (ambiente de desenvolvimento)
+npm run prisma:migrate
+```
+
+### Popular dados de desenvolvimento (seed)
+
+```bash
+# Executa prisma/seed.js e cria diretoria, gerência, usuários e um contexto com duas versões
+npm run prisma:seed
+```
+
+Credenciais padrão (senha: `123456`):
+
+- membro@vigia.sus (MEMBRO)
+- gerente@vigia.sus (GERENTE)
+- diretor@vigia.sus (DIRETOR)
+- secretaria@vigia.sus (SECRETARIA)
+
+### Prisma Client vs MySQL raw
+
+- Use Prisma Client para CRUD, relações e transações com tipos e validação.
+- Use MySQL raw (`mysql2`) apenas para consultas específicas de alto desempenho ou funcionalidades de baixo nível. Ambos podem coexistir, mas prefira Prisma para manter consistência do schema e das migrações.
+

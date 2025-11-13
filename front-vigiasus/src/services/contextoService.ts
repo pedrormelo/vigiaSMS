@@ -1,12 +1,39 @@
 // src/services/contextoService.ts
+import { Contexto, StatusContexto } from "@/components/validar/typesDados";
+import { authService } from "./authService";
 
-// 1. IMPORTAR A FONTE ÚNICA DE DADOS
-import { allContextosMock } from "@/constants/mockDatabase";
-import { Contexto, StatusContexto } from "@/components/validar/typesDados"; 
-// 2. REMOVER A IMPORTAÇÃO DESNECESSÁRIA de diretoriasConfig
-// import { diretoriasConfig } from "@/constants/diretorias"; 
+function apiBase() {
+  return (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/$/, "");
+}
 
-const USE_MOCKS = true;
+function statusLabelToEnum(code: string): StatusContexto {
+  // backend uses codes: AGUARDANDO_GERENTE, AGUARDANDO_DIRETOR, AGUARDANDO_CORRECAO, PUBLICADO, INDEFERIDO
+  switch (code) {
+    case 'AGUARDANDO_GERENTE': return StatusContexto.AguardandoGerente;
+    case 'AGUARDANDO_DIRETOR': return StatusContexto.AguardandoDiretor;
+    case 'AGUARDANDO_CORRECAO': return StatusContexto.AguardandoCorrecao;
+    case 'PUBLICADO': return StatusContexto.Publicado;
+    case 'INDEFERIDO': return StatusContexto.Indeferido;
+    default: return StatusContexto.AguardandoGerente;
+  }
+}
+
+function mapDocType(tipo: string | null | undefined): Contexto["type"] {
+  // Map backend contexto.tipo +/or versao content to frontend FileType
+  switch (tipo) {
+    case 'ARQUIVO_LINK': return 'link';
+    case 'DASHBOARD': return 'dashboard';
+    case 'INDICADOR': return 'indicador';
+    default: return 'pdf';
+  }
+}
+
+function withAuth(init: RequestInit = {}): RequestInit {
+  const token = authService.getToken();
+  const headers = new Headers(init.headers as any);
+  if (token) headers.set('Authorization', `Bearer ${token}`);
+  return { ...init, headers };
+}
 
 interface HistoricoResponse {
   data: Contexto[];
@@ -22,21 +49,50 @@ const STATUS_FINALIZADOS: StatusContexto[] = [
  * Busca contextos "Abertos" (para a página /validar).
  */
 export const getContextos = async (): Promise<Contexto[]> => {
-  console.log("Service: buscando dados de contextos 'abertos'...");
-
-  if (USE_MOCKS) {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        const dadosAbertos = allContextosMock.filter(
-          contexto => !STATUS_FINALIZADOS.includes(contexto.status)
-        );
-        console.log(`Service: retornando ${dadosAbertos.length} contextos abertos.`);
-        resolve(dadosAbertos); 
-      }, 500); 
-    });
-  } else {
-    console.warn("API real não implementada para getContextos");
-    return [];
+  const base = apiBase();
+  if (!base) return [];
+  // Try pendentes (requires gerente/diretor) and fallback to publicados for public view
+  try {
+    const res = await fetch(`${base}/contextos/pendentes`, withAuth());
+    if (!res.ok) throw new Error(`status ${res.status}`);
+    const body = await res.json();
+    const versoes: any[] = body.data || [];
+    // Map and de-duplicate by contexto.id keeping the most recent updatedAt
+    const mapped = versoes.map((v) => ({
+      id: v.contexto.id,
+      title: v.titulo || v.contexto.tituloConceitual,
+      type: mapDocType(v.contexto.tipo),
+      insertedDate: v.createdAt || v.updatedAt,
+      status: statusLabelToEnum(v.statusValidacao),
+      description: v.descricao || undefined,
+      gerencia: v.contexto.gerenciaDonaId,
+      versoes: [{ id: v.versaoNumero, nome: v.titulo, data: v.updatedAt, autor: '', status: statusLabelToEnum(v.statusValidacao) }],
+    }));
+    const byId = new Map<string, any>();
+    for (const item of mapped) {
+      const prev = byId.get(item.id);
+      if (!prev) {
+        byId.set(item.id, item);
+      } else {
+        const prevDate = new Date(prev.insertedDate).getTime();
+        const currDate = new Date(item.insertedDate).getTime();
+        if (currDate > prevDate) byId.set(item.id, item);
+      }
+    }
+    return Array.from(byId.values());
+  } catch {
+    const res = await fetch(`${base}/contextos/publicados`);
+    if (!res.ok) return [];
+    const body = await res.json();
+    const items: any[] = body.data || [];
+    return items.map((it) => ({
+      id: it.id,
+      title: it.tituloConceitual,
+      type: mapDocType(it.tipo),
+      insertedDate: it.versaoAtiva?.updatedAt || it.createdAt,
+      status: StatusContexto.Publicado,
+      gerencia: it.gerenciaDonaId,
+    }));
   }
 };
 
@@ -49,88 +105,53 @@ export const getHistoricoContextos = async (
   page: number = 1,
   limit: number = 10
 ): Promise<HistoricoResponse> => {
-  console.log(`Service: buscando HISTÓRICO - Página: ${page}, Limite: ${limit}, Termo: "${searchQuery || ''}", Datas:`, dateRange);
-
-  if (USE_MOCKS) {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        let dadosFiltrados = allContextosMock.filter(
-          contexto => STATUS_FINALIZADOS.includes(contexto.status)
-        );
-        console.log(`Service: ${dadosFiltrados.length} contextos fechados (histórico) encontrados.`);
-
-        // Aplicar filtros de pesquisa (nome/solicitante)
-        if (searchQuery && searchQuery.trim() !== "") {
-          const lowercasedQuery = searchQuery.toLowerCase().trim();
-          dadosFiltrados = dadosFiltrados.filter((contexto: Contexto) =>
-            contexto.title.toLowerCase().includes(lowercasedQuery) || 
-            (contexto.solicitante && contexto.solicitante.toLowerCase().includes(lowercasedQuery))
-          );
-        }
-
-        // Aplicar filtros de data
-        if (dateRange?.from || dateRange?.to) {
-          dadosFiltrados = dadosFiltrados.filter((contexto: Contexto) => {
-            try {
-              const dataContexto = new Date(contexto.insertedDate); 
-              if (isNaN(dataContexto.getTime())) return false; 
-              if (dateRange.from) {
-                const dataInicio = new Date(dateRange.from);
-                dataInicio.setHours(0, 0, 0, 0); 
-                if (dataContexto < dataInicio) return false;
-              }
-              if (dateRange.to) {
-                const dataFim = new Date(dateRange.to);
-                dataFim.setHours(23, 59, 59, 999); 
-                if (dataContexto > dataFim) return false;
-              }
-              return true; 
-            } catch (e) {
-              return false; 
-            }
-          });
-        }
-
-        // Aplicar paginação
-        const total = dadosFiltrados.length;
-        const startIndex = (page - 1) * limit;
-        const endIndex = page * limit;
-        const dataPaginada = dadosFiltrados.slice(startIndex, endIndex);
-
-        console.log(`Service: Retornando página ${page} com ${dataPaginada.length} de ${total} itens do histórico.`);
-        resolve({ data: dataPaginada, total: total });
-      }, 500); 
-    });
-  } else {
-    console.warn("API real não implementada para getHistoricoContextos");
-    return { data: [], total: 0 };
-  }
+  const base = apiBase();
+  if (!base) return { data: [], total: 0 };
+  const params = new URLSearchParams();
+  if (searchQuery) params.set('q', searchQuery);
+  if (dateRange?.from) params.set('from', dateRange.from.toISOString());
+  if (dateRange?.to) params.set('to', dateRange.to.toISOString());
+  params.set('page', String(page));
+  params.set('pageSize', String(limit));
+  // Only finalized statuses by default
+  // We could call twice for PUBLICADO and INDEFERIDO or rely on q/date filters
+  const res = await fetch(`${base}/contextos/buscar?${params.toString()}`, withAuth());
+  if (!res.ok) return { data: [], total: 0 };
+  const body = await res.json();
+  const rows: any[] = body.data || [];
+  const out: Contexto[] = rows.map(r => ({
+    id: r.contextoId,
+    title: r.tituloConceitual,
+    type: 'pdf',
+    insertedDate: r.updatedAt,
+    status: statusLabelToEnum(r.status),
+  }));
+  return { data: out, total: body.total || out.length };
 };
 
 /**
  * Busca um contexto específico pelo ID.
  */
 export const getContextoById = async (id: string): Promise<Contexto | null> => {
-  console.log(`Service: buscando contexto específico com ID: ${id}`);
-
-  if (USE_MOCKS) {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        const encontrado = allContextosMock.find(contexto => contexto.id === id);
-
-        if (encontrado) {
-          console.log(`Service: Contexto com ID ${id} encontrado.`);
-          resolve(encontrado); 
-        } else {
-          console.warn(`Service: Contexto com ID ${id} NÃO encontrado nos mocks.`);
-          resolve(null); 
-        }
-      }, 300); 
-    });
-  } else {
-    console.warn("API real não implementada para getContextoById");
-    return null;
-  }
+  const base = apiBase();
+  if (!base) return null;
+  const res = await fetch(`${base}/contextos/detalhes/${id}`, withAuth());
+  if (!res.ok) return null;
+  const body = await res.json();
+  // body is mapContextoDetalhe
+  const latest = body.versoes?.[0];
+  const ctx: Contexto = {
+    id: body.id,
+    title: body.tituloConceitual,
+    type: mapDocType(body.tipo),
+    insertedDate: latest?.updatedAt || body.createdAt,
+    status: latest ? statusLabelToEnum(latest.status) : StatusContexto.Publicado,
+    description: latest?.descricao || undefined,
+    gerencia: body.gerenciaDonaId,
+    versoes: (body.versoes || []).map((v: any) => ({ id: v.numero, nome: v.titulo, data: v.updatedAt, autor: '', status: statusLabelToEnum(v.status) })),
+    historico: (body.historico || []).map((h: any) => ({ data: h.timestamp, autor: '', acao: h.statusNovoLabel + (h.justificativa ? `: ${h.justificativa}` : '') })),
+  };
+  return ctx;
 };
 
 
@@ -148,27 +169,20 @@ export const getContextosPorGerencia = async (idGerencia: string): Promise<Conte
       console.warn(`Service: getContextosPorGerencia chamado com ID indefinido.`);
       return []; // Retorna vazio se o ID não for fornecido
   }
-
-  if (USE_MOCKS) {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        
-        // --- INÍCIO DA CORREÇÃO ---
-        // Filtra pelo ID da gerência (ex: "g6")
-        const encontrados = allContextosMock.filter(
-          contexto => contexto.gerencia === idGerencia
-        );
-        // --- FIM DA CORREÇÃO ---
-        
-        console.log(`Service: Encontrados ${encontrados.length} contextos (todos os status) para a gerência ID "${idGerencia}"`);
-        resolve(encontrados);
-      }, 500);
-    });
-  } else {
-    // A lógica da API real seria algo como:
-    // const response = await fetch(`/api/contextos?gerenciaId=${idGerencia}&incluirPendentes=true`);
-    // return await response.json();
-    console.warn("API real não implementada para getContextosPorGerencia");
-    return [];
-  }
+  const base = apiBase();
+  if (!base) return [];
+  const res = await fetch(`${base}/contextos/publicados`);
+  if (!res.ok) return [];
+  const body = await res.json();
+  const items: any[] = body.data || [];
+  return items
+    .filter((it) => it.gerenciaDonaId === idGerencia)
+    .map((it) => ({
+      id: it.id,
+      title: it.tituloConceitual,
+      type: mapDocType(it.tipo),
+      insertedDate: it.versaoAtiva?.updatedAt || it.createdAt,
+      status: StatusContexto.Publicado,
+      gerencia: it.gerenciaDonaId,
+    }));
 };

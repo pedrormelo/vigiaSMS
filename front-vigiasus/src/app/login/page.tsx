@@ -6,13 +6,15 @@ import { Input } from "@/components/input";
 import { Button } from "@/components/ui/button";
 import { showErrorToast, showSuccessToast } from "@/components/ui/Toasts";
 import { authService } from "@/services/authService";
+import { formatCPF } from "@/lib/utils";
 
 export default function LoginPage() {
     const router = useRouter();
-    const [email, setEmail] = useState("");
+    const [cpf, setCpf] = useState("");
     const [password, setPassword] = useState("");
     const [remember, setRemember] = useState(true);
     const [loading, setLoading] = useState(false);
+    const [cpfError, setCpfError] = useState<string | null>(null);
 
     useEffect(() => {
         // If already logged in, redirect to home
@@ -24,13 +26,20 @@ export default function LoginPage() {
 
     const onSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!email.trim() || !password.trim()) {
+        if (!cpf.trim() || !password.trim()) {
             showErrorToast("Preencha seu CPF e senha");
+            return;
+        }
+        // Validate CPF length before attempting login (allow dev/test CPFs)
+        const cpfDigits = cpf.replace(/\D/g, "");
+        if (cpfDigits.length !== 11) {
+            setCpfError("Informe os 11 dígitos do CPF");
+            showErrorToast("CPF deve ter 11 dígitos");
             return;
         }
         setLoading(true);
        try {
-            const user = await authService.login(email, password);
+            const user = await authService.login(cpf, password);
             authService.saveUser(user, remember);
             showSuccessToast(`Bem-vindo(a), ${user.name}!`);
             router.push("/");
@@ -90,12 +99,25 @@ export default function LoginPage() {
                             <Input
                                 id="cpf"
                                 type="text"
+                                inputMode="numeric"
                                 placeholder="000.000.000-00"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                className="rounded-2xl border border-gray-400/80 focus:ring-blue-400 focus:border-blue-300 focus:ring-3 ring-offset-1"
-                                autoComplete="cpf"
+                                value={cpf}
+                                onChange={(e) => {
+                                    const masked = formatCPF(e.target.value);
+                                    setCpf(masked);
+                                    if (cpfError) setCpfError(null);
+                                }}
+                                onBlur={() => {
+                                    if (cpf && cpf.replace(/\D/g, "").length !== 11) {
+                                        setCpfError("Informe os 11 dígitos do CPF");
+                                    }
+                                }}
+                                pattern="\d{3}\.\d{3}\.\d{3}-\d{2}"
+                                maxLength={14} // 000.000.000-00
+                                className={`rounded-2xl border ${cpfError ? 'border-red-500 ring-red-300' : 'border-gray-400/80 focus:ring-blue-400 focus:border-blue-300'} focus:ring-3 ring-offset-1`}
+                                autoComplete="off"
                             />
+                            {cpfError && <p className="mt-1 text-xs text-red-600 font-medium">{cpfError}</p>}
                         </div>
                         <div>
                             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Senha</label>

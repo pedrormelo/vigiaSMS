@@ -63,6 +63,7 @@ model contextoversao {
   @@index([contextoId], map: "ContextoVersao_contextoId_idx")
   @@index([solicitanteId], map: "ContextoVersao_solicitanteId_fkey")
   @@index([statusValidacao, createdAt], map: "ContextoVersao_statusValidacao_createdAt_idx")
+  @@unique([contextoId, versaoNumero], map: "ContextoVersao_contextoId_versaoNumero_key")
 }
 
 model dashboardlayout {
@@ -130,7 +131,8 @@ model notificacao {
 model user {
   id                 String               @id
   nome               String
-  email              String               @unique(map: "User_email_key")
+  cpf                String               @unique(map: "User_cpf_key")
+  email              String?              @unique(map: "User_email_key")
   passwordHash       String
   role               user_role
   gerenciaId         String?
