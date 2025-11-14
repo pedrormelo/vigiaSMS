@@ -11,7 +11,7 @@ const diretoriasData = [
     { slug: 'gestao-sus', nome: 'Diretoria de Gestão do SUS', sobre: 'Planeja e integra processos, pessoas e recursos para apoiar decisões da gestão, com foco em eficiência e melhoria contínua.', corFrom: '#109326', corTo: '#008C32' },
     { slug: 'vigilancia-saude', nome: 'Diretoria de Vigilância em Saúde', sobre: 'Previne e controla riscos à saúde pública por meio da vigilância epidemiológica, sanitária e ambiental.', corFrom: '#FF8500', corTo: '#FD8400' },
     { slug: 'administrativo-financeira', nome: 'Diretoria Administrativa Financeiro', sobre: 'Conduz a gestão orçamentária, financeira e administrativa, garantindo suporte aos processos e contratos da Secretaria.', corFrom: '#FB4242', corTo: '#EF2828' },
-    { slug: 'secretaria', nome: 'Página da Secretária', sobre: 'Painel geral com destaques, indicadores e métricas estratégicas de toda a Secretaria de Saúde.', corFrom: '#ffcb3e', corTo: '#f7721c' }
+    { slug: 'secretaria', nome: 'Página da Secretária', sobre: 'Painel geral com destaques, indicadores e métricas estratégicas de toda a Secretaria de Saúde.', corFrom: '#ffcb3e', corTo: '#f7721c', bannerImage: '/secretaria/images/banner1.png' }
 ];
 
 // Gerências associadas (simplificado, usa slugs g1.. etc)
@@ -32,10 +32,12 @@ async function run() {
     for (const d of diretoriasData) {
         const existing = await prisma.diretoria.findFirst({ where: { slug: d.slug } });
         if (existing) {
-            await prisma.diretoria.update({ where: { id: existing.id }, data: { nome: d.nome, sobre: d.sobre, corFrom: d.corFrom, corTo: d.corTo } });
+            const updateData = { nome: d.nome, sobre: d.sobre, corFrom: d.corFrom, corTo: d.corTo };
+            if (d.bannerImage) updateData.bannerImage = d.bannerImage;
+            await prisma.diretoria.update({ where: { id: existing.id }, data: updateData });
             console.log('Atualizada diretoria', d.slug);
         } else {
-            await prisma.diretoria.create({ data: { id: crypto.randomUUID(), slug: d.slug, nome: d.nome, sobre: d.sobre, corFrom: d.corFrom, corTo: d.corTo } });
+            await prisma.diretoria.create({ data: { id: crypto.randomUUID(), slug: d.slug, nome: d.nome, sobre: d.sobre, corFrom: d.corFrom, corTo: d.corTo, bannerImage: d.bannerImage || null } });
             console.log('Criada diretoria', d.slug);
         }
     }

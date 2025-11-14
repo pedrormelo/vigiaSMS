@@ -16,11 +16,6 @@ const diretoriasRoutes = require('./routes/diretoriasRoutes');
 const gerenciasRoutes = require('./routes/gerenciasRoutes');
 const comentarioRoutes = require('./routes/comentarioRoutes');
 const dashboardLayoutRoutes = require('./routes/dashboardLayoutRoutes');
-// const diretoriasRoutes = require('./routes/diretoriasRoutes');
-// const gerenciasRoutes = require('./routes/gerenciasRoutes');
-// const notificacaoRoutes = require('./routes/notificacaoRoutes');
-// const comentarioRoutes = require('./routes/comentarioRoutes');
-// const dashboardLayoutRoutes = require('./routes/dashboardLayoutRoutes');
 
 const app = express();
 // DB clients
