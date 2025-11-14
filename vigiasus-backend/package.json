@@ -11,6 +11,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "prisma db seed",
     "prisma:pull": "prisma db pull",
+    "slugs:backfill": "node src/scripts/backfillSlugs.js",
     "test": "echo \"No tests yet\" && exit 0"
   },
   "keywords": [],
@@ -23,13 +24,14 @@
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
     "jsonwebtoken": "^9.0.2",
-    "prisma": "^6.18.0",
-    "mysql2": "^3.11.3"
+    "multer": "^2.0.2",
+    "mysql2": "^3.11.3",
+    "prisma": "^6.18.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.7"
-  }
-  ,
+    "nodemon": "^3.1.7",
+    "cross-env": "^7.0.3"
+  },
   "prisma": {
     "seed": "node prisma/seed.js"
   }

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getNotificationsWithComments, Notification } from "@/services/notificationsService";
+import { getNotificationsWithComments } from "@/services/notificationsService";
+import { Notification } from "@/constants/types";
 
 export const useNotifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);

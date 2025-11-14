@@ -70,3 +70,19 @@ export async function getGerenciasPorDiretoria(diretoriaId: string): Promise<Ger
     const rows = await res.json();
     return Array.isArray(rows) ? rows : [];
 }
+
+export async function getGerenciaBySlug(slug: string): Promise<Gerencia | null> {
+    const base = apiBase();
+    if (!base) return null;
+    const res = await fetch(`${base}/gerencias/slug/${slug}`, { cache: 'no-store' });
+    if (!res.ok) return null;
+    return await res.json();
+}
+
+export async function getGerenciaById(id: string): Promise<Gerencia | null> {
+    const base = apiBase();
+    if (!base) return null;
+    const res = await fetch(`${base}/gerencias/${id}`, { cache: 'no-store' });
+    if (!res.ok) return null;
+    return await res.json();
+}

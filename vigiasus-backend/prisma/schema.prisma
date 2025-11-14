@@ -28,6 +28,7 @@ model contexto {
   autorOriginalId  String
   gerenciaDonaId   String
   createdAt        DateTime         @default(now())
+  isOculto         Boolean          @default(false)
   user             user             @relation(fields: [autorOriginalId], references: [id], onDelete: Cascade, map: "Contexto_autorOriginalId_fkey")
   gerencia         gerencia         @relation(fields: [gerenciaDonaId], references: [id], onDelete: Cascade, map: "Contexto_gerenciaDonaId_fkey")
   contextoversao   contextoversao[]
@@ -48,6 +49,7 @@ model contextoversao {
   statusValidacao     contextoversao_statusValidacao
   isAtiva             Boolean                        @default(false)
   isDestacado         Boolean                        @default(false)
+  isOculta            Boolean                        @default(false)
   createdAt           DateTime                       @default(now())
   updatedAt           DateTime
   comentario          comentario[]

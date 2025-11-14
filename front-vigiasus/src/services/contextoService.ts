@@ -130,7 +130,7 @@ export const getContextoById = async (id: string): Promise<Contexto | null> => {
     status: latest ? statusLabelToEnum(latest.status) : StatusContexto.Publicado,
     description: latest?.descricao || undefined,
     gerencia: body.gerenciaDonaId,
-    versoes: (body.versoes || []).map((v: any) => ({ id: v.numero, nome: v.titulo, data: v.updatedAt, autor: '', status: statusLabelToEnum(v.status) })),
+  versoes: (body.versoes || []).map((v: any) => ({ id: v.numero, dbId: v.id, nome: v.titulo, data: v.updatedAt, autor: '', status: statusLabelToEnum(v.status) })),
     historico: (body.historico || []).map((h: any) => ({ data: h.timestamp, autor: '', acao: (h.statusNovoLabel || h.statusNovo) + (h.justificativa ? `: ${h.justificativa}` : '') })),
   };
   return ctx;
@@ -156,3 +156,111 @@ export const getContextosPorGerencia = async (idGerencia: string): Promise<Conte
       gerencia: it.gerenciaDonaId,
     }));
 };
+
+// ---- Mutations: visibilidade ----
+export async function ocultarContexto(contextoId: string): Promise<boolean> {
+  const base = apiBase();
+  if (!base) return false;
+  const res = await fetch(`${base}/contextos/${encodeURIComponent(contextoId)}/ocultar`, withAuth({ method: 'POST' }));
+  return res.ok;
+}
+
+export async function reexibirContexto(contextoId: string): Promise<boolean> {
+  const base = apiBase();
+  if (!base) return false;
+  const res = await fetch(`${base}/contextos/${encodeURIComponent(contextoId)}/reexibir`, withAuth({ method: 'POST' }));
+  return res.ok;
+}
+
+export async function ocultarVersao(versaoId: string): Promise<boolean> {
+  const base = apiBase();
+  if (!base) return false;
+  const res = await fetch(`${base}/contextos/versoes/${encodeURIComponent(versaoId)}/ocultar`, withAuth({ method: 'POST' }));
+  return res.ok;
+}
+
+export async function reexibirVersao(versaoId: string): Promise<boolean> {
+  const base = apiBase();
+  if (!base) return false;
+  const res = await fetch(`${base}/contextos/versoes/${encodeURIComponent(versaoId)}/reexibir`, withAuth({ method: 'POST' }));
+  return res.ok;
+}
+
+// ---- Mutations: criação de contexto/versão ----
+type CreateContextoInput =
+  | { kind: 'contexto'; tituloConceitual: string; titulo: string; descricao?: string; fileType?: 'pdf'|'excel'|'doc'|'link'; url?: string; file?: File | null }
+  | { kind: 'dashboard'; tituloConceitual: string; titulo: string; descricao?: string; grafico: 'pie'|'chart'|'line'; dataset: any }
+  | { kind: 'indicador'; tituloConceitual: string; titulo: string; descricao?: string; valorAtual: string; valorAlvo?: string; unidade: string; textoComparativo?: string; cor: string; icone: string };
+
+export async function criarContexto(input: CreateContextoInput): Promise<{ contextoId: string } | null> {
+  const base = apiBase();
+  if (!base) return null;
+  // Mapear para API body
+  const mapDocType = (ft?: string) => {
+    switch (ft) {
+      case 'pdf': return 'PDF';
+      case 'excel': return 'EXCEL';
+      case 'doc': return 'DOC';
+      case 'link': return 'LINK';
+      default: return 'PDF';
+    }
+  };
+  const mapTipoGrafico = (g: 'pie'|'chart'|'line') => (g === 'pie' ? 'PIE' : g === 'chart' ? 'BAR' : 'LINE');
+
+  const body: any = (() => {
+    switch (input.kind) {
+      case 'contexto':
+        return {
+          tituloConceitual: input.tituloConceitual,
+          tipo: 'ARQUIVO_LINK',
+          titulo: input.titulo,
+          descricao: input.descricao || null,
+          arquivo: { docType: mapDocType(input.fileType), url: input.url || null },
+        };
+      case 'dashboard':
+        return {
+          tituloConceitual: input.tituloConceitual,
+          tipo: 'DASHBOARD',
+          titulo: input.titulo,
+          descricao: input.descricao || null,
+          dashboard: { tipoGrafico: mapTipoGrafico(input.grafico), payload: JSON.stringify(input.dataset || {}) },
+        };
+      case 'indicador':
+        return {
+          tituloConceitual: input.tituloConceitual,
+          tipo: 'INDICADOR',
+          titulo: input.titulo,
+          descricao: input.descricao || null,
+          indicador: {
+            valorAtual: input.valorAtual,
+            valorAlvo: input.valorAlvo || null,
+            unidade: input.unidade,
+            textoComparativo: input.textoComparativo || null,
+            cor: input.cor,
+            icone: input.icone,
+          },
+        };
+    }
+  })();
+
+  // If it's a contexto with a file, use multipart/form-data
+  if (input.kind === 'contexto' && input.file) {
+    const fd = new FormData();
+    fd.append('tituloConceitual', input.tituloConceitual);
+    fd.append('tipo', 'ARQUIVO_LINK');
+    fd.append('titulo', input.titulo);
+    if (input.descricao) fd.append('descricao', input.descricao);
+    // Supporting link-only upload as well
+    if (input.url) fd.append('url', input.url);
+    fd.append('arquivo', input.file, (input.file as any).name || 'arquivo');
+    const res = await fetch(`${base}/contextos`, withAuth({ method: 'POST', body: fd }));
+    if (!res.ok) return null;
+    const json = await res.json();
+    return { contextoId: json?.contexto?.id || json?.id };
+  }
+
+  const res = await fetch(`${base}/contextos`, withAuth({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }));
+  if (!res.ok) return null;
+  const json = await res.json();
+  return { contextoId: json?.contexto?.id || json?.id };
+}

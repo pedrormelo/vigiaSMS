@@ -145,39 +145,21 @@ export default function Navbar() {
     return { absolute, modern, relative };
   };
 
+  // Atualizar bloco de "última atualização" baseado na notificação mais recente
   useEffect(() => {
-    let mounted = true;
-    (async () => {
-      const info = await getUltimaAtualizacao();
-      if (!mounted) return;
-      if (info?.data) {
-        try {
-          const { absolute, modern, relative } = buildLabels(info.data);
-          setLastUpdateLabel(`Último envio: ${absolute}`);
-          setLastUpdateRelative(modern || relative);
-          setLastUpdateItem(info);
-          // Freshness: within last 6 hours
-          const dt = new Date(info.data);
-          const now = new Date();
-          const diffMs = now.getTime() - dt.getTime();
-          setIsRecent(diffMs < 6 * 60 * 60 * 1000);
-        } catch {
-          setLastUpdateLabel("Último envio: —");
-          setLastUpdateRelative("—");
-          setLastUpdateItem(null);
-          setIsRecent(false);
-        }
-      } else {
-        setLastUpdateLabel("Último envio: —");
-        setLastUpdateRelative("—");
-        setLastUpdateItem(null);
-        setIsRecent(false);
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, []);
+    if (!notifications || notifications.length === 0) return;
+    // Assume que createdAt existe e está em ISO. Caso contrário, mantém estado inicial.
+    const ordered = [...notifications].filter(n => !!n.createdAt).sort((a, b) => (new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()));
+    if (ordered.length === 0) return;
+    const latest = ordered[0];
+    const { absolute, modern } = buildLabels(latest.createdAt!);
+    setLastUpdateInfo({
+      relative: modern,
+      label: absolute,
+      itemName: latest.title,
+      isRecent: (Date.now() - new Date(latest.createdAt!).getTime()) < 6 * 60 * 60 * 1000
+    });
+  }, [notifications]);
 
   return (
     <>

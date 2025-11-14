@@ -26,7 +26,8 @@ export enum StatusContexto {
 
 // --- TIPO Versao (Movido de types.ts) ---
 export interface Versao {
-  id: number;
+  id: number; // versaoNumero
+  dbId?: string; // id real no banco para ações (ocultar/reexibir/aprovar)
   nome: string;
   data: string;
   autor: string;

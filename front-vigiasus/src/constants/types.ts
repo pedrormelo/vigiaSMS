@@ -26,6 +26,7 @@ export interface Comment {
 // Interface principal para uma Notificação
 export interface Notification {
   id: number;
+  originalId?: string; // UUID/string do backend para chamadas de API
   type: NotificationType;
   title: string;
   description: string;
@@ -37,4 +38,5 @@ export interface Notification {
   
   contextoId?: string; // ID do contexto relacionado (se aplicável)
   url?: string; // URL do documento/link (se aplicável)
+  createdAt?: string; // Data/hora ISO da criação (opcional, usada para ordenação)
 }

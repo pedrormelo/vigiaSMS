@@ -11,7 +11,7 @@ const diretoriasData = [
     { slug: 'gestao-sus', nome: 'Diretoria de Gestão do SUS', sobre: 'Planeja e integra processos, pessoas e recursos para apoiar decisões da gestão, com foco em eficiência e melhoria contínua.', corFrom: '#109326', corTo: '#008C32' },
     { slug: 'vigilancia-saude', nome: 'Diretoria de Vigilância em Saúde', sobre: 'Previne e controla riscos à saúde pública por meio da vigilância epidemiológica, sanitária e ambiental.', corFrom: '#FF8500', corTo: '#FD8400' },
     { slug: 'administrativo-financeira', nome: 'Diretoria Administrativa Financeiro', sobre: 'Conduz a gestão orçamentária, financeira e administrativa, garantindo suporte aos processos e contratos da Secretaria.', corFrom: '#FB4242', corTo: '#EF2828' },
-    { slug: 'secretaria', nome: 'Página da Secretária', sobre: 'Painel geral com destaques, indicadores e métricas estratégicas de toda a Secretaria de Saúde.', corFrom: '#ffcb3e', corTo: '#f7721c', bannerImage: '/secretaria/images/banner1.png' }
+    { slug: 'secretaria', nome: 'Página da Secretária', sobre: 'Painel geral com destaques, indicadores e métricas estratégicas de toda a Secretaria de Saúde.', corFrom: '', corTo: '', bannerImage: '/secretaria/images/banner1.png' }
 ];
 
 // Gerências associadas (simplificado, usa slugs g1.. etc)

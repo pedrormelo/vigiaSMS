@@ -15,9 +15,9 @@ import { useRouter } from "next/navigation";
 // Define the structure of the gerencia object expected from the parent
 interface GerenciaParaFiltrar {
   id: string;
+  slug?: string | null;
   label: string;
   color: string;
-  // diretoriaId is not needed by this component itself, but is part of the type passed
 }
 
 interface GerenciasCarouselProps {
@@ -80,7 +80,7 @@ export default function GerenciasCarousel({ gerencias }: GerenciasCarouselProps)
                   key={gerencia.id || gerencia.label}
                   label={gerencia.label}
                   color={gerencia.color}
-                  onClick={() => router.push(`/gerencia/${gerencia.id}`)}
+                  onClick={() => router.push(`/gerencia/${gerencia.slug || gerencia.id}`)}
                 />
               ))}
             </div>

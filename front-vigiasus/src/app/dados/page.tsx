@@ -10,7 +10,8 @@ import { getDiretorias, getGerencias, type Diretoria, type Gerencia } from "@/se
 
 // Interface para a estrutura de dados das gerências usadas no filtro e carrossel
 interface GerenciaParaFiltrar {
-  id: string;
+  id: string; // internal id
+  slug?: string | null; // for routing as /gerencia/:slug
   label: string; // GerenciaCard espera 'label'
   color: string;
   diretoriaId: string; // Necessário para filtrar por diretoria
@@ -70,6 +71,7 @@ export default function Dashboard() {
       const color = colorByDiretoria.get(g.diretoriaId) || '#1745FF';
       gerenciasList.push({
         id: g.id,
+        slug: g.slug ?? (g.sigla ? g.sigla.toLowerCase() : undefined),
         label: g.nome,
         color,
         diretoriaId: g.diretoriaId,

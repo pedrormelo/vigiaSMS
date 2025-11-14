@@ -3,6 +3,7 @@ require('dotenv').config();
 // Dependências principais
 const cors = require('cors');
 const express = require('express');
+const path = require('path');
 
 // Middleware de autenticação (factory que aceita lista de roles)
 const auth = require('./middlewares/authMiddleware.js');
@@ -43,6 +44,8 @@ app.use(cors({
 }));
 
 app.use(express.json()); // parse de JSON no corpo das requisições
+// Servir arquivos estáticos enviados (uploads)
+app.use('/files', express.static(path.resolve(__dirname, 'files')));
 
 // Rota pública de autenticação (login & me)
 app.use('/auth', authRoutes);
