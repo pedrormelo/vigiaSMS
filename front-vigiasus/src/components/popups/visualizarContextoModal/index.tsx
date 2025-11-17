@@ -10,7 +10,6 @@ import {
 import { VisualizadorDeConteudo } from './visualizadorDeConteudo';
 import { Button } from "@/components/ui/button";
 import { cn } from '@/lib/utils';
-// Importa o novo modal de deferimento
 import DeferirContextoModal from '@/components/popups/deferirContextoModal';
 import IndeferirContextoModal from '@/components/popups/IndeferirContextoModal';
 import { showDispatchToast, showErrorToast, showSuccessToast } from '@/components/ui/Toasts';
@@ -21,11 +20,16 @@ import AbaVersoes from './abaVersoes';
 import type { DetalhesContexto, Versao } from '@/components/popups/addContextoModal/types'; 
 import { Contexto, StatusContexto } from '@/components/validar/typesDados'; 
 
+// --- CORREÇÃO (Erro 2) ---
+// 1. Define o tipo PartialContexto (para aceitar um contexto só com ID)
+type PartialContexto = Partial<Contexto> & { id: string };
+
 // 3. PROPS DO MODAL
 interface VisualizarContextoModalProps {
     estaAberto: boolean;
     aoFechar: () => void;
-    dadosDoContexto: Contexto | null;
+    // 2. Atualiza 'dadosDoContexto' para aceitar o tipo parcial
+    dadosDoContexto: Contexto | PartialContexto | null;
     perfil: 'diretor' | 'gerente' | 'membro';
     
     aoCriarNovaVersao?: (dados: Contexto) => void;
@@ -33,11 +37,12 @@ interface VisualizarContextoModalProps {
     aoAlternarVisibilidadeVersao?: (contextoId: string, versaoId: number) => void;
     aoAlternarVisibilidadeIndicador?: (contextoId: string) => void; 
 
-    isFromHistory?: boolean;
+    isFromHistory?: boolean; // Esta prop está correta (boolean | undefined)
     onDeferir?: (contextoId: string, comentario?: string) => void;
     onIndeferir?: (contextoId: string, comentario: string) => void;
     onCorrigir?: (contextoParaCorrigir: Contexto) => void;
 }
+// --- FIM DA CORREÇÃO ---
 
 type TipoAba = 'detalhes' | 'versoes';
 
@@ -56,13 +61,13 @@ const BotaoAba = ({ id, label, Icon, abaAtiva, setAbaAtiva }: { id: TipoAba; lab
 export function VisualizarContextoModal({
     estaAberto,
     aoFechar,
-    dadosDoContexto, 
+    dadosDoContexto, // Agora pode ser 'PartialContexto'
     aoCriarNovaVersao,
-    perfil,
+    perfil, // Agora é 'string' (corrigido na navbar)
     isEditing,
     aoAlternarVisibilidadeVersao,
     aoAlternarVisibilidadeIndicador,
-    isFromHistory = false,
+    isFromHistory = false, // Agora é 'boolean | undefined' (corrigido na navbar)
     onDeferir,
     onIndeferir,
     onCorrigir 
@@ -77,10 +82,20 @@ export function VisualizarContextoModal({
     const chartContainerRef = useRef<HTMLDivElement | null>(null);
 
     // 6. NORMALIZAÇÃO DE DADOS (useMemo)
+    // Esta lógica já é capaz de lidar com 'PartialContexto'
+    // e preencher os campos que faltam (ex: 'versoes')
     const normalizedData: Contexto | null = useMemo(() => {
         if (!dadosDoContexto) return null;
         
-        const dados = { ...dadosDoContexto };
+        // Se não tiver 'title', é um contexto parcial, retorna null por enquanto
+        // (O useEffect na navbar.tsx vai buscar os dados completos)
+        if (!('title' in dadosDoContexto && dadosDoContexto.title)) {
+            // Retorna um esqueleto mínimo se for parcial
+            // ou null para esperar o carregamento
+            return null; 
+        }
+
+        const dados = { ...dadosDoContexto } as Contexto; // Agora podemos assumir que é Contexto
         if (dados.estaOculto === undefined) dados.estaOculto = false;
 
         if (!dados.versoes || dados.versoes.length === 0) {
@@ -220,8 +235,34 @@ export function VisualizarContextoModal({
     };
     
     // --- 10. RENDERIZAÇÃO ---
-    if (!estaAberto || !normalizedData) return null; 
+    // Se 'normalizedData' for 'null' (porque 'dadosDoContexto' é parcial e está a carregar),
+    // mostramos um estado de 'loading' dentro do modal.
+    if (!estaAberto) return null; 
 
+    // Se os dados ainda estão a ser carregados (porque era parcial)
+    if (!normalizedData) {
+        // Mostra um 'esqueleto' do modal com um loader
+        return (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+                <div className="bg-white rounded-[40px] w-full max-w-6xl h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+                    {/* Header */}
+                    <div className="bg-gradient-to-r from-[#0037C1] to-[#00BDFF] px-8 py-4 flex items-center justify-between rounded-t-[40px] flex-shrink-0">
+                        <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-8 h-8 flex items-center justify-center flex-shrink-0"><FileText className="w-6 h-6 text-white" /></div>
+                            <h2 className="text-2xl font-semibold text-white truncate">A carregar contexto...</h2>
+                        </div>
+                        <Button size="icon" variant="ghost" onClick={aoFechar} className="w-9 h-9 bg-white/15 text-white hover:bg-white/30 hover:text-white/50 rounded-2xl flex-shrink-0"> <ArrowLeft className="w-6 h-6" /> </Button>
+                    </div>
+                    {/* Corpo (Loading) */}
+                    <div className="flex-1 flex items-center justify-center">
+                        <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
+                    </div>
+                </div>
+            </div>
+        );
+    }
+    
+    // Se 'normalizedData' já está completo
     const AcaoBotoesNode = renderAcaoBotoes();
 
     return (
@@ -337,7 +378,6 @@ export function VisualizarContextoModal({
                 onConfirm={handleConfirmarDeferimento}
                 contextoNome={normalizedData.title}
             />
-
 
             {/* Estilos */}
             <style>{`

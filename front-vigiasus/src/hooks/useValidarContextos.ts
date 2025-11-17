@@ -3,7 +3,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Contexto } from "@/components/validar/typesDados";
-import { getContextos } from "@/services/contextoService";
+// CORREÇÃO: Importando a função correta para buscar pendentes
+import { getContextosPendentes } from "@/services/contextoService";
 
 export const useValidarContextos = () => {
   // Estado para os dados da tabela
@@ -22,7 +23,8 @@ export const useValidarContextos = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const contextos = await getContextos();
+      // CORREÇÃO: Chamando a função de pendentes
+      const contextos = await getContextosPendentes();
       setData(contextos);
     } catch (err) {
       setError("Não foi possível carregar os contextos. Tente novamente mais tarde.");

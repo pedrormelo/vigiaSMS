@@ -25,6 +25,8 @@ export interface Gerencia {
     image?: string | null;
     diretoriaId: string;
     createdAt?: string;
+    // Nova propriedade para comportar os dados vindos do 'include' no backend
+    diretoria?: Diretoria; 
 }
 
 export async function getDiretorias(): Promise<Diretoria[]> {
@@ -33,7 +35,6 @@ export async function getDiretorias(): Promise<Diretoria[]> {
     const res = await fetch(`${base}/diretorias`, { cache: 'no-store' });
     if (!res.ok) return [];
     const rows = await res.json();
-    // Backend already returns the needed shape
     return Array.isArray(rows) ? rows : [];
 }
 
@@ -65,8 +66,17 @@ export async function getGerencias(): Promise<Gerencia[]> {
 export async function getGerenciasPorDiretoria(diretoriaId: string): Promise<Gerencia[]> {
     const base = apiBase();
     if (!base || !diretoriaId) return [];
-    const res = await fetch(`${base}/gerencias/pordiretoria/${encodeURIComponent(diretoriaId)}`, { cache: 'no-store' });
+    const res = await fetch(`${base}/gerencias/pordiretoria/${diretoriaId}`, { cache: 'no-store' });
     if (!res.ok) return [];
     const rows = await res.json();
     return Array.isArray(rows) ? rows : [];
+}
+
+// Nova função para buscar Gerência pelo Slug
+export async function getGerenciaBySlug(slug: string): Promise<Gerencia | null> {
+    const base = apiBase();
+    if (!base) return null;
+    const res = await fetch(`${base}/gerencias/slug/${slug}`, { cache: 'no-store' });
+    if (!res.ok) return null;
+    return await res.json();
 }

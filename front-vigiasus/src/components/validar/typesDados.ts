@@ -5,12 +5,15 @@ import { ReactNode } from "react";
 // Importar tipos de payload do modal de add (dependência agora é unidirecional)
 import type { ConjuntoDeDadosGrafico, IndicadorDetailsPayload, TipoGrafico } from "@/components/popups/addContextoModal/types";
 
-// --- ENUMS E TIPOS BÁSICOS (Já estavam aqui) ---
+// --- ENUMS E TIPOS BÁSICOS ---
+
 export interface HistoricoEvento {
   data: string; 
   autor: string;
   acao: string;
 }
+// Alias para compatibilidade com o service
+export type HistoricoItem = HistoricoEvento;
 
 // 'DocType' agora é usado apenas internamente se necessário, 'FileType' é o padrão
 export type DocType = "excel" | "pdf" | "doc" | "dashboard" | "resolucao" | "indicador" | "apresentacao";
@@ -34,6 +37,8 @@ export interface Versao {
   status?: StatusContexto;
   historico?: HistoricoEvento[];
 }
+// Alias para compatibilidade com o service
+export type VersaoContexto = Versao;
 
 // --- INTERFACE UNIFICADA 'Contexto' ---
 // (Substitui o 'Contexto' antigo e o 'DetalhesContexto')

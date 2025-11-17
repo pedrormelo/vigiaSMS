@@ -1,61 +1,53 @@
-// src/app/gerencia/[id]/page.tsx
+// src/app/gerencia/[slug]/page.tsx
 "use client";
 
 import Image from 'next/image';
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams } from 'next/navigation'; // useParams pegará o slug
 import { Edit, Eye, SearchX, UploadCloud, Loader2 } from 'lucide-react';
 import { cn } from "@/lib/utils"; 
 
 // Hooks
 import { useDebounce } from "@/hooks/useDebounce";
+import { useStaleness } from "@/hooks/useStaleness";
 
 // Componentes da UI e Popups
 import { FileGrid } from "@/components/contextosCard/contextosGrid";
 import FilterBar from "@/components/gerencia/painel-filterBar";
 import { AddIndicatorButton } from "@/components/indicadores/adicionarIndicador";
 import { IndicatorCard } from "@/components/indicadores/indicadorCard";
-import { icons as indicatorIcons } from '@/components/indicadores/indicadorCard'; // Importa os ícones
+import { icons as indicatorIcons } from '@/components/indicadores/indicadorCard';
 import { AddDashboardButton } from "@/components/gerencia/dashboard-btn1";
 import GerenciaDashboardPreview from "@/components/gerencia/dashboard/gerencia-dashboard-preview";
 import { VisualizarContextoModal } from "@/components/popups/visualizarContextoModal/index";
 import { ModalAdicionarConteudo } from "@/components/popups/addContextoModal/index";
 import StatusBadge from "@/components/alerts/statusBadge";
 import StatusBanner from "@/components/ui/status-banner";
-import { useStaleness } from "@/hooks/useStaleness";
-
-// --- NOVO: Imports para o modal ---
-import OcultarContextoModal from "@/components/popups/ocultarContextoModal";
 import { showSuccessToast } from "@/components/ui/Toasts";
-// --- FIM NOVO ---
+import OcultarContextoModal from "@/components/popups/ocultarContextoModal";
 
 // Componentes do Carrossel
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 
-// Tipos e Dados
+// Tipos
 import type { FileType } from "@/components/contextosCard/contextoCard";
-import type { AbaAtiva, DetalhesContexto, NomeIcone, Versao, SubmitData, IndicadorDetailsPayload, TipoGrafico } from "@/components/popups/addContextoModal/types";
-import { diretoriasConfig } from "@/constants/diretorias"; 
-// Tipos Unificados
-import { Contexto, StatusContexto, HistoricoEvento } from "@/components/validar/typesDados";
-// Importar o Serviço
+import type { AbaAtiva, DetalhesContexto, NomeIcone, SubmitData, IndicadorDetailsPayload, TipoGrafico } from "@/components/popups/addContextoModal/types";
+import { Contexto, StatusContexto } from "@/components/validar/typesDados";
+
+// Serviços (AQUI ESTÁ A MUDANÇA PRINCIPAL)
 import { getContextosPorGerencia } from "@/services/contextoService"; 
+import { getGerenciaBySlug, Gerencia } from "@/services/organizacaoService";
 
 export default function GerenciaPage() {
     // --- ROTEAMENTO E DADOS DINÂMICOS ---
     const params = useParams();
-    const id = (params?.id as string) || "";
+    // Assumindo que você renomeou a pasta para [slug], o parametro será 'slug'.
+    // Se ainda estiver como [id], o next enviará 'id' com o valor do slug. 
+    const slug = (params?.slug as string) || (params?.id as string) || "";
 
-    const resolved = useMemo(() => {
-        if (!id) return null;
-        for (const key of Object.keys(diretoriasConfig)) {
-            const dir = diretoriasConfig[key];
-            const ger = dir.gerencias.find(g => g.id === id);
-            if (ger) return { diretoria: dir, gerencia: ger };
-        }
-        return null;
-    }, [id]);
+    // Estado para armazenar os dados da gerência vindos do banco
+    const [gerenciaData, setGerenciaData] = useState<Gerencia | null>(null);
 
     // --- ESTADOS DE UI E FILTROS ---
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -77,37 +69,49 @@ export default function GerenciaPage() {
     const [error, setError] = useState<string | null>(null);
     const [todosOsContextos, setTodosOsContextos] = useState<Contexto[]>([]); 
     
-    // --- NOVO: Estados para o modal de ocultar ---
+    // --- Modal de ocultar ---
     const [modalOcultarAberto, setModalOcultarAberto] = useState(false);
     const [contextoParaOcultar, setContextoParaOcultar] = useState<Contexto | null>(null);
-    // --- Fim dos novos estados ---
     
     const autoplayPlugin = useRef(
         Autoplay({ delay: 3000, stopOnInteraction: false, stopOnMouseEnter: true })
     );
 
-    // --- EFEITO PARA BUSCAR DADOS DA GERÊNCIA ---
+    // --- EFEITO PRINCIPAL: BUSCAR DADOS DA GERÊNCIA E CONTEXTOS ---
     useEffect(() => {
-        if (id) { 
+        if (slug) { 
             const carregarDados = async () => {
                 try {
                     setIsLoading(true);
                     setError(null);
-                    const dados = await getContextosPorGerencia(id); 
-                    setTodosOsContextos(dados);
+
+                    // 1. Busca os dados da Gerência pelo Slug
+                    const gerenciaEncontrada = await getGerenciaBySlug(slug);
+                    
+                    if (!gerenciaEncontrada) {
+                        throw new Error("Gerência não encontrada.");
+                    }
+
+                    setGerenciaData(gerenciaEncontrada);
+
+                    // 2. Com o ID da gerência, busca os contextos
+                    // (getContextosPorGerencia provavelmente espera um ID, não um slug)
+                    const contextos = await getContextosPorGerencia(gerenciaEncontrada.id); 
+                    setTodosOsContextos(contextos);
+
                 } catch (err: any) {
-                    console.error("Erro ao buscar dados da gerência:", err);
+                    console.error("Erro ao buscar dados:", err);
                     setError(err.message || "Não foi possível carregar os dados.");
                 } finally {
                     setIsLoading(false);
                 }
             };
             carregarDados();
-        } else if (!id) {
-             setError("ID da gerência não encontrado na URL.");
+        } else {
+             setError("Slug da gerência não encontrado na URL.");
              setIsLoading(false);
         }
-    }, [id]); 
+    }, [slug]); 
 
 
     // --- HOOK DE STALENESS ---
@@ -137,74 +141,50 @@ export default function GerenciaPage() {
     });
 
 
-    // --- LÓGICA DE FILTRAGEM CORRIGIDA ---
+    // --- LÓGICA DE FILTRAGEM ---
     const handleSelectedTypesChange = (type: FileType) => {
         setSelectedTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]);
     };
 
-    // FILTRO 1: Para Carrossel de Indicadores
     const filteredIndicators = useMemo(() => {
         return todosOsContextos.filter(ctx => {
             if (ctx.type !== 'indicador') return false;
-            
             const matchesSearch = ctx.title.toLowerCase().includes(debouncedSearchValue.toLowerCase());
-            
-            // Apenas itens Publicados aparecem no carrossel de indicadores
             const matchesStatus = ctx.status === StatusContexto.Publicado;
-
-            // Modo de edição (isEditing=true) mostra os *publicados* que estão *ocultos*
             const matchesVisibility = (modo === 'edicao') || !ctx.estaOculto;
-            
             return matchesStatus && matchesVisibility && matchesSearch;
         });
     }, [todosOsContextos, debouncedSearchValue, modo]); 
 
-    // FILTRO 2: Para Carrossel de Dashboards
     const filteredDashboards = useMemo(() => {
         return todosOsContextos.filter(ctx => {
             if (ctx.type !== 'dashboard') return false;
-            
             const matchesSearch = ctx.title.toLowerCase().includes(debouncedSearchValue.toLowerCase());
-            
-            // Apenas itens Publicados aparecem no carrossel de dashboard
             const matchesStatus = ctx.status === StatusContexto.Publicado;
-
-            // Modo de edição (isEditing=true) mostra os *publicados* que estão *ocultos*
             const matchesVisibility = (modo === 'edicao') || !ctx.estaOculto;
-
             return matchesStatus && matchesVisibility && matchesSearch;
         });
     }, [todosOsContextos, debouncedSearchValue, modo]);
 
-    // FILTRO 3: Para a Grelha de Ficheiros (Painel de Contextos)
     const filteredFiles = useMemo(() => {
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
         return todosOsContextos.filter(file => {
-            // Exclui APENAS 'indicador' da grelha de baixo
-            if (file.type === 'indicador') {
-                return false;
-            }
+            if (file.type === 'indicador') return false;
             
-            // Filtros de Pesquisa, Abas e Tipos
             const matchesSearch = file.title.toLowerCase().includes(debouncedSearchValue.toLowerCase());
             const matchesTab = activeTab === 'todas' || new Date(file.insertedDate) >= sevenDaysAgo;
             const matchesType = selectedTypes.length === 0 || selectedTypes.includes(file.type);
-
-            // Filtros de Status e Visibilidade (Aqui o modo de edição MOSTRA pendentes)
             const matchesStatus = (modo === 'edicao') || file.status === StatusContexto.Publicado;
             const matchesVisibility = (modo === 'edicao') || !file.estaOculto;
 
             return matchesStatus && matchesVisibility && matchesSearch && matchesTab && matchesType;
         });
     }, [debouncedSearchValue, activeTab, selectedTypes, todosOsContextos, modo]);
-    
-    // --- FIM DA LÓGICA DE FILTRAGEM CORRIGIDA ---
 
 
     // --- HANDLERS DE EVENTOS ---
-    
     const abrirModal = (aba: AbaAtiva) => {
         setAbaInicial(aba);
         setIsModalOpen(true);
@@ -231,6 +211,7 @@ export default function GerenciaPage() {
         setTimeout(() => abrirModal(tabParaAbrir), 50);
     };
 
+    // Função auxiliar para mapear Indicadores
     const mapContextToIndicatorProps = (indicator: Contexto) => {
         if (indicator.type !== 'indicador' || !indicator.payload) {
             return {
@@ -253,7 +234,6 @@ export default function GerenciaPage() {
         }
         
         const payload = indicator.payload as IndicadorDetailsPayload; 
-        
         const iconName = (payload.icone || "Heart") as NomeIcone;
         const iconMap: Record<NomeIcone, keyof typeof indicatorIcons> = {
             Heart: "cuidados", Building: "unidades", ClipboardList: "servidores",
@@ -301,59 +281,10 @@ export default function GerenciaPage() {
     };
 
     const aoSubmeterConteudo = (dados: SubmitData) => {
-        console.log("Novo conteúdo recebido:", dados);
-        
-        let title: string | undefined;
-        let description: string | undefined;
-        let fileType: FileType = dados.type; 
-        let payload: any = null;
-        let url: string | undefined = undefined;
-        let chartType: TipoGrafico | undefined = undefined;
-
-        switch (dados.type) {
-            case 'contexto':
-                title = dados.payload.title;
-                description = dados.payload.details;
-                fileType = dados.payload.fileType || 'doc'; 
-                url = dados.payload.url;
-                payload = dados.payload.file; 
-                break;
-            case 'dashboard':
-                title = dados.payload.title;
-                description = dados.payload.details;
-                fileType = 'dashboard';
-                payload = dados.payload.dataset; 
-                chartType = dados.payload.type;
-                break;
-            case 'indicador':
-                title = dados.payload.titulo;
-                description = dados.payload.descricao;
-                fileType = 'indicador';
-                payload = dados.payload; 
-                break;
-        }
-
-        if (title) { 
-            const novoContexto: Contexto = {
-                 id: `new-ctx-${Math.random()}`,
-                 title: title, 
-                 type: fileType, 
-                 insertedDate: new Date().toISOString(),
-                 status: StatusContexto.AguardandoGerente,
-                 description: description, 
-                 url: url, 
-                 payload: payload, 
-                 chartType: chartType, 
-                 gerencia: resolved?.gerencia.id, 
-                 solicitante: "Usuário Atual (Mock)",
-                 email: "usuario@mock.com",
-                 estaOculto: false,
-                 historico: [{data: new Date().toISOString(), autor: "Usuário Atual (Mock)", acao: "Submetido para análise."}],
-                 versoes: [{id: 1, nome: "v1", data: new Date().toISOString(), autor: "Usuário Atual (Mock)", status: StatusContexto.AguardandoGerente, historico: []}]
-            };
-            setTodosOsContextos(prev => [...prev, novoContexto]);
-        }
+        // Aqui você implementaria a chamada ao backend para criar
+        console.log("Novo conteúdo (simulado):", dados);
         fecharModalAdicionar();
+        // Dica: Recarregue os dados chamando getContextosPorGerencia novamente ou atualize o estado local
     };
 
     const aoClicarArquivo = (ficheiro: Contexto) => {
@@ -361,52 +292,32 @@ export default function GerenciaPage() {
         setModalVisualizacaoAberto(true);
     };
     
-    // --- ATUALIZADO: lidarComAlternarVisibilidadeContexto ---
     const lidarComAlternarVisibilidadeContexto = (contextoId: string) => {
         const contexto = todosOsContextos.find(f => f.id === contextoId);
         if (!contexto) return;
 
         if (contexto.estaOculto) {
-            // Ação de REEXIBIR (não precisa de modal)
             setTodosOsContextos(prev =>
                 prev.map(ctx => 
                     ctx.id === contextoId ? { ...ctx, estaOculto: false } : ctx
                 )
             );
-            if (ficheiroSelecionado && ficheiroSelecionado.id === contextoId) {
-                setFicheiroSelecionado(prev => prev ? ({ ...prev, estaOculto: false }) : null);
-            }
             showSuccessToast("Contexto reexibido com sucesso.");
-            // TODO: API call para reexibir
-            console.log(`API Call: Reexibir contexto ${contextoId}`);
         } else {
-            // Ação de OCULTAR (abre o modal)
             setContextoParaOcultar(contexto);
             setModalOcultarAberto(true);
         }
     };
     
-    // --- NOVO: Handlers para o modal de ocultar ---
     const handleConfirmarOcultar = () => {
         if (!contextoParaOcultar) return;
-        
         const contextoId = contextoParaOcultar.id;
-        
-        // Aplica a lógica de ocultar
         setTodosOsContextos(prev =>
             prev.map(ctx => 
                 ctx.id === contextoId ? { ...ctx, estaOculto: true } : ctx
             )
         );
-        if (ficheiroSelecionado && ficheiroSelecionado.id === contextoId) {
-            setFicheiroSelecionado(prev => prev ? ({ ...prev, estaOculto: true }) : null);
-        }
-        
         showSuccessToast("Contexto ocultado com sucesso.");
-        // TODO: API call para ocultar
-        console.log(`API Call: Ocultar contexto ${contextoId}`);
-
-        // Fecha e limpa o modal
         setModalOcultarAberto(false);
         setContextoParaOcultar(null);
     };
@@ -415,10 +326,8 @@ export default function GerenciaPage() {
         setModalOcultarAberto(false);
         setContextoParaOcultar(null);
     };
-    // --- FIM NOVO ---
     
     const lidarComAlternarVisibilidadeVersao = (contextoId: string, versaoId: number) => {
-        console.log("API Call: Toggle Visibilidade (Versão)", contextoId, versaoId);
         setTodosOsContextos(prev => prev.map(ctx => {
             if (ctx.id === contextoId && ctx.versoes) {
                 return {
@@ -428,13 +337,9 @@ export default function GerenciaPage() {
             }
             return ctx;
         }));
-        if (ficheiroSelecionado && ficheiroSelecionado.id === contextoId) {
-             setFicheiroSelecionado(prev => prev ? ({
-                 ...prev,
-                 versoes: prev.versoes?.map(v => v.id === versaoId ? { ...v, estaOculta: !v.estaOculta } : v)
-             }) : null);
-        }
     };
+
+    // Drag and Drop Handlers
     const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); if (modo === 'edicao') { setIsDragging(true); } }, [modo]); 
     const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); if (e.relatedTarget && (e.currentTarget as Node).contains(e.relatedTarget as Node)) { return; } setIsDragging(false); }, []);
     const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
@@ -442,8 +347,7 @@ export default function GerenciaPage() {
         setIsDragging(false);
         if (modo !== 'edicao') { return; }
         if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-            const file = e.dataTransfer.files[0];
-            setArquivoAnexadoPorDrop(file); 
+            setArquivoAnexadoPorDrop(e.dataTransfer.files[0]); 
             setAbaInicial('contexto');        
             setIsModalOpen(true);             
             e.dataTransfer.clearData();
@@ -452,7 +356,7 @@ export default function GerenciaPage() {
 
 
     // --- RENDERIZAÇÃO ---
-    if (!id) return <div className="p-8 text-center text-gray-500">Carregando ID...</div>;
+    if (!slug) return <div className="p-8 text-center text-gray-500">Carregando...</div>;
     
     if (error && !isLoading) {
          return (
@@ -464,31 +368,25 @@ export default function GerenciaPage() {
          );
     }
     
-    if (!resolved && !isLoading) { 
-        return <div className="p-8 text-center text-red-500">Gerência com ID &ldquo;{id}&rdquo; não encontrada na configuração (diretorias.ts).</div>;
+    if (isLoading || !gerenciaData) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[400px] text-gray-500">
+                <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
+                <p className="mt-4 text-lg font-medium">A carregar dados da gerência...</p>
+            </div>
+        );
     }
 
-    const { diretoria, gerencia } = resolved || {}; 
+    const { diretoria } = gerenciaData; 
 
     const renderContent = () => {
-        if (isLoading) {
-            return (
-                <div className="flex flex-col items-center justify-center min-h-[400px] text-gray-500">
-                    <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
-                    <p className="mt-4 text-lg font-medium">A carregar dados da gerência...</p>
-                </div>
-            );
-        }
-        
         const itemsIndicadores = filteredIndicators.map((indicatorCtx) => {
             const props = mapContextToIndicatorProps(indicatorCtx);
             return (
                 <IndicatorCard 
                     key={props.id} 
                     {...props} 
-                    // Note: As props de edição (onEdit, onToggleOculto) não são passadas aqui
-                    // conforme o código que você forneceu. O clique vai para visualização.
-                    id={indicatorCtx.id} // <-- ID é necessário para o mapContext
+                    id={indicatorCtx.id}
                     onClick={() => lidarComVisualizarIndicador(indicatorCtx)} 
                 />
             );
@@ -502,57 +400,36 @@ export default function GerenciaPage() {
             <>
                 {/* Seção Indicadores */}
                 <div className="mb-16">
-                    {(() => {
-                        const hasVisibleIndicators = itemsIndicadores.length > 0 && !(itemsIndicadores.length === 1 && modo === 'edicao' && itemsIndicadores[0].key === 'add-indicator');
-                        
-                        if (!hasVisibleIndicators) {
-                           if (modo === 'visualizacao') {
-                               return <div className="text-sm text-center text-gray-500 py-4">(Nenhum indicador publicado)</div>;
-                           }
-                           return (
-                                <div className="flex justify-center items-center gap-4 flex-wrap">
-                                    {itemsIndicadores} {/* Mostra só o botão de adicionar */}
-                                </div>
-                           );
-                        }
-                        
-                        if (itemsIndicadores.length > 4 && modo === 'visualizacao') {
-                            return (
-                                <Carousel 
-                                    plugins={[autoplayPlugin.current]} 
-                                    opts={{ align: "start", loop: true }} 
-                                    className="w-full max-w-full mx-auto" 
-                                    onMouseEnter={autoplayPlugin.current.stop} 
-                                    onMouseLeave={autoplayPlugin.current.play}
-                                >
-                                    <CarouselContent className="-ml-4">
-                                        {itemsIndicadores.map((item, index) => (
-                                            <CarouselItem key={index} className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
-                                                <div className="p-1 h-full">{item}</div>
-                                            </CarouselItem>
-                                        ))}
-                                    </CarouselContent>
-                                </Carousel>
-                            );
-                        }
-                        
-                        return (
-                            <div className="flex justify-center items-center gap-4 flex-wrap">
-                                {itemsIndicadores}
-                            </div>
-                        );
-                    })()}
+                    {itemsIndicadores.length > 0 ? (
+                         itemsIndicadores.length > 4 && modo === 'visualizacao' ? (
+                             <Carousel plugins={[autoplayPlugin.current]} opts={{ align: "start", loop: true }} className="w-full max-w-full mx-auto" onMouseEnter={autoplayPlugin.current.stop} onMouseLeave={autoplayPlugin.current.play}>
+                                 <CarouselContent className="-ml-4">
+                                     {itemsIndicadores.map((item, index) => (
+                                         <CarouselItem key={index} className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
+                                             <div className="p-1 h-full">{item}</div>
+                                         </CarouselItem>
+                                     ))}
+                                 </CarouselContent>
+                             </Carousel>
+                         ) : (
+                             <div className="flex justify-center items-center gap-4 flex-wrap">
+                                 {itemsIndicadores}
+                             </div>
+                         )
+                    ) : (
+                         <div className="text-sm text-center text-gray-500 py-4">(Nenhum indicador publicado)</div>
+                    )}
                 </div>
 
-                {/* Indicador de Staleness */}
+                {/* Staleness */}
                 <div className="mb-3">
                     <StatusBadge variant={stalenessVariant} label={stalenessLabel} />
                 </div>
 
-                {/* Barra de Filtro de Contextos */}
+                {/* Filtros */}
                 <FilterBar searchValue={searchValue} onSearchChange={setSearchValue} activeTab={activeTab} onTabChange={setActiveTab} selectedTypes={selectedTypes} onSelectedTypesChange={handleSelectedTypesChange} clearTypeFilter={() => setSelectedTypes([])} />
                 
-                {/* Grade de Contextos (Arquivos) */}
+                {/* Grade de Arquivos */}
                 <div className="border-2 border-none border-gray-300 rounded-4xl bg-[#FDFDFD] min-h-[300px] flex items-center justify-center">
                     {filteredFiles.length > 0 || (modo === 'edicao') ? (
                         <FileGrid 
@@ -560,18 +437,12 @@ export default function GerenciaPage() {
                             onFileClick={aoClicarArquivo} 
                             isEditing={modo === 'edicao'} 
                             onAddContextClick={() => abrirModal('contexto')} 
-                            onToggleOculto={lidarComAlternarVisibilidadeContexto} // <-- Este handler agora usa o MODAL
+                            onToggleOculto={lidarComAlternarVisibilidadeContexto} 
                         />
                     ) : (
                         <div className="flex flex-col items-center justify-center text-center p-6">
                             <SearchX className="w-16 h-16 text-gray-400 mb-4" />
                             <h3 className="text-xl font-semibold text-gray-700">Nenhum Contexto Encontrado</h3>
-                            <p className="text-gray-500 mt-2 max-w-md">
-                                {searchValue || selectedTypes.length > 0 || activeTab === 'recente' ?
-                                 "Não há contextos que correspondam aos filtros aplicados." :
-                                 "Não há contextos (arquivos, links, etc.) publicados para esta gerência."
-                                }
-                            </p>
                         </div>
                     )}
                 </div>
@@ -605,7 +476,6 @@ export default function GerenciaPage() {
                 aoAlternarVisibilidadeIndicador={lidarComAlternarVisibilidadeContexto} 
             />
 
-            {/* --- NOVO: Renderização do modal de ocultar --- */}
             <OcultarContextoModal
                 open={modalOcultarAberto}
                 onOpenChange={setModalOcultarAberto}
@@ -613,15 +483,16 @@ export default function GerenciaPage() {
                 onConfirm={handleConfirmarOcultar}
                 contextoNome={contextoParaOcultar?.title || ''}
             />
-            {/* --- FIM NOVO --- */}
 
-
-            {/* Header Dinâmico */}
+            {/* Header Dinâmico com cores do Banco de Dados */}
             <div className="relative p-8 mb-6 text-white shadow-lg" 
-                 style={{ background: `linear-gradient(to right, ${diretoria?.cores.from || '#ccc'}, ${diretoria?.cores.to || '#999'})` }}>
-                <h2 className="text-3xl font-regular mt-1">{diretoria?.nome || (isLoading ? "Carregando..." : "Diretoria")}</h2>
+                 style={{ 
+                     background: diretoria?.bannerImage 
+                        ? `url(${diretoria.bannerImage}) center/cover`
+                        : `linear-gradient(to right, ${diretoria?.corFrom || '#ccc'}, ${diretoria?.corTo || '#999'})` 
+                 }}>
+                <h2 className="text-3xl font-regular mt-1">{diretoria?.nome || "Diretoria"}</h2>
             </div>
-
             
             <div className="container mx-auto p-6">
 
@@ -632,25 +503,16 @@ export default function GerenciaPage() {
                             variant={stalenessVariant === 'stale' ? 'warning' : 'danger'}
                             title={stalenessVariant === 'stale' ? 'Esta gerência está sem atualizações recentes.' : 'Esta gerência parece inativa.'}
                         >
-                            <p className="pl-9 text-sm">
-                                {lastUpdatedAt ? (
-                                    <>
-                                        Última atualização em {lastUpdatedAt.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}. 
-                                        Considere solicitar novos dados ou publicar um contexto para manter o acompanhamento em dia.
-                                    </>
-                                ) : (
-                                    "Nenhuma atualização registrada. Publique um contexto para iniciar o acompanhamento."
-                                )}
-                            </p>
+                            <p className="pl-9 text-sm">Atualize o conteúdo para regularizar.</p>
                         </StatusBanner>
                     </div>
                 )}
 
-                {/* Título da Gerência e Botão de Edição */}
+                {/* Título e Botão */}
                 <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center gap-4">
-                        <h1 className="text-6xl font-bold text-blue-700">{gerencia?.sigla || (isLoading ? "..." : "N/A")}</h1>
-                        <h2 className="text-4xl ml-2.5 text-blue-600 uppercase">{gerencia?.nome || (isLoading ? "Carregando..." : "Gerência não encontrada")}</h2>
+                        <h1 className="text-6xl font-bold text-blue-700">{gerenciaData.sigla}</h1>
+                        <h2 className="text-4xl ml-2.5 text-blue-600 uppercase">{gerenciaData.nome}</h2>
                     </div>
                     <button onClick={() => setModo(modo === 'visualizacao' ? 'edicao' : 'visualizacao')} className="flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 text-white font-bold text-lg hover:bg-blue-700 transition-colors shadow-md">
                         {modo === 'visualizacao' ? <Edit className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -658,55 +520,47 @@ export default function GerenciaPage() {
                     </button>
                 </div>
 
-                {/* Seção Dashboard (Carrossel) */}
+                {/* Dashboard */}
                 <div className="flex items-center gap-1 mb-7">
                     <h1 className="text-3xl mr-2 text-blue-600">Dashboard</h1>
                     {modo === 'edicao' && <AddDashboardButton onClick={() => abrirModal('dashboard')} />}
                 </div>
                 <div className="mb-10">
                     <GerenciaDashboardPreview 
-                        graphs={filteredDashboards} // <-- Passa SÓ os dashboards publicados
-                        gerencia={id} 
+                        graphs={filteredDashboards} 
+                        gerencia={gerenciaData.id} 
                     />
                 </div>
                 
-                {/* Conteúdo Principal (Indicadores e Contextos) */}
                 {renderContent()}
-
                 
-                {/* Seção Sobre */}
+                {/* Sobre a Gerência */}
                 <div className="mt-32 mb-16">
                     <div className="flex flex-col lg:flex-row items-start gap-8">
                         <div className="flex-1">
                             <div className="flex gap-4 items-center mb-4">
-                                <h1 className="text-6xl font-extrabold text-blue-700">{gerencia?.sigla || "..."}</h1>
-                                <h3 className="text-4xl font-regular text-blue-600">{gerencia?.nome || "..."}</h3>
+                                <h1 className="text-6xl font-extrabold text-blue-700">{gerenciaData.sigla}</h1>
+                                <h3 className="text-4xl font-regular text-blue-600">{gerenciaData.nome}</h3>
                             </div>
                             <span className="text-2xl font-medium ml-2 text-blue-600">SOBRE</span>
                             <div className="mb-8 mt-3 max-w-full lg:max-w-[90%]">
-                                <p className="text-md ml-2 text-blue-600">{gerencia?.descricao ?? "Sem descrição disponível."}</p>
+                                <p className="text-md ml-2 text-blue-600">{gerenciaData.descricao ?? "Sem descrição disponível."}</p>
                             </div>
                         </div>
                         <div className="flex-shrink-0 relative w-full lg:w-[300px] h-[240px] lg:h-[340px] rounded-2xl bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200 shadow-md">
-                            {gerencia?.image ? <Image src={gerencia.image} alt={gerencia.nome} fill className="object-cover" /> : <span className="text-gray-400 text-lg">Sem imagem</span>}
+                            {gerenciaData.image ? <Image src={gerenciaData.image} alt={gerenciaData.nome} fill className="object-cover" /> : <span className="text-gray-400 text-lg">Sem imagem</span>}
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Overlay de Drag-and-Drop */}
+            {/* Overlay de Upload */}
             {isDragging && (
-                <div className="absolute inset-0 bg-blue-500/20 backdrop-blur-sm z-50 flex flex-col items-center justify-center pointer-events-none transition-opacity duration-300 animate-fade-in">
-                    <UploadCloud className="w-32 h-32 text-white/90 animate-pulse" style={{ filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.3))' }} />
-                    <p className="mt-4 text-3xl font-bold text-white" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.4)' }}>
-                        Solte o arquivo para adicionar
-                    </p>
-                    <p className="text-lg text-white/90" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
-                        O arquivo será anexado a um novo contexto.
-                    </p>
+                <div className="absolute inset-0 bg-blue-500/20 backdrop-blur-sm z-50 flex flex-col items-center justify-center pointer-events-none">
+                    <UploadCloud className="w-32 h-32 text-white/90 animate-pulse" />
+                    <p className="mt-4 text-3xl font-bold text-white">Solte para adicionar</p>
                 </div>
             )}
-
         </div>
     );
 }

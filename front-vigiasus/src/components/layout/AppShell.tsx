@@ -1,40 +1,39 @@
 // src/components/layout/AppShell.tsx
-"use client"
+"use client";
 
-import React from "react";
-import { usePathname } from "next/navigation";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import Sidebar from "@/components/navbar/Sidebar";
 import Navbar from "@/components/navbar/navbar";
-import Footer from "@/components/footer/footer";
+import { useState, useEffect } from "react";
+import { Footer } from "react-day-picker";
 
-type Props = {
-    children: React.ReactNode;
-    navbarClassName?: string;
-};
+export default function AppShell({ children }: { children: React.ReactNode }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false); // 1. Estado para controlar a montagem
 
-/**
- * Client-side shell that conditionally shows Navbar/Footer based on route.
- * Hides chrome on auth pages like /login.
- */
-export default function AppShell({ children }: Props) {
-    const pathname = usePathname();
-    const hideChrome = pathname === "/login" || pathname?.startsWith("/login/") || pathname === "/logout";
+  const currentUser = useCurrentUser();
 
-    if (hideChrome) {
-        return <main className="flex-1">{children}</main>;
-    }
+  // 2. useEffect roda apenas no cliente, após o primeiro render
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
-    // --- INÍCIO DA CORREÇÃO ---
-    // Trocamos o Fragmento React (<> ... </>) por um <div>.
-    // Adicionamos 'min-h-full' para garantir que este div preencha
-    // a altura do <GlobalScrollArea> (que é h-screen).
-    // Adicionamos 'flex flex-col' para que os filhos (Navbar, main, Footer)
-    // se empilhem verticalmente e o 'flex-1' do <main> funcione.
-    return (
-        <div className="flex flex-col min-h-full">
-            <Navbar />
-            <main className="flex-1">{children}</main>
-            <Footer />
-        </div>
-    );
-    // --- FIM DA CORREÇÃO ---
+  return (
+    <div>
+      {/* 3. Só renderiza a Sidebar se estiver montado no cliente */}
+      {isMounted && (
+        <Sidebar
+          role={currentUser.role}
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
+      )}
+      
+      <div className="main-content">
+        <Navbar onOpenSidebar={() => setSidebarOpen(true)} />
+        {children}
+      </div>
+       <Footer/>
+    </div>
+  );
 }

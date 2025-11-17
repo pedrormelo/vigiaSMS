@@ -8,6 +8,7 @@ import AppShell from '@/components/layout/AppShell';
 import { PanelRightOpen, Scroll } from 'lucide-react';
 import GlobalScrollArea from '@/components/ui/global-scroll-area';
 import { Toaster } from "sonner"; 
+import Footer from '@/components/footer/footer';
 
 
 const montserrat = Montserrat({

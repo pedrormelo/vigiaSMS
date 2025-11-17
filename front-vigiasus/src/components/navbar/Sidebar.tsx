@@ -11,7 +11,6 @@ import {
   HiHome,
   HiOutlineClipboardList,
   HiOutlineLogout,
-  HiOutlineChatAlt,
 } from "react-icons/hi";
 import {
   PanelRightOpen,
@@ -23,17 +22,16 @@ import {
   MessageSquareMore,
   FolderClock,
   MessageCircleQuestionMark
-
 } from 'lucide-react';
 
-
+// Alterei para string para aceitar variações como "Admin" sem dar erro de tipo
 interface SidebarProps {
-  role: "secretario" | "diretor" | "gerente" | "membro";
+  role: string; 
   isOpen: boolean;
   onClose: () => void;
 }
 
-//icones da sidebar LUCIDE + react  icons
+// icones da sidebar LUCIDE + react icons
 const icons = {
   home: HiHome,
   validarContextos: HiOutlineClipboardList,
@@ -48,62 +46,73 @@ const icons = {
   ajuda: MessageCircleQuestionMark
 };
 
-
-// Default diretoria: prefer the user's diretoriaSlug; fallback to secretaria
-const getDefaultDiretoriaSlug = () => {
-  try {
-    const user = authService.getUser();
-    return user?.diretoriaSlug || "secretaria";
-  } catch {
-    return "secretaria";
-  }
-};
-
-const menuOptions = {
-  secretario: [
-    { label: "Página Inicial", icon: icons.home, href: "/" },
-    { label: "Dashboard", icon: icons.dashboard, href: `/dashboard/secretaria` },
-    { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
-    { label: "Meus Comentários", icon: icons.comentarios, href: "/comentarios" },
-    {label: "Central de Ajuda", icon: icons.ajuda, href: "/ajuda"},
-    { label: "Sair do Sistema", icon: icons.logout, href: "/logout" },
-  ],
-  diretor: [
-    { label: "Página Inicial", icon: icons.home, href: "/" },
-    { label: "Dashboard da Diretoria", icon: icons.dashboard, href: `/dashboard/${getDefaultDiretoriaSlug()}` },
-    { label: "Minhas Gerências", icon: icons.minhasGerencias, href: "/diretorias" },
-    { label: "Validar Contextos", icon: icons.contextos, href: "/validar" },
-    { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
-//{ label: "Meus Comentários", icon: icons.comentarios, href: "/comentarios" },
-    {label: "Central de Ajuda", icon: icons.ajuda, href: "/ajuda"},
-    { label: "Sair do Sistema", icon: icons.logout, href: "/logout" },
-  ],
-  gerente: [
-    { label: "Página Inicial", icon: icons.home, href: "/" },
-    { label: "Dashboard da Gerência", icon: icons.dashboard, href: `/dashboard/${getDefaultDiretoriaSlug()}` },
-    { label: "Validar Contextos", icon: icons.contextos, href: "/validar" },
-    { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
-   // { label: "Meus Comentários", icon: icons.comentarios, href: "/comentarios" },
-    {label: "Central de Ajuda", icon: icons.ajuda, href: "/ajuda"},
-    { label: "Sair do Sistema", icon: icons.logout, href: "/logout" },
-  ],
-  membro: [
-    { label: "Página Inicial", icon: icons.home, href: "/" },
-    { label: "Contextos Enviados", icon: icons.dashboard, href: "/validar" },
-    { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
-    //{ label: "Meus Comentários", icon: icons.comentarios, href: "/comentarios" },
-    {label: "Central de Ajuda", icon: icons.ajuda, href: "/ajuda"},
-    { label: "Sair do Sistema", icon: icons.logout, href: "/logout" },
-  ],
-};
-
 export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
+
+  // --- LÓGICA CORRIGIDA START ---
+  
+  // 1. Normalizar o role para evitar erros de Case Sensitive (Ex: "Diretor" vira "diretor")
+  //    Também tratamos o caso comum de "admin" mapeando para "secretaria" se necessário.
+  const normalizedRole = role?.toLowerCase() || "membro";
+  const safeRole = normalizedRole === "admin" ? "secretaria" : normalizedRole;
+
+  // 2. Obter o slug dinamicamente DENTRO do componente
+  const getDiretoriaSlug = () => {
+    try {
+      const user = authService.getUser();
+      return user?.diretoriaSlug || "secretaria";
+    } catch {
+      return "secretaria";
+    }
+  };
+  
+  const currentSlug = getDiretoriaSlug();
+
+  // 3. Definição do Menu (agora dentro do componente para usar o currentSlug atualizado)
+  const menuOptions: Record<string, any[]> = {
+    secretaria: [
+      { label: "Página Inicial", icon: icons.home, href: "/" },
+      { label: "Dashboard", icon: icons.dashboard, href: `/dashboard/secretaria` },
+      { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
+      { label: "Meus Comentários", icon: icons.comentarios, href: "/comentarios" },
+      { label: "Central de Ajuda", icon: icons.ajuda, href: "/ajuda"},
+      { label: "Sair do Sistema", icon: icons.logout, href: "/logout" },
+    ],
+    diretor: [
+      { label: "Página Inicial", icon: icons.home, href: "/" },
+      { label: "Dashboard da Diretoria", icon: icons.dashboard, href: `/dashboard/${currentSlug}` },
+      { label: "Minhas Gerências", icon: icons.minhasGerencias, href: "/diretorias" },
+      { label: "Validar Contextos", icon: icons.contextos, href: "/validar" },
+      { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
+      { label: "Central de Ajuda", icon: icons.ajuda, href: "/ajuda"},
+      { label: "Sair do Sistema", icon: icons.logout, href: "/logout" },
+    ],
+    gerente: [
+      { label: "Página Inicial", icon: icons.home, href: "/" },
+      { label: "Dashboard da Gerência", icon: icons.dashboard, href: `/dashboard/${currentSlug}` },
+      { label: "Validar Contextos", icon: icons.contextos, href: "/validar" },
+      { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
+      { label: "Central de Ajuda", icon: icons.ajuda, href: "/ajuda"},
+      { label: "Sair do Sistema", icon: icons.logout, href: "/logout" },
+    ],
+    membro: [
+      { label: "Página Inicial", icon: icons.home, href: "/" },
+      { label: "Contextos Enviados", icon: icons.dashboard, href: "/validar" },
+      { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
+      { label: "Central de Ajuda", icon: icons.ajuda, href: "/ajuda"},
+      { label: "Sair do Sistema", icon: icons.logout, href: "/logout" },
+    ],
+  };
+
+  // Seleciona as opções com base no role seguro, ou usa membro como fallback
+  const currentOptions = menuOptions[safeRole] || menuOptions['membro'];
+
+  // --- LÓGICA CORRIGIDA END ---
+
 
   const isActive = (href: string) => {
     if (!pathname) return false;
     if (href === "/") return pathname === "/";
-    // Treat dynamic dashboard routes as a group: any /dashboard/* activates it
     if (href.startsWith("/dashboard")) {
       return pathname.startsWith("/dashboard");
     }
@@ -151,7 +160,7 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
 
         {/* Menu com scroll */}
         <nav className="flex flex-col gap-2 w-full overflow-y-auto px-2 pr-1 scrollbar-thin scrollbar-thumb-blue-300 scrollbar-track-transparent">
-          {menuOptions[role].map(({ label, icon: Icon, href }) => {
+          {currentOptions.map(({ label, icon: Icon, href }) => {
             const active = isActive(href);
             return (
               <Link

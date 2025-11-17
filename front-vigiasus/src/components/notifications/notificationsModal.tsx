@@ -5,13 +5,11 @@ import { useState, useEffect, useMemo } from "react";
 import { Notification } from "@/constants/types";
 import NotificationList, { type ActiveFilter } from "@/components/notifications/notificationList";
 import NotificationDetailView from "@/components/notifications/NotificationDetailView";
-// --- 1. IMPORTAR O NOVO PAINEL DE CONFIGURAÇÕES ---
 import NotificationSettingsView from "./notificationSettingsView";
 import { Button } from "@/components/ui/button";
 import { Bell, Inbox, ArrowLeft, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Props (inalteradas)
 interface Props {
   isOpen: boolean;
   onClose: () => void;
@@ -19,8 +17,9 @@ interface Props {
   notifications: Notification[];
   isLoading: boolean;
   isError: boolean;
-  readNotifications: Set<number>;
-  onMarkAsRead: (id: number) => void;
+  // O modal recebe 'string[]' (do hook 'useNotifications'), pode ser undefined ao carregar
+  readNotifications: string[] | undefined; 
+  onMarkAsRead: (id: string | "all") => void;
 }
 
 export default function NotificationsModal({
@@ -30,11 +29,8 @@ export default function NotificationsModal({
 }: Props) {
 
   const [activeNotification, setActiveNotification] = useState<Notification | null>(null);
-
-  // --- 2. ADICIONAR ESTADO PARA O PAINEL DE CONFIGURAÇÕES ---
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
 
-  // Tenta ler o filtro salvo no localStorage ao iniciar
   const [activeFilter, setActiveFilter] = useState<ActiveFilter>(() => {
     try {
       const savedFilter = localStorage.getItem('notifications.activeFilter');
@@ -47,39 +43,52 @@ export default function NotificationsModal({
     }
   });
 
-  // Lógica de filtro (inalterada)
+  // --- CORREÇÃO: Lidar com 'readNotifications' undefined ---
+  const readNotificationsAsSetNumber = useMemo(() => {
+    const numberSet = new Set<number>();
+    
+    // Adicionamos '|| []' para garantir que não falha se 'readNotifications' for 'undefined'
+    (readNotifications || []).forEach(idStr => {
+      const idNum = parseInt(idStr, 10);
+      if (!isNaN(idNum)) {
+        numberSet.add(idNum);
+      }
+    });
+    return numberSet;
+  }, [readNotifications]);
+  // -------------------------------------------------------------
+
   const totalUnreadCount = useMemo(() => {
-    return notifications.filter(n => !readNotifications.has(n.id)).length;
-  }, [notifications, readNotifications]);
+    return notifications.filter(n => !readNotificationsAsSetNumber.has(n.id)).length;
+  }, [notifications, readNotificationsAsSetNumber]);
 
   const filteredNotifications = useMemo(() => {
     if (activeFilter === "unread") {
-      return notifications.filter(n => !readNotifications.has(n.id));
+      return notifications.filter(n => !readNotificationsAsSetNumber.has(n.id));
     }
     if (activeFilter === "system") {
       return notifications.filter(n => n.type === "sistema");
     }
     return notifications;
-  }, [notifications, activeFilter, readNotifications]);
+  }, [notifications, activeFilter, readNotificationsAsSetNumber]);
 
 
-  // --- 3. ATUALIZAR HANDLER DE SELEÇÃO ---
+  // O 'NotificationList' (filho) vai-nos enviar um 'number'
   const handleSelectNotification = (id: number) => {
     const notification = notifications.find((notif) => notif.id === id);
     if (notification) {
       setActiveNotification(notification);
-      setShowSettingsPanel(false); // <--- Esconde as configs ao selecionar notif
-      if (!readNotifications.has(id)) {
-        onMarkAsRead(id);
+      setShowSettingsPanel(false); 
+      
+      if (!readNotificationsAsSetNumber.has(id)) {
+        onMarkAsRead(String(id)); // Convertemos 'number' para 'string'
       }
     }
   };
 
-  // --- 4. ADICIONAR HANDLER PARA O BOTÃO DE CONFIGS ---
   const handleToggleSettings = () => {
     setShowSettingsPanel(prev => {
       const isOpening = !prev;
-      // Se estiver abrindo as configs, des-seleciona a notificação
       if (isOpening) {
         setActiveNotification(null);
       }
@@ -87,7 +96,6 @@ export default function NotificationsModal({
     });
   };
 
-  // --- 5. ATUALIZAR FILTRO (passado para o SettingsView) ---
   const handleFilterChange = (filter: ActiveFilter) => {
     setActiveFilter(filter);
     try {
@@ -96,16 +104,13 @@ export default function NotificationsModal({
   };
 
 
-  // useEffect (inalterado, mas agora 'activeNotification' pode ser null
-  // se as configs estiverem abertas)
   useEffect(() => {
     if (!isOpen) {
       setActiveNotification(null);
-      setShowSettingsPanel(false); // <--- Reseta ao fechar o modal
+      setShowSettingsPanel(false); 
       return;
     }
 
-    // Se as configs estiverem abertas, não faz nada
     if (showSettingsPanel) return;
 
     const activeIsFilteredOut = activeNotification && !filteredNotifications.some(n => n.id === activeNotification.id);
@@ -116,7 +121,7 @@ export default function NotificationsModal({
     } else if (filteredNotifications.length === 0) {
       setActiveNotification(null);
     }
-  }, [isOpen, filteredNotifications, activeNotification, showSettingsPanel]); // <--- Adiciona showSettingsPanel
+  }, [isOpen, filteredNotifications, activeNotification, showSettingsPanel]); 
 
 
   // --- Componentes de Estado (EmptyState, LoadingState, ErrorState) (inalterados) ---
@@ -144,14 +149,13 @@ export default function NotificationsModal({
   );
 
 
-  // --- 6. ATUALIZAR RENDERCONTENT ---
   const renderContent = () => {
     if (isLoading) return <LoadingState />;
     if (isError) return <ErrorState />;
     if (notifications.length === 0) return <EmptyState />;
 
     const isCurrentNotificationRead = activeNotification
-      ? readNotifications.has(activeNotification.id)
+      ? readNotificationsAsSetNumber.has(activeNotification.id)
       : false;
 
     return (
@@ -160,23 +164,18 @@ export default function NotificationsModal({
         <div className="w-[400px] flex-shrink-0 border-r border-gray-200 overflow-hidden flex flex-col">
           <NotificationList
             notifications={filteredNotifications}
-            // Se as configs estiverem ativas, NENHUMA notificação é "active"
             activeNotificationId={showSettingsPanel ? null : activeNotification?.id || null}
             onSelectNotification={handleSelectNotification}
-            readNotifications={readNotifications}
+            readNotifications={readNotificationsAsSetNumber} // Passa o 'Set<number>'
             totalUnreadCount={totalUnreadCount}
             activeFilter={activeFilter}
-            onFilterChange={handleFilterChange} // <--- Passa o handler de filtro
-
-            // --- Passa as novas props ---
+            onFilterChange={handleFilterChange}
             onToggleSettings={handleToggleSettings}
             isSettingsActive={showSettingsPanel}
           />
         </div>
 
-        {/* *** INÍCIO DA MODIFICAÇÃO PRINCIPAL ***
-              O painel da direita agora renderiza OU as Configurações OU os Detalhes
-            */}
+        {/* Painel da Direita (Configurações ou Detalhes) */}
         <div className="flex-1 overflow-hidden flex flex-col">
           {showSettingsPanel ? (
             <NotificationSettingsView
@@ -192,7 +191,6 @@ export default function NotificationsModal({
             />
           )}
         </div>
-        {/* *** FIM DA MODIFICAÇÃO PRINCIPAL *** */}
       </div>
     );
   };
