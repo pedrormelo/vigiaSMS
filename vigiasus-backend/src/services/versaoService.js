@@ -51,6 +51,8 @@ async function gerenteAprova({ versaoId, actor }) {
         versao,
         `O contexto "${versao.titulo}" aguarda aprovação do Diretor.`
     );
+    // Notify the original solicitante that status moved forward
+    await notificacaoService.notifySolicitanteStatus(updated, actor.id, 'AGUARDANDO_DIRETOR');
     return updated;
 }
 

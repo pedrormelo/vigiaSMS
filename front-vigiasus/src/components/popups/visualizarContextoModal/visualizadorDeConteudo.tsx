@@ -25,13 +25,14 @@ interface VisualizadorProps {
     url?: string;
     titulo: string;
     payload?: any;
+    descricao?: string;
     chartType?: DetalhesContexto['chartType'];
     aoAlternarTelaCheia?: () => void;
     emTelaCheia?: boolean;
     zoomLevel?: number;
 }
 
-export const VisualizadorDeConteudo: React.FC<VisualizadorProps> = ({ tipo, url, titulo, payload, chartType, aoAlternarTelaCheia, emTelaCheia = false, zoomLevel = 1 }) => {
+export const VisualizadorDeConteudo: React.FC<VisualizadorProps> = ({ tipo, url, titulo, payload, descricao, chartType, aoAlternarTelaCheia, emTelaCheia = false, zoomLevel = 1 }) => {
 
     const renderFallback = () => (
         <div className="animate-fade-in h-full flex flex-col items-center justify-center bg-gray-50 rounded-2xl p-6 text-center">
@@ -85,7 +86,7 @@ export const VisualizadorDeConteudo: React.FC<VisualizadorProps> = ({ tipo, url,
                     {payload ? (
                         <VisualizadorIndicador
                             title={titulo}
-                            description={payload.description}
+                            description={descricao || payload.description}
                             valorAtual={payload.valorAtual}
                             unidade={payload.unidade}
                             textoComparativo={payload.textoComparativo}

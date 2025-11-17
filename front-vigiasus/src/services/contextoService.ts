@@ -266,8 +266,9 @@ export const getContextosPendentes = async (): Promise<Contexto[]> => {
         
         if (!res.ok) return [];
         
-        const body: (BackendVersao | BackendContexto)[] = await res.json();
-        return body.map(mapBackendToFrontend);
+        const raw = await res.json();
+        const list: (BackendVersao | BackendContexto)[] = Array.isArray(raw) ? raw : (raw?.data || []);
+        return list.map(mapBackendToFrontend);
     } catch (err) {
         console.error("Erro ao buscar contextos pendentes:", err);
         return [];
@@ -298,9 +299,38 @@ export const getContextoById = async (id: string): Promise<Contexto | null> => {
             cache: 'no-store' 
         });
         if (!res.ok) return null;
-        
-        const body: BackendContexto = await res.json();
-        return mapBackendToFrontend(body);
+        const body: any = await res.json();
+        // Backends podem responder em dois formatos:
+        // 1) Formato "mapeado": BackendContexto direto
+        // 2) Formato bruto: { contexto, versoes, historico }
+        let normalized: BackendContexto | BackendVersao;
+        if (body && body.contexto && Array.isArray(body.versoes)) {
+            const ctx = body.contexto;
+            const versoes = body.versoes.map((v: any) => ({
+                ...v,
+                contexto: {
+                    id: ctx.id,
+                    tituloConceitual: ctx.tituloConceitual,
+                    tipo: ctx.tipo,
+                    gerenciaDonaId: ctx.gerenciaDonaId,
+                    createdAt: ctx.createdAt,
+                    autorOriginalId: ctx.autorOriginalId,
+                } as BackendContextoBase,
+            }));
+            normalized = {
+                id: ctx.id,
+                tituloConceitual: ctx.tituloConceitual,
+                tipo: ctx.tipo,
+                gerenciaDonaId: ctx.gerenciaDonaId,
+                createdAt: ctx.createdAt,
+                autorOriginalId: ctx.autorOriginalId,
+                versoes,
+                historico: body.historico || [],
+            } as BackendContexto;
+        } else {
+            normalized = body as (BackendContexto | BackendVersao);
+        }
+        return mapBackendToFrontend(normalized);
     } catch (err) {
         console.error("Erro ao buscar detalhes do contexto:", err);
         return null;
@@ -376,7 +406,13 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
         gerenciaId = ctx.gerenciaDonaId;
         versoesLista = ctx.versoes || [];
         historicoLista = ctx.historico || [];
-        versaoRecente = ctx.versoes?.[0] || ctx.versaoAtiva;
+        if (ctx.versoes && ctx.versoes.length) {
+            versaoRecente = ctx.versoes.reduce((acc, v) => {
+                return (!acc || (v.versaoNumero > acc.versaoNumero)) ? v : acc;
+            }, ctx.versoes[0] as BackendVersao);
+        } else {
+            versaoRecente = ctx.versaoAtiva;
+        }
     } else {
         const v = item as BackendVersao;
         const ctxPai = v.contexto;

@@ -18,17 +18,18 @@ const iconMap: Record<NomeIcone, keyof typeof indicatorIcons> = {
 
 interface VisualizadorIndicadorProps {
     title: string;
-    description: string;
-    valorAtual: string;
-    unidade: string;
-    textoComparativo: string;
-    cor: string;
-    icone: NomeIcone;
+    description?: string;
+    valorAtual?: string | number;
+    unidade?: string;
+    textoComparativo?: string;
+    cor?: string;
+    icone?: NomeIcone;
 }
 
-const getChangeType = (text: string): 'positive' | 'negative' | 'neutral' => {
-    if (text.startsWith('+')) return 'positive';
-    if (text.startsWith('-')) return 'negative';
+const getChangeType = (text?: string): 'positive' | 'negative' | 'neutral' => {
+    const t = (text ?? '').trim();
+    if (t.startsWith('+')) return 'positive';
+    if (t.startsWith('-')) return 'negative';
     return 'neutral';
 };
 
@@ -43,9 +44,9 @@ export const VisualizadorIndicador: React.FC<VisualizadorIndicadorProps> = ({
         'text-gray-600';
 
     const unidadesMonetarias = ["R$", "$", "€"];
-    const eUnidadeMonetaria = unidadesMonetarias.includes(unidade);
+    const eUnidadeMonetaria = unidade ? unidadesMonetarias.includes(unidade) : false;
     
-    const IconeDoCard = indicatorIcons[iconMap[icone]];
+    const IconeDoCard = icone && iconMap[icone] ? indicatorIcons[iconMap[icone]] : null;
 
     return (
         <div 
@@ -58,9 +59,9 @@ export const VisualizadorIndicador: React.FC<VisualizadorIndicadorProps> = ({
             </div>
             <div className="my-2 text-center">
                 <p className="text-4xl font-bold text-gray-900 leading-none">
-                    {eUnidadeMonetaria && <span className="text-2xl font-medium text-gray-500 mr-1">{unidade}</span>}
-                    {valorAtual || "0"}
-                    {!eUnidadeMonetaria && unidade !== "Nenhum" && <span className="text-2xl font-medium text-gray-500 ml-1">{unidade}</span>}
+                    {eUnidadeMonetaria && unidade && <span className="text-2xl font-medium text-gray-500 mr-1">{unidade}</span>}
+                    {valorAtual ?? "0"}
+                    {!eUnidadeMonetaria && unidade && unidade !== "Nenhum" && <span className="text-2xl font-medium text-gray-500 ml-1">{unidade}</span>}
                 </p>
                 <p className="text-sm text-gray-500 mt-1 break-words">{description || "Descrição"}</p>
             </div>

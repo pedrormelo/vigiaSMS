@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const prisma = require('../config/prismaClient');
 const { Status } = require('../constants/status');
 const { mapContextoDetalhe } = require('../mappers/contextoMapper');
+const versaoService = require('../services/versaoService');
 
 // Função auxiliar para mapear resposta simples
 function mapContextoWithVersao(ctx, versao) {
@@ -65,10 +66,11 @@ exports.listPendentes = async (req, res) => {
             return res.json({ data: versoes });
         }
         if (user.role === 'MEMBRO') {
+            // Mostrar "Enviados": tudo que o membro submeteu e ainda não foi publicado
             const versoes = await prisma.contextoversao.findMany({
                 where: {
-                    statusValidacao: 'AGUARDANDO_CORRECAO',
                     solicitanteId: user.id,
+                    statusValidacao: { in: ['AGUARDANDO_GERENTE', 'AGUARDANDO_DIRETOR', 'AGUARDANDO_CORRECAO'] },
                 },
                 include: { contexto: true },
                 orderBy: { createdAt: 'desc' },
@@ -346,25 +348,12 @@ exports.gerenteAprovar = async (req, res) => {
     const { versaoId } = req.params;
     const user = req.user;
     try {
-        await prisma.$transaction(async (tx) => {
-            await tx.contextoversao.update({
-                where: { id: versaoId },
-                data: { statusValidacao: 'AGUARDANDO_DIRETOR', updatedAt: new Date() }
-            });
-            await tx.validacaohistorico.create({
-                data: {
-                    id: crypto.randomUUID(),
-                    versaoId,
-                    autorId: user.id,
-                    statusNovo: 'AGUARDANDO_DIRETOR',
-                    justificativa: 'Aprovado pelo Gerente',
-                    timestamp: new Date()
-                }
-            });
-        });
+        await versaoService.gerenteAprova({ versaoId, actor: user });
         return res.json({ message: 'Aprovado com sucesso' });
     } catch (err) {
-        return res.status(500).json({ message: 'Erro ao aprovar' });
+        console.error('Erro gerenteAprovar:', err);
+        const status = err.status || 500;
+        return res.status(status).json({ message: err.message || 'Erro ao aprovar' });
     }
 };
 

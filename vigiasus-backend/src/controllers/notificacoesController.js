@@ -7,6 +7,11 @@ exports.listForUser = async (req, res) => {
             where: { destinatarioId: req.user.id },
             orderBy: { createdAt: 'desc' },
             take: 100,
+            include: {
+                contextoversao: {
+                    select: { contextoId: true }
+                }
+            }
         });
         return res.json({ data: rows });
     } catch (err) {

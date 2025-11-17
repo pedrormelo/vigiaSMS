@@ -418,6 +418,7 @@ const AbaDetalhes = ({
                     url={dados.url}
                     titulo={dados.title}
                     payload={dados.payload}
+                    descricao={dados.description}
                     chartType={dados.chartType}
                     aoAlternarTelaCheia={aoAlternarTelaCheia}
                     emTelaCheia={emTelaCheia}

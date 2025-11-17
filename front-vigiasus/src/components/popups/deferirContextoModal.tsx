@@ -42,7 +42,7 @@ export function DeferirContextoModal({
                     {/* ATUALIZADO: Estrutura do Título para corresponder ao IndeferirModal */}
                     <DialogTitle className="flex items-center gap-2">
                         <CheckCircle className="h-5 w-5 text-green-600" /> {/* Ícone verde mantido */}
-                        <h1 className="text-lg text-gray-700 font-semibold">Confirmar Deferimento</h1>
+                        <span className="text-lg text-gray-700 font-semibold">Confirmar Deferimento</span>
                     </DialogTitle>
                     
                     {/* ATUALIZADO: Estrutura da Descrição para corresponder ao IndeferirModal */}
@@ -55,7 +55,7 @@ export function DeferirContextoModal({
                             <span className="text-gray-700">Você está prestes a deferir este contexto.</span>
                         )}
                         <br />
-                        <h1 className="text-gray-700">Esta ação irá publicá-lo e (se aplicável) movê-lo para a próxima etapa de validação.</h1>
+                        <span className="text-gray-700">Esta ação irá publicá-lo e (se aplicável) movê-lo para a próxima etapa de validação.</span>
                     </DialogDescription>
                 </DialogHeader>
 

@@ -351,6 +351,7 @@ export function VisualizarContextoModal({
                             tipo={normalizedData.type}
                             titulo={normalizedData.title}
                             payload={normalizedData.payload}
+                            descricao={normalizedData.description}
                             url={normalizedData.url}
                             chartType={normalizedData.chartType}
                             emTelaCheia={true}

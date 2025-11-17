@@ -46,7 +46,7 @@ export default function IndeferirContextoModal({
             <DialogContent className="sm:rounded-2xl bg-white/80 border border-gray-300 shadow-2xl backdrop-blur-md">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
-                        <FileX className="h-5 w-5 text-red-600" /> <h1 className="text-lg text-gray-700 font-semibold">Indeferir contexto</h1>
+                        <FileX className="h-5 w-5 text-red-600" /> <span className="text-lg text-gray-700 font-semibold">Indeferir contexto</span>
                     </DialogTitle>
                     <DialogDescription>
                         {contextoNome ? (
@@ -57,7 +57,7 @@ export default function IndeferirContextoModal({
                             <span className="text-gray-700">Você está prestes a indeferir este contexto.</span>
                         )}
                         <br />
-                        <h1 className="text-gray-700">Informe o motivo/justificativa no campo abaixo.</h1>
+                        <span className="text-gray-700">Informe o motivo/justificativa no campo abaixo.</span>
                     </DialogDescription>
                 </DialogHeader>
 

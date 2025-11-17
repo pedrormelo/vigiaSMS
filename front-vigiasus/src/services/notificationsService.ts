@@ -17,7 +17,8 @@ interface BackendNotificationRow {
   isLida?: boolean;
   versaoId?: string | null;
   createdAt?: string;
-  contextoId?: string; // se existir no backend
+  contextoId?: string; // se existir no backend (flat)
+  contextoversao?: { contextoId: string } | null; // quando vem via include
 }
 
 interface BackendCommentRow {
@@ -70,7 +71,7 @@ export async function getNotifications(): Promise<Notification[]> {
       description: "", // backend não fornece descrição detalhada ainda
       status: r.isLida ? "visto" : undefined,
       comments: [],
-      contextoId: r.contextoId,
+      contextoId: r.contextoId || r.contextoversao?.contextoId,
       url: undefined,
       relatedFileType: undefined,
       createdAt: r.createdAt,
