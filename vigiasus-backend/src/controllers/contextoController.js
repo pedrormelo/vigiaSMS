@@ -119,8 +119,10 @@ exports.createContexto = async (req, res) => {
 
     if (!user.gerenciaId) return res.status(400).json({ message: 'Usuário sem gerência.' });
     if (!tituloConceitual || !tipo || !titulo) return res.status(400).json({ message: 'Campos obrigatórios ausentes.' });
-
     try {
+        // Validar existência da gerência do usuário para evitar erro 500 por FK
+        const ger = await prisma.gerencia.findUnique({ where: { id: user.gerenciaId } });
+        if (!ger) return res.status(400).json({ message: 'Gerência do usuário não encontrada.' });
         const result = await prisma.$transaction(async (tx) => {
             // 1. Criar Contexto Pai
             const ctx = await tx.contexto.create({
@@ -155,7 +157,7 @@ exports.createContexto = async (req, res) => {
                 let docType = 'LINK';
 
                 if (req.file) {
-                    finalUrl = `/files/context/${req.file.filename}`;
+                    finalUrl = `/files/uploads/${user.gerenciaId || 'misc'}/${req.file.filename}`;
                     const mime = req.file.mimetype;
                     if (mime === 'application/pdf') docType = 'PDF';
                     else if (mime.includes('spreadsheet') || mime.includes('excel') || mime.includes('csv')) docType = 'EXCEL';
@@ -271,8 +273,8 @@ exports.createVersao = async (req, res) => {
             if (contexto.tipo === 'ARQUIVO_LINK') {
                 let finalUrl = linkUrl;
                 let docType = 'LINK';
-                if (req.file) {
-                    finalUrl = `/files/context/${req.file.filename}`;
+                 if (req.file) {
+                     finalUrl = `/files/uploads/${user.gerenciaId || 'misc'}/${req.file.filename}`;
                     // Mesma lógica de docType acima...
                     const mime = req.file.mimetype;
                     if (mime === 'application/pdf') docType = 'PDF';

@@ -4,7 +4,7 @@ import { useModalAdicionarConteudo } from './useAddContentModal';
 import { NomeIcone, TipoVersao } from './types';
 import { icons as indicatorIcons } from '@/components/indicadores/indicadorCard';
 import { cn } from "@/lib/utils"; 
-import { Heart, Building, ClipboardList, TrendingUp, Landmark, Users, UserCheck, DollarSign} from 'lucide-react';
+import { Heart, Building, TrendingUp, Landmark, Users, UserCheck, DollarSign, HeartPulse, Hospital, ClipboardPlus, Activity, Cross, HeartHandshake, Stethoscope, Ambulance} from 'lucide-react';
 
 // Props (Tipagem)
 type AbaIndicadorProps = Pick<
@@ -38,14 +38,14 @@ const iconMap: Record<NomeIcone, keyof typeof indicatorIcons> = {
 };
 
 const iconSelectorMap: Record<NomeIcone, React.FC<React.SVGProps<SVGSVGElement>>> = {
-    Heart: Heart,
-    Building: Building,
-    ClipboardList: ClipboardList,
-    TrendingUp: TrendingUp,
-    Landmark: Landmark,
-    Users: Users,
-    UserCheck: UserCheck,
-    DollarSign: DollarSign,
+    Heart: HeartPulse,
+    Building: Hospital,
+    ClipboardList: ClipboardPlus,
+    TrendingUp: Activity,
+    Landmark: Cross,
+    Users: HeartHandshake,
+    UserCheck: Stethoscope,
+    DollarSign: Ambulance,
 };
 
 // Componente de Pré-visualização (Com a alteração)

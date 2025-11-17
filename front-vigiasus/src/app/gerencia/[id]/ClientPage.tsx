@@ -18,13 +18,15 @@ import StatusBadge from "@/components/alerts/statusBadge";
 import StatusBanner from "@/components/ui/status-banner";
 import { useStaleness } from "@/hooks/useStaleness";
 import OcultarContextoModal from "@/components/popups/ocultarContextoModal";
-import { showSuccessToast } from "@/components/ui/Toasts";
+import { showSuccessToast, showErrorToast } from "@/components/ui/Toasts";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 import type { FileType } from "@/components/contextosCard/contextoCard";
 import type { AbaAtiva, DetalhesContexto, NomeIcone, Versao, SubmitData, IndicadorDetailsPayload, TipoGrafico } from "@/components/popups/addContextoModal/types";
 import { Contexto, StatusContexto } from "@/components/validar/typesDados";
-import { getContextosPorGerencia, ocultarContexto, reexibirContexto, criarContexto, ocultarVersao as apiOcultarVersao, reexibirVersao as apiReexibirVersao, getContextoById } from "@/services/contextoService";
+import { getContextosPorGerencia, criarContexto, getContextoById } from "@/services/contextoService";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import type { CriarContextoData } from "@/services/contextoService";
 
 type DiretoriaMeta = { id: string; nome: string; corFrom?: string | null; corTo?: string | null };
 type GerenciaMeta = { id: string; nome: string; sigla?: string | null; descricao?: string | null; image?: string | null };
@@ -42,7 +44,10 @@ export default function ClientGerenciaPage({ gerencia, diretoria }: ClientGerenc
     const [dadosParaEditar, setDadosParaEditar] = useState<Partial<DetalhesContexto> | null>(null);
     const [modalVisualizacaoAberto, setModalVisualizacaoAberto] = useState(false);
     const [ficheiroSelecionado, setFicheiroSelecionado] = useState<DetalhesContexto | null>(null);
-    const [perfil] = useState<'diretor' | 'gerente' | 'membro'>('membro');
+    const user = useCurrentUser();
+    const [perfil] = useState<'diretor' | 'gerente' | 'membro'>(
+        (useCurrentUser().role as any) === 'diretor' ? 'diretor' : (useCurrentUser().role as any) === 'gerente' ? 'gerente' : 'membro'
+    );
     const [searchValue, setSearchValue] = useState("");
     const [activeTab, setActiveTab] = useState<'recente' | 'todas'>("todas");
     const [selectedTypes, setSelectedTypes] = useState<FileType[]>([]);
@@ -73,6 +78,12 @@ export default function ClientGerenciaPage({ gerencia, diretoria }: ClientGerenc
             })();
         }
     }, [id]);
+
+    // Define modo conforme regra: só membro da própria gerência edita
+    useEffect(() => {
+        const canEdit = user?.role === 'membro' && user?.gerenciaId === id;
+        setModo(canEdit ? 'edicao' : 'visualizacao');
+    }, [user, id]);
 
     const stalenessExtractors = useMemo(() => [
         () => {
@@ -175,51 +186,135 @@ export default function ClientGerenciaPage({ gerencia, diretoria }: ClientGerenc
     };
 
     const lidarComVisualizarIndicador = (indicator: Contexto) => { setFicheiroSelecionado(indicator); setModalVisualizacaoAberto(true); };
-        const aoSubmeterConteudo = async (dados: SubmitData) => {
-        let title: string | undefined;
-        let description: string | undefined;
-        let fileType: FileType = 'doc';
-        let payload: any = null;
-        let url: string | undefined = undefined;
-        let chartType: TipoGrafico | undefined = undefined;
-        switch (dados.type) {
-            case 'contexto': title = dados.payload.title; description = dados.payload.details; fileType = dados.payload.fileType || 'doc'; url = dados.payload.url; payload = dados.payload.file; break;
-            case 'dashboard': title = dados.payload.title; description = dados.payload.details; fileType = 'dashboard'; payload = dados.payload.dataset; chartType = dados.payload.type; break;
-            case 'indicador': title = dados.payload.titulo; description = dados.payload.descricao; fileType = 'indicador'; payload = dados.payload; break;
+    const mapTipoGraficoParaBackend = (tipo?: TipoGrafico): 'PIE' | 'BAR' | 'LINE' | undefined => {
+        switch (tipo) {
+            case 'pie':
+                return 'PIE';
+            case 'line':
+                return 'LINE';
+            case 'chart':
+                return 'BAR';
+            default:
+                return undefined;
         }
-            if (title) {
-                // Mapear para API
-                try {
-                    let created = null;
-                            if (dados.type === 'contexto') {
-                                            const mapFT = (ft?: FileType | null) => {
-                                    switch (ft) {
-                                        case 'pdf': return 'pdf';
-                                        case 'doc': return 'doc';
-                                        case 'link': return 'link';
-                                                    case 'planilha': return 'excel';
-                                                    case 'apresentacao': return 'doc';
-                                                    case 'resolucao': return 'pdf';
-                                                    case 'leis': return 'pdf';
-                                        default: return 'pdf';
-                                    }
-                                };
-                                created = await criarContexto({ kind: 'contexto', tituloConceitual: title, titulo: title, descricao: description, fileType: mapFT(fileType), url, file: (payload as File | null) || null });
-                    } else if (dados.type === 'dashboard') {
-                        created = await criarContexto({ kind: 'dashboard', tituloConceitual: title, titulo: title, descricao: description, grafico: (chartType === 'pie' ? 'pie' : chartType === 'line' ? 'line' : 'chart'), dataset: dados.payload?.dataset });
-                    } else if (dados.type === 'indicador') {
-                        const p = dados.payload as any;
-                        created = await criarContexto({ kind: 'indicador', tituloConceitual: title, titulo: title, descricao: description, valorAtual: p?.valorAtual || '0', valorAlvo: p?.valorAlvo, unidade: p?.unidade || '', textoComparativo: p?.textoComparativo, cor: p?.cor || '#3B82F6', icone: p?.icone || 'Heart' });
-                    }
-                    // Recarregar lista
-                    const dadosAtualizados = await getContextosPorGerencia(id);
-                    setTodosOsContextos(dadosAtualizados);
-                    showSuccessToast("Conteúdo submetido com sucesso.");
-                } catch (e) {
-                    console.error(e);
+    };
+
+    const normalizarNumero = (valor?: string): number | undefined => {
+        if (!valor) return undefined;
+        const semEspacos = valor.replace(/\s/g, '');
+        const semPontosDeMilhar = semEspacos.replace(/\.(?=\d{3}(?:\D|$))/g, '');
+        const tratado = semPontosDeMilhar.replace(',', '.');
+        if (!tratado) return undefined;
+        const num = Number(tratado);
+        return Number.isFinite(num) ? num : undefined;
+    };
+
+    const aoSubmeterConteudo = async (dados: SubmitData) => {
+        let payload: CriarContextoData | null = null;
+        let arquivo: File | null = null;
+
+        try {
+            if (dados.type === 'contexto') {
+                const titulo = dados.payload.title?.trim();
+                const descricao = dados.payload.details?.trim();
+                const linkUrl = dados.payload.url?.trim();
+                const file = dados.payload.file ?? null;
+
+                if (!titulo) {
+                    showErrorToast('Título obrigatório', 'Informe um título para o contexto.');
+                    return;
                 }
+
+                if (!linkUrl && !file) {
+                    showErrorToast('Fonte obrigatória', 'Selecione um arquivo ou informe um link válido.');
+                    return;
+                }
+
+                payload = {
+                    tituloConceitual: titulo,
+                    tipo: 'ARQUIVO_LINK',
+                    titulo,
+                    descricao: descricao || undefined,
+                };
+
+                if (linkUrl) {
+                    payload.linkUrl = linkUrl;
+                }
+
+                arquivo = file;
+            } else if (dados.type === 'dashboard') {
+                const titulo = dados.payload.title?.trim();
+                const descricao = dados.payload.details?.trim();
+                const tipoGrafico = mapTipoGraficoParaBackend(dados.payload.type);
+                const dataset = dados.payload.dataset
+                    ? JSON.parse(JSON.stringify(dados.payload.dataset)) as Record<string, unknown>
+                    : undefined;
+
+                if (!titulo) {
+                    showErrorToast('Título obrigatório', 'Informe um título para o dashboard.');
+                    return;
+                }
+
+                if (!tipoGrafico || !dataset) {
+                    showErrorToast('Dados incompletos', 'Defina o tipo de gráfico e os dados do dashboard.');
+                    return;
+                }
+
+                payload = {
+                    tituloConceitual: titulo,
+                    tipo: 'DASHBOARD',
+                    titulo,
+                    descricao: descricao || undefined,
+                    tipoGrafico,
+                    dashboardPayload: dataset,
+                };
+            } else if (dados.type === 'indicador') {
+                const titulo = dados.payload.titulo?.trim();
+                const descricao = dados.payload.descricao?.trim();
+                const valorAtual = normalizarNumero(dados.payload.valorAtual);
+                const valorAlvo = normalizarNumero(dados.payload.valorAlvo);
+                const unidade = dados.payload.unidade?.trim();
+                const textoComparativo = dados.payload.textoComparativo?.trim();
+                const cor = dados.payload.cor;
+                const icone = dados.payload.icone;
+
+                if (!titulo) {
+                    showErrorToast('Título obrigatório', 'Informe um título para o indicador.');
+                    return;
+                }
+
+                if (valorAtual === undefined) {
+                    showErrorToast('Valor atual obrigatório', 'Informe o valor atual do indicador (apenas números).');
+                    return;
+                }
+
+                payload = {
+                    tituloConceitual: titulo,
+                    tipo: 'INDICADOR',
+                    titulo,
+                    descricao: descricao || undefined,
+                    valorAtual,
+                    valorAlvo: valorAlvo !== undefined ? valorAlvo : undefined,
+                    unidade: unidade && unidade !== 'Nenhum' ? unidade : undefined,
+                    textoComparativo: textoComparativo || undefined,
+                    cor,
+                    icone,
+                };
             }
+
+            if (!payload) {
+                return;
+            }
+
+            await criarContexto(payload, arquivo);
+            const dadosAtualizados = await getContextosPorGerencia(id);
+            setTodosOsContextos(dadosAtualizados);
+            showSuccessToast('Conteúdo submetido com sucesso.');
             fecharModalAdicionar();
+        } catch (error: any) {
+            console.error('Erro ao criar contexto:', error);
+            showErrorToast('Erro ao criar contexto', error?.message || 'Não foi possível concluir a operação.');
+        }
     };
     const aoClicarArquivo = async (ficheiro: Contexto) => {
         try {
@@ -233,22 +328,18 @@ export default function ClientGerenciaPage({ gerencia, diretoria }: ClientGerenc
         const lidarComAlternarVisibilidadeContexto = async (contextoId: string) => {
         const contexto = todosOsContextos.find(f => f.id === contextoId); if (!contexto) return;
         if (contexto.estaOculto) {
-                // Reexibir via API
-                const ok = await reexibirContexto(contextoId);
-                if (ok) {
-                    setTodosOsContextos(prev => prev.map(ctx => ctx.id === contextoId ? { ...ctx, estaOculto: false } : ctx));
-                }
+                // Reexibir (otimista)
+                setTodosOsContextos(prev => prev.map(ctx => ctx.id === contextoId ? { ...ctx, estaOculto: false } : ctx));
             if (ficheiroSelecionado && ficheiroSelecionado.id === contextoId) { setFicheiroSelecionado(prev => prev ? ({ ...prev, estaOculto: false }) : null); }
             showSuccessToast("Contexto reexibido com sucesso.");
         } else { setContextoParaOcultar(contexto); setModalOcultarAberto(true); }
     };
     const handleConfirmarOcultar = () => {
             if (!contextoParaOcultar) return; const contextoId = contextoParaOcultar.id;
-            ocultarContexto(contextoId).then(() => {
-                setTodosOsContextos(prev => prev.map(ctx => ctx.id === contextoId ? { ...ctx, estaOculto: true } : ctx));
-                if (ficheiroSelecionado && ficheiroSelecionado.id === contextoId) { setFicheiroSelecionado(prev => prev ? ({ ...prev, estaOculto: true }) : null); }
-                showSuccessToast("Contexto ocultado com sucesso.");
-            }).finally(() => { setModalOcultarAberto(false); setContextoParaOcultar(null); });
+            setTodosOsContextos(prev => prev.map(ctx => ctx.id === contextoId ? { ...ctx, estaOculto: true } : ctx));
+            if (ficheiroSelecionado && ficheiroSelecionado.id === contextoId) { setFicheiroSelecionado(prev => prev ? ({ ...prev, estaOculto: true }) : null); }
+            showSuccessToast("Contexto ocultado com sucesso.");
+            setModalOcultarAberto(false); setContextoParaOcultar(null);
     };
     const handleCancelarOcultar = () => { setModalOcultarAberto(false); setContextoParaOcultar(null); };
     const lidarComAlternarVisibilidadeVersao = async (contextoId: string, versaoNumero: number) => {
@@ -256,17 +347,7 @@ export default function ClientGerenciaPage({ gerencia, diretoria }: ClientGerenc
         const ctx = (ficheiroSelecionado && ficheiroSelecionado.id === contextoId) ? ficheiroSelecionado : todosOsContextos.find(c => c.id === contextoId) || null;
         const alvo = ctx?.versoes?.find(v => v.id === versaoNumero);
         const dbId = (alvo as any)?.dbId as string | undefined;
-        if (dbId) {
-            try {
-                if (alvo?.estaOculta) {
-                    await apiReexibirVersao(dbId);
-                } else {
-                    await apiOcultarVersao(dbId);
-                }
-            } catch (e) {
-                console.error('Falha ao alternar visibilidade da versão', e);
-            }
-        }
+        // Sem chamadas de API aqui; otimista na UI
         // Otimismo na UI
         setTodosOsContextos(prev => prev.map(ctx => { if (ctx.id === contextoId && ctx.versoes) { return { ...ctx, versoes: ctx.versoes.map(v => v.id === versaoNumero ? { ...v, estaOculta: !v.estaOculta } : v) }; } return ctx; }));
         if (ficheiroSelecionado && ficheiroSelecionado.id === contextoId) { setFicheiroSelecionado(prev => prev ? ({ ...prev, versoes: prev.versoes?.map(v => v.id === versaoNumero ? { ...v, estaOculta: !v.estaOculta } : v) }) : null); }
@@ -299,7 +380,7 @@ export default function ClientGerenciaPage({ gerencia, diretoria }: ClientGerenc
                         <h1 className="text-6xl font-bold text-blue-700">{gerencia?.sigla || (isLoading ? "..." : "N/A")}</h1>
                         <h2 className="text-4xl ml-2.5 text-blue-600 uppercase">{gerencia?.nome || (isLoading ? "Carregando..." : "Gerência não encontrada")}</h2>
                     </div>
-                    <button onClick={() => setModo(modo === 'visualizacao' ? 'edicao' : 'visualizacao')} className="flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 text-white font-bold text-lg hover:bg-blue-700 transition-colors shadow-md">{modo === 'visualizacao' ? <Edit className="w-5 h-5" /> : <Eye className="w-5 h-5" />}{modo === 'visualizacao' ? 'Modo de Edição' : 'Modo de Visualização'}</button>
+                    {/* Alternância removida: modo controlado por permissões */}
                 </div>
                 <div className="flex items-center gap-1 mb-7">
                     <h1 className="text-3xl mr-2 text-blue-600">Dashboard</h1>

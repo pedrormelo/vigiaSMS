@@ -69,6 +69,10 @@ export const authService = {
         try {
             persist(STORAGE_KEY_USER, JSON.stringify(user), remember);
             if (user.token) persist(STORAGE_KEY_TOKEN, user.token, remember);
+            // Notificar a aplicação sobre a troca de usuário
+            try {
+                window.dispatchEvent(new CustomEvent('vigiasus:user-change', { detail: { user } }));
+            } catch { /* noop */ }
         } catch { /* noop */ }
     },
     getUser(): AuthUser | null {
@@ -112,6 +116,9 @@ export const authService = {
             window.localStorage.removeItem(STORAGE_KEY_TOKEN);
             window.sessionStorage.removeItem(STORAGE_KEY_USER);
             window.sessionStorage.removeItem(STORAGE_KEY_TOKEN);
+            try {
+                window.dispatchEvent(new CustomEvent('vigiasus:user-change', { detail: { user: null } }));
+            } catch { /* noop */ }
         } catch { /* noop */ }
     }
 };
