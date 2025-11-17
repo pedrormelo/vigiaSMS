@@ -28,12 +28,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           onClose={() => setSidebarOpen(false)}
         />
       )}
-      
+
       <div className="main-content">
         <Navbar onOpenSidebar={() => setSidebarOpen(true)} />
-        {children}
+          {children}
+        <Footer />
       </div>
-       <Footer/>
     </div>
   );
 }

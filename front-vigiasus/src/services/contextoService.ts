@@ -123,8 +123,18 @@ export async function criarContexto(dados: CriarContextoData, file?: File | null
     });
 
     if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Erro ao criar contexto.');
+        let message = 'Erro ao criar contexto.';
+        try {
+            const ct = res.headers.get('content-type') || '';
+            if (ct.includes('application/json')) {
+                const j = await res.json();
+                message = j?.message || message;
+            } else {
+                const t = await res.text();
+                if (t) message = t;
+            }
+        } catch {}
+        throw new Error(`[${res.status}] ${message}`);
     }
 
     return await res.json();
@@ -159,8 +169,18 @@ export async function criarVersao(contextoId: string, dados: Partial<CriarContex
     });
 
     if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Erro ao criar nova versão.');
+        let message = 'Erro ao criar nova versão.';
+        try {
+            const ct = res.headers.get('content-type') || '';
+            if (ct.includes('application/json')) {
+                const j = await res.json();
+                message = j?.message || message;
+            } else {
+                const t = await res.text();
+                if (t) message = t;
+            }
+        } catch {}
+        throw new Error(`[${res.status}] ${message}`);
     }
 
     return await res.json();
