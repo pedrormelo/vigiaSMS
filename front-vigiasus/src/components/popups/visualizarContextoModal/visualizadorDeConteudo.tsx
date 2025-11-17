@@ -70,7 +70,6 @@ export const VisualizadorDeConteudo: React.FC<VisualizadorProps> = ({ tipo, url,
                             tipoGrafico={chartType || 'chart'}
                             conjuntoDeDados={dadosDoDashboard}
                             titulo={titulo}
-                            previsualizacaoGerada={true}
                             aoAlternarTelaCheia={aoAlternarTelaCheia}
                             emTelaCheia={emTelaCheia}
                         />

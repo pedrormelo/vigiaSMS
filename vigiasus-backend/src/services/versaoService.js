@@ -2,6 +2,7 @@
 // Implementa a lógica de aprovação por GERENTE, publicação por DIRETOR, etc.
 
 const prisma = require('../config/prismaClient');
+const crypto = require('crypto');
 const notificacaoService = require('./notificacaoService');
 
 async function getVersaoWithContexto(versaoId) {
@@ -27,7 +28,14 @@ function assert(condition, message) {
 
 async function registrarHistorico(versaoId, autorId, statusNovo, justificativa) {
     await prisma.validacaohistorico.create({
-        data: { versaoId, autorId, statusNovo, justificativa: justificativa || null },
+        data: {
+            id: crypto.randomUUID(),
+            versaoId,
+            autorId,
+            statusNovo,
+            justificativa: justificativa || null,
+            timestamp: new Date(),
+        },
     });
 }
 
@@ -75,8 +83,16 @@ async function diretorPublica({ versaoId, actor }) {
             where: { id: versaoId },
             data: { statusValidacao: 'PUBLICADO', isAtiva: true, updatedAt: new Date() },
         });
+        // Registrar histórico com id e timestamp consistentes
         await tx.validacaohistorico.create({
-            data: { versaoId, autorId: actor.id, statusNovo: 'PUBLICADO' },
+            data: {
+                id: require('crypto').randomUUID(),
+                versaoId,
+                autorId: actor.id,
+                statusNovo: 'PUBLICADO',
+                justificativa: 'Publicado pelo Diretor',
+                timestamp: new Date(),
+            },
         });
         return published;
     });

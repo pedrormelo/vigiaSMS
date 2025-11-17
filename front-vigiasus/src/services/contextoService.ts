@@ -433,12 +433,39 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
         versoesLista = [v]; 
     }
 
-    const dadosEspecificos = versaoRecente 
+    // Dados específicos por tipo (parse se necessário)
+    const dadosEspecificosRaw = versaoRecente 
         ? (versaoRecente.versaoarquivo || versaoRecente.versaodashboard || versaoRecente.versaoindicador || {})
-        : {};
+        : {} as any;
+    const dadosEspecificos = {
+        ...dadosEspecificosRaw,
+        // versaodashboard.payload pode vir como string JSON → parse
+        ...(dadosEspecificosRaw && typeof (dadosEspecificosRaw as any).payload === 'string'
+            ? { payload: safeJsonParse((dadosEspecificosRaw as any).payload) }
+            : {}),
+    } as any;
+
+    // Mapear tipo visual corretamente (link x pdf x planilha x doc)
+    let frontType: Contexto['type'] = 'pdf';
+    let chartType: any = undefined;
+    if (tipoBackend === 'DASHBOARD') {
+        frontType = 'dashboard';
+        // Mapear enum do backend para TipoGrafico do front
+        const tg = (versaoRecente as any)?.versaodashboard?.tipoGrafico;
+        chartType = tg === 'PIE' ? 'pie' : tg === 'LINE' ? 'line' : 'chart';
+    }
+    else if (tipoBackend === 'INDICADOR') frontType = 'indicador';
+    else if (tipoBackend === 'ARQUIVO_LINK') {
+        const docType = (versaoRecente as any)?.versaoarquivo?.docType;
+        if (docType === 'LINK') frontType = 'link';
+        else if (docType === 'PDF') frontType = 'pdf';
+        else if (docType === 'EXCEL') frontType = 'planilha';
+        else frontType = 'doc';
+    }
 
     const versoesFrontend: VersaoContexto[] = versoesLista.map(v => ({
         id: v.versaoNumero,
+        dbId: v.id,
         nome: v.titulo,
         data: v.updatedAt,
         autor: v.solicitanteId || 'Sistema',
@@ -455,26 +482,24 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
     return {
         id: contextoId,
         title: tituloConceitual,
-        type: mapDocType(tipoBackend),
+        type: frontType,
         insertedDate: versaoRecente?.updatedAt || new Date().toISOString(),
         status: versaoRecente ? mapStatus(versaoRecente.statusValidacao) : StatusContexto.AguardandoGerente,
         description: versaoRecente?.descricao || undefined,
         gerencia: gerenciaId,
-        payload: dadosEspecificos, 
+        // Para dashboards, expor diretamente o dataset (payload) esperado pelo visualizador
+        payload: tipoBackend === 'DASHBOARD' ? (dadosEspecificos?.payload ?? undefined) : dadosEspecificos, 
+        url: (versaoRecente as any)?.versaoarquivo?.url || undefined,
         estaOculto: false,
         versoes: versoesFrontend,
         historico: historicoFrontend,
-        solicitante: versaoRecente?.solicitanteId || ''
+        solicitante: versaoRecente?.solicitanteId || '',
+        chartType,
     };
 }
 
-function mapDocType(tipo: string | undefined): Contexto['type'] {
-    switch (tipo) {
-        case 'ARQUIVO_LINK': return 'pdf'; 
-        case 'DASHBOARD': return 'dashboard';
-        case 'INDICADOR': return 'indicador';
-        default: return 'pdf';
-    }
+function safeJsonParse(s: string) {
+    try { return JSON.parse(s); } catch { return undefined; }
 }
 
 function mapStatus(status: string): StatusContexto {

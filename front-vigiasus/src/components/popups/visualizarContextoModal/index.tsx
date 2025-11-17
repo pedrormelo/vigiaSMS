@@ -169,7 +169,8 @@ export function VisualizarContextoModal({
     
     const handleConfirmarDeferimento = () => {
         if (normalizedData && onDeferir) {
-            onDeferir(normalizedData.id, undefined);
+            const versaoId = versaoEmJulgamento?.dbId || normalizedData.id;
+            onDeferir(versaoId, undefined);
             showSuccessToast("Contexto deferido com sucesso!");
             setDeferirOpen(false); // Fecha o modal de confirmação
             aoFechar(); // Fecha o modal principal
@@ -192,7 +193,8 @@ export function VisualizarContextoModal({
             return; 
         }
         if (normalizedData && onIndeferir) {
-            onIndeferir(normalizedData.id, comentario.trim());
+            const versaoId = versaoEmJulgamento?.dbId || normalizedData.id;
+            onIndeferir(versaoId, comentario.trim());
             showDispatchToast("Contexto indeferido e devolvido com justificativa.");
             setIndeferirOpen(false);
             aoFechar();

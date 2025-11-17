@@ -1,10 +1,16 @@
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const crypto = require('crypto');
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, "files/context/"); 
+        // Save under src/files/context to align with express.static('/files', src/files)
+        const dest = path.resolve(__dirname, '../files/context');
+        try {
+            fs.mkdirSync(dest, { recursive: true });
+        } catch {}
+        cb(null, dest);
     },
     filename: (req, file, cb) => {
         const ext = path.extname(file.originalname);

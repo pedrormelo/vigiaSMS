@@ -49,7 +49,7 @@ exports.listPendentes = async (req, res) => {
                     statusValidacao: 'AGUARDANDO_GERENTE',
                     contexto: { gerenciaDonaId: user.gerenciaId || '' },
                 },
-                include: { contexto: true },
+                include: { contexto: true, versaoindicador: true, versaoarquivo: true, versaodashboard: true },
                 orderBy: { createdAt: 'desc' },
             });
             return res.json({ data: versoes });
@@ -60,7 +60,7 @@ exports.listPendentes = async (req, res) => {
                     statusValidacao: 'AGUARDANDO_DIRETOR',
                     contexto: { gerencia: { diretoriaId: user.diretoriaId || '' } },
                 },
-                include: { contexto: true },
+                include: { contexto: true, versaoindicador: true, versaoarquivo: true, versaodashboard: true },
                 orderBy: { createdAt: 'desc' },
             });
             return res.json({ data: versoes });
@@ -72,7 +72,7 @@ exports.listPendentes = async (req, res) => {
                     solicitanteId: user.id,
                     statusValidacao: { in: ['AGUARDANDO_GERENTE', 'AGUARDANDO_DIRETOR', 'AGUARDANDO_CORRECAO'] },
                 },
-                include: { contexto: true },
+                include: { contexto: true, versaoindicador: true, versaoarquivo: true, versaodashboard: true },
                 orderBy: { createdAt: 'desc' },
             });
             return res.json({ data: versoes });
@@ -119,6 +119,9 @@ exports.createContexto = async (req, res) => {
         valorAtual, valorAlvo, unidade, textoComparativo, cor, icone 
     } = req.body;
 
+    console.log('[createContexto] body keys:', Object.keys(req.body || {}));
+    console.log('[createContexto] tipo:', tipo, 'temArquivo?', !!req.file, 'linkUrl:', !!linkUrl, 'tipoGrafico:', tipoGrafico ? String(tipoGrafico) : undefined);
+
     if (!user.gerenciaId) return res.status(400).json({ message: 'Usuário sem gerência.' });
     if (!tituloConceitual || !tipo || !titulo) return res.status(400).json({ message: 'Campos obrigatórios ausentes.' });
     try {
@@ -159,7 +162,8 @@ exports.createContexto = async (req, res) => {
                 let docType = 'LINK';
 
                 if (req.file) {
-                    finalUrl = `/files/uploads/${user.gerenciaId || 'misc'}/${req.file.filename}`;
+                    // Arquivo salvo em src/files/context/<filename> e servido por /files
+                    finalUrl = `/files/context/${req.file.filename}`;
                     const mime = req.file.mimetype;
                     if (mime === 'application/pdf') docType = 'PDF';
                     else if (mime.includes('spreadsheet') || mime.includes('excel') || mime.includes('csv')) docType = 'EXCEL';
@@ -276,11 +280,13 @@ exports.createVersao = async (req, res) => {
                 let finalUrl = linkUrl;
                 let docType = 'LINK';
                  if (req.file) {
-                     finalUrl = `/files/uploads/${user.gerenciaId || 'misc'}/${req.file.filename}`;
-                    // Mesma lógica de docType acima...
-                    const mime = req.file.mimetype;
+                     finalUrl = `/files/context/${req.file.filename}`;
+                    // Mesma lógica de docType acima, com suporte a CSV/Presentation
+                    const mime = req.file.mimetype || '';
                     if (mime === 'application/pdf') docType = 'PDF';
-                    else if (mime.includes('spreadsheet') || mime.includes('excel')) docType = 'EXCEL';
+                    else if (mime.includes('spreadsheet') || mime.includes('excel') || mime.includes('csv')) docType = 'EXCEL';
+                    else if (mime.includes('presentation') || mime.includes('powerpoint') || mime.includes('ms-powerpoint')) docType = 'DOC';
+                    else if (mime.includes('word')) docType = 'DOC';
                     else docType = 'DOC';
                 }
                 // Fallback para URL anterior se não enviado novo
