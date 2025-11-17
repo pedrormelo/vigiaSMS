@@ -11,9 +11,15 @@ import { getDiretorias, getGerencias, type Diretoria, type Gerencia } from "@/se
 
 // ATUALIZADO: Interface agora inclui 'slug'
 interface GerenciaParaFiltrar {
+<<<<<<< HEAD
   id: string;
   slug?: string | null; // <-- Adicionado
   label: string; 
+=======
+  id: string; // internal id
+  slug?: string | null; // for routing as /gerencia/:slug
+  label: string; // GerenciaCard espera 'label'
+>>>>>>> f444dbd42689cdbf09ed78a6f30dbf1b4cf8a836
   color: string;
   diretoriaId: string; 
 }
@@ -70,7 +76,11 @@ export default function Dashboard() {
       const color = colorByDiretoria.get(g.diretoriaId) || '#1745FF';
       gerenciasList.push({
         id: g.id,
+<<<<<<< HEAD
         slug: g.slug, // <-- Mapeamos o slug aqui
+=======
+        slug: g.slug ?? (g.sigla ? g.sigla.toLowerCase() : undefined),
+>>>>>>> f444dbd42689cdbf09ed78a6f30dbf1b4cf8a836
         label: g.nome,
         color,
         diretoriaId: g.diretoriaId,

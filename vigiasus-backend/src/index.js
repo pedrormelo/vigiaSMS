@@ -3,24 +3,20 @@ require('dotenv').config();
 // Dependências principais
 const cors = require('cors');
 const express = require('express');
+const path = require('path');
 
 // Middleware de autenticação (factory que aceita lista de roles)
 const auth = require('./middlewares/authMiddleware.js');
 
 // Rotas existentes (algumas ainda serão implementadas)
-const authRoutes = require('./routes/authRoutes.js');
-const usuariosRoutes = require('./routes/usuariosRoutes.js');
-const contextoRoutes = require('./routes/contextoRoutes.js');
-const notificacaoRoutes = require('./routes/notificacaoRoutes.js');
-const diretoriasRoutes = require('./routes/diretoriasRoutes.js');
-const gerenciasRoutes = require('./routes/gerenciasRoutes.js');
-const comentarioRoutes = require('./routes/comentarioRoutes.js');
-const dashboardLayoutRoutes = require('./routes/dashboardLayoutRoutes.js');
-// const diretoriasRoutes = require('./routes/diretoriasRoutes');
-// const gerenciasRoutes = require('./routes/gerenciasRoutes');
-// const notificacaoRoutes = require('./routes/notificacaoRoutes');
-// const comentarioRoutes = require('./routes/comentarioRoutes');
-// const dashboardLayoutRoutes = require('./routes/dashboardLayoutRoutes');
+const authRoutes = require('./routes/authRoutes');
+const usuariosRoutes = require('./routes/usuariosRoutes');
+const contextoRoutes = require('./routes/contextoRoutes');
+const notificacaoRoutes = require('./routes/notificacaoRoutes');
+const diretoriasRoutes = require('./routes/diretoriasRoutes');
+const gerenciasRoutes = require('./routes/gerenciasRoutes');
+const comentarioRoutes = require('./routes/comentarioRoutes');
+const dashboardLayoutRoutes = require('./routes/dashboardLayoutRoutes');
 
 const app = express();
 // DB clients
@@ -48,6 +44,8 @@ app.use(cors({
 }));
 
 app.use(express.json()); // parse de JSON no corpo das requisições
+// Servir arquivos estáticos enviados (uploads)
+app.use('/files', express.static(path.resolve(__dirname, 'files')));
 
 // Rota pública de autenticação (login & me)
 app.use('/auth', authRoutes);

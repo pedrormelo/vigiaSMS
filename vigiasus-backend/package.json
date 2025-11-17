@@ -11,6 +11,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "prisma db seed",
     "prisma:pull": "prisma db pull",
+    "slugs:backfill": "node src/scripts/backfillSlugs.js",
     "test": "echo \"No tests yet\" && exit 0"
   },
   "keywords": [],
@@ -28,7 +29,12 @@
     "prisma": "^6.18.0"
   },
   "devDependencies": {
+<<<<<<< HEAD
     "nodemon": "^3.1.7"
+=======
+    "nodemon": "^3.1.7",
+    "cross-env": "^7.0.3"
+>>>>>>> f444dbd42689cdbf09ed78a6f30dbf1b4cf8a836
   },
   "prisma": {
     "seed": "node prisma/seed.js"

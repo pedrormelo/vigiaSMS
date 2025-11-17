@@ -72,11 +72,26 @@ export async function getGerenciasPorDiretoria(diretoriaId: string): Promise<Ger
     return Array.isArray(rows) ? rows : [];
 }
 
+<<<<<<< HEAD
 // Nova função para buscar Gerência pelo Slug
+=======
+>>>>>>> f444dbd42689cdbf09ed78a6f30dbf1b4cf8a836
 export async function getGerenciaBySlug(slug: string): Promise<Gerencia | null> {
     const base = apiBase();
     if (!base) return null;
     const res = await fetch(`${base}/gerencias/slug/${slug}`, { cache: 'no-store' });
     if (!res.ok) return null;
     return await res.json();
+<<<<<<< HEAD
 }
+=======
+}
+
+export async function getGerenciaById(id: string): Promise<Gerencia | null> {
+    const base = apiBase();
+    if (!base) return null;
+    const res = await fetch(`${base}/gerencias/${id}`, { cache: 'no-store' });
+    if (!res.ok) return null;
+    return await res.json();
+}
+>>>>>>> f444dbd42689cdbf09ed78a6f30dbf1b4cf8a836

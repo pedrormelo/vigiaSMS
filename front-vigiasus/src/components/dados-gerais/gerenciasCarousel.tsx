@@ -16,7 +16,11 @@ import { useRouter } from "next/navigation";
 // ATENÇÃO: Adicionei o campo 'slug' aqui.
 interface GerenciaParaFiltrar {
   id: string;
+<<<<<<< HEAD
   slug?: string | null; // <--- CORREÇÃO: Adicionado campo slug opcional
+=======
+  slug?: string | null;
+>>>>>>> f444dbd42689cdbf09ed78a6f30dbf1b4cf8a836
   label: string;
   color: string;
 }
@@ -75,8 +79,11 @@ export default function GerenciasCarousel({ gerencias }: GerenciasCarouselProps)
                   key={gerencia.id || gerencia.label}
                   label={gerencia.label}
                   color={gerencia.color}
+<<<<<<< HEAD
                   // <--- CORREÇÃO PRINCIPAL AQUI:
                   // Verifica se existe slug. Se sim, usa. Se não, usa ID.
+=======
+>>>>>>> f444dbd42689cdbf09ed78a6f30dbf1b4cf8a836
                   onClick={() => router.push(`/gerencia/${gerencia.slug || gerencia.id}`)}
                 />
               ))}
