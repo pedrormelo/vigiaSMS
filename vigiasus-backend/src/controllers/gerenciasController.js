@@ -36,7 +36,6 @@ exports.listByDiretoria = async (req, res) => {
     }
 };
 
-// rota para buscar uma gerência por ID
 /**
  * Rota para BUSCAR uma gerência por ID
  * GET /gerencias/:id
@@ -56,14 +55,33 @@ exports.getById = async (req, res) => {
     }
 };
 
-// Buscar gerência por slug
+/**
+ * Rota para BUSCAR uma gerência por SLUG
+ * GET /gerencias/slug/:slug
+ * ATUALIZADO: Agora inclui os dados da Diretoria para renderização do frontend
+ */
 exports.getBySlug = async (req, res) => {
     const { slug } = req.params;
     try {
         const gerencia = await prisma.gerencia.findUnique({
             where: { slug },
-            select: { id: true, slug: true, nome: true, sigla: true, descricao: true, image: true, diretoriaId: true, createdAt: true },
+            // Removemos o 'select' anterior para trazer todos os campos da gerência
+            // e adicionamos o include da diretoria
+            include: {
+                diretoria: {
+                    select: {
+                        id: true,
+                        nome: true,
+                        slug: true,
+                        corFrom: true,
+                        corTo: true,
+                        bannerImage: true,
+                        sobre: true
+                    }
+                }
+            },
         });
+        
         if (!gerencia) return res.status(404).json({ message: 'Gerência não encontrada' });
         return res.json(gerencia);
     } catch (error) {

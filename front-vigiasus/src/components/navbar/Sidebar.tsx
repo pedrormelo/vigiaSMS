@@ -1,7 +1,8 @@
-// src/app/components/navbar/Sidebar.tsx
+// src/components/navbar/Sidebar.tsx
 "use client";
 import { motion } from "framer-motion";
 import { authService } from "@/services/authService";
+import { useState, useEffect } from "react"; // 1. Importar Hooks
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -24,7 +25,6 @@ import {
   MessageCircleQuestionMark
 } from 'lucide-react';
 
-// Alterei para string para aceitar variações como "Admin" sem dar erro de tipo
 interface SidebarProps {
   role: string; 
   isOpen: boolean;
@@ -48,16 +48,26 @@ const icons = {
 
 export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
-
-  // --- LÓGICA CORRIGIDA START ---
   
-  // 1. Normalizar o role para evitar erros de Case Sensitive (Ex: "Diretor" vira "diretor")
-  //    Também tratamos o caso comum de "admin" mapeando para "secretaria" se necessário.
-  const normalizedRole = role?.toLowerCase() || "membro";
-  const safeRole = normalizedRole === "admin" ? "secretaria" : normalizedRole;
+  // 2. Estado para controlar a hidratação
+  const [isMounted, setIsMounted] = useState(false);
 
-  // 2. Obter o slug dinamicamente DENTRO do componente
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // --- LÓGICA DE DADOS ---
+  
+  // 3. Normalizar o role
+  // SE NÃO ESTIVER MONTADO (Server/First Render), forçamos "membro" para evitar erro de hidratação
+  const normalizedRole = (isMounted ? role : "membro")?.toLowerCase() || "membro";
+  const safeRole = normalizedRole === "admin" ? "secretario" : normalizedRole;
+
+  // 4. Obter o slug dinamicamente
   const getDiretoriaSlug = () => {
+    // Só acessa o localStorage se estiver montado
+    if (!isMounted) return "secretaria";
+    
     try {
       const user = authService.getUser();
       return user?.diretoriaSlug || "secretaria";
@@ -68,9 +78,9 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
   
   const currentSlug = getDiretoriaSlug();
 
-  // 3. Definição do Menu (agora dentro do componente para usar o currentSlug atualizado)
+  // 5. Definição do Menu
   const menuOptions: Record<string, any[]> = {
-    secretaria: [
+    secretario: [
       { label: "Página Inicial", icon: icons.home, href: "/" },
       { label: "Dashboard", icon: icons.dashboard, href: `/dashboard/secretaria` },
       { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
@@ -107,9 +117,6 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
   // Seleciona as opções com base no role seguro, ou usa membro como fallback
   const currentOptions = menuOptions[safeRole] || menuOptions['membro'];
 
-  // --- LÓGICA CORRIGIDA END ---
-
-
   const isActive = (href: string) => {
     if (!pathname) return false;
     if (href === "/") return pathname === "/";
@@ -119,6 +126,7 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
     return pathname === href || pathname.startsWith(href + "/");
   };
 
+  // Renderização: O layout permanece, mas os dados sensíveis só aparecem após montagem
   return (
     <>
       {/* Overlay escuro no fundo */}
@@ -155,7 +163,8 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
             <span className=" text-blue-600"><CircleUserRound strokeWidth={0.75} className="w-20 h-20" /></span>
           </div>
           <h2 className="font-bold text-blue-700 text-sm">Usuário</h2>
-          <p className="text-xs text-blue-600 capitalize">{role}</p>
+          {/* Exibe o role apenas quando montado para evitar flash de texto errado */}
+          <p className="text-xs text-blue-600 capitalize">{isMounted ? role : "Membro"}</p>
         </div>
 
         {/* Menu com scroll */}

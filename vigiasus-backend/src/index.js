@@ -8,14 +8,14 @@ const express = require('express');
 const auth = require('./middlewares/authMiddleware.js');
 
 // Rotas existentes (algumas ainda serão implementadas)
-const authRoutes = require('./routes/authRoutes');
-const usuariosRoutes = require('./routes/usuariosRoutes');
-const contextoRoutes = require('./routes/contextoRoutes');
-const notificacaoRoutes = require('./routes/notificacaoRoutes');
-const diretoriasRoutes = require('./routes/diretoriasRoutes');
-const gerenciasRoutes = require('./routes/gerenciasRoutes');
-const comentarioRoutes = require('./routes/comentarioRoutes');
-const dashboardLayoutRoutes = require('./routes/dashboardLayoutRoutes');
+const authRoutes = require('./routes/authRoutes.js');
+const usuariosRoutes = require('./routes/usuariosRoutes.js');
+const contextoRoutes = require('./routes/contextoRoutes.js');
+const notificacaoRoutes = require('./routes/notificacaoRoutes.js');
+const diretoriasRoutes = require('./routes/diretoriasRoutes.js');
+const gerenciasRoutes = require('./routes/gerenciasRoutes.js');
+const comentarioRoutes = require('./routes/comentarioRoutes.js');
+const dashboardLayoutRoutes = require('./routes/dashboardLayoutRoutes.js');
 // const diretoriasRoutes = require('./routes/diretoriasRoutes');
 // const gerenciasRoutes = require('./routes/gerenciasRoutes');
 // const notificacaoRoutes = require('./routes/notificacaoRoutes');
@@ -24,8 +24,8 @@ const dashboardLayoutRoutes = require('./routes/dashboardLayoutRoutes');
 
 const app = express();
 // DB clients
-const prisma = require('./config/prismaClient');
-const mysqlRaw = require('./config/db');
+const prisma = require('./config/prismaClient.js');
+const mysqlRaw = require('./config/db.js');
 
 // Lista de origens permitidas. Adicionamos localhost:3000 (Next.js) além das já existentes.
 const allowedOrigins = [
