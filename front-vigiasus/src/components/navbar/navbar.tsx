@@ -112,7 +112,6 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
 
   // Atualizar bloco de "última atualização" baseado na notificação mais recente
   useEffect(() => {
-<<<<<<< HEAD
     if (selectedContexto?.id && !("titulo" in selectedContexto && selectedContexto.titulo)) {
       let mounted = true;
       (async () => {
@@ -141,21 +140,6 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
     }
   }, [selectedContexto?.id]);
 
-=======
-    if (!notifications || notifications.length === 0) return;
-    // Assume que createdAt existe e está em ISO. Caso contrário, mantém estado inicial.
-    const ordered = [...notifications].filter(n => !!n.createdAt).sort((a, b) => (new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()));
-    if (ordered.length === 0) return;
-    const latest = ordered[0];
-    const { absolute, modern } = buildLabels(latest.createdAt!);
-    setLastUpdateInfo({
-      relative: modern,
-      label: absolute,
-      itemName: latest.title,
-      isRecent: (Date.now() - new Date(latest.createdAt!).getTime()) < 6 * 60 * 60 * 1000
-    });
-  }, [notifications]);
->>>>>>> f444dbd42689cdbf09ed78a6f30dbf1b4cf8a836
 
   return (
     <>

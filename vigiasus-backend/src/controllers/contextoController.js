@@ -1,10 +1,12 @@
-// source/controllers/contextoController.js
-const crypto = require('crypto'); // Necessário para gerar UUIDs manualmente na transação
+// src/controllers/contextoController.js
+
+const crypto = require('crypto');
 const prisma = require('../config/prismaClient');
 const { Status } = require('../constants/status');
+const { mapContextoDetalhe } = require('../mappers/contextoMapper');
 
-// Função auxiliar para mapear resposta (pode ser expandida conforme necessidade)
-function mapContextoResponse(ctx, versao) {
+// Função auxiliar para mapear resposta simples
+function mapContextoWithVersao(ctx, versao) {
     return {
         id: ctx.id,
         tituloConceitual: ctx.tituloConceitual,
@@ -20,28 +22,79 @@ function mapContextoResponse(ctx, versao) {
     };
 }
 
-/**
- * GET /gerencias/:gerenciaId/contextos
- * Lista todos os contextos PUBLICADOS de uma gerência específica.
- * Usado na página pública da gerência.
- */
+// GET /contextos/publicados
+exports.listPublicados = async (req, res) => {
+    try {
+        const versoes = await prisma.contextoversao.findMany({
+            where: { isAtiva: true, statusValidacao: 'PUBLICADO' },
+            include: { contexto: true },
+            orderBy: { updatedAt: 'desc' },
+        });
+        const out = versoes.map((v) => mapContextoWithVersao(v.contexto, v));
+        return res.json({ data: out });
+    } catch (err) {
+        console.error('Erro listPublicados:', err);
+        return res.status(500).json({ message: 'Erro interno' });
+    }
+};
+
+// GET /contextos/pendentes
+exports.listPendentes = async (req, res) => {
+    const user = req.user;
+    try {
+        if (user.role === 'GERENTE') {
+            const versoes = await prisma.contextoversao.findMany({
+                where: {
+                    statusValidacao: 'AGUARDANDO_GERENTE',
+                    contexto: { gerenciaDonaId: user.gerenciaId || '' },
+                },
+                include: { contexto: true },
+                orderBy: { createdAt: 'desc' },
+            });
+            return res.json({ data: versoes });
+        }
+        if (user.role === 'DIRETOR') {
+            const versoes = await prisma.contextoversao.findMany({
+                where: {
+                    statusValidacao: 'AGUARDANDO_DIRETOR',
+                    contexto: { gerencia: { diretoriaId: user.diretoriaId || '' } },
+                },
+                include: { contexto: true },
+                orderBy: { createdAt: 'desc' },
+            });
+            return res.json({ data: versoes });
+        }
+        if (user.role === 'MEMBRO') {
+            const versoes = await prisma.contextoversao.findMany({
+                where: {
+                    statusValidacao: 'AGUARDANDO_CORRECAO',
+                    solicitanteId: user.id,
+                },
+                include: { contexto: true },
+                orderBy: { createdAt: 'desc' },
+            });
+            return res.json({ data: versoes });
+        }
+        // Se for ADMIN ou SECRETARIA, talvez mostrar tudo ou nada
+        return res.json({ data: [] });
+    } catch (err) {
+        console.error('Erro listPendentes:', err);
+        return res.status(500).json({ message: 'Erro interno' });
+    }
+};
+
+// GET /gerencias/:gerenciaId/contextos
 exports.listByGerencia = async (req, res) => {
     const { gerenciaId } = req.params;
     try {
         const versoes = await prisma.contextoversao.findMany({
             where: {
-                // Filtra apenas versões ativas (isAtiva: true) e publicadas
-                isAtiva: true, 
+                isAtiva: true,
                 statusValidacao: 'PUBLICADO',
-                // Filtra pela gerência dona do contexto pai
-                contexto: {
-                    gerenciaDonaId: gerenciaId
-                }
+                contexto: { gerenciaDonaId: gerenciaId }
             },
-            // Inclui os dados do Contexto pai (título conceitual, tipo, etc)
             include: { 
                 contexto: true,
-                // Opcional: incluir dados específicos se precisar exibir logo na lista (ex: icone do indicador)
                 versaoindicador: true,
                 versaoarquivo: true,
                 versaodashboard: true
@@ -55,120 +108,37 @@ exports.listByGerencia = async (req, res) => {
     }
 };
 
-<<<<<<< HEAD
-/**
- * GET /contextos/publicados
- * Lista contextos que já foram publicados (visíveis para todos ou filtrados)
- */
-=======
-// GET /contextos/publicados
-// Removemos o filtro direto por `isOculta` para contornar o erro de client desatualizado (PrismaClientValidationError).
-// Caso o campo exista, filtramos em memória; caso não exista ainda no client gerado, ignoramos.
->>>>>>> f444dbd42689cdbf09ed78a6f30dbf1b4cf8a836
-exports.listPublicados = async (req, res) => {
-    try {
-        const versoes = await prisma.contextoversao.findMany({
-            where: { isAtiva: true, statusValidacao: 'PUBLICADO', contexto: { isOculto: false } },
-            include: { contexto: true },
-            orderBy: { updatedAt: 'desc' },
-        });
-<<<<<<< HEAD
-        return res.json(versoes);
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: 'Erro ao listar publicados' });
-=======
-        // Filtro defensivo (se a propriedade estiver presente na instância retornada)
-        const filtradas = versoes.filter(v => (typeof v.isOculta === 'boolean' ? v.isOculta === false : true));
-        const out = filtradas.map((v) => mapContextoWithVersao(v.contexto, v));
-        return res.json({ data: out });
-    } catch (err) {
-        console.error('Erro listPublicados:', err);
-        return res.status(500).json({ message: 'Erro interno' });
->>>>>>> f444dbd42689cdbf09ed78a6f30dbf1b4cf8a836
-    }
-};
-
-/**
- * GET /contextos/pendentes
- * Lista contextos aguardando aprovação
- */
-exports.listPendentes = async (req, res) => {
-    try {
-        // Aqui você pode filtrar por gerência do usuário se necessário
-        const versoes = await prisma.contextoversao.findMany({
-            where: {
-                statusValidacao: { in: ['AGUARDANDO_GERENTE', 'AGUARDANDO_DIRETOR'] }
-            },
-            include: { contexto: true },
-            orderBy: { updatedAt: 'desc' },
-        });
-        return res.json(versoes);
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: 'Erro ao listar pendentes' });
-    }
-};
-
-/**
- * POST /contextos
- * Cria um NOVO contexto e sua primeira versão.
- * Suporta Upload de arquivo via Multer (req.file) e dados via multipart/form-data.
- */
+// POST /contextos (Criação com Transação)
 exports.createContexto = async (req, res) => {
     const user = req.user;
-<<<<<<< HEAD
-
-    // Extrair dados do body (vindos do FormData)
-    const {
-        tituloConceitual, tipo, titulo, descricao,
-        // Campos específicos que podem vir como string JSON ou texto simples
-        linkUrl, tipoGrafico, dashboardPayload,
-        valorAtual, valorAlvo, unidade, textoComparativo, cor, icone
+    const { 
+        tituloConceitual, tipo, titulo, descricao, 
+        linkUrl, tipoGrafico, dashboardPayload, 
+        valorAtual, valorAlvo, unidade, textoComparativo, cor, icone 
     } = req.body;
 
-    // Validações Básicas
-    if (!user.gerenciaId) return res.status(400).json({ message: 'Usuário sem gerência associada.' });
-    if (!tituloConceitual || !tipo || !titulo) return res.status(400).json({ message: 'Campos obrigatórios (Título Conceitual, Tipo, Título) ausentes.' });
+    if (!user.gerenciaId) return res.status(400).json({ message: 'Usuário sem gerência.' });
+    if (!tituloConceitual || !tipo || !titulo) return res.status(400).json({ message: 'Campos obrigatórios ausentes.' });
 
     try {
         const result = await prisma.$transaction(async (tx) => {
-            // 1. Criar o Contexto Pai
-            const novoContexto = await tx.contexto.create({
-=======
-    const { tituloConceitual, tipo, titulo, descricao, dashboard, indicador } = req.body || {};
-    if (user.role !== 'MEMBRO') return res.status(403).json({ message: 'Apenas MEMBRO pode criar contexto' });
-    if (!user.gerenciaId) return res.status(400).json({ message: 'Usuário sem gerência' });
-    if (!tituloConceitual || !tipo || !titulo) return res.status(400).json({ message: 'Campos obrigatórios ausentes' });
-
-    try {
-        // Logging defensivo para depuração de 500 em produção
-        console.log('[createContexto] user', { id: user.id, role: user.role, gerenciaId: user.gerenciaId });
-        console.log('[createContexto] body', { tituloConceitual, tipo, titulo, hasDescricao: !!descricao });
-        console.log('[createContexto] file', { hasFile: !!req.file, mimetype: req.file?.mimetype, originalname: req.file?.originalname });
-        console.log('[createContexto] url?', req.body?.url);
-        const created = await prisma.$transaction(async (tx) => {
+            // 1. Criar Contexto Pai
             const ctx = await tx.contexto.create({
->>>>>>> f444dbd42689cdbf09ed78a6f30dbf1b4cf8a836
                 data: {
                     id: crypto.randomUUID(),
                     tituloConceitual,
-                    tipo, // 'ARQUIVO_LINK', 'DASHBOARD', 'INDICADOR', etc.
+                    tipo,
                     autorOriginalId: user.id,
                     gerenciaDonaId: user.gerenciaId,
                 },
             });
-<<<<<<< HEAD
 
-            // 2. Criar a Versão Inicial (v1)
-            const novaVersao = await tx.contextoversao.create({
-=======
+            // 2. Criar Versão 1
             const v1 = await tx.contextoversao.create({
->>>>>>> f444dbd42689cdbf09ed78a6f30dbf1b4cf8a836
                 data: {
                     id: crypto.randomUUID(),
-                    contextoId: novoContexto.id,
-                    titulo, // Título da versão (ex: "Relatório Jan/2025")
+                    contextoId: ctx.id,
+                    titulo,
                     descricao: descricao || null,
                     solicitanteId: user.id,
                     versaoNumero: 1,
@@ -178,172 +148,111 @@ exports.createContexto = async (req, res) => {
                     updatedAt: new Date(),
                 },
             });
-<<<<<<< HEAD
 
-            // 3. Salvar dados específicos dependendo do TIPO
-            switch (tipo) {
-                case 'ARQUIVO_LINK':
-                    let finalUrl = linkUrl;
-                    let docType = 'LINK';
+            // 3. Dados Específicos
+            if (tipo === 'ARQUIVO_LINK') {
+                let finalUrl = linkUrl;
+                let docType = 'LINK';
 
-                    // Se veio arquivo pelo Multer
-                    if (req.file) {
-                        // Caminho onde o arquivo ficou salvo (configurado no uploadsConfig.js)
-                        // Ajuste o prefixo conforme sua configuração de pasta estática no app.js
-                        finalUrl = `/uploads/${req.file.filename}`;
-                        docType = req.file.mimetype === 'application/pdf' ? 'PDF' : 'DOC';
+                if (req.file) {
+                    finalUrl = `/files/context/${req.file.filename}`;
+                    const mime = req.file.mimetype;
+                    if (mime === 'application/pdf') docType = 'PDF';
+                    else if (mime.includes('spreadsheet') || mime.includes('excel') || mime.includes('csv')) docType = 'EXCEL';
+                    else if (mime.includes('word') || mime.includes('presentation') || mime.includes('powerpoint')) docType = 'DOC';
+                    else docType = 'DOC';
+                }
+
+                if (!finalUrl) throw new Error("Arquivo ou URL é obrigatório.");
+
+                await tx.versaoarquivo.create({
+                    data: {
+                        id: crypto.randomUUID(),
+                        versaoId: v1.id,
+                        url: finalUrl,
+                        docType
                     }
+                });
+            } else if (tipo === 'DASHBOARD') {
+                if (!tipoGrafico || !dashboardPayload) throw new Error("Dados do gráfico incompletos.");
+                
+                // Validar enum
+                const validTypes = ['PIE', 'BAR', 'LINE'];
+                if (!validTypes.includes(tipoGrafico)) throw new Error(`Tipo de gráfico inválido: ${tipoGrafico}`);
 
-                    if (!finalUrl) throw new Error("Para ARQUIVO_LINK, é necessário enviar um arquivo ou uma URL.");
-
-                    await tx.versaoarquivo.create({
-                        data: {
-                            id: crypto.randomUUID(),
-                            versaoId: novaVersao.id,
-                            url: finalUrl,
-                            docType
-                        }
-                    });
-                    break;
-
-                case 'DASHBOARD':
-                    if (!tipoGrafico || !dashboardPayload) throw new Error("Dados do Dashboard incompletos.");
-
-                    // Parse do payload se ele vier como string JSON do frontend
-                    let payloadValidado = dashboardPayload;
-                    if (typeof dashboardPayload === 'string') {
-                        try {
-                            // Apenas para validar se é JSON válido, salvamos como string no banco se o campo for String
-                            JSON.parse(dashboardPayload);
-                        } catch (e) {
-                            // Se não for JSON, assume string normal
-                        }
-                    } else {
-                        // Se já for objeto, converte para string para salvar no banco (se o campo for @db.Text)
-                        payloadValidado = JSON.stringify(dashboardPayload);
+                await tx.versaodashboard.create({
+                    data: {
+                        id: crypto.randomUUID(),
+                        versaoId: v1.id,
+                        tipoGrafico,
+                        payload: typeof dashboardPayload === 'object' ? JSON.stringify(dashboardPayload) : dashboardPayload
                     }
-
-                    await tx.versaodashboard.create({
-                        data: {
-                            id: crypto.randomUUID(),
-                            versaoId: novaVersao.id,
-                            tipoGrafico,
-                            payload: payloadValidado
-                        }
-                    });
-                    break;
-
-                case 'INDICADOR':
-                    if (valorAtual === undefined || valorAtual === null) throw new Error("Valor atual é obrigatório para indicadores.");
-
-                    await tx.versaoindicador.create({
-                        data: {
-                            id: crypto.randomUUID(),
-                            versaoId: novaVersao.id,
-                            valorAtual: parseFloat(valorAtual),
-                            valorAlvo: valorAlvo ? parseFloat(valorAlvo) : null,
-                            unidade: unidade || '',
-                            textoComparativo: textoComparativo || null,
-                            cor: cor || '#000000',
-                            icone: icone || 'default'
-                        }
-                    });
-                    break;
-
-                default:
-                    // Tipos desconhecidos podem ser tratados ou ignorados
-                    break;
+                });
+            } else if (tipo === 'INDICADOR') {
+                if (valorAtual === undefined) throw new Error("Valor atual obrigatório.");
+                await tx.versaoindicador.create({
+                    data: {
+                        id: crypto.randomUUID(),
+                        versaoId: v1.id,
+                        valorAtual: parseFloat(valorAtual),
+                        valorAlvo: valorAlvo ? parseFloat(valorAlvo) : null,
+                        unidade: unidade || '',
+                        textoComparativo: textoComparativo || null,
+                        cor: cor || '#000',
+                        icone: icone || 'Heart'
+                    }
+                });
             }
 
-            // 4. Registrar no Histórico
+            // 4. Histórico
             await tx.validacaohistorico.create({
                 data: {
                     id: crypto.randomUUID(),
-                    versaoId: novaVersao.id,
+                    versaoId: v1.id,
                     autorId: user.id,
                     statusNovo: 'AGUARDANDO_GERENTE',
-                    justificativa: 'Criação inicial do contexto',
+                    justificativa: 'Criação inicial',
                     timestamp: new Date()
                 }
             });
 
-            return { novoContexto, novaVersao };
-=======
-            // Criar payload específico por tipo, usando req.file para ARQUIVO_LINK quando presente
-            if (tipo === 'ARQUIVO_LINK') {
-                const file = req.file;
-                let docType = 'PDF';
-                let url = null;
-                if (file) {
-                    const rel = `/files/uploads/${user.gerenciaId || 'misc'}/${file.filename}`;
-                    url = rel;
-                    const mt = file.mimetype;
-                    if (mt.includes('spreadsheet') || mt === 'application/vnd.ms-excel' || mt === 'text/csv') docType = 'EXCEL';
-                    else if (mt.includes('word') || mt === 'application/msword' || mt.includes('presentation')) docType = 'DOC';
-                    else if (mt === 'application/pdf') docType = 'PDF';
-                } else if (req.body && req.body.url) {
-                    docType = 'LINK';
-                    url = req.body.url;
-                }
-                await tx.versaoarquivo.create({ data: { versaoId: v1.id, url: url || '', docType } });
-            }
-            if (tipo === 'DASHBOARD' && dashboard) {
-                const tipoGrafico = dashboard.tipoGrafico; // 'PIE' | 'BAR' | 'LINE'
-                const payload = dashboard.payload || '{}';
-                await tx.versaodashboard.create({ data: { versaoId: v1.id, tipoGrafico, payload } });
-            }
-            if (tipo === 'INDICADOR' && indicador) {
-                const { valorAtual, valorAlvo, unidade, textoComparativo, cor, icone } = indicador;
-                await tx.versaoindicador.create({ data: { versaoId: v1.id, valorAtual, valorAlvo: valorAlvo || null, unidade, textoComparativo: textoComparativo || null, cor, icone } });
-            }
             return { ctx, v1 };
->>>>>>> f444dbd42689cdbf09ed78a6f30dbf1b4cf8a836
         });
 
         return res.status(201).json(result);
-
-    } catch (error) {
-        console.error('Erro em createContexto:', error);
-        return res.status(500).json({ message: error.message || 'Erro interno ao criar contexto.' });
+    } catch (err) {
+        console.error('Erro createContexto:', err);
+        return res.status(500).json({ message: err.message || 'Erro interno' });
     }
 };
 
-/**
- * POST /contextos/:contextoId/versoes
- * Cria uma NOVA VERSÃO para um contexto existente.
- */
+// POST /contextos/:contextoId/versoes
 exports.createVersao = async (req, res) => {
-    const { contextoId } = req.params;
     const user = req.user;
-<<<<<<< HEAD
-    const {
-        titulo, descricao,
-        linkUrl, tipoGrafico, dashboardPayload,
-        valorAtual, valorAlvo, unidade, textoComparativo, cor, icone
-    } = req.body;
-=======
     const { contextoId } = req.params;
-    const { titulo, descricao, motivoNovaVersao, descNovaVersao, dashboard, indicador } = req.body || {};
-    if (user.role !== 'MEMBRO') return res.status(403).json({ message: 'Apenas MEMBRO pode criar versão' });
+    const { 
+        titulo, descricao, motivoNovaVersao, descNovaVersao,
+        linkUrl, tipoGrafico, dashboardPayload, 
+        valorAtual, valorAlvo, unidade, textoComparativo, cor, icone 
+    } = req.body;
+
     if (!titulo) return res.status(400).json({ message: 'Título obrigatório' });
-    try {
-        const contexto = await prisma.contexto.findUnique({ where: { id: contextoId } });
-        if (!contexto) return res.status(404).json({ message: 'Contexto não encontrado' });
-        if (contexto.gerenciaDonaId !== user.gerenciaId) return res.status(403).json({ message: 'Gerência diferente' });
->>>>>>> f444dbd42689cdbf09ed78a6f30dbf1b4cf8a836
 
     try {
-        // Buscar contexto para saber o tipo e o último número de versão
-        const contexto = await prisma.contexto.findUnique({
+        const contexto = await prisma.contexto.findUnique({ 
             where: { id: contextoId },
             include: { versoes: { orderBy: { versaoNumero: 'desc' }, take: 1 } }
         });
+        
+        if (!contexto) return res.status(404).json({ message: 'Contexto não encontrado' });
+        if (contexto.gerenciaDonaId !== user.gerenciaId) return res.status(403).json({ message: 'Gerência diferente' });
 
-<<<<<<< HEAD
-=======
-        const v = await prisma.$transaction(async (tx) => {
-            const created = await tx.contextoversao.create({
+        const nextNum = (contexto.versoes[0]?.versaoNumero || 0) + 1;
+
+        const result = await prisma.$transaction(async (tx) => {
+            const v = await tx.contextoversao.create({
                 data: {
+                    id: crypto.randomUUID(),
                     contextoId,
                     titulo,
                     descricao: descricao || null,
@@ -357,82 +266,192 @@ exports.createVersao = async (req, res) => {
                     updatedAt: new Date(),
                 },
             });
-            // Child payload based on contexto.tipo
+
+            // Repetir lógica de salvamento específico (Simplificada aqui)
             if (contexto.tipo === 'ARQUIVO_LINK') {
-                const file = req.file;
-                let docType = 'PDF';
-                let url = null;
-                if (file) {
-                    const rel = `/files/uploads/${user.gerenciaId || 'misc'}/${file.filename}`;
-                    url = rel;
-                    const mt = file.mimetype;
-                    if (mt.includes('spreadsheet') || mt === 'application/vnd.ms-excel' || mt === 'text/csv') docType = 'EXCEL';
-                    else if (mt.includes('word') || mt === 'application/msword' || mt.includes('presentation')) docType = 'DOC';
-                    else if (mt === 'application/pdf') docType = 'PDF';
-                } else if (req.body && req.body.url) {
-                    docType = 'LINK';
-                    url = req.body.url;
+                let finalUrl = linkUrl;
+                let docType = 'LINK';
+                if (req.file) {
+                    finalUrl = `/files/context/${req.file.filename}`;
+                    // Mesma lógica de docType acima...
+                    const mime = req.file.mimetype;
+                    if (mime === 'application/pdf') docType = 'PDF';
+                    else if (mime.includes('spreadsheet') || mime.includes('excel')) docType = 'EXCEL';
+                    else docType = 'DOC';
                 }
-                await tx.versaoarquivo.create({ data: { versaoId: created.id, url: url || '', docType } });
+                // Fallback para URL anterior se não enviado novo
+                if (!finalUrl && contexto.versoes[0]) {
+                    // Precisaria buscar o versaoArquivo anterior
+                    const prevFile = await prisma.versaoarquivo.findUnique({ where: { versaoId: contexto.versoes[0].id } });
+                    if (prevFile) {
+                        finalUrl = prevFile.url;
+                        docType = prevFile.docType;
+                    }
+                }
+
+                if (finalUrl) {
+                    await tx.versaoarquivo.create({
+                        data: { id: crypto.randomUUID(), versaoId: v.id, url: finalUrl, docType }
+                    });
+                }
+            } else if (contexto.tipo === 'DASHBOARD' && dashboardPayload) {
+                 await tx.versaodashboard.create({
+                    data: {
+                        id: crypto.randomUUID(),
+                        versaoId: v.id,
+                        tipoGrafico: tipoGrafico || 'BAR',
+                        payload: typeof dashboardPayload === 'object' ? JSON.stringify(dashboardPayload) : dashboardPayload
+                    }
+                });
+            } else if (contexto.tipo === 'INDICADOR' && valorAtual !== undefined) {
+                await tx.versaoindicador.create({
+                    data: {
+                        id: crypto.randomUUID(),
+                        versaoId: v.id,
+                        valorAtual: parseFloat(valorAtual),
+                        valorAlvo: valorAlvo ? parseFloat(valorAlvo) : null,
+                        unidade: unidade || '',
+                        textoComparativo: textoComparativo || null,
+                        cor: cor || '#000',
+                        icone: icone || 'Heart'
+                    }
+                });
             }
-            if (contexto.tipo === 'DASHBOARD' && dashboard) {
-                await tx.versaodashboard.create({ data: { versaoId: created.id, tipoGrafico: dashboard.tipoGrafico, payload: dashboard.payload || '{}' } });
-            }
-            if (contexto.tipo === 'INDICADOR' && indicador) {
-                const { valorAtual, valorAlvo, unidade, textoComparativo, cor, icone } = indicador;
-                await tx.versaoindicador.create({ data: { versaoId: created.id, valorAtual, valorAlvo: valorAlvo || null, unidade, textoComparativo: textoComparativo || null, cor, icone } });
-            }
-            return created;
+
+            await tx.validacaohistorico.create({
+                data: {
+                    id: crypto.randomUUID(),
+                    versaoId: v.id,
+                    autorId: user.id,
+                    statusNovo: 'AGUARDANDO_GERENTE',
+                    justificativa: 'Nova versão',
+                    timestamp: new Date()
+                }
+            });
+
+            return v;
         });
-        return res.status(201).json({ versao: v });
+        return res.status(201).json({ versao: result });
     } catch (err) {
         console.error('Erro createVersao:', err);
-        return res.status(500).json({ message: 'Erro interno' });
+        return res.status(500).json({ message: err.message || 'Erro interno' });
     }
 };
 
-// Ações de validação
-// aprovar
+// --- AÇÕES DE VALIDAÇÃO ---
+
 exports.gerenteAprovar = async (req, res) => {
+    const { versaoId } = req.params;
+    const user = req.user;
     try {
-        const updated = await versaoService.gerenteAprova({ versaoId: req.params.versaoId, actor: req.user });
-        return res.json({ versao: updated });
+        await prisma.$transaction(async (tx) => {
+            await tx.contextoversao.update({
+                where: { id: versaoId },
+                data: { statusValidacao: 'AGUARDANDO_DIRETOR', updatedAt: new Date() }
+            });
+            await tx.validacaohistorico.create({
+                data: {
+                    id: crypto.randomUUID(),
+                    versaoId,
+                    autorId: user.id,
+                    statusNovo: 'AGUARDANDO_DIRETOR',
+                    justificativa: 'Aprovado pelo Gerente',
+                    timestamp: new Date()
+                }
+            });
+        });
+        return res.json({ message: 'Aprovado com sucesso' });
     } catch (err) {
-        console.error('Erro gerenteAprovar:', err);
-        return res.status(err.status || 500).json({ message: err.message || 'Erro interno' });
+        return res.status(500).json({ message: 'Erro ao aprovar' });
     }
 };
 
-// publicar
 exports.diretorPublicar = async (req, res) => {
+    const { versaoId } = req.params;
+    const user = req.user;
     try {
-        const updated = await versaoService.diretorPublica({ versaoId: req.params.versaoId, actor: req.user });
-        return res.json({ versao: updated });
+        await prisma.$transaction(async (tx) => {
+            // Desativar anteriores
+            const current = await tx.contextoversao.findUnique({ where: { id: versaoId } });
+            if (current) {
+                await tx.contextoversao.updateMany({
+                    where: { contextoId: current.contextoId, isAtiva: true },
+                    data: { isAtiva: false }
+                });
+            }
+            // Publicar atual
+            await tx.contextoversao.update({
+                where: { id: versaoId },
+                data: { statusValidacao: 'PUBLICADO', isAtiva: true, updatedAt: new Date() }
+            });
+            await tx.validacaohistorico.create({
+                data: {
+                    id: crypto.randomUUID(),
+                    versaoId,
+                    autorId: user.id,
+                    statusNovo: 'PUBLICADO',
+                    justificativa: 'Publicado pelo Diretor',
+                    timestamp: new Date()
+                }
+            });
+        });
+        return res.json({ message: 'Publicado com sucesso' });
     } catch (err) {
-        console.error('Erro diretorPublicar:', err);
-        return res.status(err.status || 500).json({ message: err.message || 'Erro interno' });
+        return res.status(500).json({ message: 'Erro ao publicar' });
     }
 };
 
-// indeferir
 exports.diretorIndeferir = async (req, res) => {
+    const { versaoId } = req.params;
+    const { justificativa } = req.body;
+    const user = req.user;
     try {
-        const updated = await versaoService.diretorIndefere({ versaoId: req.params.versaoId, actor: req.user, justificativa: req.body?.justificativa });
-        return res.json({ versao: updated });
+        await prisma.$transaction(async (tx) => {
+            await tx.contextoversao.update({
+                where: { id: versaoId },
+                data: { statusValidacao: 'INDEFERIDO', updatedAt: new Date() }
+            });
+            await tx.validacaohistorico.create({
+                data: {
+                    id: crypto.randomUUID(),
+                    versaoId,
+                    autorId: user.id,
+                    statusNovo: 'INDEFERIDO',
+                    justificativa: justificativa || 'Indeferido',
+                    timestamp: new Date()
+                }
+            });
+        });
+        return res.json({ message: 'Indeferido com sucesso' });
     } catch (err) {
-        console.error('Erro diretorIndeferir:', err);
-        return res.status(err.status || 500).json({ message: err.message || 'Erro interno' });
+        return res.status(500).json({ message: 'Erro ao indeferir' });
     }
 };
 
-// solicitar correcao
 exports.solicitarCorrecao = async (req, res) => {
+    const { versaoId } = req.params;
+    const { justificativa } = req.body;
+    const user = req.user;
     try {
-        const updated = await versaoService.solicitarCorrecao({ versaoId: req.params.versaoId, actor: req.user, justificativa: req.body?.justificativa });
-        return res.json({ versao: updated });
+        await prisma.$transaction(async (tx) => {
+            await tx.contextoversao.update({
+                where: { id: versaoId },
+                data: { statusValidacao: 'AGUARDANDO_CORRECAO', updatedAt: new Date() }
+            });
+            await tx.validacaohistorico.create({
+                data: {
+                    id: crypto.randomUUID(),
+                    versaoId,
+                    autorId: user.id,
+                    statusNovo: 'AGUARDANDO_CORRECAO',
+                    justificativa: justificativa || 'Correção Solicitada',
+                    timestamp: new Date()
+                }
+            });
+        });
+        return res.json({ message: 'Correção solicitada' });
     } catch (err) {
-        console.error('Erro solicitarCorrecao:', err);
-        return res.status(err.status || 500).json({ message: err.message || 'Erro interno' });
+        return res.status(500).json({ message: 'Erro ao solicitar correção' });
     }
 };
 
@@ -441,225 +460,74 @@ exports.getDetalhes = async (req, res) => {
     const { contextoId } = req.params;
     try {
         const contexto = await prisma.contexto.findUnique({ where: { id: contextoId } });
->>>>>>> f444dbd42689cdbf09ed78a6f30dbf1b4cf8a836
         if (!contexto) return res.status(404).json({ message: 'Contexto não encontrado' });
 
-        const proximoNumero = (contexto.versoes[0]?.versaoNumero || 0) + 1;
-
-        const result = await prisma.$transaction(async (tx) => {
-            const novaVersao = await tx.contextoversao.create({
-                data: {
-                    id: crypto.randomUUID(),
-                    contextoId: contexto.id,
-                    titulo,
-                    descricao: descricao || null,
-                    solicitanteId: user.id,
-                    versaoNumero: proximoNumero,
-                    statusValidacao: 'AGUARDANDO_GERENTE',
-                    isAtiva: false,
-                    updatedAt: new Date(),
-                },
-            });
-
-            // Repetir lógica de salvar dados específicos (Reutilizando lógica seria ideal, mas repetindo para clareza)
-            switch (contexto.tipo) {
-                case 'ARQUIVO_LINK':
-                    let finalUrl = linkUrl;
-                    let docType = 'LINK'; // Padrão se for apenas um link externo
-
-                    // Se veio arquivo físico
-                    if (req.file) {
-                        finalUrl = `/files/context/${req.file.filename}`;
-                        const mime = req.file.mimetype;
-
-                        // Classificação precisa baseada no MIME Type
-                        if (mime === 'application/pdf') {
-                            docType = 'PDF';
-                        }
-                        // Planilhas e Dados (XLS, XLSX, CSV) -> EXCEL
-                        else if (
-                            mime.includes('spreadsheet') ||
-                            mime.includes('excel') ||
-                            mime.includes('csv') ||
-                            mime === 'text/csv'
-                        ) {
-                            docType = 'EXCEL';
-                        }
-                        // Documentos de Texto e Apresentações (DOC, DOCX, PPT, PPTX) -> DOC
-                        else if (
-                            mime.includes('word') ||
-                            mime.includes('presentation') ||
-                            mime.includes('powerpoint')
-                        ) {
-                            docType = 'DOC';
-                        }
-                        else {
-                            docType = 'DOC'; // Fallback seguro
-                        }
-                    }
-
-                    if (!finalUrl) throw new Error("Para ARQUIVO_LINK, é necessário enviar um arquivo ou uma URL.");
-
-                    await tx.versaoarquivo.create({
-                        data: {
-                            id: crypto.randomUUID(),
-                            versaoId: novaVersao.id,
-                            url: finalUrl,
-                            docType
-                        }
-                    });
-                    break;
-                case 'DASHBOARD':
-                    if (dashboardPayload) {
-                        const payloadStr = typeof dashboardPayload === 'object' ? JSON.stringify(dashboardPayload) : dashboardPayload;
-                        await tx.versaodashboard.create({
-                            data: {
-                                id: crypto.randomUUID(),
-                                versaoId: novaVersao.id,
-                                tipoGrafico: tipoGrafico || 'BARRA',
-                                payload: payloadStr
-                            }
-                        });
-                    }
-                    break;
-
-                case 'INDICADOR':
-                    if (valorAtual !== undefined) {
-                        await tx.versaoindicador.create({
-                            data: {
-                                id: crypto.randomUUID(),
-                                versaoId: novaVersao.id,
-                                valorAtual: parseFloat(valorAtual),
-                                valorAlvo: valorAlvo ? parseFloat(valorAlvo) : null,
-                                unidade: unidade || '',
-                                textoComparativo: textoComparativo || null,
-                                cor: cor || '#000',
-                                icone: icone || 'default'
-                            }
-                        });
-                    }
-                    break;
-            }
-
-            await tx.validacaohistorico.create({
-                data: {
-                    id: crypto.randomUUID(),
-                    versaoId: novaVersao.id,
-                    autorId: user.id,
-                    statusNovo: 'AGUARDANDO_GERENTE',
-                    justificativa: 'Nova versão criada',
-                    timestamp: new Date()
-                }
-            });
-
-            return novaVersao;
+        const versoes = await prisma.contextoversao.findMany({
+            where: { contextoId },
+            include: {
+                versaoarquivo: true,
+                versaodashboard: true,
+                versaoindicador: true
+            },
+            orderBy: [{ versaoNumero: 'desc' }],
         });
 
-        return res.status(201).json(result);
+        const ids = versoes.map(v => v.id);
+        const historico = ids.length ? await prisma.validacaohistorico.findMany({
+            where: { versaoId: { in: ids } },
+            orderBy: [{ timestamp: 'desc' }],
+        }) : [];
 
-    } catch (error) {
-        console.error('Erro em createVersao:', error);
-        return res.status(500).json({ message: error.message });
-    }
-};
-
-<<<<<<< HEAD
-// Métodos de Validação (Placeholders para manter integridade se chamados)
-exports.gerenteAprovar = async (req, res) => { /* Lógica de update status */ res.json({ ok: true }) };
-exports.diretorPublicar = async (req, res) => { /* Lógica de update status + isAtiva */ res.json({ ok: true }) };
-exports.diretorIndeferir = async (req, res) => { /* Lógica de update status */ res.json({ ok: true }) };
-exports.solicitarCorrecao = async (req, res) => { /* Lógica de update status */ res.json({ ok: true }) };
-exports.getDetalhes = async (req, res) => { /* Lógica de getById com include */ res.json({ ok: true }) };
-exports.buscar = async (req, res) => { /* Lógica de busca */ res.json({ ok: true }) };
-=======
-// ---- Visibilidade (ocultar/reexibir) ----
-// POST /contextos/:contextoId/ocultar
-exports.ocultarContexto = async (req, res) => {
-    try {
-        const user = req.user;
-        if (!user) return res.status(401).json({ message: 'Não autenticado' });
-        if (!['GERENTE', 'DIRETOR'].includes(user.role)) {
-            return res.status(403).json({ message: 'Sem permissão' });
+        // Se tiver função de mapeamento importada, use-a, senão retorne cru
+        if (typeof mapContextoDetalhe === 'function') {
+            return res.json(mapContextoDetalhe(contexto, versoes, historico));
         }
-        const { contextoId } = req.params;
-        const ctx = await prisma.contexto.findUnique({ where: { id: contextoId }, include: { gerencia: true } });
-        if (!ctx) return res.status(404).json({ message: 'Contexto não encontrado' });
-        // Checagem básica de pertencimento
-        if (user.role === 'GERENTE' && user.gerenciaId !== ctx.gerenciaDonaId) return res.status(403).json({ message: 'Gerência diferente' });
-        if (user.role === 'DIRETOR' && user.diretoriaId !== ctx.gerencia.diretoriaId) return res.status(403).json({ message: 'Diretoria diferente' });
-
-        const updated = await prisma.contexto.update({ where: { id: contextoId }, data: { isOculto: true } });
-        return res.json({ contexto: updated });
+        return res.json({ contexto, versoes, historico });
     } catch (err) {
-        console.error('Erro ocultarContexto:', err);
+        console.error('Erro getDetalhes:', err);
         return res.status(500).json({ message: 'Erro interno' });
     }
 };
 
-// POST /contextos/:contextoId/reexibir
-exports.reexibirContexto = async (req, res) => {
-    try {
-        const user = req.user;
-        if (!user) return res.status(401).json({ message: 'Não autenticado' });
-        if (!['GERENTE', 'DIRETOR'].includes(user.role)) {
-            return res.status(403).json({ message: 'Sem permissão' });
-        }
-        const { contextoId } = req.params;
-        const ctx = await prisma.contexto.findUnique({ where: { id: contextoId }, include: { gerencia: true } });
-        if (!ctx) return res.status(404).json({ message: 'Contexto não encontrado' });
-        if (user.role === 'GERENTE' && user.gerenciaId !== ctx.gerenciaDonaId) return res.status(403).json({ message: 'Gerência diferente' });
-        if (user.role === 'DIRETOR' && user.diretoriaId !== ctx.gerencia.diretoriaId) return res.status(403).json({ message: 'Diretoria diferente' });
+// GET /contextos/buscar
+exports.buscar = async (req, res) => {
+    const { q, status, from, to, page = '1', pageSize = '10' } = req.query;
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const sizeNum = Math.min(100, Math.max(1, parseInt(pageSize, 10) || 10));
+    const skip = (pageNum - 1) * sizeNum;
 
-        const updated = await prisma.contexto.update({ where: { id: contextoId }, data: { isOculto: false } });
-        return res.json({ contexto: updated });
+    const whereVersao = {};
+    if (status) whereVersao.statusValidacao = status;
+    if (from || to) {
+        whereVersao.updatedAt = {};
+        if (from) whereVersao.updatedAt.gte = new Date(from);
+        if (to) whereVersao.updatedAt.lte = new Date(to);
+    }
+
+    try {
+        const where = {
+            ...(q ? { contexto: { tituloConceitual: { contains: q } } } : {}), // removido mode insensitive p/ compatibilidade simples
+            ...whereVersao
+        };
+
+        // Busca simplificada para evitar conflito de types do prisma dependendo da versão
+        const [total, rows] = await Promise.all([
+            prisma.contextoversao.count({ where }),
+            prisma.contextoversao.findMany({
+                where,
+                include: { contexto: true },
+                orderBy: { updatedAt: 'desc' },
+                skip,
+                take: sizeNum,
+            }),
+        ]);
+
+        return res.json({ 
+            data: rows, 
+            meta: { total, page: pageNum, totalPages: Math.ceil(total / sizeNum) } 
+        });
     } catch (err) {
-        console.error('Erro reexibirContexto:', err);
+        console.error('Erro buscar:', err);
         return res.status(500).json({ message: 'Erro interno' });
     }
 };
-
-// POST /versoes/:versaoId/ocultar
-exports.ocultarVersao = async (req, res) => {
-    try {
-        const user = req.user;
-        if (!user) return res.status(401).json({ message: 'Não autenticado' });
-        if (!['GERENTE', 'DIRETOR'].includes(user.role)) {
-            return res.status(403).json({ message: 'Sem permissão' });
-        }
-        const { versaoId } = req.params;
-        const v = await prisma.contextoversao.findUnique({ where: { id: versaoId }, include: { contexto: { include: { gerencia: true } } } });
-        if (!v) return res.status(404).json({ message: 'Versão não encontrada' });
-        if (user.role === 'GERENTE' && user.gerenciaId !== v.contexto.gerenciaDonaId) return res.status(403).json({ message: 'Gerência diferente' });
-        if (user.role === 'DIRETOR' && user.diretoriaId !== v.contexto.gerencia.diretoriaId) return res.status(403).json({ message: 'Diretoria diferente' });
-
-        const updated = await prisma.contextoversao.update({ where: { id: versaoId }, data: { isOculta: true } });
-        return res.json({ versao: updated });
-    } catch (err) {
-        console.error('Erro ocultarVersao:', err);
-        return res.status(500).json({ message: 'Erro interno' });
-    }
-};
-
-// POST /versoes/:versaoId/reexibir
-exports.reexibirVersao = async (req, res) => {
-    try {
-        const user = req.user;
-        if (!user) return res.status(401).json({ message: 'Não autenticado' });
-        if (!['GERENTE', 'DIRETOR'].includes(user.role)) {
-            return res.status(403).json({ message: 'Sem permissão' });
-        }
-        const { versaoId } = req.params;
-        const v = await prisma.contextoversao.findUnique({ where: { id: versaoId }, include: { contexto: { include: { gerencia: true } } } });
-        if (!v) return res.status(404).json({ message: 'Versão não encontrada' });
-        if (user.role === 'GERENTE' && user.gerenciaId !== v.contexto.gerenciaDonaId) return res.status(403).json({ message: 'Gerência diferente' });
-        if (user.role === 'DIRETOR' && user.diretoriaId !== v.contexto.gerencia.diretoriaId) return res.status(403).json({ message: 'Diretoria diferente' });
-
-        const updated = await prisma.contextoversao.update({ where: { id: versaoId }, data: { isOculta: false } });
-        return res.json({ versao: updated });
-    } catch (err) {
-        console.error('Erro reexibirVersao:', err);
-        return res.status(500).json({ message: 'Erro interno' });
-    }
-};
-
->>>>>>> f444dbd42689cdbf09ed78a6f30dbf1b4cf8a836

@@ -5,11 +5,10 @@ import { useModalAdicionarConteudo } from '@/components/popups/addContextoModal/
 import { TipoVersao } from '@/components/popups/addContextoModal/types';
 import IconeDocumento from '@/components/validar/iconeDocumento'; 
 import { FileType } from '@/components/contextosCard/contextoCard';
-import { cn } from "@/lib/utils"; // <-- 1. IMPORTAR A UTILIDADE 'cn'
+import { cn } from "@/lib/utils"; 
 
 type AbaContextoProps = Pick<
     ReturnType<typeof useModalAdicionarConteudo>,
-    // ... (todas as outras props permanecem iguais)
     | 'tituloContexto' | 'setTituloContexto'
     | 'detalhesContexto' | 'setDetalhesContexto'
     | 'arquivoContexto' | 'setArquivoContexto'
@@ -24,13 +23,12 @@ type AbaContextoProps = Pick<
     | 'descricaoVersao'
     | 'setDescricaoVersao'
     | 'tipoArquivoDetectado'
-    | 'setTipoArquivoDetectado' // <--- ADICIONADO NA TIPAGEM!
+    | 'setTipoArquivoDetectado' // <--- ADICIONADO para permitir reset
     | 'acceptString'
     | 'helpText'
     | 'tipoArquivoOriginal'
 >;
 
-// Componente IconeFonte (permanece o mesmo)
 const IconeFonte = ({ tipo }: { tipo: FileType | null }) => {
     if (tipo === 'link') {
         return <LinkIcon className="w-10 h-10 text-green-600 mb-3" />;
@@ -44,7 +42,6 @@ const IconeFonte = ({ tipo }: { tipo: FileType | null }) => {
     }
     return <UploadCloud className="w-10 h-10 text-gray-400 mb-3" />;
 };
-
 
 export const AbaContexto: React.FC<AbaContextoProps> = ({
     tituloContexto, setTituloContexto,
@@ -61,13 +58,13 @@ export const AbaContexto: React.FC<AbaContextoProps> = ({
     descricaoVersao,
     setDescricaoVersao,
     tipoArquivoDetectado,
-    setTipoArquivoDetectado, // <--- ADICIONADO NAS PROPS!
+    setTipoArquivoDetectado, 
     acceptString,
     helpText,
     tipoArquivoOriginal,
 }) => {
     
-    // --- 2. DEFINIR O LIMITE MÍNIMO E CALCULAR VALIDAÇÃO ---
+    // --- VALIDAÇÃO VISUAL DE DETALHES ---
     const MIN_DETALHES_LENGTH = 15;
     const isDetalhesValido = detalhesContexto.trim().length >= MIN_DETALHES_LENGTH;
     const showDetalhesWarning = !isDetalhesValido && detalhesContexto.length > 0;
@@ -76,7 +73,7 @@ export const AbaContexto: React.FC<AbaContextoProps> = ({
         <div className="h-full overflow-y-auto pr-4">
             <div className="space-y-6 animate-fade-in">
 
-                {/* Campo de Título (sem alteração) */}
+                {/* TÍTULO */}
                 <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-x-6 gap-y-2 items-end">
                     <div>
                         <label className="block text-lg font-medium text-gray-700 mb-2">
@@ -107,7 +104,7 @@ export const AbaContexto: React.FC<AbaContextoProps> = ({
                     )}
                 </div>
 
-                {/* Campos de Nova Versão (sem alteração) */}
+                {/* NOVA VERSÃO INFO */}
                 {isNewVersionMode && (
                     <div className="space-y-4 rounded-2xl border border-blue-200 bg-blue-50/50 p-4">
                         <h3 className="text-lg font-semibold text-blue-800">Detalhes da Nova Versão</h3>
@@ -135,8 +132,7 @@ export const AbaContexto: React.FC<AbaContextoProps> = ({
                     </div>
                 )}
 
-
-                {/* Campo de Anexar Fonte (sem alteração) */}
+                {/* ANEXAR FONTE */}
                 <div>
                     <label className="block text-lg font-medium text-gray-700 mb-2">
                         {isNewVersionMode ? "Anexar Novo Arquivo (Obrigatório)" : "Anexar Fonte"}
@@ -147,9 +143,7 @@ export const AbaContexto: React.FC<AbaContextoProps> = ({
                             <input id="context-file-input" type="file" onChange={(e) => aoSelecionarArquivo(e.target.files ? e.target.files[0] : null)} className="hidden" accept={acceptString} />
                             
                             <label htmlFor="context-file-input" className="cursor-pointer w-full flex flex-col items-center justify-center">
-                                
                                 <IconeFonte tipo={tipoArquivoDetectado} />
-
                                 {(arquivoContexto || urlContexto) ? (
                                     <>
                                         <p className="font-semibold text-gray-800 break-all">{obterNomeFonteContexto()}</p>
@@ -183,14 +177,14 @@ export const AbaContexto: React.FC<AbaContextoProps> = ({
                     </div>
                 </div>
 
-                {/* --- 3. CAMPO DE DETALHES (ATUALIZADO) --- */}
+                {/* DETALHES DO CONTEXTO (Apenas se não for modo edição) */}
                 {!isNewVersionMode && (
                     <div>
                         <div className="flex justify-between items-center mb-2">
                             <label htmlFor="contexto-detalhes" className="block text-lg font-medium text-gray-700">
                                 Detalhes do Contexto
                             </label>
-                            {/* Contador de caracteres */}
+                            {/* Contador de Caracteres com Feedback Visual */}
                             <span className={cn(
                                 "text-xs font-medium",
                                 showDetalhesWarning ? "text-red-500" : (isDetalhesValido ? "text-green-600" : "text-gray-500")
@@ -206,15 +200,10 @@ export const AbaContexto: React.FC<AbaContextoProps> = ({
                             rows={4} 
                             className={cn(
                                 "w-full px-4 py-3 border bg-gray-50/25 rounded-2xl focus:ring-2 focus:border-transparent outline-none resize-none transition-colors",
-                                // Lógica da borda: vermelha se tocado e inválido, verde se válido, padrão caso contrário
-                                showDetalhesWarning ? 
-                                "border-red-300 focus:ring-red-500" : 
-                                (isDetalhesValido ? 
-                                "border-green-300 focus:ring-green-500" : 
-                                "border-gray-200 focus:ring-blue-500")
+                                showDetalhesWarning ? "border-red-300 focus:ring-red-500" : 
+                                (isDetalhesValido ? "border-green-300 focus:ring-green-500" : "border-gray-200 focus:ring-blue-500")
                             )}
                         />
-                        {/* Mensagem de ajuda/erro */}
                         {showDetalhesWarning && (
                             <p className="text-xs text-red-500 mt-1.5">
                                 O campo de detalhes é obrigatório e deve ter pelo menos {MIN_DETALHES_LENGTH} caracteres.

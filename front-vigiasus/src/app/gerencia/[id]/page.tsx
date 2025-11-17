@@ -1,18 +1,18 @@
-<<<<<<< HEAD
 // src/app/gerencia/[slug]/page.tsx
 "use client";
 
 import Image from 'next/image';
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
-import { useParams } from 'next/navigation'; // useParams pegará o slug
+import { useParams } from 'next/navigation';
 import { Edit, Eye, SearchX, UploadCloud, Loader2 } from 'lucide-react';
 import { cn } from "@/lib/utils"; 
 
 // Hooks
 import { useDebounce } from "@/hooks/useDebounce";
 import { useStaleness } from "@/hooks/useStaleness";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
-// Componentes da UI e Popups
+// Componentes
 import { FileGrid } from "@/components/contextosCard/contextosGrid";
 import FilterBar from "@/components/gerencia/painel-filterBar";
 import { AddIndicatorButton } from "@/components/indicadores/adicionarIndicador";
@@ -24,40 +24,34 @@ import { VisualizarContextoModal } from "@/components/popups/visualizarContextoM
 import { ModalAdicionarConteudo } from "@/components/popups/addContextoModal/index";
 import StatusBadge from "@/components/alerts/statusBadge";
 import StatusBanner from "@/components/ui/status-banner";
-import { showSuccessToast } from "@/components/ui/Toasts";
+import { showSuccessToast, showErrorToast } from "@/components/ui/Toasts";
 import OcultarContextoModal from "@/components/popups/ocultarContextoModal";
 
-// Componentes do Carrossel
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 
-// Tipos
 import type { FileType } from "@/components/contextosCard/contextoCard";
-import type { AbaAtiva, DetalhesContexto, NomeIcone, SubmitData, IndicadorDetailsPayload, TipoGrafico } from "@/components/popups/addContextoModal/types";
+import type { AbaAtiva, DetalhesContexto, NomeIcone, SubmitData, IndicadorDetailsPayload } from "@/components/popups/addContextoModal/types";
 import { Contexto, StatusContexto } from "@/components/validar/typesDados";
 
-// Serviços (AQUI ESTÁ A MUDANÇA PRINCIPAL)
-import { getContextosPorGerencia } from "@/services/contextoService"; 
+import { getContextosPorGerencia, criarContexto, CriarContextoData } from "@/services/contextoService"; 
 import { getGerenciaBySlug, Gerencia } from "@/services/organizacaoService";
 
 export default function GerenciaPage() {
-    // --- ROTEAMENTO E DADOS DINÂMICOS ---
     const params = useParams();
-    // Assumindo que você renomeou a pasta para [slug], o parametro será 'slug'.
-    // Se ainda estiver como [id], o next enviará 'id' com o valor do slug. 
     const slug = (params?.slug as string) || (params?.id as string) || "";
-
-    // Estado para armazenar os dados da gerência vindos do banco
     const [gerenciaData, setGerenciaData] = useState<Gerencia | null>(null);
 
-    // --- ESTADOS DE UI E FILTROS ---
+    const user = useCurrentUser();
+    const perfil = (user?.role?.toLowerCase() as "diretor" | "gerente" | "membro") || "membro";
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [abaInicial, setAbaInicial] = useState<AbaAtiva>('contexto');
     const [modo, setModo] = useState<'visualizacao' | 'edicao'>('visualizacao');
     const [dadosParaEditar, setDadosParaEditar] = useState<Partial<DetalhesContexto> | null>(null);
     const [modalVisualizacaoAberto, setModalVisualizacaoAberto] = useState(false);
     const [ficheiroSelecionado, setFicheiroSelecionado] = useState<DetalhesContexto | null>(null);
-    const [perfil] = useState<'diretor' | 'gerente' | 'membro'>('membro');
+    
     const [searchValue, setSearchValue] = useState("");
     const [activeTab, setActiveTab] = useState<'recente' | 'todas'>("todas");
     const [selectedTypes, setSelectedTypes] = useState<FileType[]>([]);
@@ -65,12 +59,10 @@ export default function GerenciaPage() {
     const [isDragging, setIsDragging] = useState(false); 
     const [arquivoAnexadoPorDrop, setArquivoAnexadoPorDrop] = useState<File | null>(null);
 
-    // --- DADOS EM ESTADO ---
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [todosOsContextos, setTodosOsContextos] = useState<Contexto[]>([]); 
     
-    // --- Modal de ocultar ---
     const [modalOcultarAberto, setModalOcultarAberto] = useState(false);
     const [contextoParaOcultar, setContextoParaOcultar] = useState<Contexto | null>(null);
     
@@ -78,44 +70,108 @@ export default function GerenciaPage() {
         Autoplay({ delay: 3000, stopOnInteraction: false, stopOnMouseEnter: true })
     );
 
-    // --- EFEITO PRINCIPAL: BUSCAR DADOS DA GERÊNCIA E CONTEXTOS ---
-    useEffect(() => {
-        if (slug) { 
-            const carregarDados = async () => {
-                try {
-                    setIsLoading(true);
-                    setError(null);
-
-                    // 1. Busca os dados da Gerência pelo Slug
-                    const gerenciaEncontrada = await getGerenciaBySlug(slug);
-                    
-                    if (!gerenciaEncontrada) {
-                        throw new Error("Gerência não encontrada.");
-                    }
-
-                    setGerenciaData(gerenciaEncontrada);
-
-                    // 2. Com o ID da gerência, busca os contextos
-                    // (getContextosPorGerencia provavelmente espera um ID, não um slug)
-                    const contextos = await getContextosPorGerencia(gerenciaEncontrada.id); 
-                    setTodosOsContextos(contextos);
-
-                } catch (err: any) {
-                    console.error("Erro ao buscar dados:", err);
-                    setError(err.message || "Não foi possível carregar os dados.");
-                } finally {
-                    setIsLoading(false);
-                }
-            };
-            carregarDados();
-        } else {
-             setError("Slug da gerência não encontrado na URL.");
-             setIsLoading(false);
+    const carregarDados = useCallback(async () => {
+        if (!slug) return;
+        try {
+            setError(null);
+            const gerenciaEncontrada = await getGerenciaBySlug(slug);
+            if (!gerenciaEncontrada) throw new Error("Gerência não encontrada.");
+            setGerenciaData(gerenciaEncontrada);
+            const contextos = await getContextosPorGerencia(gerenciaEncontrada.id); 
+            setTodosOsContextos(contextos);
+        } catch (err: any) {
+            console.error("Erro ao buscar dados:", err);
+            setError(err.message || "Não foi possível carregar os dados.");
+        } finally {
+            setIsLoading(false);
         }
-    }, [slug]); 
+    }, [slug]);
 
+    useEffect(() => {
+        carregarDados();
+    }, [carregarDados]);
 
-    // --- HOOK DE STALENESS ---
+    // --- LÓGICA DE ENVIO AO BACKEND ---
+    
+    // Helper para converter tipos do frontend para o ENUM do Banco
+    const mapGraphicType = (type: string): string => {
+        const t = type.toLowerCase();
+        if (t === 'chart' || t === 'bar') return 'BAR';
+        if (t === 'pie') return 'PIE';
+        if (t === 'line') return 'LINE';
+        return 'BAR'; // Fallback seguro
+    };
+
+    const aoSubmeterConteudo = async (dados: SubmitData) => {
+        try {
+            let titulo = "";
+            let descricao = "";
+            let backendTipo: 'ARQUIVO_LINK' | 'DASHBOARD' | 'INDICADOR' = 'ARQUIVO_LINK';
+            let arquivoFisico: File | null | undefined = null;
+
+            if (dados.type === 'contexto') {
+                titulo = dados.payload.title || "";
+                descricao = dados.payload.details || "";
+                arquivoFisico = dados.payload.file;
+                backendTipo = 'ARQUIVO_LINK';
+            } 
+            else if (dados.type === 'dashboard') {
+                titulo = dados.payload.title || "";
+                descricao = dados.payload.details || "";
+                backendTipo = 'DASHBOARD';
+            } 
+            else if (dados.type === 'indicador') {
+                titulo = dados.payload.titulo || "";
+                descricao = dados.payload.descricao || "";
+                backendTipo = 'INDICADOR';
+            }
+
+            if (!titulo) throw new Error("O título é obrigatório.");
+
+            const payload: CriarContextoData = {
+                tituloConceitual: titulo, 
+                tipo: backendTipo,
+                titulo: titulo, 
+                descricao: descricao,
+            };
+
+            if (dados.type === 'contexto') {
+                if (dados.payload.url) {
+                    payload.linkUrl = dados.payload.url;
+                }
+            }
+            else if (dados.type === 'dashboard') {
+                if (dados.payload.dataset) {
+                     // CORREÇÃO: Mapeia corretamente para o Enum do Prisma
+                     payload.tipoGrafico = mapGraphicType(dados.payload.type || 'chart');
+                     payload.dashboardPayload = dados.payload.dataset; 
+                }
+            }
+            else if (dados.type === 'indicador') {
+                payload.valorAtual = dados.payload.valorAtual;
+                payload.valorAlvo = dados.payload.valorAlvo;
+                payload.unidade = dados.payload.unidade;
+                payload.textoComparativo = dados.payload.textoComparativo;
+                payload.cor = dados.payload.cor;
+                payload.icone = dados.payload.icone;
+            }
+
+            await criarContexto(payload, arquivoFisico);
+
+            showSuccessToast("Contexto enviado com sucesso! Aguardando aprovação.");
+            fecharModalAdicionar();
+            carregarDados(); 
+
+        } catch (err: any) {
+            console.error("Erro ao criar contexto:", err);
+            // Mostra mensagem amigável se vier do backend
+            showErrorToast(err.message || "Erro ao enviar contexto.");
+        }
+    };
+
+    // ... (O restante do código permanece igual: hooks de staleness, filtros, handlers, renderização) ...
+    // Para brevidade, mantenha o código existente abaixo desta linha.
+    
     const stalenessExtractors = useMemo(() => [
         () => {
             const arr: Array<string> = [];
@@ -135,14 +191,12 @@ export default function GerenciaPage() {
         },
     ], [todosOsContextos]); 
 
-    const { variant: stalenessVariant, label: stalenessLabel, lastUpdatedAt } = useStaleness({
+    const { variant: stalenessVariant, label: stalenessLabel } = useStaleness({
         extractors: stalenessExtractors, 
         thresholds: { recentDays: 7, staleDays: 30 },
         locale: 'pt-BR'
     });
 
-
-    // --- LÓGICA DE FILTRAGEM ---
     const handleSelectedTypesChange = (type: FileType) => {
         setSelectedTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]);
     };
@@ -184,8 +238,6 @@ export default function GerenciaPage() {
         });
     }, [debouncedSearchValue, activeTab, selectedTypes, todosOsContextos, modo]);
 
-
-    // --- HANDLERS DE EVENTOS ---
     const abrirModal = (aba: AbaAtiva) => {
         setAbaInicial(aba);
         setIsModalOpen(true);
@@ -212,18 +264,19 @@ export default function GerenciaPage() {
         setTimeout(() => abrirModal(tabParaAbrir), 50);
     };
 
-    // Função auxiliar para mapear Indicadores
     const mapContextToIndicatorProps = (indicator: Contexto) => {
-        if (indicator.type !== 'indicador' || !indicator.payload) {
-            return {
+        const payload = indicator.payload as IndicadorDetailsPayload; 
+
+        if (indicator.type !== 'indicador' || !payload) {
+             return {
                 id: indicator.id,
                 title: indicator.title,
-                value: "N/A",
+                value: "0",
                 unidade: "",
-                subtitle: indicator.description || "Dados inválidos",
+                subtitle: indicator.description || "Sem dados",
                 status: indicator.status,
                 estaOculto: indicator.estaOculto,
-                borderColor: "border-l-red-500",
+                borderColor: "border-l-gray-500",
                 iconType: "cruz" as keyof typeof indicatorIcons,
                 versoes: indicator.versoes || [],
                 insertedDate: indicator.insertedDate,
@@ -234,7 +287,6 @@ export default function GerenciaPage() {
             };
         }
         
-        const payload = indicator.payload as IndicadorDetailsPayload; 
         const iconName = (payload.icone || "Heart") as NomeIcone;
         const iconMap: Record<NomeIcone, keyof typeof indicatorIcons> = {
             Heart: "cuidados", Building: "unidades", ClipboardList: "servidores",
@@ -259,7 +311,7 @@ export default function GerenciaPage() {
             id: indicator.id,
             title: indicator.title,
             value: payload.valorAtual || "0",
-            unidade: payload.unidade || "N/A",
+            unidade: payload.unidade || "",
             subtitle: payload.description || indicator.description || "",
             change: payload.textoComparativo || "",
             changeType: changeTypeMap(payload.textoComparativo),
@@ -279,13 +331,6 @@ export default function GerenciaPage() {
     const lidarComVisualizarIndicador = (indicator: Contexto) => {
         setFicheiroSelecionado(indicator); 
         setModalVisualizacaoAberto(true);
-    };
-
-    const aoSubmeterConteudo = (dados: SubmitData) => {
-        // Aqui você implementaria a chamada ao backend para criar
-        console.log("Novo conteúdo (simulado):", dados);
-        fecharModalAdicionar();
-        // Dica: Recarregue os dados chamando getContextosPorGerencia novamente ou atualize o estado local
     };
 
     const aoClicarArquivo = (ficheiro: Contexto) => {
@@ -340,7 +385,6 @@ export default function GerenciaPage() {
         }));
     };
 
-    // Drag and Drop Handlers
     const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); if (modo === 'edicao') { setIsDragging(true); } }, [modo]); 
     const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); if (e.relatedTarget && (e.currentTarget as Node).contains(e.relatedTarget as Node)) { return; } setIsDragging(false); }, []);
     const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
@@ -355,8 +399,6 @@ export default function GerenciaPage() {
         }
     }, [modo]); 
 
-
-    // --- RENDERIZAÇÃO ---
     if (!slug) return <div className="p-8 text-center text-gray-500">Carregando...</div>;
     
     if (error && !isLoading) {
@@ -399,7 +441,6 @@ export default function GerenciaPage() {
 
         return (
             <>
-                {/* Seção Indicadores */}
                 <div className="mb-16">
                     {itemsIndicadores.length > 0 ? (
                          itemsIndicadores.length > 4 && modo === 'visualizacao' ? (
@@ -422,15 +463,12 @@ export default function GerenciaPage() {
                     )}
                 </div>
 
-                {/* Staleness */}
                 <div className="mb-3">
                     <StatusBadge variant={stalenessVariant} label={stalenessLabel} />
                 </div>
 
-                {/* Filtros */}
                 <FilterBar searchValue={searchValue} onSearchChange={setSearchValue} activeTab={activeTab} onTabChange={setActiveTab} selectedTypes={selectedTypes} onSelectedTypesChange={handleSelectedTypesChange} clearTypeFilter={() => setSelectedTypes([])} />
                 
-                {/* Grade de Arquivos */}
                 <div className="border-2 border-none border-gray-300 rounded-4xl bg-[#FDFDFD] min-h-[300px] flex items-center justify-center">
                     {filteredFiles.length > 0 || (modo === 'edicao') ? (
                         <FileGrid 
@@ -485,7 +523,6 @@ export default function GerenciaPage() {
                 contextoNome={contextoParaOcultar?.title || ''}
             />
 
-            {/* Header Dinâmico com cores do Banco de Dados */}
             <div className="relative p-8 mb-6 text-white shadow-lg" 
                  style={{ 
                      background: diretoria?.bannerImage 
@@ -497,7 +534,6 @@ export default function GerenciaPage() {
             
             <div className="container mx-auto p-6">
 
-                {/* Banner de Staleness */}
                 {(stalenessVariant === 'stale' || stalenessVariant === 'error') && !isLoading && (
                     <div className="mb-6">
                         <StatusBanner
@@ -509,7 +545,6 @@ export default function GerenciaPage() {
                     </div>
                 )}
 
-                {/* Título e Botão */}
                 <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center gap-4">
                         <h1 className="text-6xl font-bold text-blue-700">{gerenciaData.sigla}</h1>
@@ -521,7 +556,6 @@ export default function GerenciaPage() {
                     </button>
                 </div>
 
-                {/* Dashboard */}
                 <div className="flex items-center gap-1 mb-7">
                     <h1 className="text-3xl mr-2 text-blue-600">Dashboard</h1>
                     {modo === 'edicao' && <AddDashboardButton onClick={() => abrirModal('dashboard')} />}
@@ -535,7 +569,6 @@ export default function GerenciaPage() {
                 
                 {renderContent()}
                 
-                {/* Sobre a Gerência */}
                 <div className="mt-32 mb-16">
                     <div className="flex flex-col lg:flex-row items-start gap-8">
                         <div className="flex-1">
@@ -555,7 +588,6 @@ export default function GerenciaPage() {
                 </div>
             </div>
 
-            {/* Overlay de Upload */}
             {isDragging && (
                 <div className="absolute inset-0 bg-blue-500/20 backdrop-blur-sm z-50 flex flex-col items-center justify-center pointer-events-none">
                     <UploadCloud className="w-32 h-32 text-white/90 animate-pulse" />
@@ -563,28 +595,5 @@ export default function GerenciaPage() {
                 </div>
             )}
         </div>
-=======
-// Server component: fetch gerência by slug (or id fallback) and render interactive client page
-import { notFound } from 'next/navigation';
-import ClientGerenciaPage from './ClientPage';
-import { getGerenciaBySlug, getGerenciaById, getDiretoriaById } from '@/services/organizacaoService';
-
-export default async function GerenciaPage({ params }: { params: { id: string } }) {
-    const raw = params.id;
-
-    // Try slug first, then fallback to ID
-    const gerencia = (await getGerenciaBySlug(raw)) || (await getGerenciaById(raw));
-    if (!gerencia) {
-        notFound();
-    }
-
-    const diretoria = gerencia?.diretoriaId ? await getDiretoriaById(gerencia.diretoriaId) : null;
-
-    return (
-        <ClientGerenciaPage
-            gerencia={{ id: gerencia.id, nome: gerencia.nome, sigla: gerencia.sigla, descricao: gerencia.descricao, image: gerencia.image }}
-            diretoria={{ id: diretoria?.id || '', nome: diretoria?.nome || 'Diretoria', corFrom: diretoria?.corFrom, corTo: diretoria?.corTo }}
-        />
->>>>>>> f444dbd42689cdbf09ed78a6f30dbf1b4cf8a836
     );
 }

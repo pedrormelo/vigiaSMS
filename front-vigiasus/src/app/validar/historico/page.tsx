@@ -1,156 +1,177 @@
 // src/app/validar/historico/page.tsx
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import Link from "next/link";
+import { ArrowLeft, Eye, Loader2, SearchX } from "lucide-react";
+
+// Componentes de UI
+import { Button } from "@/components/ui/button";
+import { SearchBar } from "@/components/ui/search-bar";
+import DateInputFilter from "@/components/validar/dateInputFilter";
+import Paginacao from "@/components/ui/paginacao";
+import ContextoTable from "@/components/validar/ContextoTable";
+
+// Modais
+import { VisualizarContextoModal } from "@/components/popups/visualizarContextoModal";
+
+// Hooks e Tipos
 import { useDebounce } from "@/hooks/useDebounce";
 import { useHistoricoContextos } from "@/hooks/useHistoricoContextos";
-
-import ContextoTable from "@/components/validar/ContextoTable";
-// 1. IMPORTAÇÃO ATUALIZADA
-// import DetalhesContextoModal from "@/components/popups/detalhesContextoModal"; // <-- REMOVIDO
-import { VisualizarContextoModal } from "@/components/popups/visualizarContextoModal"; // <-- ADICIONADO
-
-import { Button } from "@/components/ui/button";
-import Paginacao from "@/components/ui/paginacao";
-import { SearchBar } from "@/components/ui/search-bar";
-import DateInputFilter from "@/components/validar/dateInputFilter"; 
-import { ArrowLeft, Eye, Loader2, SearchX } from "lucide-react"; 
-
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { Contexto } from "@/components/validar/typesDados";
 import { membroColumns } from "@/components/validar/colunasTable/membroColumns";
 import { gerenteColumns } from "@/components/validar/colunasTable/gerenteColumns";
 import { diretorColumns } from "@/components/validar/colunasTable/diretorColumns";
-import { Contexto } from "@/components/validar/typesDados";
+
+type DateRange = { from: Date | undefined; to: Date | undefined } | undefined;
 
 export default function HistoricoPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+  const debouncedSearch = useDebounce(searchQuery, 500); 
+  const [dateRange, setDateRange] = useState<DateRange>(undefined);
 
-  const [dateRange, setDateRange] = useState<{ from: Date | undefined, to: Date | undefined }>({
-    from: undefined,
-    to: undefined,
-  });
+  const { 
+    data, 
+    isLoading, 
+    error, 
+    currentPage, 
+    totalPages, 
+    setCurrentPage, 
+    totalItems 
+  } = useHistoricoContextos(debouncedSearch, dateRange);
 
-  const { data, error, isLoading, currentPage, totalPages, setCurrentPage } = useHistoricoContextos(
-    debouncedSearchQuery,
-    dateRange
-  );
+  const user = useCurrentUser();
+  const perfil = (user?.role?.toLowerCase() as "diretor" | "gerente" | "membro") || "membro";
 
-  const [perfil, setPerfil] = useState<"diretor" | "gerente" | "membro">("gerente");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedContexto, setSelectedContexto] = useState<Contexto | null>(null);
 
-  const handleViewClick = (contexto: Contexto) => {
-    setSelectedContexto(contexto);
+  const handleRowClick = (row: Contexto) => {
+    setSelectedContexto(row);
     setIsModalOpen(true);
   };
 
-  const handleDateFilterChange = useCallback((range: { from: Date | undefined; to: Date | undefined }) => {
-    setDateRange(range);
-    console.log("Novo filtro de datas selecionado:", range);
-  }, []);
-
   const getColumns = () => {
-    const baseColumns =
-      perfil === "membro"
-        ? membroColumns
-        : perfil === "gerente"
-        ? gerenteColumns
-        : diretorColumns;
+    const baseColumns = perfil === "diretor" ? diretorColumns 
+                      : perfil === "gerente" ? gerenteColumns 
+                      : membroColumns;
     
     return baseColumns.map(col => {
-      if (col.key === 'acoes') {
-        return {
-          ...col,
-          render: (row: Contexto) => (
-            <div className="flex items-center gap-4 text-gray-500">
-              <button onClick={() => handleViewClick(row)} className="hover:text-blue-600" title="Visualizar Contexto">
-                <Eye size={16} />
-              </button>
-            </div>
-          )
-        };
-      }
-      return col;
+        if (col.key === 'acoes') {
+            return {
+                ...col,
+                render: (row: Contexto) => (
+                    <div className="flex items-center gap-4 text-gray-500">
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); handleRowClick(row); }} 
+                            className="hover:text-blue-600 transition-colors" 
+                            title="Ver Detalhes"
+                        >
+                            <Eye size={16} />
+                        </button>
+                    </div>
+                )
+            };
+        }
+        return col;
     });
   };
 
-  if (error) {
-    return <div className="p-8 text-red-500">{error}</div>;
-  }
-
-  const renderTableContent = () => {
-    if (isLoading) {
-      return (
-        <div className="flex flex-col items-center justify-center min-h-[200px] text-gray-500">
-          <Loader2 className="w-8 h-8 animate-spin" />
-          <p className="mt-2 font-medium">A carregar histórico...</p>
-        </div>
-      );
-    }
-    if (data.length === 0) {
-      return (
-        <div className="flex flex-col items-center justify-center min-h-[200px] text-gray-500 border-2 border-dashed border-gray-300 rounded-2xl bg-gray-50/50">
-          <SearchX className="w-12 h-12" />
-          <p className="mt-2 font-semibold">Nenhum resultado encontrado</p>
-          <p className="text-sm">Tente ajustar os filtros de pesquisa ou data.</p>
-        </div>
-      );
-    }
-    return <ContextoTable data={data} columns={getColumns()} />;
-  };
-
   return (
+    // Layout Simétrico com a página de Validação
     <div className="p-8 bg-white min-h-screen">
-      {/* Simulação de Perfil... (sem alteração) */}
-      <div className="flex gap-2 mb-4 bg-yellow-100 p-2 rounded-md text-sm">
-        <p className="font-bold my-auto">Simulação de Perfil:</p>
-        <button onClick={() => setPerfil("diretor")} className={`px-3 py-1 rounded-md ${perfil === 'diretor' && 'bg-blue-200 font-semibold'}`}>Diretor</button>
-        <button onClick={() => setPerfil("gerente")} className={`px-3 py-1 rounded-md ${perfil === 'gerente' && 'bg-blue-200 font-semibold'}`}>Gerente</button>
-        <button onClick={() => setPerfil("membro")} className={`px-3 py-1 rounded-md ${perfil === 'membro' && 'bg-blue-200 font-semibold'}`}>Membro</button>
-      </div>
-      
-      {/* Cabeçalho... (sem alteração) */}
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-[#1745FF]">Histórico de Contextos</h1>
-        <Link href="/validar">
-          <Button className="bg-white rounded-full border border-gray-300 shadow-sm">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Voltar
-          </Button>
-        </Link>
-      </div>
-
-      {/* Conteúdo da Tabela... (sem alteração) */}
-      <div className="bg-gray-100/25 rounded-[2rem] p-6 shadow-sm">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-          <SearchBar
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Pesquise por nome ou solicitante..."
-            className="w-full md:w-auto md:flex-1"
-          />
-          <DateInputFilter onDateChange={handleDateFilterChange} />
-        </div>
         
-        {renderTableContent()}
+      {/* Cabeçalho */}
+      <div className="flex items-center justify-between mb-8">
+          <div>
+              <h1 className="text-3xl font-bold text-[#1745FF]">Histórico de Contextos</h1>
+              <p className="text-gray-500 mt-1 text-sm">Registro completo de todas as movimentações.</p>
+          </div>
+          <Link href="/validar">
+            <Button className="bg-white rounded-full border border-gray-300 shadow-sm text-gray-700 hover:bg-gray-50">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Voltar
+            </Button>
+          </Link>
+      </div>
 
-        {!isLoading && data.length > 0 && totalPages > 1 && (
-          <Paginacao 
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
+      {/* Container Branco Arredondado (Igual ao da Validação) */}
+      <div className="bg-gray-100/25 rounded-[2rem] p-6 shadow-sm">
+            
+        {/* Barra de Filtros */}
+        <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
+            <div className="flex-1">
+                <SearchBar
+                    value={searchQuery}
+                    onChange={setSearchQuery}
+                    placeholder="Pesquise por título, autor ou ID..."
+                    className="w-full"
+                />
+            </div>
+            <div className="w-full md:w-auto">
+                <DateInputFilter onDateChange={setDateRange} />
+            </div>
+        </div>
+
+        {/* Conteúdo da Tabela */}
+        {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+                <Loader2 className="w-10 h-10 animate-spin mb-2 text-blue-600" />
+                <p>A carregar histórico...</p>
+            </div>
+        ) : error ? (
+            <div className="text-center py-12 bg-red-50 rounded-xl border border-red-100">
+                <p className="text-red-500 mb-2">{error}</p>
+                <Button variant="outline" onClick={() => window.location.reload()}>
+                    Tentar Novamente
+                </Button>
+            </div>
+        ) : (
+            <>
+                {/* Tabela com Estado Vazio Customizado */}
+                <ContextoTable 
+                    data={data} 
+                    columns={getColumns()} 
+                    onRowClick={handleRowClick}
+                    emptyState={{
+                        title: "Nenhum registro encontrado",
+                        description: "Tente ajustar os filtros de busca ou data.",
+                        icon: SearchX
+                    }}
+                />
+                
+                {/* Rodapé com Total e Paginação */}
+                {data.length > 0 && (
+                    <div className="flex flex-col md:flex-row justify-between items-center mt-6 pt-4 border-t border-gray-200">
+                        <div className="text-sm text-gray-500 mb-4 md:mb-0">
+                            Total de {totalItems} registro(s)
+                        </div>
+                        
+                        {totalPages > 1 && (
+                            <Paginacao 
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                onPageChange={setCurrentPage}
+                            />
+                        )}
+                    </div>
+                )}
+            </>
         )}
       </div>
 
-      {/* 2. MODAL ATUALIZADO */}
+      {/* Modal de Visualização */}
       <VisualizarContextoModal
         estaAberto={isModalOpen}
         aoFechar={() => setIsModalOpen(false)}
         dadosDoContexto={selectedContexto}
         perfil={perfil}
-        isFromHistory={true} // <-- Importante: Mantém o modo "somente leitura"
+        isEditing={false}
+        isFromHistory={true}
+        onDeferir={undefined}
+        onIndeferir={undefined}
+        onCorrigir={undefined}
       />
     </div>
   );

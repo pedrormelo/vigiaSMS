@@ -1,6 +1,5 @@
 const multer = require('multer');
 const path = require('path');
-<<<<<<< HEAD
 const crypto = require('crypto');
 
 const storage = multer.diskStorage({
@@ -11,32 +10,6 @@ const storage = multer.diskStorage({
         const ext = path.extname(file.originalname);
         const uniqueName = crypto.randomUUID(); 
         cb(null, `${uniqueName}${ext}`);
-=======
-const fs = require('fs');
-
-function ensureDir(dir) {
-    if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
-    }
-}
-
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        // Save per-gerência under src/files/uploads/<gerenciaId>
-        const gerenciaId = (req.user && req.user.gerenciaId) ? req.user.gerenciaId : 'misc';
-        const dest = path.resolve(__dirname, '..', 'files', 'uploads', gerenciaId);
-        try { ensureDir(dest); } catch {}
-        cb(null, dest);
-    },
-    filename: (req, file, cb) => {
-        const ext = path.extname(file.originalname);
-        const base = path.basename(file.originalname, ext)
-            .toLowerCase()
-            .replace(/[^a-z0-9-_\.]+/g, '_')
-            .slice(0, 60);
-        const name = `${Date.now()}_${base}${ext}`;
-        cb(null, name);
->>>>>>> f444dbd42689cdbf09ed78a6f30dbf1b4cf8a836
     }
 });
 
@@ -52,7 +25,6 @@ const allowed = new Set([
 ]);
 
 const fileFilter = (req, file, cb) => {
-<<<<<<< HEAD
     // Lista exaustiva de tipos permitidos
     const allowedMimes = [
         // PDF
@@ -87,11 +59,3 @@ const upload = multer({
 });
 
 module.exports = upload;
-=======
-    if (!file) return cb(null, true);
-    if (allowed.has(file.mimetype)) return cb(null, true);
-    cb(new Error('Tipo de arquivo não suportado.'), false);
-};
-
-module.exports = multer({ storage, fileFilter });
->>>>>>> f444dbd42689cdbf09ed78a6f30dbf1b4cf8a836

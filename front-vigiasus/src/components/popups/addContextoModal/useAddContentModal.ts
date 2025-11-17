@@ -15,7 +15,7 @@ import { FileType } from "@/components/contextosCard/contextoCard";
 const FILE_TYPE_DEFINITIONS: Record<FileType, { mimes: string[], extensions: string[], label: string }> = {
     'pdf': { mimes: ['application/pdf'], extensions: ['.pdf'], label: 'PDF' },
     'doc': { mimes: ['application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.oasis.opendocument.text'], extensions: ['.doc', '.docx', '.odt'], label: 'Documento' },
-    'planilha': { mimes: ['application/vnd.ms-planilha', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.oasis.opendocument.spreadsheet'], extensions: ['.xls', '.xlsx', '.ods'], label: 'Planilha' },
+    'planilha': { mimes: ['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.oasis.opendocument.spreadsheet', 'text/csv', 'application/csv'], extensions: ['.xls', '.xlsx', '.ods', '.csv'], label: 'Planilha' },
     'apresentacao': { mimes: ['application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/vnd.oasis.opendocument.presentation'], extensions: ['.ppt', '.pptx', '.odp'], label: 'Apresentação' },
     'resolucao': { mimes: ['application/pdf'], extensions: ['.pdf'], label: 'Resolução (PDF)' },
     'leis': { mimes: ['application/pdf'], extensions: ['.pdf'], label: 'Lei (PDF)' },
@@ -49,7 +49,6 @@ const detectarTipoPorArquivo = (arquivo: File): FileType | null => {
 };
 // --- FIM DAS DEFINIÇÕES ---
 
-// Definindo a interface das Props do Hook
 interface PropsDoHook {
     estaAberto: boolean;
     aoFechar: () => void;
@@ -79,11 +78,9 @@ export const useModalAdicionarConteudo = ({
     const [arquivoContexto, setArquivoContexto] = useState<File | null>(null);
     const [urlContexto, setUrlContexto] = useState("");
     const [tipoArquivoDetectado, setTipoArquivoDetectado] = useState<FileType | null>(null); 
-    // Controle do modal de link
     const [linkModalAberto, setLinkModalAberto] = useState(false);
-    
-    // Força refresh da pré-visualização do gráfico quando abrimos nova versão / modal
     const [dashboardRefreshKey, setDashboardRefreshKey] = useState(0);
+    
     // --- ESTADOS DE NOVA VERSÃO ---
     const [isNewVersionMode, setIsNewVersionMode] = useState(false);
     const [selectedVersion, setSelectedVersion] = useState("");
@@ -102,6 +99,7 @@ export const useModalAdicionarConteudo = ({
         cores: ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444'],
         formatos: ['text', 'number'],
     });
+
     // --- ESTADOS DE INDICADOR ---
     const [tituloIndicador, setTituloIndicador] = useState("");
     const [descricaoIndicador, setDescricaoIndicador] = useState("");
@@ -112,7 +110,6 @@ export const useModalAdicionarConteudo = ({
     const [corIndicador, setCorIndicador] = useState("#3B82F6");
     const [iconeIndicador, setIconeIndicador] = useState<NomeIcone>("Heart");
 
-    
     const definirCoresDoGrafico = (novasCores: string[]) => {
         setConjuntoDeDados(dadosAtuais => ({ ...dadosAtuais, cores: novasCores }));
     };
@@ -144,7 +141,6 @@ export const useModalAdicionarConteudo = ({
             setAbaAtiva(abaInicial);
 
             if (dadosIniciais) {
-                // --- LÓGICA MODO EDIÇÃO (Nova Versão) ---
                 setIsNewVersionMode(true);
                 const proximaVersao = (dadosIniciais.versoes?.length || 0) + 1;
                 setSelectedVersion(`v${proximaVersao}`);
@@ -176,7 +172,6 @@ export const useModalAdicionarConteudo = ({
                             ...(payloadDash.colunas?.slice(1).map(() => 'number' as FormatoColuna) || ['number' as FormatoColuna])
                         ],
                     });
-                    // refresh key será incrementado após finalizar reinicialização global
                 }
 
                 if (dadosIniciais.type === 'indicador' && dadosIniciais.payload) {
@@ -193,7 +188,6 @@ export const useModalAdicionarConteudo = ({
                 }
             
             } else if (arquivoAnexado) {
-                // --- LÓGICA MODO CRIAÇÃO (via Drag-and-Drop) ---
                 const tipoDetectado = detectarTipoPorArquivo(arquivoAnexado);
                 
                 if (tipoDetectado && tipoDetectado !== 'dashboard' && tipoDetectado !== 'indicador') {
@@ -211,9 +205,7 @@ export const useModalAdicionarConteudo = ({
                     showErrorToast("Arquivo inválido", "O arquivo solto não é um tipo de contexto válido (PDF, DOC, etc).");
                     setArquivoContexto(null);
                 }
-                // refresh key será incrementado após reinicialização global
             }
-            // Incrementa apenas uma vez ao final de toda preparação, evitando múltiplos renders extras
             setDashboardRefreshKey(k => k + 1);
         }
     }, [estaAberto, dadosIniciais, abaInicial, reiniciarTodoOEstado, arquivoAnexado]);
@@ -259,7 +251,7 @@ export const useModalAdicionarConteudo = ({
             if (eTipoDeArquivoOriginal && tipoDetectado !== tipoArquivoOriginal) {
                 showErrorToast("Tipo de arquivo incorreto", `A nova versão deve ser do mesmo tipo do original (${FILE_TYPE_DEFINITIONS[tipoArquivoOriginal].label}).`);
                 setArquivoContexto(null);
-                setTipoArquivoDetectado(tipoArquivoOriginal); // Mantém o tipo original
+                setTipoArquivoDetectado(tipoArquivoOriginal); 
                 return;
             }
         }
@@ -284,21 +276,19 @@ export const useModalAdicionarConteudo = ({
                     fileType: tipoArquivoDetectado 
                 };
                 aoSubmeter({ type: 'contexto', payload: payload }); 
-                showDispatchToast("Seu contexto foi enviado para aprovação do gerente.");
                 break;
 
             case 'dashboard':
                 payload = { title: tituloGrafico, details: detalhesGrafico, type: tipoGrafico, dataFile: arquivoDeDados, dataset: conjuntoDeDados, versionInfo };
                 aoSubmeter({ type: 'dashboard', payload: payload });
-                showDispatchToast("Seu dashboard foi enviado para aprovação.");
                 break;
 
             case 'indicador':
                 payload = { titulo: tituloIndicador, descricao: descricaoIndicador, valorAtual: valorAtualIndicador, valorAlvo: valorAlvoIndicador, unidade: unidadeIndicador, textoComparativo: textoComparativoIndicador, cor: corIndicador, icone: iconeIndicador, versionInfo };
                 aoSubmeter({ type: 'indicador', payload: payload });
-                showDispatchToast("Seu indicador foi enviado para aprovação.");
                 break;
         }
+        // Nota: Os toasts de sucesso/erro são gerenciados pela página que chama 'aoSubmeter'
         aoFechar();
     };
     
@@ -342,17 +332,10 @@ export const useModalAdicionarConteudo = ({
         }
     };
 
-    const aoMudarTipoGrafico = (t: TipoGrafico) => {
-        setTipoGrafico(t);
-    };
-
-    // --- LÓGICA DA TABELA DO DASHBOARD ---
+    const aoMudarTipoGrafico = (t: TipoGrafico) => setTipoGrafico(t);
 
     const adicionarLinha = () => {
-        if (conjuntoDeDados.linhas.length >= 25) {
-            showWarningToast("Limite de 25 linhas atingido.");
-            return;
-        }
+        if (conjuntoDeDados.linhas.length >= 25) { showWarningToast("Limite de 25 linhas atingido."); return; }
         setConjuntoDeDados((d) => ({ ...d, linhas: [...d.linhas, ["", ...Array(d.colunas.length - 1).fill(null)]] }));
     };
 
@@ -360,79 +343,37 @@ export const useModalAdicionarConteudo = ({
 
     const atualizarCelula = (linha: number, coluna: number, valor: string) => {
         let valorFinal: string | number | null = valor; 
-
         if (coluna > 0) { 
             const valorTrim = valor.trim();
-            
-            if (valorTrim === "") {
-                valorFinal = null; 
-            } else if (valorTrim.includes('-')) {
-                showErrorToast("Valor inválido.", "Números negativos não são permitidos.");
-                return; 
-            } else {
-                const valorLimpo = valorTrim
-                    .replace(/R\$|\s/g, '')
-                    .replace(/\./g, (match, offset, original) => offset === original.lastIndexOf('.') ? '.' : '') 
-                    .replace(',', '.'); 
-
+            if (valorTrim === "") { valorFinal = null; } 
+            else if (valorTrim.includes('-')) { showErrorToast("Valor inválido.", "Números negativos não são permitidos."); return; } 
+            else {
+                const valorLimpo = valorTrim.replace(/R\$|\s/g, '').replace(/\./g, (match, offset, original) => offset === original.lastIndexOf('.') ? '.' : '').replace(',', '.'); 
                 const eFormatoNumero = /^\d*\.?\d*$/.test(valorLimpo);
-
                 if (eFormatoNumero && valorLimpo) {
                     const num = parseFloat(valorLimpo);
-                    if (!isNaN(num)) {
-                        valorFinal = num; 
-                    } else {
-                        valorFinal = null; 
-                    }
+                    valorFinal = !isNaN(num) ? num : null;
                 } else if (valorTrim !== "") {
-                    showErrorToast("Valor inválido.", "Apenas números são permitidos.");
-                    return; 
-                } else {
-                    valorFinal = null;
-                }
+                    showErrorToast("Valor inválido.", "Apenas números são permitidos."); return; 
+                } else { valorFinal = null; }
             }
         }
-        
-        setConjuntoDeDados((d) => ({ ...d, linhas: d.linhas.map((l, i) => 
-            i === linha ? l.map((c, j) => (j === coluna ? valorFinal : c)) : l
-        )}));
+        setConjuntoDeDados((d) => ({ ...d, linhas: d.linhas.map((l, i) => i === linha ? l.map((c, j) => (j === coluna ? valorFinal : c)) : l)}));
     };
 
    const adicionarColuna = () => {
-        if (conjuntoDeDados.colunas.length >= 30) {
-            showWarningToast("Limite de 30 colunas atingido.");
-            return;
-        }
-        setConjuntoDeDados((d) => ({
-            ...d,
-            colunas: [...d.colunas, `Série ${d.colunas.length}`],
-            linhas: d.linhas.map(linha => [...linha, null]), 
-            formatos: [...(d.formatos || []), 'number'] 
-        }));
+        if (conjuntoDeDados.colunas.length >= 30) { showWarningToast("Limite de 30 colunas atingido."); return; }
+        setConjuntoDeDados((d) => ({ ...d, colunas: [...d.colunas, `Série ${d.colunas.length}`], linhas: d.linhas.map(linha => [...linha, null]), formatos: [...(d.formatos || []), 'number'] }));
     };
 
    const removerColuna = (indiceColuna: number) => {
-        if (indiceColuna === 0) {
-            showErrorToast("Ação não permitida", "A coluna de categorias não pode ser removida."); return;
-        }
-        if (conjuntoDeDados.colunas.length <= 2) {
-            showErrorToast("Ação não permitida", "O gráfico precisa de pelo menos uma coluna de valores."); return;
-        }
-        setConjuntoDeDados((d) => ({
-            colunas: d.colunas.filter((_, i) => i !== indiceColuna),
-            linhas: d.linhas.map(linha => linha.filter((_, i) => i !== indiceColuna)),
-            formatos: d.formatos?.filter((_, i) => i !== indiceColuna) 
-        }));
+        if (indiceColuna === 0) { showErrorToast("Ação não permitida", "A coluna de categorias não pode ser removida."); return; }
+        if (conjuntoDeDados.colunas.length <= 2) { showErrorToast("Ação não permitida", "O gráfico precisa de pelo menos uma coluna de valores."); return; }
+        setConjuntoDeDados((d) => ({ colunas: d.colunas.filter((_, i) => i !== indiceColuna), linhas: d.linhas.map(linha => linha.filter((_, i) => i !== indiceColuna)), formatos: d.formatos?.filter((_, i) => i !== indiceColuna) }));
     };
 
     const atualizarNomeColuna = (index: number, novoNome: string) => setConjuntoDeDados((d) => ({ ...d, colunas: d.colunas.map((col, i) => (i === index ? novoNome : col)) }));
-
-    const atualizarFormatoColuna = (indiceColuna: number, novoFormato: FormatoColuna) => {
-        setConjuntoDeDados(d => ({
-            ...d,
-            formatos: d.formatos?.map((formato, i) => i === indiceColuna ? novoFormato : formato)
-        }));
-    };
+    const atualizarFormatoColuna = (indiceColuna: number, novoFormato: FormatoColuna) => { setConjuntoDeDados(d => ({ ...d, formatos: d.formatos?.map((formato, i) => i === indiceColuna ? novoFormato : formato) })); };
 
     const baixarModelo = () => {
         const cabecalho = conjuntoDeDados.colunas.join(",") + "\n";
@@ -441,8 +382,6 @@ export const useModalAdicionarConteudo = ({
         const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
         saveAs(blob, `modelo-${tipoGrafico}.csv`);
     };
-
-    // --- FUNÇÕES UTILITÁRIAS ---
 
     const formatarTamanhoArquivo = (bytes: number) => {
         if (bytes === 0) return '0 Bytes';
@@ -458,20 +397,16 @@ export const useModalAdicionarConteudo = ({
         return "Nenhum arquivo ou link selecionado";
     };
 
-    // --- LÓGICA DE SUBMISSÃO (ATUALIZADA) ---
-    
+    // --- VALIDACAO DE SUBMISSÃO ---
     const submissaoDesativada = (() => {
-        // Define o mínimo de caracteres para os detalhes
-        const MIN_DETALHES_LENGTH = 15; 
+        const MIN_DETALHES_LENGTH = 15; // Alinhado com a validação visual
 
         switch (abaAtiva) {
             case 'contexto':
                 if (isNewVersionMode) {
-                    // (Nova Versão) Precisa de descrição da VERSÃO (obrigatório) E (arquivo OU url)
                     return !tipoVersao || !descricaoVersao.trim() || (!arquivoContexto && !urlContexto.trim());
                 }
-                
-                // (Novo) Precisa de título, DETALHES (com min 15 chars), (arquivo OU url) E tipo detectado
+                // Verifica título, tamanho dos detalhes e se há arquivo/link
                 return !tituloContexto.trim() || 
                        detalhesContexto.trim().length < MIN_DETALHES_LENGTH || 
                        (!arquivoContexto && !urlContexto.trim()) || 
@@ -479,29 +414,20 @@ export const useModalAdicionarConteudo = ({
 
             case 'dashboard':
                  if (isNewVersionMode) {
-                    // (Nova Versão)
                     const dadosManuaisForamModificados = abaFonteDeDados === 'manual' && JSON.stringify(conjuntoDeDados) !== JSON.stringify(dadosIniciais?.payload);
                     const novoArquivoFoiEnviado = abaFonteDeDados === 'upload' && !!arquivoDeDados;
-                    const dadosForamAlterados = dadosManuaisForamModificados || novoArquivoFoiEnviado;
-                    
-                    return !tipoVersao || !descricaoVersao.trim() || !dadosForamAlterados;
+                    return !tipoVersao || !descricaoVersao.trim() || !(dadosManuaisForamModificados || novoArquivoFoiEnviado);
                 }
-                // (Novo)
                 const temDadosManuais = abaFonteDeDados === 'manual' && conjuntoDeDados.linhas.length > 0 && conjuntoDeDados.linhas.some(l => l.slice(1).some(c => c !== null && c !== ''));
                 const temArquivo = abaFonteDeDados === 'upload' && !!arquivoDeDados;
-                
-                // (Novo) Precisa de título, DETALHES (mín 15) E (dados manuais OU arquivo)
                 return !tituloGrafico.trim() || 
                        detalhesGrafico.trim().length < MIN_DETALHES_LENGTH || 
                        (!temDadosManuais && !temArquivo);
 
             case 'indicador':
                 if (isNewVersionMode) {
-                    // (Nova Versão) Precisa de descrição da VERSÃO e VALOR ATUAL
                     return !tipoVersao || !descricaoVersao.trim() || !valorAtualIndicador.trim();
                 }
-                
-                // (Novo) Precisa de título, DESCRIÇÃO (mín 15) e VALOR ATUAL
                 return !tituloIndicador.trim() || 
                        descricaoIndicador.trim().length < MIN_DETALHES_LENGTH || 
                        !valorAtualIndicador.trim();
@@ -511,37 +437,20 @@ export const useModalAdicionarConteudo = ({
         }
     })();
     
-    // --- RETORNO DO HOOK ---
     return {
         abaAtiva, setAbaAtiva, aoCancelar: aoFechar, aoSubmeter: aoSubmeterFormulario, submissaoDesativada,
-        
-        // Contexto
         tituloContexto, setTituloContexto, detalhesContexto, setDetalhesContexto, arquivoContexto, setArquivoContexto,
         urlContexto, setUrlContexto, arrastandoSobre, aoSelecionarArquivo, aoClicarBotaoUrl, aoEntrarNaArea,
         aoSairDaArea, aoArrastarSobre, aoSoltarArquivo, obterNomeFonteContexto, formatarTamanhoArquivo,
-        acceptString, 
-        helpText,     
-        tipoArquivoDetectado,
-        setTipoArquivoDetectado, // <--- ADICIONADO AQUI!
-        tipoArquivoOriginal, 
-        
-        // Nova Versão
+        acceptString, helpText, tipoArquivoDetectado, setTipoArquivoDetectado, tipoArquivoOriginal, 
         isNewVersionMode, selectedVersion, tipoVersao, setTipoVersao, descricaoVersao, setDescricaoVersao,
-        
-        // Dashboard
         abaFonteDeDados, setAbaFonteDeDados, tituloGrafico, setTituloGrafico, detalhesGrafico, setDetalhesGrafico,
         tipoGrafico, aoMudarTipo: aoMudarTipoGrafico, arquivoDeDados, setArquivoDeDados,
-        conjuntoDeDados, definirCoresDoGrafico,
-        adicionarLinha, removerLinha, atualizarCelula, adicionarColuna, removerColuna, atualizarNomeColuna,
-        atualizarFormatoColuna,
-        baixarModelo, 
-    dashboardRefreshKey,
-        
-        // Indicador
+        conjuntoDeDados, definirCoresDoGrafico, adicionarLinha, removerLinha, atualizarCelula, adicionarColuna, removerColuna, atualizarNomeColuna,
+        atualizarFormatoColuna, baixarModelo, dashboardRefreshKey,
         tituloIndicador, setTituloIndicador, descricaoIndicador, setDescricaoIndicador, valorAtualIndicador,
         setValorAtualIndicador, valorAlvoIndicador, setValorAlvoIndicador, unidadeIndicador, setUnidadeIndicador,
         textoComparativoIndicador, setTextoComparativoIndicador, corIndicador, setCorIndicador, iconeIndicador, setIconeIndicador,
-        // Link modal
         linkModalAberto, aoConfirmarLink, aoCancelarLink, setLinkModalAberto,
     };
 };

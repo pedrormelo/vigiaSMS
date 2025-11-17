@@ -9,14 +9,14 @@ const path = require('path');
 const auth = require('./middlewares/authMiddleware.js');
 
 // Rotas existentes (algumas ainda serão implementadas)
-const authRoutes = require('./routes/authRoutes');
-const usuariosRoutes = require('./routes/usuariosRoutes');
-const contextoRoutes = require('./routes/contextoRoutes');
-const notificacaoRoutes = require('./routes/notificacaoRoutes');
-const diretoriasRoutes = require('./routes/diretoriasRoutes');
-const gerenciasRoutes = require('./routes/gerenciasRoutes');
-const comentarioRoutes = require('./routes/comentarioRoutes');
-const dashboardLayoutRoutes = require('./routes/dashboardLayoutRoutes');
+const authRoutes = require('./routes/authRoutes.js');
+const usuariosRoutes = require('./routes/usuariosRoutes.js');
+const contextoRoutes = require('./routes/contextoRoutes.js');
+const notificacaoRoutes = require('./routes/notificacaoRoutes.js');
+const diretoriasRoutes = require('./routes/diretoriasRoutes.js');
+const gerenciasRoutes = require('./routes/gerenciasRoutes.js');
+const comentarioRoutes = require('./routes/comentarioRoutes.js');
+const dashboardLayoutRoutes = require('./routes/dashboardLayoutRoutes.js');
 
 const app = express();
 // DB clients
