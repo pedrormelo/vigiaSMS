@@ -151,6 +151,8 @@ export function ChartPreview({ type, title, data, colors, isHighlighted, editMod
                 console.debug('[ChartPreview] Desenhando gráfico...'); // Log
                 chartInstance.draw(chartData, options);
                 console.debug('[ChartPreview] Comando draw executado.'); // Log
+                // Fallback: caso o evento 'ready' não dispare (cenário raro), garante fim do loading
+                setTimeout(() => { if (isMounted) setIsLoading(false); }, 300);
 
             } catch (err: any) {
                 // Captura erros gerais

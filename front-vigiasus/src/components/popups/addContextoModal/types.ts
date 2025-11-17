@@ -108,7 +108,9 @@ export interface SecaoDadosManuaisProps {
   aoAdicionarColuna: () => void;
   aoRemoverColuna: (indiceColuna: number) => void;
   aoAtualizarNomeColuna: (index: number, novoNome: string) => void;
-  aoAtualizarFormatoColuna: (indiceSerie: number, novoFormato: FormatoColuna) => void;
+  aoAtualizarFormatoColuna?: (indiceSerie: number, novoFormato: FormatoColuna) => void;
+  definirFormatoDasSeries: (novoFormato: FormatoColuna) => void;
+  formatoSeries: FormatoColuna;
 }
 export interface SecaoUploadArquivoProps {
   arquivoDeDados: File | null;

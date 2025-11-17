@@ -489,7 +489,9 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
         gerencia: gerenciaId,
         // Para dashboards, expor diretamente o dataset (payload) esperado pelo visualizador
         payload: tipoBackend === 'DASHBOARD' ? (dadosEspecificos?.payload ?? undefined) : dadosEspecificos, 
-        url: (versaoRecente as any)?.versaoarquivo?.url || undefined,
+        url: (versaoRecente as any)?.versaoarquivo?.url
+            ? `${apiBase()}${(versaoRecente as any).versaoarquivo.url}`
+            : undefined,
         estaOculto: false,
         versoes: versoesFrontend,
         historico: historicoFrontend,

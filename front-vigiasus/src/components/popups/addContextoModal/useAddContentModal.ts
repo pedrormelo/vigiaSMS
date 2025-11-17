@@ -95,10 +95,13 @@ export const useModalAdicionarConteudo = ({
     const [arquivoDeDados, setArquivoDeDados] = useState<File | null>(null);
     const [conjuntoDeDados, setConjuntoDeDados] = useState<ConjuntoDeDadosGrafico>({
         colunas: ["Categoria", "Valor"],
-        linhas: [["Exemplo de Categoria", 100]],
+        // Começa com uma linha vazia para edição, evitando render automático do gráfico
+        linhas: [["", null]],
         cores: ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444'],
         formatos: ['text', 'number'],
     });
+    // Formato global para as séries (todas as colunas após a primeira)
+    const [formatoSeries, setFormatoSeries] = useState<FormatoColuna>('number');
 
     // --- ESTADOS DE INDICADOR ---
     const [tituloIndicador, setTituloIndicador] = useState("");
@@ -123,10 +126,12 @@ export const useModalAdicionarConteudo = ({
         setArquivoDeDados(null);
         setConjuntoDeDados({
             colunas: ["Categoria", "Valor"],
-            linhas: [["Exemplo de Categoria", 100]],
+            // Linha vazia padrão para entrada manual
+            linhas: [["", null]],
             cores: ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444'],
             formatos: ['text', 'number'], 
         });
+        setFormatoSeries('number');
         setTituloIndicador(""); setDescricaoIndicador(""); setValorAtualIndicador("");
         setValorAlvoIndicador(""); setUnidadeIndicador("Nenhum"); setTextoComparativoIndicador("");
         setCorIndicador("#3B82F6"); setIconeIndicador("Heart");
@@ -163,13 +168,21 @@ export const useModalAdicionarConteudo = ({
                 
                 if (dadosIniciais.payload && dadosIniciais.type === 'dashboard') {
                     const payloadDash = dadosIniciais.payload as ConjuntoDeDadosGrafico;
+                    const colunas = payloadDash.colunas || ["Categoria", "Valor"]; 
+                    const linhasOrig = Array.isArray(payloadDash.linhas) ? payloadDash.linhas : [];
+                    const temLinhas = linhasOrig.length > 0;
+                    const linhaVazia = colunas.map((_, i) => (i === 0 ? "" : null));
+                    const defaultSeriesFmt: FormatoColuna = (payloadDash.formatos && payloadDash.formatos[1]) ? payloadDash.formatos[1] as FormatoColuna : 'number';
+                    setFormatoSeries(defaultSeriesFmt);
                     setConjuntoDeDados({
-                        colunas: payloadDash.colunas || ["Categoria", "Valor"],
-                        linhas: payloadDash.linhas || [],
+                        colunas,
+                        // Mantém dados quando existem; caso contrário, fornece linha vazia para edição
+                        linhas: temLinhas ? linhasOrig : [linhaVazia],
                         cores: payloadDash.cores || ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444'],
-                        formatos: payloadDash.formatos || [
-                            'text' as FormatoColuna, 
-                            ...(payloadDash.colunas?.slice(1).map(() => 'number' as FormatoColuna) || ['number' as FormatoColuna])
+                        // Unificar formato das séries com base na primeira série
+                        formatos: [
+                            'text' as FormatoColuna,
+                            ...colunas.slice(1).map(() => defaultSeriesFmt)
                         ],
                     });
                 }
@@ -361,9 +374,9 @@ export const useModalAdicionarConteudo = ({
         setConjuntoDeDados((d) => ({ ...d, linhas: d.linhas.map((l, i) => i === linha ? l.map((c, j) => (j === coluna ? valorFinal : c)) : l)}));
     };
 
-   const adicionarColuna = () => {
+    const adicionarColuna = () => {
         if (conjuntoDeDados.colunas.length >= 30) { showWarningToast("Limite de 30 colunas atingido."); return; }
-        setConjuntoDeDados((d) => ({ ...d, colunas: [...d.colunas, `Série ${d.colunas.length}`], linhas: d.linhas.map(linha => [...linha, null]), formatos: [...(d.formatos || []), 'number'] }));
+        setConjuntoDeDados((d) => ({ ...d, colunas: [...d.colunas, `Série ${d.colunas.length}`], linhas: d.linhas.map(linha => [...linha, null]), formatos: [...(d.formatos || []), formatoSeries] }));
     };
 
    const removerColuna = (indiceColuna: number) => {
@@ -374,6 +387,15 @@ export const useModalAdicionarConteudo = ({
 
     const atualizarNomeColuna = (index: number, novoNome: string) => setConjuntoDeDados((d) => ({ ...d, colunas: d.colunas.map((col, i) => (i === index ? novoNome : col)) }));
     const atualizarFormatoColuna = (indiceColuna: number, novoFormato: FormatoColuna) => { setConjuntoDeDados(d => ({ ...d, formatos: d.formatos?.map((formato, i) => i === indiceColuna ? novoFormato : formato) })); };
+
+    // Define o formato de TODAS as séries de uma vez
+    const definirFormatoDasSeries = (novoFormato: FormatoColuna) => {
+        setFormatoSeries(novoFormato);
+        setConjuntoDeDados((d) => ({
+            ...d,
+            formatos: d.colunas.map((_, i) => (i === 0 ? 'text' : novoFormato)) as FormatoColuna[]
+        }));
+    };
 
     const baixarModelo = () => {
         const cabecalho = conjuntoDeDados.colunas.join(",") + "\n";
@@ -447,7 +469,7 @@ export const useModalAdicionarConteudo = ({
         abaFonteDeDados, setAbaFonteDeDados, tituloGrafico, setTituloGrafico, detalhesGrafico, setDetalhesGrafico,
         tipoGrafico, aoMudarTipo: aoMudarTipoGrafico, arquivoDeDados, setArquivoDeDados,
         conjuntoDeDados, definirCoresDoGrafico, adicionarLinha, removerLinha, atualizarCelula, adicionarColuna, removerColuna, atualizarNomeColuna,
-        atualizarFormatoColuna, baixarModelo, dashboardRefreshKey,
+        atualizarFormatoColuna, definirFormatoDasSeries, formatoSeries, baixarModelo, dashboardRefreshKey,
         tituloIndicador, setTituloIndicador, descricaoIndicador, setDescricaoIndicador, valorAtualIndicador,
         setValorAtualIndicador, valorAlvoIndicador, setValorAlvoIndicador, unidadeIndicador, setUnidadeIndicador,
         textoComparativoIndicador, setTextoComparativoIndicador, corIndicador, setCorIndicador, iconeIndicador, setIconeIndicador,

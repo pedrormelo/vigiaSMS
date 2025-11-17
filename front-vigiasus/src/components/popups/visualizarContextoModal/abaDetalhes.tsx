@@ -412,7 +412,7 @@ const AbaDetalhes = ({
             </div>
 
             {/* Coluna da Direita: Visualizador */}
-            <div className="h-full min-h-0">
+            <div className="h-full min-h-[280px]">
                 <VisualizadorDeConteudo
                     tipo={dados.type}
                     url={dados.url}

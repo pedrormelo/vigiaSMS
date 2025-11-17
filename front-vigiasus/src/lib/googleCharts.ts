@@ -27,24 +27,25 @@ export function loadGoogleCharts(packages: string[] = ['corechart', 'bar']): Pro
                 }
 
                 const finishWhenVisualizationReady = () => {
-                    // poll until google.visualization is available
-                    const start = Date.now()
-                    const timeoutMs = 10000
+                    // Poll until google.visualization AND DataTable constructor are available
+                    const start = Date.now();
+                    const timeoutMs = 12000;
                     const interval = setInterval(() => {
-                        if ((window as any).google && (window as any).google.visualization) {
-                            clearInterval(interval)
-                            debug('google.visualization ready (polled)')
-                            ;(window as any).__googleChartsLoaderStatus = 'ready'
-                            resolve((window as any).google)
-                            return
+                        const g = (window as any).google;
+                        if (g && g.visualization && typeof g.visualization.DataTable === 'function') {
+                            clearInterval(interval);
+                            debug('google.visualization.DataTable ready (polled)');
+                            (window as any).__googleChartsLoaderStatus = 'ready';
+                            resolve(g);
+                            return;
                         }
                         if (Date.now() - start > timeoutMs) {
-                            clearInterval(interval)
-                            reject(new Error('Timed out waiting for google.visualization'))
-                            return
+                            clearInterval(interval);
+                            reject(new Error('Timed out waiting for google.visualization.DataTable'));
+                            return;
                         }
-                    }, 100)
-                }
+                    }, 120);
+                };
 
                 if (!existing) {
                     debug('Injecting google charts loader script')
@@ -80,7 +81,8 @@ export function loadGoogleCharts(packages: string[] = ['corechart', 'bar']): Pro
                                 reject(new Error('Timed out loading Google Charts'))
                             }, timeoutMs)
 
-                            // Not calling finishWhenVisualizationReady() here to avoid double-callbacks.
+                            // Also start polling as a fallback in case setOnLoadCallback never fires
+                            finishWhenVisualizationReady()
                         } catch (err) {
                             debug('error during onload handling', err)
                             ;(window as any).__googleChartsLoaderStatus = 'error'
@@ -96,8 +98,8 @@ export function loadGoogleCharts(packages: string[] = ['corechart', 'bar']): Pro
                 } else {
                     debug('loader script already present')
                     // Se o script já existe, a lógica de fallback (com polling) é aceitável
-                    if ((window as any).google && (window as any).google.visualization && (window as any).google.visualization.PieChart) {
-                        debug('google.visualization.PieChart already available')
+                    if ((window as any).google && (window as any).google.visualization && typeof (window as any).google.visualization.DataTable === 'function') {
+                        debug('google.visualization.DataTable already available')
                         resolve((window as any).google)
                     } else if ((window as any).google && (window as any).google.charts) {
                         debug('google.charts present, calling load')
@@ -148,5 +150,5 @@ export function loadGoogleCharts(packages: string[] = ['corechart', 'bar']): Pro
 }
 
 export function isGoogleChartsLoaded(): boolean {
-    return !!((window as any).google && (window as any).google.visualization && (window as any).google.visualization.PieChart);
+    return !!((window as any).google && (window as any).google.visualization && typeof (window as any).google.visualization.DataTable === 'function');
 }

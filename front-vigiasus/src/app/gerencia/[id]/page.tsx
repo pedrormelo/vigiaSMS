@@ -628,6 +628,7 @@ export default function GerenciaPage() {
                     <GerenciaDashboardPreview
                         graphs={filteredDashboards}
                         gerencia={gerenciaData.id}
+                        disabled={user?.role === 'membro' && modo !== 'edicao'}
                     />
                 </div>
 

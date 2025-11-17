@@ -66,13 +66,15 @@ export const VisualizadorDeConteudo: React.FC<VisualizadorProps> = ({ tipo, url,
             return (
                 <div className="animate-fade-in h-full w-full">
                     {dadosDoDashboard ? (
-                        <PrevisualizacaoGrafico
-                            tipoGrafico={chartType || 'chart'}
-                            conjuntoDeDados={dadosDoDashboard}
-                            titulo={titulo}
-                            aoAlternarTelaCheia={aoAlternarTelaCheia}
-                            emTelaCheia={emTelaCheia}
-                        />
+                        <div className="w-full h-full min-h-[280px]">
+                            <PrevisualizacaoGrafico
+                                tipoGrafico={chartType || 'chart'}
+                                conjuntoDeDados={dadosDoDashboard}
+                                titulo={titulo}
+                                aoAlternarTelaCheia={aoAlternarTelaCheia}
+                                emTelaCheia={emTelaCheia}
+                            />
+                        </div>
                     ) : (
                         <p>Dados do dashboard não disponíveis para visualização.</p>
                     )}

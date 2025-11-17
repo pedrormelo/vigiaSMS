@@ -33,6 +33,7 @@ interface DashboardPreviewProps {
     onHighlightToggle: (id: string, highlighted: boolean) => void
     editMode?: boolean
     renderVersion?: number
+    disabled?: boolean
 }
 
 export function DashboardPreview({
@@ -43,6 +44,7 @@ export function DashboardPreview({
     onHighlightToggle,
     editMode = false,
     renderVersion,
+    disabled = false,
 }: DashboardPreviewProps) {
     const [modalAberto, setModalAberto] = useState(false)
     const [detalhesSelecionados, setDetalhesSelecionados] = useState<DetalhesContexto | null>(null)
@@ -137,8 +139,11 @@ export function DashboardPreview({
                                         colors={graph.colors}
                                         editMode={editMode}
                                         renderVersion={renderVersion}
-                                        onShowDetails={() => abrirDetalhes(graph)}
+                                        onShowDetails={disabled ? undefined : () => abrirDetalhes(graph)}
                                     />
+                                    {disabled && (
+                                        <div className="absolute inset-0 bg-white/40 backdrop-blur-[1px] pointer-events-none rounded-2xl" />
+                                    )}
                                     {editMode && (
                                         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2 items-center">
                                             <div className="flex items-center gap-1">

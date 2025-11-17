@@ -19,9 +19,10 @@ interface GerenciaDashboardPreviewProps {
     graphs: Contexto[] // <-- Alterado de (GraphData | null)[] para Contexto[]
     gerencia: string
     className?: string
+    disabled?: boolean
 }
 
-export function GerenciaDashboardPreview({ graphs, gerencia, className }: GerenciaDashboardPreviewProps) {
+export function GerenciaDashboardPreview({ graphs, gerencia, className, disabled = false }: GerenciaDashboardPreviewProps) {
     
     // --- INÍCIO DA ALTERAÇÃO ---
     // Mapeia o formato Contexto[] para GraphData[]
@@ -130,6 +131,7 @@ export function GerenciaDashboardPreview({ graphs, gerencia, className }: Gerenc
                 onHighlightToggle={() => {}}
                 editMode={false}
                 renderVersion={renderVersion} 
+                disabled={disabled}
             />
 
             {totalPages > 1 && (

@@ -40,6 +40,7 @@ interface GoogleVisualization {
     PieChart: new (element: Element) => GoogleChartInstance;
     AreaChart: new (element: Element) => GoogleChartInstance;
     ColumnChart: new (element: Element) => GoogleChartInstance;
+    arrayToDataTable: (data: (string | number | null)[][]) => GoogleDataTable;
     events: {
         addListener: (instance: GoogleChartInstance, eventName: string, handler: (e?: unknown) => void) => void;
         removeAllListeners: (instance: GoogleChartInstance) => void;
@@ -204,6 +205,19 @@ export const PrevisualizacaoGrafico: React.FC<PrevisualizacaoGraficoProps> = ({
             if (!chartRef.current || !isMounted) return;
             const containerEl = chartRef.current;
 
+            // Evitar desenhar em contêiner sem dimensões (modal ainda abrindo)
+            const hasSize = () => {
+                const r = containerEl.getBoundingClientRect();
+                return r.width > 0 && r.height > 0;
+            };
+            if (!hasSize()) {
+                // aguarda próximo frame e tenta novamente
+                rafIdRef.current = requestAnimationFrame(() => {
+                    if (isMounted) draw();
+                });
+                return;
+            }
+
             // Se não houver dados, limpa o gráfico e sai
             if (!possuiDadosValidos()) {
                 setDrawError(null);
@@ -254,25 +268,33 @@ export const PrevisualizacaoGrafico: React.FC<PrevisualizacaoGraficoProps> = ({
 
                 if (!googleVisualization) throw new Error("Biblioteca Google Charts não carregada.");
 
-                // Preparação do DataTable
+                // Preparação do DataTable (preferir arrayToDataTable; fallback para DataTable manual)
                 if (!dadosGrafico) throw new Error("Dados do gráfico ausentes");
-                const header = dadosGrafico[0] as string[];
-                const rows = dadosGrafico.slice(1);
-                
-                const chartData = new googleVisualization.DataTable();
-                chartData.addColumn('string', header[0]);
-                for (let c = 1; c < header.length; c++) {
-                    chartData.addColumn('number', header[c]);
+                let chartData: GoogleDataTable;
+                const canArray = typeof googleVisualization.arrayToDataTable === 'function';
+                if (typeof googleVisualization.DataTable === 'function') {
+                    const header = dadosGrafico[0] as string[];
+                    const rows = dadosGrafico.slice(1);
+                    const manual = new googleVisualization.DataTable();
+                    manual.addColumn('string', header[0]);
+                    for (let c = 1; c < header.length; c++) manual.addColumn('number', header[c]);
+                    const safeRows = rows.map((r) => {
+                        const row: (string | number | null)[] = [String(r[0] ?? '')];
+                        for (let c = 1; c < header.length; c++) {
+                            const v = (r as any)[c];
+                            row.push(typeof v === 'number' && Number.isFinite(v) ? v : null);
+                        }
+                        return row;
+                    });
+                    manual.addRows(safeRows);
+                    chartData = manual;
+                } else if (canArray) {
+                    chartData = googleVisualization.arrayToDataTable(dadosGrafico as (string | number | null)[][]);
+                } else {
+                    console.warn('[previsualizacaoGrafico] Nem arrayToDataTable nem DataTable disponíveis, re-agendando draw');
+                    setTimeout(() => { if (isMounted) draw(); }, 250);
+                    return;
                 }
-                const safeRows = rows.map((r) => {
-                    const row: (string | number | null)[] = [String(r[0] ?? '')];
-                    for (let c = 1; c < header.length; c++) {
-                        const v = r[c];
-                        row.push(typeof v === 'number' && Number.isFinite(v) ? v : null);
-                    }
-                    return row;
-                });
-                chartData.addRows(safeRows);
 
                 // Formatação de Colunas
                 if (conjuntoDeDados?.formatos && chartData) {
@@ -354,6 +376,8 @@ export const PrevisualizacaoGrafico: React.FC<PrevisualizacaoGraficoProps> = ({
                 }
 
                 chartInstance.draw(chartData, currentOptions);
+                // Fallback para garantir que loading não fica eterno
+                setTimeout(() => { if (isMounted) setIsLoadingLibs(false); }, 300);
 
                 // Se reutilizamos a instância, o evento 'ready' pode não disparar novamente,
                 // então garantimos que o loading pare.
@@ -408,14 +432,7 @@ export const PrevisualizacaoGrafico: React.FC<PrevisualizacaoGraficoProps> = ({
     // Adicionado possuiDadosValidos às dependências
 
     // ... Resto do componente (Renderização) ...
-    if (isLoadingLibs) {
-        return (
-            <div className="w-full h-full p-4 bg-white border border-gray-200 rounded-2xl shadow-inner flex flex-col items-center justify-center text-gray-500">
-                <Loader2 className="w-8 h-8 animate-spin mr-2" />
-                <p>A carregar gráfico...</p>
-            </div>
-        );
-    }
+    // Nota: Não retornamos mais cedo quando loading está ativo, para manter o contêiner no DOM
 
     if (drawError) {
         return (
@@ -445,7 +462,14 @@ export const PrevisualizacaoGrafico: React.FC<PrevisualizacaoGraficoProps> = ({
     return (
         <div className="w-full h-full p-4 bg-white border border-gray-200 rounded-2xl shadow-inner relative group">
             <div ref={chartRef} style={{ width: "100%", height: "100%" }} />
-            
+
+            {isLoadingLibs && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 bg-white/60 rounded-2xl">
+                    <Loader2 className="w-8 h-8 animate-spin mr-2" />
+                    <p>A carregar gráfico...</p>
+                </div>
+            )}
+
             {!emTelaCheia && aoAlternarTelaCheia && (
                 <button
                     onClick={aoAlternarTelaCheia}

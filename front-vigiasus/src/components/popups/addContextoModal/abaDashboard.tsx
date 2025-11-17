@@ -26,6 +26,8 @@ type AbaDashboardProps = Pick<
     | 'setDescricaoVersao'
     | 'atualizarFormatoColuna' // <-- Prop corrigida (estava faltando)
     | 'dashboardRefreshKey'
+    | 'definirFormatoDasSeries'
+    | 'formatoSeries'
 >;
 
 // 3B82F6
@@ -45,6 +47,8 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
         arquivoDeDados, setArquivoDeDados, baixarModelo,
         isNewVersionMode, selectedVersion, tipoVersao, setTipoVersao, descricaoVersao, setDescricaoVersao,
         atualizarFormatoColuna,
+        definirFormatoDasSeries,
+        formatoSeries,
         dashboardRefreshKey
     } = props;
 
@@ -187,6 +191,8 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                         </div>
                     </div>
 
+                    {/* (Selector movido para Séries de Dados na coluna central) */}
+
                     {isNewVersionMode && (
                         <div className="space-y-4 rounded-2xl border border-blue-200 bg-blue-50/50 p-4">
                             <h3 className="text-lg font-semibold text-blue-800">Detalhes da Nova Versão</h3>
@@ -234,6 +240,8 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                                 aoRemoverColuna={removerColuna}
                                 aoAtualizarNomeColuna={atualizarNomeColuna}
                                 aoAtualizarFormatoColuna={atualizarFormatoColuna}
+                                definirFormatoDasSeries={definirFormatoDasSeries}
+                                formatoSeries={formatoSeries}
                             />
                         ) : (
                             <SecaoUploadArquivo arquivoDeDados={arquivoDeDados} setArquivoDeDados={setArquivoDeDados} aoBaixarModelo={baixarModelo} />
@@ -244,7 +252,7 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                 {/* Coluna Direita */}
                 <div className="flex flex-col space-y-2 h-full">
                     <label className="block text-lg font-medium text-gray-700 flex-shrink-0">Pré-visualização</label>
-                    <div className="flex-1 min-h-0 h-full">
+                    <div className="flex-1 min-h-[280px] h-full">
                         <PrevisualizacaoGrafico
                             tipoGrafico={tipoGrafico}
                             conjuntoDeDados={conjuntoDeDados}
