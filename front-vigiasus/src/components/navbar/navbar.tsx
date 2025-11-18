@@ -36,17 +36,21 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
 
   const userProfile = useCurrentUser();
 
+  // Integração com o Hook de Notificações
   const {
     notifications,
     isLoading: isLoadingNotifications,
     isError: isErrorNotifications,
-    readNotifications, // Agora existe
-    markAsRead,        // Agora existe
+    readNotifications, // Lista de IDs que já foram lidos
+    markAsRead,        // Função para marcar como lido
   } = useNotifications(userProfile?.name);
 
+  // Cálculo dinâmico de não lidas (Total - Lidas)
   const totalUnreadCount = useMemo(() => {
-    if (!notifications || !readNotifications) return 0;
-    return notifications.filter(n => !readNotifications.includes(n.id)).length;
+    if (!notifications) return 0;
+    const lidas = readNotifications || [];
+    // Conta apenas as que NÃO estão na lista de lidas
+    return notifications.filter(n => !lidas.includes(n.id)).length;
   }, [notifications, readNotifications]);
 
   const handleNotificationsClick = () => {
@@ -62,6 +66,9 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
 
     setIsLoadingContexto(true);
     setIsNotificationsOpen(false);
+
+    // Ao clicar para abrir, marca como lida automaticamente
+    handleMarkAsRead(notification.id);
 
     try {
       const contextoDetails = await getContextoById(notification.contextoId);
@@ -87,7 +94,7 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
     setSelectedContexto(null);
   };
 
-  // CORREÇÃO DE TIPO: notificationId agora é number | "all"
+  // Função intermediária para lidar com 'Mark as Read' (Individual ou Todas)
   const handleMarkAsRead = (notificationId: number | "all") => {
     if (notificationId === "all") {
       const allIds = notifications.map(n => n.id);
@@ -97,7 +104,7 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
     }
   };
 
-  // Atualizar bloco de "última atualização"
+  // Efeito para recarregar detalhes do contexto se necessário
   useEffect(() => {
     if (selectedContexto?.id && !("titulo" in selectedContexto && selectedContexto.titulo)) {
       let mounted = true;
@@ -110,7 +117,6 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
           } else if (mounted) {
             console.error("Não foi possível carregar os detalhes do contexto.");
             handleCloseDetalhesContexto();
-            alert("Erro: Não foi possível carregar os detalhes do contexto.");
           }
         } catch (error) {
           console.error("Erro ao buscar detalhes do contexto:", error);
@@ -199,7 +205,8 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
         isLoading={isLoadingNotifications}
         isError={isErrorNotifications}
         
-        readNotifications={readNotifications}
+        // Passamos a lista de lidos e a função de marcar
+        readNotifications={readNotifications || []}
         onMarkAsRead={handleMarkAsRead}
       />
 

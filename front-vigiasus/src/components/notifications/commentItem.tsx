@@ -16,7 +16,7 @@ export default function CommentItem({ comment }: CommentItemProps) {
       roleStyle = "bg-white border-gray-300 text-gray-600 font-semibold";
       break;
     case "secretaria":
-    case "zelma": // Exemplo específico
+    case "zelma": 
       roleStyle = "bg-gradient-to-r from-indigo-400/30 to-indigo-600/30 border-indigo-300 text-gray-800";
       break;
     case "diretoria":
@@ -39,7 +39,11 @@ export default function CommentItem({ comment }: CommentItemProps) {
       } ${roleStyle}`}
     >
       <div className="flex items-center justify-between gap-2 mb-1">
-        <p className="font-semibold text-xs opacity-80">{author}</p>
+        {/* AQUI: Se for meu comentário, mostra 'Eu', senão mostra o nome do autor */}
+        <p className="font-semibold text-xs opacity-80">
+          {isMyComment ? "Eu" : author}
+        </p>
+        
         {isPrivate && (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-800 text-white ml-2">
             <Lock className="w-3 h-3" />

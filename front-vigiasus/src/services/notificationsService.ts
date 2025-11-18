@@ -4,7 +4,6 @@
 import { authService } from "./authService";
 import { Notification, Comment } from "@/constants/types";
 
-// Tipos internos atualizados para refletir a nova estrutura do Back
 interface BackendNotificationRow {
   id: string;
   tipo?: string;
@@ -13,13 +12,9 @@ interface BackendNotificationRow {
   versaoId?: string | null;
   createdAt?: string;
   contextoId?: string;
-  // Estrutura aninhada que adicionamos no controller
   contextoversao?: { 
     contextoId: string;
-    contexto?: {
-        tituloConceitual: string;
-        tipo: string;
-    }
+    contexto?: { tituloConceitual: string; tipo: string; }
   } | null;
 }
 
@@ -29,9 +24,11 @@ interface BackendCommentRow {
   timestamp: string;
   autorId: string;
   user?: { nome?: string; id?: string };
+  isPrivate?: boolean;// Novo campo presumido
+  destinatarioId?: string; // Novo campo presumido
+  destinatarioNome?: string;
 }
 
-// --- Helpers de ID ---
 function hashIdToNumber(id: string): number {
   let hash = 0;
   for (let i = 0; i < id.length; i++) {
@@ -56,7 +53,6 @@ function withAuth(init: RequestInit = {}): RequestInit {
   return { ...init, headers };
 }
 
-// --- 1. Busca de Notificações (ATUALIZADA) ---
 export async function getNotifications(): Promise<Notification[]> {
   const base = apiBase();
   if (!base) return [];
@@ -70,12 +66,7 @@ export async function getNotifications(): Promise<Notification[]> {
     return rows.map(r => {
       const numericId = hashIdToNumber(r.id);
       numericToOriginalId.set(numericId, r.id);
-      
-      if (r.versaoId) {
-        numericToVersaoId.set(numericId, r.versaoId);
-      }
-
-      // Extraindo dados do contexto aninhado
+      if (r.versaoId) numericToVersaoId.set(numericId, r.versaoId);
       const contextoData = r.contextoversao?.contexto;
 
       return {
@@ -83,16 +74,14 @@ export async function getNotifications(): Promise<Notification[]> {
         originalId: r.id,
         type: (r.tipo as any) || "sistema",
         title: r.titulo || "(sem título)",
-        description: "", // Pode usar contextoData?.tituloConceitual se quiser exibir
+        description: "",
         status: r.isLida ? "visto" : undefined,
         comments: [],
         contextoId: r.contextoId || r.contextoversao?.contextoId,
         createdAt: r.createdAt,
         hasVersionLinked: !!r.versaoId,
-        
-        // AQUI ESTÁ O PULO DO GATO PARA O CARD:
-        relatedFileType: contextoData?.tipo, // Preenche "Tipo: DASHBOARD/INDICADOR"
-        contextTitle: contextoData?.tituloConceitual // Preenche o título se estiver faltando
+        relatedFileType: contextoData?.tipo,
+        contextTitle: contextoData?.tituloConceitual
       } as unknown as Notification;
     });
   } catch (error) {
@@ -101,7 +90,6 @@ export async function getNotifications(): Promise<Notification[]> {
   }
 }
 
-// ... (Mantenha as funções getCommentsForNotification, sendComment, markNotificationRead abaixo iguais ao que já fizemos)
 export async function getCommentsForNotification(notificationId: number): Promise<Comment[]> {
   const versaoId = numericToVersaoId.get(notificationId);
   if (!versaoId) return []; 
@@ -119,18 +107,27 @@ export async function getCommentsForNotification(notificationId: number): Promis
       return {
         id: hashIdToNumber(r.id),
         author: r.user?.nome || "Usuário",
+        authorId: r.autorId, // IMPORTANTÍSSIMO: Guardamos o ID real do autor
         text: r.texto,
         time: date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
         date: date.toLocaleDateString("pt-BR"),
         isMyComment: currentUser ? String(currentUser.id) === String(r.autorId) : false,
-      } as Comment;
+        isPrivate: r.isPrivate, // Mapeia se é privado
+        toAuthor: r.destinatarioNome
+      } as unknown as Comment;
     });
   } catch (error) {
     return [];
   }
 }
 
-export async function sendComment(notificationId: number, text: string): Promise<Comment | null> {
+// AQUI: Atualizado para aceitar isPrivate e recipientId
+export async function sendComment(
+  notificationId: number, 
+  text: string, 
+  isPrivate: boolean = false, 
+  recipientId?: string
+): Promise<Comment | null> {
   const versaoId = numericToVersaoId.get(notificationId);
   if (!versaoId) return null;
 
@@ -138,7 +135,11 @@ export async function sendComment(notificationId: number, text: string): Promise
   try {
     const res = await fetch(`${base}/comentarios/${versaoId}`, withAuth({
       method: 'POST',
-      body: JSON.stringify({ texto: text })
+      body: JSON.stringify({ 
+        texto: text,
+        privado: isPrivate,         // Envia flag privada
+        destinatarioId: recipientId // Envia ID do destinatário
+      })
     }));
 
     if (!res.ok) throw new Error('Falha ao enviar');
@@ -149,11 +150,14 @@ export async function sendComment(notificationId: number, text: string): Promise
     return {
       id: hashIdToNumber(r.id),
       author: r.user?.nome || "Eu",
+      authorId: r.autorId,
       text: r.texto,
       time: date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
       date: date.toLocaleDateString("pt-BR"),
       isMyComment: true,
-    } as Comment;
+      isPrivate: isPrivate,
+      toAuthor: r.destinatarioNome
+    } as unknown as Comment;
 
   } catch (error) {
     return null;
@@ -172,4 +176,25 @@ export async function markNotificationRead(id: number): Promise<boolean> {
 
 export async function getNotificationsWithComments() {
   return getNotifications();
+}
+
+export interface Participante {
+  id: string;
+  nome: string;
+  role: string;
+}
+
+export async function getParticipantes(notificationId: number): Promise<Participante[]> {
+  const versaoId = numericToVersaoId.get(notificationId);
+  if (!versaoId) return [];
+
+  const base = apiBase();
+  try {
+    const res = await fetch(`${base}/contextos/${versaoId}/participantes`, withAuth());
+    if (!res.ok) return [];
+    return await res.json();
+  } catch (error) {
+    console.error("Erro ao buscar participantes:", error);
+    return [];
+  }
 }
