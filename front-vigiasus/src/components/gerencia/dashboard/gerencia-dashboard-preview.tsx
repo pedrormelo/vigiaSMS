@@ -51,64 +51,29 @@ export function GerenciaDashboardPreview({ graphs, gerencia, className, disabled
     // --- FIM DA ALTERAÇÃO ---
 
 
-    // Escolhe um layout com base no número de gráficos
-    const chooseLayout = (n: number): LayoutType => {
-        if (n >= 3) return "asymmetric" // capacidade 3
-        if (n === 2) return "sideBySide" // capacidade 2
-        return "grid" // capacidade 4, usará 1 slot para um único gráfico
-    }
-
-    // Constrói páginas com layouts dinâmicos por página
+    // Sempre limitar a páginas de até 3 gráficos usando layout assimétrico
     const [page, setPage] = useState(0)
 
-    // Calcula as páginas dinamicamente
     const pages = useMemo(() => {
-        // Usa filteredAsGraphData
         if (filteredAsGraphData.length === 0) return []
-
-        const result: { graphs: GraphData[], layout: LayoutType }[] = []
-        let remaining = [...filteredAsGraphData] // Usa filteredAsGraphData
-
-        while (remaining.length > 0) {
-            const count = remaining.length
-            let takeCount: number
-            let layout: LayoutType
-
-            if (count >= 3) {
-                layout = "asymmetric"
-                takeCount = 3
-            } else if (count === 2) {
-                layout = "sideBySide"
-                takeCount = 2
-            } else {
-                layout = "grid"
-                takeCount = 1 
-            }
-
-            result.push({
-                graphs: remaining.slice(0, takeCount),
-                layout
-            })
-            remaining = remaining.slice(takeCount)
+        const chunked: GraphData[][] = []
+        for (let i = 0; i < filteredAsGraphData.length; i += 3) {
+            chunked.push(filteredAsGraphData.slice(i, i + 3))
         }
-
-        return result
-    }, [filteredAsGraphData]) // Depende de filteredAsGraphData
+        return chunked
+    }, [filteredAsGraphData])
 
     const totalPages = Math.max(1, pages.length)
 
     useEffect(() => {
-        setPage((p) => (p >= totalPages ? Math.max(0, totalPages - 1) : p))
+        setPage(p => (p >= totalPages ? Math.max(0, totalPages - 1) : p))
     }, [totalPages])
 
-    const currentPage = pages[page] || { graphs: [], layout: "grid" as LayoutType }
-    const pageGraphs = currentPage.graphs
-    const layout = currentPage.layout
+    const pageGraphs = pages[page] || []
+    // Layout é sempre "asymmetric" conforme regra solicitada
+    const layout: LayoutType = "asymmetric"
 
-    const renderVersion = useMemo(() => {
-        const layoutCode = layout === "asymmetric" ? 3 : layout === "sideBySide" ? 2 : 1;
-        return page * 10 + layoutCode;
-    }, [page, layout]);
+    const renderVersion = useMemo(() => page * 10 + 3, [page])
 
 
     // Usa filteredAsGraphData para a verificação de vazio
@@ -123,14 +88,14 @@ export function GerenciaDashboardPreview({ graphs, gerencia, className, disabled
     return (
         <div className={cn("relative", className)}>
             <DashboardPreview
-                key={`${gerencia}-${layout}-${page}`} 
+                key={`${gerencia}-asymmetric-${page}`}
                 layout={layout}
                 graphs={pageGraphs}
                 onGraphSelect={() => {}}
                 onGraphRemove={() => {}}
                 onHighlightToggle={() => {}}
                 editMode={false}
-                renderVersion={renderVersion} 
+                renderVersion={renderVersion}
                 disabled={disabled}
             />
 

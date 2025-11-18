@@ -36,12 +36,13 @@ interface FileItemProps {
     isEditing?: boolean;
     estaOculto?: boolean;
     onToggleOculto?: (id: string) => void;
+    compact?: boolean;
 }
 
 // Config permanece a mesma...
 export const fileTypeConfig = {
     pdf: {
-        color: "bg-[#C53131] hover:bg-[#A02020]",
+        color: "bg-[#E54444] hover:bg-[#A02020]",
         svg: "/icons/CONTEXTOS/PDF-1.svg",
         label: "PDF",
     },
@@ -67,12 +68,12 @@ export const fileTypeConfig = {
         label: "Indicador",
     },
     planilha: { 
-        color: "bg-[#008C32] hover:bg-[#006B24]",
+        color: "bg-[#0FA745] hover:bg-[#006B24]",
         svg: "/icons/CONTEXTOS/PLA-1.svg",
         label: "Planilha", 
     },
     resolucao: {
-        color: "bg-[#E2712A] hover:bg-[#C95A2A]",
+        color: "bg-[#F97725] hover:bg-[#C95A2A]",
         svg: "/icons/CONTEXTOS/RES-1.svg",
         label: "Arquivo de Resolução",
     },
@@ -88,6 +89,56 @@ export const fileTypeConfig = {
     },
 }
 
+// Config permanece a mesma...
+// export const fileTypeConfig = {
+//     pdf: {
+//         color: "bg-[#C53131] hover:bg-[#A02020]",
+//         svg: "/icons/CONTEXTOS/PDF-1.svg",
+//         label: "PDF",
+//     },
+//     doc: {
+//         color: "bg-[#2651FF] hover:bg-[#1E40B8]",
+//         svg: "/icons/CONTEXTOS/DOC-1.svg",
+//         label: "DOC",
+//     },
+//     apresentacao: {
+//         color: "bg-amber-400 hover:bg-amber-500",
+//         svg: "/icons/CONTEXTOS/PPTX-1.svg",
+//         icon: Presentation,
+//         label: "Apresentação",
+//     },
+//     dashboard: {
+//         color: "bg-[#B329E9] hover:bg-purple-600",
+//         icon: ChartNetwork,
+//         label: "Gráfico de Dashboard",
+//     },
+//     indicador: {
+//         color: "bg-teal-500 hover:bg-teal-600",
+//         svg: "/icons/CONTEXTOS/INDC.svg",
+//         label: "Indicador",
+//     },
+//     planilha: { 
+//         color: "bg-[#008C32] hover:bg-[#006B24]",
+//         svg: "/icons/CONTEXTOS/PLA-1.svg",
+//         label: "Planilha", 
+//     },
+//     resolucao: {
+//         color: "bg-[#E2712A] hover:bg-[#C95A2A]",
+//         svg: "/icons/CONTEXTOS/RES-1.svg",
+//         label: "Arquivo de Resolução",
+//     },
+//     leis: {
+//         color: "bg-[#f27] hover:bg-[#f26]",
+//         icon: FileSearch,
+//         label: "Arquivo de Resolução",
+//     },
+//     link: {
+//         color: "bg-[#81BFDE] hover:bg-[#6BAEDB]",
+//         icon: Link,
+//         label: "Link Externo",
+//     },
+// }
+
 export function FileItem({
     id,
     title,
@@ -99,7 +150,8 @@ export function FileItem({
     onClick,
     isEditing = false,
     estaOculto = false,
-    onToggleOculto
+    onToggleOculto,
+    compact = false
 }: FileItemProps) {
     const config = fileTypeConfig[type]
     const IconComponent = (config as any).icon
@@ -143,7 +195,8 @@ export function FileItem({
     return (
         <div
             className={cn(
-                "rounded-4xl p-6 cursor-pointer transition-all duration-200 shadow-md flex flex-col justify-between max-h-[200px] max-w-[245px] relative overflow-hidden",
+                "rounded-4xl cursor-pointer transition-all duration-200 shadow-md flex flex-col justify-between max-h-[200px] max-w-[245px] relative overflow-hidden",
+                compact ? "p-4" : "p-6",
                 cardColor,
                 isDisabled && "opacity-70 grayscale-[80%] hover:opacity-100 hover:grayscale-0",
                 className,

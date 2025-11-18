@@ -4,8 +4,7 @@
 import Image from 'next/image';
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
-import { Edit, Eye, SearchX, UploadCloud, Loader2 } from 'lucide-react';
-import { cn } from "@/lib/utils";
+import { SearchX, UploadCloud, Loader2 } from 'lucide-react';
 
 // Hooks
 import { useDebounce } from "@/hooks/useDebounce";
@@ -15,9 +14,6 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 // Componentes
 import { FileGrid } from "@/components/contextosCard/contextosGrid";
 import FilterBar from "@/components/gerencia/painel-filterBar";
-import { AddIndicatorButton } from "@/components/indicadores/adicionarIndicador";
-import { IndicatorCard } from "@/components/indicadores/indicadorCard";
-import { icons as indicatorIcons } from '@/components/indicadores/indicadorCard';
 import { AddDashboardButton } from "@/components/gerencia/dashboard-btn1";
 import GerenciaDashboardPreview from "@/components/gerencia/dashboard/gerencia-dashboard-preview";
 import { VisualizarContextoModal } from "@/components/popups/visualizarContextoModal/index";
@@ -27,15 +23,15 @@ import StatusBanner from "@/components/ui/status-banner";
 import { showSuccessToast, showErrorToast } from "@/components/ui/Toasts";
 import OcultarContextoModal from "@/components/popups/ocultarContextoModal";
 
-import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
-import Autoplay from "embla-carousel-autoplay";
 
 import type { FileType } from "@/components/contextosCard/contextoCard";
-import type { AbaAtiva, DetalhesContexto, NomeIcone, SubmitData, IndicadorDetailsPayload, TipoGrafico } from "@/components/popups/addContextoModal/types";
+import type { AbaAtiva, DetalhesContexto, SubmitData } from "@/components/popups/addContextoModal/types";
 import { Contexto, StatusContexto } from "@/components/validar/typesDados";
 
 import { getContextosPorGerencia, criarContexto, CriarContextoData } from "@/services/contextoService";
 import { getGerenciaBySlug, Gerencia } from "@/services/organizacaoService";
+import { mapTipoGraficoParaBackend, normalizarNumero } from "@/lib/gerenciaUtils";
+import IndicadoresSection from "@/components/gerencia/sections/IndicadoresSection";
 
 export default function GerenciaPage() {
     const params = useParams();
@@ -66,9 +62,7 @@ export default function GerenciaPage() {
     const [modalOcultarAberto, setModalOcultarAberto] = useState(false);
     const [contextoParaOcultar, setContextoParaOcultar] = useState<Contexto | null>(null);
 
-    const autoplayPlugin = useRef(
-        Autoplay({ delay: 3000, stopOnInteraction: false, stopOnMouseEnter: true })
-    );
+    // (Removed carousel autoplay – handled inside IndicadoresSection if needed)
 
     const carregarDados = useCallback(async () => {
         if (!slug) return;
@@ -100,28 +94,7 @@ export default function GerenciaPage() {
 
     // --- LÓGICA DE ENVIO AO BACKEND ---
 
-    const mapTipoGraficoParaBackend = (tipo?: TipoGrafico): 'PIE' | 'BAR' | 'LINE' | undefined => {
-        switch (tipo || 'chart') {
-            case 'pie':
-                return 'PIE';
-            case 'line':
-                return 'LINE';
-            case 'chart':
-                return 'BAR';
-            default:
-                return undefined;
-        }
-    };
-
-    const normalizarNumero = (valor?: string): number | undefined => {
-        if (!valor) return undefined;
-        const semEspacos = valor.replace(/\s/g, '');
-        const semPontosDeMilhar = semEspacos.replace(/\.(?=\d{3}(?:\D|$))/g, '');
-        const tratado = semPontosDeMilhar.replace(',', '.');
-        if (!tratado) return undefined;
-        const num = Number(tratado);
-        return Number.isFinite(num) ? num : undefined;
-    };
+    // number/graph helpers moved to utils
 
     const aoSubmeterConteudo = async (dados: SubmitData) => {
         let payload: CriarContextoData | null = null;
@@ -326,69 +299,7 @@ export default function GerenciaPage() {
         setTimeout(() => abrirModal(tabParaAbrir), 50);
     };
 
-    const mapContextToIndicatorProps = (indicator: Contexto) => {
-        const payload = indicator.payload as IndicadorDetailsPayload;
-
-        if (indicator.type !== 'indicador' || !payload) {
-            return {
-                id: indicator.id,
-                title: indicator.title,
-                value: "0",
-                unidade: "",
-                subtitle: indicator.description || "Sem dados",
-                status: indicator.status,
-                estaOculto: indicator.estaOculto,
-                borderColor: "border-l-gray-500",
-                iconType: "cruz" as keyof typeof indicatorIcons,
-                versoes: indicator.versoes || [],
-                insertedDate: indicator.insertedDate,
-                solicitante: indicator.solicitante,
-                gerencia: indicator.gerencia,
-                autor: indicator.solicitante,
-                historico: indicator.historico,
-            };
-        }
-
-        const iconName = (payload.icone || "Heart") as NomeIcone;
-        const iconMap: Record<NomeIcone, keyof typeof indicatorIcons> = {
-            Heart: "cuidados", Building: "unidades", ClipboardList: "servidores",
-            TrendingUp: "atividade", Landmark: "cruz", Users: "populacao",
-            UserCheck: "medicos", DollarSign: "ambulancia",
-        };
-
-        const borderColorMap: { [key: string]: string } = {
-            "#3B82F6": "border-l-blue-500", "#22C55E": "border-l-green-500",
-            "#EF4444": "border-l-red-500", "#EAB308": "border-l-yellow-500",
-            "#A855F7": "border-l-purple-500", "#F97316": "border-l-orange-500",
-            "#14B8A6": "border-l-teal-500", "#EC4899": "border-l-pink-500",
-        };
-
-        const changeTypeMap = (text: string = ""): "positive" | "negative" | "neutral" => {
-            if (text.startsWith('+')) return 'positive';
-            if (text.startsWith('-')) return 'negative';
-            return 'neutral';
-        };
-
-        return {
-            id: indicator.id,
-            title: indicator.title,
-            value: payload.valorAtual || "0",
-            unidade: payload.unidade || "",
-            subtitle: payload.description || indicator.description || "",
-            change: payload.textoComparativo || "",
-            changeType: changeTypeMap(payload.textoComparativo),
-            borderColor: borderColorMap[payload.cor] || "border-l-gray-500",
-            iconType: iconMap[iconName] || "cruz",
-            status: indicator.status,
-            estaOculto: indicator.estaOculto,
-            versoes: indicator.versoes || [],
-            insertedDate: indicator.insertedDate,
-            solicitante: indicator.solicitante,
-            gerencia: indicator.gerencia,
-            autor: indicator.solicitante,
-            historico: indicator.historico,
-        };
-    };
+    // indicator mapping moved to utils
 
     const lidarComVisualizarIndicador = (indicator: Contexto) => {
         setFicheiroSelecionado(indicator);
@@ -485,51 +396,14 @@ export default function GerenciaPage() {
     const { diretoria } = gerenciaData;
 
     const renderContent = () => {
-        const itemsIndicadores = filteredIndicators.map((indicatorCtx) => {
-            const { id: indicatorId, ...cardProps } = mapContextToIndicatorProps(indicatorCtx);
-            return (
-                <IndicatorCard
-                    key={indicatorId}
-                    {...cardProps}
-                    onClick={() => lidarComVisualizarIndicador(indicatorCtx)}
-                />
-            );
-        });
-
-        if (modo === 'edicao') {
-            itemsIndicadores.unshift(<AddIndicatorButton key="add-indicator" onClick={() => abrirModal('indicador')} />);
-        }
-
         return (
             <>
-                <div className="mb-16">
-                    {itemsIndicadores.length > 0 ? (
-                        itemsIndicadores.length > 4 && modo === 'visualizacao' ? (
-                            <Carousel
-                                plugins={[autoplayPlugin.current]}
-                                opts={{ align: "start", loop: true }}
-                                className="w-full max-w-full mx-auto"
-                                onMouseEnter={() => autoplayPlugin.current?.stop?.()}
-                                onMouseLeave={() => autoplayPlugin.current?.play?.()}
-                            >
-                                <CarouselContent className="-ml-4">
-                                    {itemsIndicadores.map((item, index) => (
-                                        <CarouselItem key={index} className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
-                                            <div className="p-1 h-full">{item}</div>
-                                        </CarouselItem>
-                                    ))}
-                                </CarouselContent>
-                            </Carousel>
-                        ) : (
-                            <div className="flex justify-center items-center gap-4 flex-wrap">
-                                {itemsIndicadores}
-                            </div>
-                        )
-                    ) : (
-                        <div className="text-sm text-center text-gray-500 py-4">(Nenhum indicador publicado)</div>
-                    )}
-                </div>
-
+                <IndicadoresSection
+                    indicadores={filteredIndicators}
+                    modo={modo}
+                    onAddIndicator={() => abrirModal('indicador')}
+                    onClickIndicator={lidarComVisualizarIndicador}
+                />
                 <div className="mb-3">
                     <StatusBadge variant={stalenessVariant} label={stalenessLabel} />
                 </div>
