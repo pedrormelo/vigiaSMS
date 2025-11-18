@@ -1,9 +1,8 @@
-// source/routes/contextoRoutes.js
+// src/routes/contextoRoutes.js
 const express = require('express');
 const router = express.Router();
 const auth = require('../middlewares/authMiddleware');
-const ctrl = require('../controllers/contextoController');
-// Importar a configuração do Multer
+const ctrl = require('../controllers/contextoController'); // Aqui importamos como 'ctrl'
 const upload = require('../config/uploadsConfig');
 
 // Públicos
@@ -12,12 +11,8 @@ router.get('/publicados', ctrl.listPublicados);
 // Protegidos
 router.get('/pendentes', auth(['GERENTE', 'DIRETOR', 'MEMBRO']), ctrl.listPendentes);
 
-// --- ALTERAÇÃO AQUI ---
-// Adicionamos 'upload.single("file")' para permitir o envio de arquivos (PDFs)
-// O campo no formulário do frontend deve se chamar "file"
+// Criação
 router.post('/', auth(['MEMBRO']), upload.single('file'), ctrl.createContexto);
-// ----------------------
-
 router.post('/:contextoId/versoes', auth(['MEMBRO']), upload.single('file'), ctrl.createVersao);
 
 // Ações de validação
@@ -26,7 +21,13 @@ router.post('/versoes/:versaoId/diretor-publicar', auth(['DIRETOR']), ctrl.diret
 router.post('/versoes/:versaoId/diretor-indeferir', auth(['DIRETOR']), ctrl.diretorIndeferir);
 router.post('/versoes/:versaoId/solicitar-correcao', auth(['GERENTE', 'DIRETOR']), ctrl.solicitarCorrecao);
 
+// Detalhes e Busca
 router.get('/detalhes/:contextoId', ctrl.getDetalhes);
 router.get('/buscar', auth(), ctrl.buscar);
+
+// --- CORREÇÃO AQUI ---
+// Usamos 'ctrl' porque foi assim que importamos lá em cima
+router.get('/:versaoId/participantes', auth(), ctrl.listarParticipantes);
+// ---------------------
 
 module.exports = router;

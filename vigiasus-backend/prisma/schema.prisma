@@ -15,6 +15,8 @@ model comentario {
   timestamp      DateTime       @default(now())
   user           user           @relation(fields: [autorId], references: [id], onDelete: Cascade, map: "Comentario_autorId_fkey")
   contextoversao contextoversao @relation(fields: [versaoId], references: [id], onDelete: Cascade, map: "Comentario_versaoId_fkey")
+  isPrivate      Boolean        @default(false)
+  destinatarioId String?
 
   @@index([autorId], map: "Comentario_autorId_fkey")
   @@index([timestamp], map: "Comentario_timestamp_idx")

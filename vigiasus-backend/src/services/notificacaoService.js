@@ -12,7 +12,7 @@ async function notifyDiretoresDaDiretoria(diretoriaId, excludingUserId, versao, 
         where: { 
             role: 'DIRETOR', 
             diretoriaId: diretoriaId, 
-            id: { not: excludingUserId } // Não notificar quem disparou a ação (se for o caso)
+            id: { not: excludingUserId } 
         },
         select: { id: true }
     });
@@ -33,7 +33,6 @@ async function notifyDiretoresDaDiretoria(diretoriaId, excludingUserId, versao, 
 
 /**
  * Notifica todos os Gerentes de uma Gerência específica.
- * (NOVA FUNÇÃO NECESSÁRIA PARA O FLUXO INICIAL)
  */
 async function notifyGerentesDaGerencia(gerenciaId, excludingUserId, versao, titulo) {
     if (!gerenciaId) return 0;
@@ -52,7 +51,7 @@ async function notifyGerentesDaGerencia(gerenciaId, excludingUserId, versao, tit
     const data = gerentes.map(g => ({
         id: crypto.randomUUID(),
         destinatarioId: g.id,
-        tipo: 'VALIDACAO', // Tipo que aparece no sininho
+        tipo: 'VALIDACAO',
         titulo: titulo,
         versaoId: versao.id,
         createdAt: new Date()
@@ -66,10 +65,8 @@ async function notifyGerentesDaGerencia(gerenciaId, excludingUserId, versao, tit
  * Notifica o autor original (Solicitante) sobre mudança de status.
  */
 async function notifySolicitanteStatus(versao, actorId, status) {
-    // Se quem disparou a ação for o próprio dono da versão, não notifica
     if (versao.solicitanteId === actorId) return false; 
 
-    // Mapa de mensagens amigáveis
     const msgs = {
         'AGUARDANDO_DIRETOR': 'Sua versão foi aprovada pelo Gerente e aguarda o Diretor.',
         'PUBLICADO': 'Parabéns! Sua versão foi publicada pelo Diretor.',
@@ -93,8 +90,80 @@ async function notifySolicitanteStatus(versao, actorId, status) {
     return true;
 }
 
+/**
+ * Notifica um usuário específico sobre uma mensagem privada recebida.
+ */
+async function notifyComentarioPrivado(destinatarioId, autorNome, versaoId) {
+    if (!destinatarioId) return;
+
+    await prisma.notificacao.create({
+        data: {
+            id: crypto.randomUUID(),
+            destinatarioId: destinatarioId,
+            tipo: 'COMENTARIO',
+            titulo: `Mensagem privada de ${autorNome}`,
+            versaoId: versaoId,
+            createdAt: new Date()
+        }
+    });
+}
+
+/**
+ * NOVO: Notifica toda a hierarquia sobre um novo comentário PÚBLICO.
+ * Regra: Secretaria <-> Diretor <-> Gerente <-> Membro (Solicitante)
+ */
+async function notifyComentarioHierarquia(versaoId, autorId, texto) {
+    // 1. Buscar dados da estrutura (Versão -> Contexto -> Gerência -> Diretoria)
+    const versao = await prisma.contextoversao.findUnique({
+        where: { id: versaoId },
+        include: {
+            contexto: {
+                include: {
+                    gerencia: true 
+                }
+            }
+        }
+    });
+
+    if (!versao || !versao.contexto || !versao.contexto.gerencia) return;
+
+    const gerenciaId = versao.contexto.gerencia.id;
+    const diretoriaId = versao.contexto.gerencia.diretoriaId;
+    const solicitanteId = versao.solicitanteId;
+
+    // 2. Encontrar todos os usuários envolvidos na hierarquia
+    const destinatarios = await prisma.user.findMany({
+        where: {
+            OR: [
+                { role: 'SECRETARIA' }, // Sempre vê tudo
+                { role: 'DIRETOR', diretoriaId: diretoriaId }, // Diretor da área
+                { role: 'GERENTE', gerenciaId: gerenciaId },   // Gerente da área
+                { id: solicitanteId }   // Dono do contexto (Membro)
+            ],
+            id: { not: autorId } // Não notificar o próprio autor do comentário
+        },
+        select: { id: true }
+    });
+
+    if (!destinatarios.length) return;
+
+    // 3. Criar as notificações em lote
+    const data = destinatarios.map(u => ({
+        id: crypto.randomUUID(),
+        destinatarioId: u.id,
+        tipo: 'COMENTARIO',
+        titulo: `Novo comentário em "${versao.titulo}"`,
+        versaoId: versaoId,
+        createdAt: new Date()
+    }));
+
+    await prisma.notificacao.createMany({ data });
+}
+
 module.exports = {
     notifyDiretoresDaDiretoria,
-    notifyGerentesDaGerencia, // <--- Exportando a nova função
+    notifyGerentesDaGerencia,
     notifySolicitanteStatus,
+    notifyComentarioPrivado,
+    notifyComentarioHierarquia, // <--- Exportado
 };

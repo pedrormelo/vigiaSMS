@@ -5,8 +5,7 @@ const prisma = require('../config/prismaClient');
 const { Status } = require('../constants/status');
 const { mapContextoDetalhe } = require('../mappers/contextoMapper');
 const versaoService = require('../services/versaoService');
-// ADICIONADO: Importação do serviço de notificações
-const notificacaoService = require('../services/notificacaoService');
+const notificacaoService = require('../services/notificacaoService'); // Importação essencial
 
 // Função auxiliar para mapear resposta simples
 function mapContextoWithVersao(ctx, versao) {
@@ -68,7 +67,6 @@ exports.listPendentes = async (req, res) => {
             return res.json({ data: versoes });
         }
         if (user.role === 'MEMBRO') {
-            // Mostrar "Enviados": tudo que o membro submeteu e ainda não foi publicado
             const versoes = await prisma.contextoversao.findMany({
                 where: {
                     solicitanteId: user.id,
@@ -79,7 +77,6 @@ exports.listPendentes = async (req, res) => {
             });
             return res.json({ data: versoes });
         }
-        // Se for ADMIN ou SECRETARIA, talvez mostrar tudo ou nada
         return res.json({ data: [] });
     } catch (err) {
         console.error('Erro listPendentes:', err);
@@ -121,18 +118,15 @@ exports.createContexto = async (req, res) => {
         valorAtual, valorAlvo, unidade, textoComparativo, cor, icone 
     } = req.body;
 
-    console.log('[createContexto] body keys:', Object.keys(req.body || {}));
-    console.log('[createContexto] tipo:', tipo, 'temArquivo?', !!req.file, 'linkUrl:', !!linkUrl, 'tipoGrafico:', tipoGrafico ? String(tipoGrafico) : undefined);
-
     if (!user.gerenciaId) return res.status(400).json({ message: 'Usuário sem gerência.' });
     if (!tituloConceitual || !tipo || !titulo) return res.status(400).json({ message: 'Campos obrigatórios ausentes.' });
+    
     try {
-        // Validar existência da gerência do usuário para evitar erro 500 por FK
         const ger = await prisma.gerencia.findUnique({ where: { id: user.gerenciaId } });
         if (!ger) return res.status(400).json({ message: 'Gerência do usuário não encontrada.' });
         
         const result = await prisma.$transaction(async (tx) => {
-            // 1. Criar Contexto Pai
+            // 1. Criar Contexto
             const ctx = await tx.contexto.create({
                 data: {
                     id: crypto.randomUUID(),
@@ -163,34 +157,19 @@ exports.createContexto = async (req, res) => {
             if (tipo === 'ARQUIVO_LINK') {
                 let finalUrl = linkUrl;
                 let docType = 'LINK';
-
                 if (req.file) {
-                    // Arquivo salvo em src/files/context/<filename> e servido por /files
                     finalUrl = `/files/context/${req.file.filename}`;
                     const mime = req.file.mimetype;
                     if (mime === 'application/pdf') docType = 'PDF';
-                    else if (mime.includes('spreadsheet') || mime.includes('excel') || mime.includes('csv')) docType = 'EXCEL';
-                    else if (mime.includes('word') || mime.includes('presentation') || mime.includes('powerpoint')) docType = 'DOC';
+                    else if (mime.includes('spreadsheet') || mime.includes('excel')) docType = 'EXCEL';
+                    else if (mime.includes('word') || mime.includes('presentation')) docType = 'DOC';
                     else docType = 'DOC';
                 }
-
                 if (!finalUrl) throw new Error("Arquivo ou URL é obrigatório.");
-
                 await tx.versaoarquivo.create({
-                    data: {
-                        id: crypto.randomUUID(),
-                        versaoId: v1.id,
-                        url: finalUrl,
-                        docType
-                    }
+                    data: { id: crypto.randomUUID(), versaoId: v1.id, url: finalUrl, docType }
                 });
             } else if (tipo === 'DASHBOARD') {
-                if (!tipoGrafico || !dashboardPayload) throw new Error("Dados do gráfico incompletos.");
-                
-                // Validar enum
-                const validTypes = ['PIE', 'BAR', 'LINE'];
-                if (!validTypes.includes(tipoGrafico)) throw new Error(`Tipo de gráfico inválido: ${tipoGrafico}`);
-
                 await tx.versaodashboard.create({
                     data: {
                         id: crypto.randomUUID(),
@@ -200,7 +179,6 @@ exports.createContexto = async (req, res) => {
                     }
                 });
             } else if (tipo === 'INDICADOR') {
-                if (valorAtual === undefined) throw new Error("Valor atual obrigatório.");
                 await tx.versaoindicador.create({
                     data: {
                         id: crypto.randomUUID(),
@@ -230,19 +208,18 @@ exports.createContexto = async (req, res) => {
             return { ctx, v1 };
         });
 
-        // --- ADICIONADO: Notificar Gerentes ---
+        // --- NOTIFICAÇÃO PARA GERENTE ---
+        // Texto ajustado para incluir a palavra "Gerente"
         try {
-            // result.v1 é a versão criada
             await notificacaoService.notifyGerentesDaGerencia(
                 user.gerenciaId,
                 user.id,
                 result.v1,
-                `Novo contexto "${titulo}" aguarda sua análise.`
+                `Novo contexto "${titulo}" aguarda análise do Gerente.`
             );
         } catch (notifError) {
-            console.error('Falha ao notificar gerentes (createContexto):', notifError);
+            console.error('Falha notif create:', notifError);
         }
-        // -------------------------------------
 
         return res.status(201).json(result);
     } catch (err) {
@@ -255,11 +232,7 @@ exports.createContexto = async (req, res) => {
 exports.createVersao = async (req, res) => {
     const user = req.user;
     const { contextoId } = req.params;
-    const { 
-        titulo, descricao, motivoNovaVersao, descNovaVersao,
-        linkUrl, tipoGrafico, dashboardPayload, 
-        valorAtual, valorAlvo, unidade, textoComparativo, cor, icone 
-    } = req.body;
+    const { titulo, descricao, motivoNovaVersao, descNovaVersao, linkUrl, tipoGrafico, dashboardPayload, valorAtual, valorAlvo, unidade, textoComparativo, cor, icone } = req.body;
 
     if (!titulo) return res.status(400).json({ message: 'Título obrigatório' });
 
@@ -292,56 +265,30 @@ exports.createVersao = async (req, res) => {
                 },
             });
 
-            // Repetir lógica de salvamento específico (Simplificada aqui)
+            // Lógica de arquivos/dados
             if (contexto.tipo === 'ARQUIVO_LINK') {
                 let finalUrl = linkUrl;
                 let docType = 'LINK';
-                 if (req.file) {
+                if (req.file) {
                      finalUrl = `/files/context/${req.file.filename}`;
-                    // Mesma lógica de docType acima, com suporte a CSV/Presentation
-                    const mime = req.file.mimetype || '';
-                    if (mime === 'application/pdf') docType = 'PDF';
-                    else if (mime.includes('spreadsheet') || mime.includes('excel') || mime.includes('csv')) docType = 'EXCEL';
-                    else if (mime.includes('presentation') || mime.includes('powerpoint') || mime.includes('ms-powerpoint')) docType = 'DOC';
-                    else if (mime.includes('word')) docType = 'DOC';
-                    else docType = 'DOC';
+                     const mime = req.file.mimetype || '';
+                     if (mime.includes('pdf')) docType = 'PDF';
+                     else if (mime.includes('sheet') || mime.includes('excel')) docType = 'EXCEL';
+                     else docType = 'DOC';
+                } else if (!finalUrl && contexto.versoes[0]) {
+                     const prev = await prisma.versaoarquivo.findUnique({ where: { versaoId: contexto.versoes[0].id }});
+                     if (prev) { finalUrl = prev.url; docType = prev.docType; }
                 }
-                // Fallback para URL anterior se não enviado novo
-                if (!finalUrl && contexto.versoes[0]) {
-                    // Precisaria buscar o versaoArquivo anterior
-                    const prevFile = await prisma.versaoarquivo.findUnique({ where: { versaoId: contexto.versoes[0].id } });
-                    if (prevFile) {
-                        finalUrl = prevFile.url;
-                        docType = prevFile.docType;
-                    }
-                }
-
                 if (finalUrl) {
-                    await tx.versaoarquivo.create({
-                        data: { id: crypto.randomUUID(), versaoId: v.id, url: finalUrl, docType }
-                    });
+                    await tx.versaoarquivo.create({ data: { id: crypto.randomUUID(), versaoId: v.id, url: finalUrl, docType }});
                 }
             } else if (contexto.tipo === 'DASHBOARD' && dashboardPayload) {
                  await tx.versaodashboard.create({
-                    data: {
-                        id: crypto.randomUUID(),
-                        versaoId: v.id,
-                        tipoGrafico: tipoGrafico || 'BAR',
-                        payload: typeof dashboardPayload === 'object' ? JSON.stringify(dashboardPayload) : dashboardPayload
-                    }
+                    data: { id: crypto.randomUUID(), versaoId: v.id, tipoGrafico: tipoGrafico || 'BAR', payload: typeof dashboardPayload === 'object' ? JSON.stringify(dashboardPayload) : dashboardPayload }
                 });
             } else if (contexto.tipo === 'INDICADOR' && valorAtual !== undefined) {
                 await tx.versaoindicador.create({
-                    data: {
-                        id: crypto.randomUUID(),
-                        versaoId: v.id,
-                        valorAtual: parseFloat(valorAtual),
-                        valorAlvo: valorAlvo ? parseFloat(valorAlvo) : null,
-                        unidade: unidade || '',
-                        textoComparativo: textoComparativo || null,
-                        cor: cor || '#000',
-                        icone: icone || 'Heart'
-                    }
+                    data: { id: crypto.randomUUID(), versaoId: v.id, valorAtual: parseFloat(valorAtual), valorAlvo: valorAlvo ? parseFloat(valorAlvo) : null, unidade: unidade||'', textoComparativo, cor: cor||'#000', icone: icone||'Heart' }
                 });
             }
 
@@ -355,28 +302,96 @@ exports.createVersao = async (req, res) => {
                     timestamp: new Date()
                 }
             });
-
             return v;
         });
 
-        // --- ADICIONADO: Notificar Gerentes ---
+        // --- NOTIFICAÇÃO PARA GERENTE ---
+        // Texto ajustado para incluir a palavra "Gerente"
         try {
-            // result aqui é a versão retornada pela transação (v)
             await notificacaoService.notifyGerentesDaGerencia(
                 user.gerenciaId,
                 user.id,
                 result,
-                `Nova versão "${titulo}" aguarda sua análise.`
+                `Nova versão "${titulo}" aguarda análise do Gerente.`
             );
         } catch (notifError) {
-            console.error('Falha ao notificar gerentes (createVersao):', notifError);
+            console.error('Falha notif createVersao:', notifError);
         }
-        // -------------------------------------
 
         return res.status(201).json({ versao: result });
     } catch (err) {
         console.error('Erro createVersao:', err);
         return res.status(500).json({ message: err.message || 'Erro interno' });
+    }
+};
+
+// GET /contextos/:versaoId/participantes
+// Retorna a hierarquia e filtra quem interagiu
+exports.listarParticipantes = async (req, res) => {
+    const { versaoId } = req.params;
+    const userId = req.user.id; // ID de quem está pedindo a lista (para excluir a si mesmo)
+
+    try {
+        // 1. Buscar a Versão e a Estrutura Hierárquica
+        const versao = await prisma.contextoversao.findUnique({
+            where: { id: versaoId },
+            include: { 
+                contexto: { 
+                    include: { 
+                        gerencia: true 
+                    } 
+                } 
+            }
+        });
+
+        if (!versao) return res.status(404).json({ message: 'Versão não encontrada' });
+
+        const gerenciaId = versao.contexto.gerencia.id;
+        const diretoriaId = versao.contexto.gerencia.diretoriaId;
+        const solicitanteId = versao.solicitanteId;
+
+        // 2. Descobrir quais Secretarias interagiram nesta versão
+        // (Regra: Só listar Secretaria se ela tiver interagido anteriormente)
+        const comentariosSecretaria = await prisma.comentario.findMany({
+            where: {
+                versaoId: versaoId,
+                user: { role: 'SECRETARIA' }
+            },
+            select: { autorId: true },
+            distinct: ['autorId']
+        });
+        
+        const idsSecretariasInteragiram = comentariosSecretaria.map(c => c.autorId);
+
+        // 3. Buscar os usuários aplicando os filtros
+        const participantes = await prisma.user.findMany({
+            where: {
+                AND: [
+                    // Filtro 1: Excluir o próprio usuário (para não aparecer "Eu" na lista de destinatários)
+                    { id: { not: userId } },
+                    
+                    // Filtro 2: Regras de quem deve aparecer
+                    {
+                        OR: [
+                            { role: 'DIRETOR', diretoriaId: diretoriaId }, // Diretor da área
+                            { role: 'GERENTE', gerenciaId: gerenciaId },   // Gerente da área
+                            { id: solicitanteId },                         // Membro (Dono)
+                            { id: { in: idsSecretariasInteragiram } }      // Secretarias (apenas se interagiram)
+                        ]
+                    }
+                ]
+            },
+            select: { 
+                id: true, 
+                nome: true, 
+                role: true 
+            }
+        });
+
+        return res.json(participantes);
+    } catch (err) {
+        console.error('Erro listarParticipantes:', err);
+        return res.status(500).json({ message: 'Erro interno' });
     }
 };
 
@@ -386,11 +401,9 @@ exports.gerenteAprovar = async (req, res) => {
     const { versaoId } = req.params;
     const user = req.user;
     try {
-        // O service já altera o status para AGUARDANDO_DIRETOR
         await versaoService.gerenteAprova({ versaoId, actor: user });
 
-        // --- ADICIONADO: Notificar Diretores ---
-        // Recupera a versão atualizada para saber a diretoria correta
+        // --- NOTIFICAR DIRETORES ---
         const versao = await prisma.contextoversao.findUnique({
             where: { id: versaoId },
             include: { contexto: { include: { gerencia: true } } }
@@ -398,23 +411,22 @@ exports.gerenteAprovar = async (req, res) => {
 
         if (versao && versao.contexto?.gerencia?.diretoriaId) {
             try {
+                // Texto ajustado para incluir "Diretor" e remover "Gerente" (para não confundir o regex do front)
                 await notificacaoService.notifyDiretoresDaDiretoria(
                     versao.contexto.gerencia.diretoriaId,
                     user.id,
                     versao,
-                    `Versão "${versao.titulo}" aprovada pelo Gerente e aguarda sua validação.`
+                    `Versão "${versao.titulo}" aguarda validação do Diretor.`
                 );
             } catch (notifError) {
-                console.error('Falha ao notificar diretores (gerenteAprovar):', notifError);
+                console.error('Falha notif diretores:', notifError);
             }
         }
-        // ---------------------------------------
 
         return res.json({ message: 'Aprovado com sucesso' });
     } catch (err) {
         console.error('Erro gerenteAprovar:', err);
-        const status = err.status || 500;
-        return res.status(status).json({ message: err.message || 'Erro ao aprovar' });
+        return res.status(err.status || 500).json({ message: err.message || 'Erro ao aprovar' });
     }
 };
 
@@ -423,7 +435,6 @@ exports.diretorPublicar = async (req, res) => {
     const user = req.user;
     try {
         await prisma.$transaction(async (tx) => {
-            // Desativar anteriores
             const current = await tx.contextoversao.findUnique({ where: { id: versaoId } });
             if (current) {
                 await tx.contextoversao.updateMany({
@@ -431,7 +442,6 @@ exports.diretorPublicar = async (req, res) => {
                     data: { isAtiva: false }
                 });
             }
-            // Publicar atual
             await tx.contextoversao.update({
                 where: { id: versaoId },
                 data: { statusValidacao: 'PUBLICADO', isAtiva: true, updatedAt: new Date() }
@@ -447,6 +457,7 @@ exports.diretorPublicar = async (req, res) => {
                 }
             });
         });
+        
         return res.json({ message: 'Publicado com sucesso' });
     } catch (err) {
         return res.status(500).json({ message: 'Erro ao publicar' });
@@ -530,7 +541,6 @@ exports.getDetalhes = async (req, res) => {
             orderBy: [{ timestamp: 'desc' }],
         }) : [];
 
-        // Se tiver função de mapeamento importada, use-a, senão retorne cru
         if (typeof mapContextoDetalhe === 'function') {
             return res.json(mapContextoDetalhe(contexto, versoes, historico));
         }
@@ -558,11 +568,10 @@ exports.buscar = async (req, res) => {
 
     try {
         const where = {
-            ...(q ? { contexto: { tituloConceitual: { contains: q } } } : {}), // removido mode insensitive p/ compatibilidade simples
+            ...(q ? { contexto: { tituloConceitual: { contains: q } } } : {}), 
             ...whereVersao
         };
 
-        // Busca simplificada para evitar conflito de types do prisma dependendo da versão
         const [total, rows] = await Promise.all([
             prisma.contextoversao.count({ where }),
             prisma.contextoversao.findMany({
