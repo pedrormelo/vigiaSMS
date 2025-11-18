@@ -1,3 +1,4 @@
+// NotificationDetailView.tsx
 // CLEAN REWRITE BELOW (previous duplicate/corrupted content removed)
 "use client";
 import React, { useEffect, useState } from "react";
@@ -9,9 +10,29 @@ import SystemUpdateView from "@/components/systemUpdate/systemUpdateNotification
 import CommentItem from "./commentItem";
 import { Notification, Comment } from "@/constants/types";
 import { FileType } from "@/components/contextosCard/contextoCard";
-import { showSuccessToast } from "@/components/ui/Toasts";
+import { showSuccessToast, showErrorToast } from "@/components/ui/Toasts";
+import * as notifService from "@/services/notificationsService"; 
 
 interface Props { notification: Notification | null; isRead: boolean; onOpenContexto: (n: Notification) => void; }
+
+// Função auxiliar para gerar o badge de status (usa o título da notificação para inferir)
+function getStatusBadge(notificationTitle: string) {
+    if (notificationTitle.includes('Gerente')) {
+        return (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-yellow-100 text-yellow-800 border border-yellow-200">
+                AGUARDA GERENTE
+            </span>
+        );
+    }
+    if (notificationTitle.includes('Diretor')) {
+        return (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                AGUARDA DIRETOR
+            </span>
+        );
+    }
+    return null;
+}
 
 const ChatNotificationDetails: React.FC<Props> = ({ notification, onOpenContexto }) => {
   const [comments, setComments] = useState<Comment[]>([]);
@@ -19,6 +40,7 @@ const ChatNotificationDetails: React.FC<Props> = ({ notification, onOpenContexto
   const [showQuick, setShowQuick] = useState(false);
   const [privateMode, setPrivateMode] = useState(false);
   const [recipient, setRecipient] = useState<string | null>(null);
+  const [isSending, setIsSending] = useState(false);
   const [chatBg, setChatBg] = useState<string>(() => {
     try {
       const existing = localStorage.getItem('notifications.chatBg');
@@ -26,37 +48,69 @@ const ChatNotificationDetails: React.FC<Props> = ({ notification, onOpenContexto
       return 'gradient';
     } catch { return 'gradient'; }
   });
-  useEffect(() => { setComments(notification?.comments || []); }, [notification]);
+  
+  // Lógica de carregamento de comentários REAIS
+  useEffect(() => {
+    let active = true;
+    async function loadComments() {
+      if (notification?.id) {
+        try {
+          const serverComments = await notifService.getCommentsForNotification(notification.id);
+          if (active) setComments(serverComments);
+        } catch (error) {
+          console.error("Erro ao carregar chat:", error);
+        }
+      }
+    }
+    loadComments();
+    return () => { active = false; };
+  }, [notification]);
+
   useEffect(() => {
     const listener = (e: StorageEvent) => { if (e.key === 'notifications.chatBg' && e.newValue) setChatBg(e.newValue); };
     window.addEventListener('storage', listener); return () => window.removeEventListener('storage', listener);
   }, []);
+  
   if (!notification) return null;
-  const { title, description, type, relatedFileType, contextoId } = notification;
+  
+  // Pegando as propriedades relevantes (contextTitle vem do service atualizado)
+  const { title, description, type, relatedFileType, contextoId, contextTitle } = notification; 
+  
+  const mainTitle = contextTitle || title;
   const iconType = (relatedFileType || type) as FileType;
   const canView = !!contextoId;
   const quickReplies = ["Ciente.", "Obrigado(a).", "Recebido.", "Entendido."];
-  // Lista de participantes (simplificada). Em cenário real viria da notificação.
   const participants = Array.from(new Set([
-    ...(notification?.comments || []).map(c => c.author).filter(a => a !== 'Você')
+    ...comments.map(c => c.author).filter(a => a !== 'Você' && a !== 'Eu')
   ]));
-  const send = (value: string) => {
-    const v = value.trim(); if (!v) return;
-    const now = new Date();
-    setComments(prev => [...prev, {
-      id: Math.random(), author: 'Você', text: v,
-      time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      date: now.toLocaleDateString('pt-BR'), isMyComment: true, role: 'user', isPrivate: privateMode || undefined, toAuthor: privateMode ? recipient || undefined : undefined
-    }]);
-    if (privateMode && recipient) {
-      showSuccessToast(`Mensagem privada enviada para ${recipient}.`);
-    } else if (privateMode) {
-      showSuccessToast('Mensagem privada enviada.');
-    } else {
-      showSuccessToast('Mensagem enviada.');
+
+  const statusBadge = getStatusBadge(title);
+
+  const send = async (value: string) => {
+    const v = value.trim(); 
+    if (!v || !notification) return;
+      
+    setIsSending(true);
+
+    try {
+        const savedComment = await notifService.sendComment(notification.id, v);
+
+        if (savedComment) {
+            setComments(prev => [...prev, savedComment]);
+            setText(''); 
+            setShowQuick(false);
+            showSuccessToast('Mensagem enviada.');
+        } else {
+            setText(v);
+            showErrorToast('Não foi possível enviar a mensagem.');
+        }
+    } catch (error) {
+        showErrorToast('Erro de conexão.');
+    } finally {
+        setIsSending(false);
     }
-    setText(''); setShowQuick(false);
   };
+  
   return (
     <div className="flex flex-col h-full bg-white">
       <div className="p-4 border-b border-gray-200 bg-gray-50/30">
@@ -64,10 +118,33 @@ const ChatNotificationDetails: React.FC<Props> = ({ notification, onOpenContexto
           <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-white border border-gray-200 shadow-inner p-3">
             <IconeDocumento type={iconType} />
           </div>
+          
+          {/* BLOCO DE CONTEÚDO DE TEXTO (ALTERADO) */}
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-lg text-blue-700 line-clamp-2" title={title}>{title}</h3>
-            <p className="text-sm text-gray-600 mt-1 line-clamp-3" title={description}>{description}</p>
+            {/* Linha 1: Título Conceitual */}
+            <h3 className="font-semibold text-lg text-blue-700 line-clamp-1" title={mainTitle}>
+                {mainTitle}
+            </h3>
+
+            {/* Linha 2: Etiqueta de Tipo + Etiqueta de Status (LADO A LADO) */}
+            <div className="flex items-center gap-2 mt-1">
+                {/* Etiqueta de Tipo (DASHBOARD/INDICADOR) */}
+                {relatedFileType && (
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide bg-gray-100 text-gray-600 border border-gray-200">
+                        {relatedFileType}
+                    </span>
+                )}
+                
+                {/* Etiqueta de Status (AGUARDA GERENTE/DIRETOR) */}
+                {statusBadge}
+            </div>
+
+            {/* Linha 3: Subtítulo/Descrição da Notificação */}
+            <p className="text-sm text-gray-600 mt-1 line-clamp-2" title={description}>
+                {description}
+            </p>
           </div>
+          
           {canView && (
             <Button size="sm" onClick={() => onOpenContexto(notification)} className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-4 py-2 flex items-center gap-1.5 ml-auto shadow-sm">
               <Eye className="w-4 h-4" /> Abrir
@@ -75,6 +152,8 @@ const ChatNotificationDetails: React.FC<Props> = ({ notification, onOpenContexto
           )}
         </div>
       </div>
+      
+      {/* Corpo do Chat */}
       <div className={cn(
         "flex-1 p-4 flex flex-col gap-3 overflow-y-auto scrollbar-custom",
         chatBg === 'gradient' ? 'bg-gradient-to-b from-white to-blue-50' : (chatBg === 'none' ? 'bg-white' : 'bg-cover bg-center bg-no-repeat')
@@ -83,6 +162,8 @@ const ChatNotificationDetails: React.FC<Props> = ({ notification, onOpenContexto
           <div className="flex-1 flex items-center justify-center text-gray-500">Nenhum comentário.</div>
         )}
       </div>
+
+      {/* Área de Input */}
       <div className="p-4 border-t border-gray-200 bg-white flex-shrink-0">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 flex-1">
@@ -126,8 +207,8 @@ const ChatNotificationDetails: React.FC<Props> = ({ notification, onOpenContexto
                 </select>
               </div>
             )}
-            <Button disabled={!text.trim()} onClick={() => send(text)} size="sm" className="rounded-full text-white bg-blue-500 px-4 py-2 text-sm font-medium flex items-center gap-2 hover:bg-blue-600">
-              <Send className="w-4 h-4" /> Enviar
+            <Button disabled={!text.trim() || isSending} onClick={() => send(text)} size="sm" className="rounded-full text-white bg-blue-500 px-4 py-2 text-sm font-medium flex items-center gap-2 hover:bg-blue-600">
+              {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />} Enviar
             </Button>
           </div>
         </div>

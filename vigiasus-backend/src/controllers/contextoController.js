@@ -5,6 +5,8 @@ const prisma = require('../config/prismaClient');
 const { Status } = require('../constants/status');
 const { mapContextoDetalhe } = require('../mappers/contextoMapper');
 const versaoService = require('../services/versaoService');
+// ADICIONADO: Importação do serviço de notificações
+const notificacaoService = require('../services/notificacaoService');
 
 // Função auxiliar para mapear resposta simples
 function mapContextoWithVersao(ctx, versao) {
@@ -128,6 +130,7 @@ exports.createContexto = async (req, res) => {
         // Validar existência da gerência do usuário para evitar erro 500 por FK
         const ger = await prisma.gerencia.findUnique({ where: { id: user.gerenciaId } });
         if (!ger) return res.status(400).json({ message: 'Gerência do usuário não encontrada.' });
+        
         const result = await prisma.$transaction(async (tx) => {
             // 1. Criar Contexto Pai
             const ctx = await tx.contexto.create({
@@ -226,6 +229,20 @@ exports.createContexto = async (req, res) => {
 
             return { ctx, v1 };
         });
+
+        // --- ADICIONADO: Notificar Gerentes ---
+        try {
+            // result.v1 é a versão criada
+            await notificacaoService.notifyGerentesDaGerencia(
+                user.gerenciaId,
+                user.id,
+                result.v1,
+                `Novo contexto "${titulo}" aguarda sua análise.`
+            );
+        } catch (notifError) {
+            console.error('Falha ao notificar gerentes (createContexto):', notifError);
+        }
+        // -------------------------------------
 
         return res.status(201).json(result);
     } catch (err) {
@@ -341,6 +358,21 @@ exports.createVersao = async (req, res) => {
 
             return v;
         });
+
+        // --- ADICIONADO: Notificar Gerentes ---
+        try {
+            // result aqui é a versão retornada pela transação (v)
+            await notificacaoService.notifyGerentesDaGerencia(
+                user.gerenciaId,
+                user.id,
+                result,
+                `Nova versão "${titulo}" aguarda sua análise.`
+            );
+        } catch (notifError) {
+            console.error('Falha ao notificar gerentes (createVersao):', notifError);
+        }
+        // -------------------------------------
+
         return res.status(201).json({ versao: result });
     } catch (err) {
         console.error('Erro createVersao:', err);
@@ -354,7 +386,30 @@ exports.gerenteAprovar = async (req, res) => {
     const { versaoId } = req.params;
     const user = req.user;
     try {
+        // O service já altera o status para AGUARDANDO_DIRETOR
         await versaoService.gerenteAprova({ versaoId, actor: user });
+
+        // --- ADICIONADO: Notificar Diretores ---
+        // Recupera a versão atualizada para saber a diretoria correta
+        const versao = await prisma.contextoversao.findUnique({
+            where: { id: versaoId },
+            include: { contexto: { include: { gerencia: true } } }
+        });
+
+        if (versao && versao.contexto?.gerencia?.diretoriaId) {
+            try {
+                await notificacaoService.notifyDiretoresDaDiretoria(
+                    versao.contexto.gerencia.diretoriaId,
+                    user.id,
+                    versao,
+                    `Versão "${versao.titulo}" aprovada pelo Gerente e aguarda sua validação.`
+                );
+            } catch (notifError) {
+                console.error('Falha ao notificar diretores (gerenteAprovar):', notifError);
+            }
+        }
+        // ---------------------------------------
+
         return res.json({ message: 'Aprovado com sucesso' });
     } catch (err) {
         console.error('Erro gerenteAprovar:', err);

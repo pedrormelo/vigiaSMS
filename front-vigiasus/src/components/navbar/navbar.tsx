@@ -4,35 +4,23 @@
 import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-// REMOVIDO: Sidebar interna, pois o AppShell já a renderiza
-// import Sidebar from "./Sidebar"; 
 import { Menu, Loader2 } from 'lucide-react';
 import NotificationsModal from "@/components/notifications/notificationsModal";
-
 import { VisualizarContextoModal } from "@/components/popups/visualizarContextoModal";
-
 import { getContextoById } from "@/services/contextoService";
-
 import { Contexto } from "@/components/validar/typesDados";
 import { Notification } from "@/constants/types";
-
 import UpdateStatusPopover from "./UpdateStatusPopover";
-
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useNotifications } from "@/hooks/useNotifications";
 
 type PartialContexto = Partial<Contexto> & { id: string };
 
-// 1. DEFINIR AS PROPS QUE O NAVBAR RECEBE
 interface NavbarProps {
   onOpenSidebar: () => void;
 }
 
-// 2. RECEBER AS PROPS NO COMPONENTE
 export default function Navbar({ onOpenSidebar }: NavbarProps) {
-  // REMOVIDO: Estado interno da sidebar (controlado pelo pai/AppShell agora)
-  // const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
   const [lastUpdateInfo, setLastUpdateInfo] = useState({
     relative: "há 2 horas",
     label: "29/10/2025 09:15",
@@ -52,15 +40,14 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
     notifications,
     isLoading: isLoadingNotifications,
     isError: isErrorNotifications,
-    readNotifications,
-    markAsRead,
+    readNotifications, // Agora existe
+    markAsRead,        // Agora existe
   } = useNotifications(userProfile?.name);
 
   const totalUnreadCount = useMemo(() => {
     if (!notifications || !readNotifications) return 0;
     return notifications.filter(n => !readNotifications.includes(n.id)).length;
   }, [notifications, readNotifications]);
-
 
   const handleNotificationsClick = () => {
     setIsNotificationsOpen(true);
@@ -95,13 +82,13 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
     }
   };
 
-
   const handleCloseDetalhesContexto = () => {
     setIsDetalhesContextoOpen(false);
     setSelectedContexto(null);
   };
 
-  const handleMarkAsRead = (notificationId: string | "all") => {
+  // CORREÇÃO DE TIPO: notificationId agora é number | "all"
+  const handleMarkAsRead = (notificationId: number | "all") => {
     if (notificationId === "all") {
       const allIds = notifications.map(n => n.id);
       markAsRead(allIds);
@@ -110,7 +97,7 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
     }
   };
 
-  // Atualizar bloco de "última atualização" baseado na notificação mais recente
+  // Atualizar bloco de "última atualização"
   useEffect(() => {
     if (selectedContexto?.id && !("titulo" in selectedContexto && selectedContexto.titulo)) {
       let mounted = true;
@@ -140,14 +127,11 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
     }
   }, [selectedContexto?.id]);
 
-
   return (
     <>
       <header className="bg-white w-full drop-shadow-md sticky top-0 z-35">
         <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
-          {/* Botão Menu (Esquerda) */}
           <button
-            // 3. USAR A PROP PARA ABRIR A SIDEBAR DO APPSHELL
             onClick={onOpenSidebar}
             className="text-blue-700 hover:text-blue-500 transition-colors p-2 -ml-2 md:ml-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1"
             aria-label="Abrir menu lateral"
@@ -155,7 +139,6 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
             <Menu strokeWidth={2.5} className="w-6 h-6 md:w-7 md:h-7" />
           </button>
 
-          {/* Bloco central (Logos) */}
           <div className="flex items-center gap-4 md:gap-6 lg:gap-8">
             <Link href="/" className="block flex-shrink-0">
               <h1 className="text-xl md:text-2xl text-blue-700 hover:text-blue-500 transition-colors">
@@ -172,9 +155,7 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
             />
           </div>
 
-          {/* Ícones de ações (Direita) */}
           <div className="flex items-center gap-3 md:gap-4 text-blue-700">
-
             <UpdateStatusPopover
               lastUpdateRelative={lastUpdateInfo.relative}
               lastUpdateLabel={lastUpdateInfo.label}
@@ -182,7 +163,6 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
               isRecent={lastUpdateInfo.isRecent}
             />
 
-            {/* Ícone de Notificações com contador */}
             <div className="relative">
               <button
                 onClick={handleNotificationsClick}
@@ -210,10 +190,6 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
         </div>
       </header>
 
-      {/* REMOVIDO: A Sidebar agora é responsabilidade do AppShell, não do Navbar */}
-      {/* <Sidebar role={userProfile?.role ?? 'membro'} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} /> */}
-
-      {/* Modal de Notificações */}
       <NotificationsModal
         isOpen={isNotificationsOpen}
         onClose={handleCloseNotifications}
@@ -227,22 +203,17 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
         onMarkAsRead={handleMarkAsRead}
       />
 
-      {/* Modal de Visualizar Contexto */}
       <VisualizarContextoModal
         estaAberto={isDetalhesContextoOpen}
         aoFechar={handleCloseDetalhesContexto}
         dadosDoContexto={selectedContexto}
-        
         perfil={userProfile?.role ?? 'membro'}
-        
         isFromHistory={selectedContexto && 'historico' in selectedContexto && (selectedContexto.historico?.length ?? 0) > 0}
-        
         onDeferir={undefined}
         onIndeferir={undefined}
         onCorrigir={undefined}
       />
 
-      {/* Indicador de Loading */}
       {isLoadingContexto && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center">
           <Loader2 className="h-10 w-10 animate-spin text-blue-600" />

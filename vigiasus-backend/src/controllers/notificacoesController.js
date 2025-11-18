@@ -1,37 +1,62 @@
+// src/controllers/notificacoesController.js
 const prisma = require('../config/prismaClient');
 
-// GET /notificacoes -> list for current user
+// GET /notificacoes
+// CORREÇÃO: O nome da função deve ser listForUser para bater com a rota
 exports.listForUser = async (req, res) => {
+    const user = req.user;
     try {
-        const rows = await prisma.notificacao.findMany({
-            where: { destinatarioId: req.user.id },
+        const notificacoes = await prisma.notificacao.findMany({
+            where: { destinatarioId: user.id },
             orderBy: { createdAt: 'desc' },
-            take: 100,
             include: {
+                // Inclui os dados do remetente (opcional)
+                user: { // Se a relação se chamar 'user' no schema para o remetente, senão ajuste conforme seu schema
+                    select: { id: true, nome: true, email: true }
+                },
+                // Entramos na versão e pedimos para incluir o Contexto Pai
                 contextoversao: {
-                    select: { contextoId: true }
+                    include: {
+                        contexto: {
+                            select: {
+                                id: true,
+                                tituloConceitual: true,
+                                tipo: true
+                            }
+                        }
+                    }
                 }
             }
         });
-        return res.json({ data: rows });
-    } catch (err) {
-        console.error('Erro list notificacoes:', err);
-        return res.status(500).json({ message: 'Erro interno' });
-    }
-}
 
-// POST /notificacoes/:id/ler -> mark as read
-exports.markAsRead = async (req, res) => {
-    const { id } = req.params;
-    try {
-        const n = await prisma.notificacao.findUnique({ where: { id } });
-        if (!n || n.destinatarioId !== req.user.id) return res.status(404).json({ message: 'Notificação não encontrada' });
-        if (n.isLida) return res.json({ message: 'Já marcada como lida' });
-        await prisma.notificacao.update({ where: { id }, data: { isLida: true } });
-        return res.json({ message: 'OK' });
-    } catch (err) {
-        console.error('Erro marcar leitura notificacao:', err);
-        return res.status(500).json({ message: 'Erro interno' });
+        return res.json({ data: notificacoes });
+
+    } catch (error) {
+        console.error('Erro listNotificacoes:', error);
+        return res.status(500).json({ message: 'Erro ao buscar notificações' });
     }
 };
 
+// POST /notificacoes/:id/ler
+exports.markAsRead = async (req, res) => {
+    const { id } = req.params;
+    const user = req.user;
+
+    try {
+        // Verifica se a notificação pertence ao usuário
+        const notif = await prisma.notificacao.findFirst({
+            where: { id, destinatarioId: user.id }
+        });
+
+        if (!notif) return res.status(404).json({ message: 'Notificação não encontrada' });
+
+        await prisma.notificacao.update({
+            where: { id },
+            data: { isLida: true }
+        });
+
+        return res.json({ message: 'Marcada como lida' });
+    } catch (error) {
+        return res.status(500).json({ message: 'Erro ao atualizar notificação' });
+    }
+};
