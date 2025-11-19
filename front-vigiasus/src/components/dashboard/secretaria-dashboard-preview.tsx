@@ -36,40 +36,62 @@ export function SecretariaDashboardPreview({ graphs, pageSize = 6, className }: 
         [graphs]
     )
 
-    // Group by diretoria id using gerencia name mapping
+    // Group highlighted graphs by diretoria, using direct ids when available
     const groups = useMemo(() => {
-        // Maps for quick lookup
         const dirIdToSlug = new Map(diretorias.map(d => [d.id, d.slug || d.id]))
         const dirSlugToName = new Map(diretorias.map(d => [d.slug || d.id, d.nome]))
-        const gerenciaNameToDirSlug = new Map<string, string>()
+        const dirSlugToColor = new Map(diretorias.map(d => [d.slug || d.id, d.corFrom]))
+
         const gerenciaIdToDirSlug = new Map<string, string>()
-        gerencias.forEach(g => {
+        const gerenciaNameToDirSlug = new Map<string, string>()
+        for (const g of gerencias) {
             const slug = dirIdToSlug.get(g.diretoriaId)
-            if (slug) {
-                gerenciaIdToDirSlug.set(g.id, slug)
-                if (g.nome) gerenciaNameToDirSlug.set(g.nome.toLowerCase(), slug)
-            }
-        })
+            if (!slug) continue
+            gerenciaIdToDirSlug.set(g.id, slug)
+            if (g.nome) gerenciaNameToDirSlug.set(g.nome.toLowerCase(), slug)
+        }
 
-        // Order of diretorias: exclude secretaria
-        const orderedSlugs = diretorias.filter(d => (d.slug || d.id) !== 'secretaria').map(d => d.slug || d.id)
+        const orderedSlugs = diretorias
+            .filter(d => (d.slug || d.id) !== "secretaria")
+            .map(d => d.slug || d.id)
+
         const map = new Map<string, GraphData[]>()
-        for (const slug of orderedSlugs) map.set(slug, [])
+        for (const slug of orderedSlugs) {
+            map.set(slug, [])
+        }
 
-        for (const g of highlighted) {
-            const key = (g.gerencia || '').toLowerCase()
-            let dirSlug = gerenciaNameToDirSlug.get(key) || gerenciaIdToDirSlug.get(g.gerencia)
-            if (!dirSlug) dirSlug = 'outras'
-            if (!map.has(dirSlug)) map.set(dirSlug, [])
-            map.get(dirSlug)!.push(g)
+        for (const graph of highlighted) {
+            let dirSlug: string | undefined
+            if (graph.diretoriaId) {
+                dirSlug = dirIdToSlug.get(graph.diretoriaId) || dirSlug
+            }
+            if (!dirSlug && graph.gerenciaId) {
+                dirSlug = gerenciaIdToDirSlug.get(graph.gerenciaId) || dirSlug
+            }
+            const nomeBase = graph.gerenciaNome || graph.gerencia || ""
+            if (!dirSlug && nomeBase) {
+                dirSlug = gerenciaNameToDirSlug.get(nomeBase.toLowerCase()) || dirSlug
+            }
+            if (!dirSlug) {
+                dirSlug = "outras"
+            }
+            if (!map.has(dirSlug)) {
+                map.set(dirSlug, [])
+            }
+            map.get(dirSlug)!.push(graph)
         }
 
         const ordered: { id: string; nome: string; graphs: GraphData[]; color?: string }[] = []
         for (const slug of orderedSlugs) {
-            ordered.push({ id: slug, nome: dirSlugToName.get(slug) || slug, graphs: map.get(slug)!, color: diretorias.find(d => (d.slug || d.id) === slug)?.corFrom || undefined })
+            ordered.push({
+                id: slug,
+                nome: dirSlugToName.get(slug) || slug,
+                graphs: map.get(slug) || [],
+                color: dirSlugToColor.get(slug) || undefined
+            })
         }
-        if (map.has('outras')) {
-            ordered.push({ id: 'outras', nome: 'Outras Diretorias', graphs: map.get('outras')! })
+        if (map.has("outras")) {
+            ordered.push({ id: "outras", nome: "Outras Diretorias", graphs: map.get("outras") || [] })
         }
         return ordered
     }, [highlighted, diretorias, gerencias])

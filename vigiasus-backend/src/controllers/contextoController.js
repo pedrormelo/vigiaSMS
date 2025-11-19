@@ -109,6 +109,69 @@ exports.listByGerencia = async (req, res) => {
     }
 };
 
+// POST /contextos/versoes/:versaoId/destacar
+exports.marcarDestaque = async (req, res) => {
+    const { versaoId } = req.params;
+    const user = req.user;
+    try {
+        // Buscar versão com relação até a diretoria
+        const versao = await prisma.contextoversao.findUnique({
+            where: { id: versaoId },
+            include: { contexto: { include: { gerencia: true } } }
+        });
+        if (!versao) return res.status(404).json({ message: 'Versão não encontrada' });
+        if (user.role !== 'DIRETOR') return res.status(403).json({ message: 'Apenas Diretor pode destacar' });
+        const diretoriaId = versao.contexto?.gerencia?.diretoriaId || null;
+        if (!diretoriaId || user.diretoriaId !== diretoriaId) {
+            return res.status(403).json({ message: 'Diretoria não correspondente' });
+        }
+        if (!(versao.isAtiva && versao.statusValidacao === 'PUBLICADO')) {
+            return res.status(400).json({ message: 'Apenas versões publicadas e ativas podem ser destacadas' });
+        }
+        if (!versao.isDestacado) {
+            const count = await prisma.contextoversao.count({
+                where: {
+                    isDestacado: true,
+                    isAtiva: true,
+                    statusValidacao: 'PUBLICADO',
+                    contexto: { gerencia: { diretoriaId } }
+                }
+            });
+            if (count >= 3) {
+                return res.status(400).json({ message: 'Limite de 3 destaques por diretoria alcançado' });
+            }
+        }
+        await prisma.contextoversao.update({ where: { id: versaoId }, data: { isDestacado: true, updatedAt: new Date() } });
+        return res.json({ message: 'Marcado como destaque' });
+    } catch (err) {
+        console.error('Erro marcarDestaque:', err);
+        return res.status(500).json({ message: 'Erro interno' });
+    }
+};
+
+// POST /contextos/versoes/:versaoId/remover-destaque
+exports.removerDestaque = async (req, res) => {
+    const { versaoId } = req.params;
+    const user = req.user;
+    try {
+        const versao = await prisma.contextoversao.findUnique({
+            where: { id: versaoId },
+            include: { contexto: { include: { gerencia: true } } }
+        });
+        if (!versao) return res.status(404).json({ message: 'Versão não encontrada' });
+        if (user.role !== 'DIRETOR') return res.status(403).json({ message: 'Apenas Diretor pode remover destaque' });
+        const diretoriaId = versao.contexto?.gerencia?.diretoriaId || null;
+        if (!diretoriaId || user.diretoriaId !== diretoriaId) {
+            return res.status(403).json({ message: 'Diretoria não correspondente' });
+        }
+        await prisma.contextoversao.update({ where: { id: versaoId }, data: { isDestacado: false, updatedAt: new Date() } });
+        return res.json({ message: 'Destaque removido' });
+    } catch (err) {
+        console.error('Erro removerDestaque:', err);
+        return res.status(500).json({ message: 'Erro interno' });
+    }
+};
+
 // POST /contextos (Criação com Transação)
 exports.createContexto = async (req, res) => {
     const user = req.user;

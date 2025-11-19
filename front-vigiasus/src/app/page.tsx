@@ -31,6 +31,7 @@ export default function LandingPage() {
         role={user.role} 
         userName={user.name} 
         diretoriaId={user.diretoriaId} 
+        diretoriaSlug={user.diretoriaSlug}
         gerenciaId={user.gerenciaId} 
         gerenciaSlug={user.gerenciaSlug}
       />

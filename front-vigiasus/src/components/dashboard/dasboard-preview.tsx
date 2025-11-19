@@ -22,6 +22,9 @@ export interface GraphData {
     colors?: string[]  // Add colors support
     isHighlighted?: boolean
     editMode?: boolean
+    diretoriaId?: string
+    gerenciaId?: string
+    gerenciaNome?: string
 }
 
 

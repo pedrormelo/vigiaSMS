@@ -63,6 +63,7 @@ model contextoversao {
   versaoarquivo       versaoarquivo?
   versaodashboard     versaodashboard?
   versaoindicador     versaoindicador?
+  dashboardkpi        dashboardkpi[]
 
   @@index([contextoId], map: "ContextoVersao_contextoId_idx")
   @@index([solicitanteId], map: "ContextoVersao_solicitanteId_fkey")
@@ -77,6 +78,19 @@ model dashboardlayout {
   createdAt           DateTime                   @default(now())
   diretoria           diretoria                  @relation(fields: [diretoriaId], references: [id], onDelete: Cascade, map: "DashboardLayout_diretoriaId_fkey")
   dashboardlayoutitem dashboardlayoutitem[]
+}
+
+model dashboardkpi {
+  id                String          @id
+  diretoriaId       String
+  contextoVersaoId  String          @unique(map: "DashboardKpi_contextoVersaoId_key")
+  position          Int
+  createdAt         DateTime        @default(now())
+  isHighlighted     Boolean         @default(false)
+  diretoria         diretoria       @relation(fields: [diretoriaId], references: [id], onDelete: Cascade, map: "DashboardKpi_diretoriaId_fkey")
+  contextoversao    contextoversao  @relation(fields: [contextoVersaoId], references: [id], onDelete: Cascade, map: "DashboardKpi_contextoVersaoId_fkey")
+
+  @@unique([diretoriaId, position], map: "DashboardKpi_diretoriaId_position_key")
 }
 
 model dashboardlayoutitem {
@@ -104,6 +118,7 @@ model diretoria {
   dashboardlayout dashboardlayout?
   gerencia        gerencia[]
   user            user[]
+  dashboardkpi    dashboardkpi[]
 }
 
 model gerencia {

@@ -11,6 +11,7 @@ interface HeroProps {
   role?: UserRole;
   userName?: string;
   diretoriaId?: string;
+  diretoriaSlug?: string;
   gerenciaId?: string;
   gerenciaSlug?: string;
 }
@@ -19,14 +20,15 @@ export default function Hero({
   role = "membro", // Ajustei o default para um valor válido do tipo UserRole
   userName = "Visitante", 
   diretoriaId, 
+  diretoriaSlug,
   gerenciaId, 
   gerenciaSlug 
 }: HeroProps) {
   
   const targetHref = (() => {
     if (role === "diretor") {
-      const id = diretoriaId || "gestao-sus"; 
-      return `/dashboard/${id}`;
+      const slug = diretoriaSlug || diretoriaId || "gestao-sus"; 
+      return `/dashboard/${slug}`;
     }
     if (role === "secretaria") {
       return "/dashboard/secretaria";

@@ -20,6 +20,9 @@ router.post('/versoes/:versaoId/gerente-aprovar', auth(['GERENTE']), ctrl.gerent
 router.post('/versoes/:versaoId/diretor-publicar', auth(['DIRETOR']), ctrl.diretorPublicar);
 router.post('/versoes/:versaoId/diretor-indeferir', auth(['DIRETOR']), ctrl.diretorIndeferir);
 router.post('/versoes/:versaoId/solicitar-correcao', auth(['GERENTE', 'DIRETOR']), ctrl.solicitarCorrecao);
+// Destaque (Secretaria)
+router.post('/versoes/:versaoId/destacar', auth(['DIRETOR']), ctrl.marcarDestaque);
+router.post('/versoes/:versaoId/remover-destaque', auth(['DIRETOR']), ctrl.removerDestaque);
 
 // Detalhes e Busca
 router.get('/detalhes/:contextoId', ctrl.getDetalhes);

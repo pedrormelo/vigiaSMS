@@ -35,6 +35,7 @@ export function SecretariaMetricsSection({
 
     const main = mainItems ?? defaultMain
     const secondary = secondaryItems ?? defaultSecondary
+    const showSecondary = (secondaryItems ? secondaryItems.length > 0 : secondary.length > 0)
 
     return (
         <div>
@@ -45,13 +46,15 @@ export function SecretariaMetricsSection({
                 columns={5}
             />
 
-            <MetricsGrid
-                className="mt-12"
-                title={secondaryTitle}
-                items={secondary}
-                loading={loading}
-                columns={3}
-            />
+            {showSecondary && (
+                <MetricsGrid
+                    className="mt-12"
+                    title={secondaryTitle}
+                    items={secondary}
+                    loading={loading}
+                    columns={3}
+                />
+            )}
         </div>
     )
 }
