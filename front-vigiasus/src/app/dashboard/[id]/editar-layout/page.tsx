@@ -112,46 +112,41 @@ export default function DashboardBuilder() {
             return
         }
 
-        setSelectedKpis((prev) => {
-            if (prev.some((item) => item.contextoVersaoId === metric.contextoVersaoId) || prev.length >= MAX_KPIS) {
-                return prev
-            }
-            const next: DashboardKpiSelection[] = [...prev, {
-                dashboardKpiId: metric.id,
-                diretoriaId: diretoriaApi?.id || metric.diretoriaId,
-                contextoVersaoId: metric.contextoVersaoId,
-                position: prev.length,
-                isHighlighted: false,
-                metric: { ...metric, isHighlighted: false },
-            }]
-            return next.map((item, index) => ({ ...item, position: index }))
-        })
+        const nextSelected: DashboardKpiSelection[] = [...selectedKpis, {
+            dashboardKpiId: metric.id,
+            diretoriaId: diretoriaApi?.id || metric.diretoriaId,
+            contextoVersaoId: metric.contextoVersaoId,
+            position: selectedKpis.length,
+            isHighlighted: false,
+            metric: { ...metric, isHighlighted: false },
+        }].map((item, index) => ({ ...item, position: index }))
 
-        setAvailableKpis((prev) => prev.filter((item) => item.contextoVersaoId !== metric.contextoVersaoId))
+        setSelectedKpis(nextSelected)
+        setAvailableKpis(sortMetricsByDate(availableKpis.filter((item) => item.contextoVersaoId !== metric.contextoVersaoId)))
 
-        if (selectedKpis.length + 1 >= MAX_KPIS) {
+        if (nextSelected.length >= MAX_KPIS) {
             setKpiModalOpen(false)
         }
     }
 
     const handleKpiRemove = (contextoVersaoId: string) => {
-        let removedMetric: IndicatorMetric | null = null
-        setSelectedKpis((prev) => {
-            const remaining = prev.filter((item) => {
-                if (item.contextoVersaoId === contextoVersaoId) {
-                    removedMetric = item.metric
-                    return false
-                }
-                return true
-            }).map((item, index) => ({ ...item, position: index }))
-            return remaining
-        })
-        if (removedMetric) {
-            setAvailableKpis((prev) => {
-                const merged = [...prev.filter((item) => item.contextoVersaoId !== removedMetric!.contextoVersaoId), removedMetric!]
-                return sortMetricsByDate(merged)
-            })
+        const target = selectedKpis.find((item) => item.contextoVersaoId === contextoVersaoId)
+        if (!target) return
+
+        const sanitizedMetric: IndicatorMetric = {
+            ...target.metric,
+            isHighlighted: false,
         }
+
+        const remaining = selectedKpis
+            .filter((item) => item.contextoVersaoId !== contextoVersaoId)
+            .map((item, index) => ({ ...item, position: index }))
+
+        setSelectedKpis(remaining)
+        setAvailableKpis((prev) => {
+            const withoutDuplicate = prev.filter((item) => item.contextoVersaoId !== contextoVersaoId)
+            return sortMetricsByDate([...withoutDuplicate, sanitizedMetric])
+        })
     }
 
     const handleKpiHighlightToggle = (contextoVersaoId: string) => {
@@ -199,11 +194,11 @@ export default function DashboardBuilder() {
         })
         if (reverted) return;
         // Persist
-        const ok = await setVersaoDestaque(id, highlighted);
-        if (!ok) {
+        const result = await setVersaoDestaque(id, highlighted);
+        if (!result.ok) {
             // Revert on failure
             setLayoutGraphs((prev) => prev.map((g) => (g?.id === id ? { ...g, isHighlighted: !highlighted } : g)))
-            showWarningToast("Falha ao atualizar destaque. Tente novamente.")
+            showWarningToast(result.message || "Falha ao atualizar destaque. Tente novamente.")
         }
     }
 

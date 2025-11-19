@@ -1,6 +1,6 @@
 "use client";
 
-import { X, Gauge } from "lucide-react";
+import { X, Gauge, ArrowLeft } from "lucide-react";
 import type { IndicatorMetric } from "@/services/dashboardService";
 import { AvailableKpisPanel } from "@/components/dashboard/kpis/availableKpisPanel";
 
@@ -17,9 +17,9 @@ export function SelecioneKpiModal({ open, onClose, metrics, onSelect }: Selecion
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
             <div className="relative flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-[40px] bg-white shadow-2xl">
-                <header className="flex items-center justify-between bg-gradient-to-r from-blue-900 via-blue-700 to-cyan-500 px-8 py-5 text-white">
+                <header className="flex items-center justify-between bg-gradient-to-r from-[#0037C1] to-[#00BDFF] px-8 py-4 text-white rounded-t-[40px] flex-shrink-0">
                     <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/15">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl">
                             <Gauge className="h-6 w-6" />
                         </div>
                         <div>
@@ -30,9 +30,9 @@ export function SelecioneKpiModal({ open, onClose, metrics, onSelect }: Selecion
                     <button
                         type="button"
                         onClick={onClose}
-                        className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white transition hover:bg-white/25"
+                        className="w-9 h-9 bg-white/15 text-white hover:bg-white/30 hover:text-white/50 rounded-2xl flex-shrink-0 flex items-center justify-center transition-colors"
                     >
-                        <X className="h-5 w-5" />
+                        <ArrowLeft className="w-6 h-6" />
                     </button>
                 </header>
 

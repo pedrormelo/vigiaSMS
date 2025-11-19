@@ -2,6 +2,7 @@
 
 import { Contexto, StatusContexto, VersaoContexto, HistoricoItem } from "@/components/validar/typesDados";
 import { authService } from "./authService";
+import { normalizeGraphType } from "@/lib/graphTypes";
 
 function apiBase() {
   return (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/$/, "");
@@ -456,6 +457,12 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
     // Definição do solicitante principal para a capa do contexto
     const solicitantePrincipal = versaoRecente?.solicitanteNome || versaoRecente?.user?.nome || versaoRecente?.solicitanteId || '';
 
+    const rawChartType = (versaoRecente as any)?.versaodashboard?.tipoGrafico
+        ?? (dadosEspecificosRaw as any)?.tipoGrafico
+        ?? (typeof dadosEspecificos?.payload?.tipoGrafico === 'string' ? dadosEspecificos.payload.tipoGrafico : undefined)
+        ?? (typeof dadosEspecificos?.payload?.type === 'string' ? dadosEspecificos.payload.type : undefined);
+    const chartType = normalizeGraphType(rawChartType);
+
     return {
         id: contextoId,
         title: tituloConceitual,
@@ -476,7 +483,7 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
         versoes: versoesFrontend,
         historico: historicoFrontend,
         solicitante: solicitantePrincipal,
-        chartType: (versaoRecente as any)?.versaodashboard?.tipoGrafico === 'PIE' ? 'pie' : 'chart',
+        chartType,
     };
 }
 

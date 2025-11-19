@@ -272,7 +272,7 @@ export default function DashboardView() {
         <div className="min-h-screen bg-[#FDFDFD] flex flex-col">
             {/* Header */}
             <div
-                className="relative p-10 text-white shadow-lg"
+                className="relative p-10 text-white shadow-md"
                 style={
                     diretoria.bannerImage
                         ? {
@@ -326,50 +326,11 @@ export default function DashboardView() {
             </div>
 
             <div className="p-8 mx-auto">
-                <h2 className="text-3xl font-bold text-blue-700 mb-2">Visão Geral</h2>
+                <h2 className="text-3xl font-semibold text-blue-700">Visão Geral</h2>
             </div>
 
-            {id !== 'secretaria' && (
-                <div className="flex flex-col items-center gap-4 mb-12 z-10 relative w-full px-8">
-                    {loadingMetrics && (
-                        <div className="text-center text-gray-500">Carregando métricas...</div>
-                    )}
-                    {!loadingMetrics && metricsError && (
-                        <div className="text-center text-red-500">{metricsError}</div>
-                    )}
-                    {!loadingMetrics && !metricsError && (
-                        directorMetricCards.length > 0 ? (
-                            <div className="flex flex-wrap gap-6 justify-center w-full">
-                                {directorMetricCards.map(card => (
-                                    <div
-                                        key={card.id}
-                                        className="bg-white rounded-2xl shadow-md p-6 min-w-[220px] max-w-[260px] flex flex-col gap-2 border border-gray-100"
-                                        style={{ borderLeft: `4px solid ${card.borderColor}` }}
-                                    >
-                                        <h3 className="text-lg font-bold text-slate-700">{card.title}</h3>
-                                        <div className="text-3xl font-extrabold text-slate-900">{card.value}</div>
-                                        <div className="text-sm text-gray-500 break-words">{card.subtitle}</div>
-                                        {card.change && (
-                                            <div className={`text-xs font-medium mt-2 ${card.changeType === "positive" ? "text-green-600" : card.changeType === "negative" ? "text-red-600" : "text-gray-600"}`}>
-                                                {card.changeType === "positive" && <span>▲ </span>}
-                                                {card.changeType === "negative" && <span>▼ </span>}
-                                                {card.changeType === "neutral" && <span className="font-bold">— </span>}
-                                                <span>{card.change.replace(/^([+\-—])\s*/, '')}</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="text-center text-gray-500 w-full">Nenhum indicador disponível para esta diretoria.</div>
-                        )
-                    )}
-                </div>
-            )}
-
-
             {/* Dashboard Charts - Secretaria uses a special preview showing only highlighted graphs */}
-            <div className="flex justify-center items-center w-full pt-2 mb-28">
+            <div className="flex justify-center items-center w-full pt-2 mb-10">
                 <div className="max-w-[90%] w-full">
                     {loadingGraphs && (
                         <div className="text-center py-16 text-gray-500">Carregando gráficos...</div>
@@ -422,6 +383,44 @@ export default function DashboardView() {
                     )}
                 </div>
             </div>
+
+            {id !== 'secretaria' && (
+                <div className="flex flex-col items-center gap-6 mb-22 z-10 relative w-full px-8">
+                    {loadingMetrics && (
+                        <div className="text-center text-gray-500">Carregando métricas...</div>
+                    )}
+                    {!loadingMetrics && metricsError && (
+                        <div className="text-center text-red-500">{metricsError}</div>
+                    )}
+                    {!loadingMetrics && !metricsError && (
+                        directorMetricCards.length > 0 ? (
+                            <div className="flex flex-wrap gap-6 justify-center w-full max-w-[1200px]">
+                                {directorMetricCards.map(card => (
+                                    <div
+                                        key={card.id}
+                                        className="bg-white rounded-3xl shadow-md px-7 py-6 min-w-[260px] max-w-[320px] flex flex-col gap-3 border border-gray-100"
+                                        style={{ borderLeft: `4px solid ${card.borderColor}` }}
+                                    >
+                                        <h3 className="text-lg font-bold text-slate-700">{card.title}</h3>
+                                        <div className="text-3xl font-extrabold text-slate-900 break-words">{card.value}</div>
+                                        <div className="text-sm text-gray-500 break-words">{card.subtitle}</div>
+                                        {card.change && (
+                                            <div className={`text-xs font-medium mt-2 ${card.changeType === "positive" ? "text-green-600" : card.changeType === "negative" ? "text-red-600" : "text-gray-600"}`}>
+                                                {card.changeType === "positive" && <span>▲ </span>}
+                                                {card.changeType === "negative" && <span>▼ </span>}
+                                                {card.changeType === "neutral" && <span className="font-bold">— </span>}
+                                                <span>{card.change.replace(/^([+\-—])\s*/, '')}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center text-gray-500 w-full">Nenhum indicador disponível para esta diretoria.</div>
+                        )
+                    )}
+                </div>
+            )}
 
         </div>
     )

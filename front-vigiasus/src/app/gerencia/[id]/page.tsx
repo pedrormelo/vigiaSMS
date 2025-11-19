@@ -240,7 +240,7 @@ export default function GerenciaPage() {
         return todosOsContextos.filter(ctx => {
             if (ctx.type !== 'indicador') return false;
             const matchesSearch = ctx.title.toLowerCase().includes(debouncedSearchValue.toLowerCase());
-            const matchesStatus = ctx.status === StatusContexto.Publicado;
+            const matchesStatus = modo === 'edicao' || ctx.status === StatusContexto.Publicado;
             const matchesVisibility = (modo === 'edicao') || !ctx.estaOculto;
             return matchesStatus && matchesVisibility && matchesSearch;
         });

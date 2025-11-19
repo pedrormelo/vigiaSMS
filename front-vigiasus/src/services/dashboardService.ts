@@ -52,7 +52,7 @@ export async function getDashboardHighlights(): Promise<DashboardLayoutItem[]> {
 }
 
 // Helper to map backend layout items into GraphData-like structure for DashboardPreview
-import type { GraphType } from "@/components/dashboard/graficoCard";
+import { type GraphType, normalizeGraphType } from "@/lib/graphTypes";
 import { getGerenciasPorDiretoria } from "./organizacaoService";
 import { getContextosPorGerencia } from "./contextoService";
 import type { Contexto } from "@/components/validar/typesDados";
@@ -61,7 +61,7 @@ import type { NomeIcone } from "@/components/popups/addContextoModal/types";
 export function mapLayoutItemsToGraphData(items: DashboardLayoutItem[]) {
     return items.map(it => {
         const payload = it.payload || { colunas: [], linhas: [] };
-        const chartType: GraphType = it.tipoGrafico === 'PIE' ? 'pie' : it.tipoGrafico === 'LINE' ? 'line' : 'chart';
+        const chartType = normalizeGraphType(it.tipoGrafico);
         const gerenciaNome = it.gerenciaNome || it.contextoTituloConceitual || '';
         return {
             id: it.contextoVersaoId,
@@ -267,24 +267,25 @@ export async function listAvailableGraphsForDiretoria(diretoriaId: string) {
         const ctxs = await getContextosPorGerencia(g.id);
         all.push(...ctxs);
     }
-    // Filter only dashboards that are published and active
     const dashboards = all.filter(c => c.type === 'dashboard' && c.chartType && c.payload);
-    return dashboards.map(c => {
+    const mapped = dashboards.map(c => {
+        const published = (c.versoes || []).find(v => v.status?.toUpperCase().includes('PUBLICADO') && !v.estaOculta);
+        if (!published?.dbId) {
+            return null; // Skip dashboards without a published/active version
+        }
         const payload = (c.payload as any) || { colunas: [], linhas: [] };
-        const chartType: GraphType = c.chartType === 'pie' ? 'pie' : c.chartType === 'line' ? 'line' : 'chart';
-        // Try to use the DB id of the active/published version if available
-        const published = (c.versoes || []).find(v => v.status?.includes('Publicado') && !v.estaOculta);
-        const id = (published?.dbId) || c.id;
+        const chartType = normalizeGraphType(c.chartType);
         return {
-            id,
+            id: published.dbId,
             type: chartType,
             title: c.title,
             gerencia: c.gerencia || '',
-            insertedDate: c.insertedDate,
+            insertedDate: published.data || c.insertedDate,
             data: [payload.colunas || [], ...(payload.linhas || [])],
             colors: payload.cores,
         };
     });
+    return mapped.filter((item): item is NonNullable<typeof mapped[number]> => item !== null);
 }
 
 function toBackendLayoutType(layout: 'asymmetric' | 'grid' | 'sideBySide') {
@@ -318,19 +319,32 @@ export async function saveDiretoriaDashboardLayout(
 }
 
 // Mark/unmark a versão as destaque (for Secretaria dashboard)
-export async function setVersaoDestaque(versaoId: string, highlighted: boolean): Promise<boolean> {
+interface HighlightResponse {
+    ok: boolean
+    message?: string
+}
+
+export async function setVersaoDestaque(versaoId: string, highlighted: boolean): Promise<HighlightResponse> {
     const base = apiBase();
     const token = authService.getToken();
-    if (!base || !token || !versaoId) return false;
+    if (!base || !token || !versaoId) return { ok: false, message: 'Requisição inválida.' };
     const path = highlighted ? 'destacar' : 'remover-destaque';
     try {
         const res = await fetch(`${base}/contextos/versoes/${versaoId}/${path}`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        return res.ok;
+        if (res.ok) {
+            return { ok: true };
+        }
+        let message: string | undefined;
+        try {
+            const body = await res.json();
+            if (body && typeof body.message === 'string') message = body.message;
+        } catch {}
+        return { ok: false, message };
     } catch (e) {
         console.error('Erro ao alterar destaque da versão:', e);
-        return false;
+        return { ok: false, message: 'Erro ao comunicar com o servidor.' };
     }
 }

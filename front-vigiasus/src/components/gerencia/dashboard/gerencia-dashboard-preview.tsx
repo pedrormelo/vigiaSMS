@@ -11,7 +11,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react"
 // --- INÍCIO DAS ALTERAÇÕES ---
 import type { Contexto } from "@/components/validar/typesDados"; // Importa o tipo Contexto
 import type { ConjuntoDeDadosGrafico } from "@/components/popups/addContextoModal/types"; // Importa o tipo do Payload
-import type { GraphType } from "@/components/dashboard/graficoCard"; // Importa o GraphType
+import { normalizeGraphType } from "@/lib/graphTypes";
 // --- FIM DAS ALTERAÇÕES ---
 
 
@@ -35,7 +35,7 @@ export function GerenciaDashboardPreview({ graphs, gerencia, className, disabled
                 return {
                     id: ctx.id,
                     title: ctx.title,
-                    type: (ctx.chartType as GraphType) || 'chart', // Converte chartType para type
+                    type: normalizeGraphType(ctx.chartType),
                     gerencia: ctx.gerencia || 'N/A', 
                     insertedDate: ctx.insertedDate,
                     isHighlighted: ctx.estaOculto, 

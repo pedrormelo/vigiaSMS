@@ -1,13 +1,8 @@
 "use client";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { AvailableGraphsPanel } from "@/components/dashboard/graficos-filterBar";
-
-import { ChartCandlestick, FileChartPie, X } from 'lucide-react';
-
+import { FileChartPie, ArrowLeft, X } from "lucide-react";
 import type { GraphData } from "@/components/dashboard/dasboard-preview";
-import React from "react";
+import { AvailableGraphsPanel } from "@/components/dashboard/graficos-filterBar";
 
 interface SelecioneGraficoModalProps {
     open: boolean;
@@ -20,39 +15,41 @@ export function SelecioneGraficoModal({ open, onClose, graphs, onGraphSelect }: 
     if (!open) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-[40px] w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl">
-                {/* Header */}
-                <div className="bg-gradient-to-r from-[#0037C1] to-[#00BDFF] px-8 py-4 flex items-center justify-between rounded-t-[40px]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <div className="relative flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-[40px] bg-white shadow-2xl">
+                <header className="flex items-center justify-between bg-gradient-to-r from-[#0037C1] to-[#00BDFF] px-8 py-4 text-white rounded-t-[40px] flex-shrink-0">
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-opacity-20 rounded-lg flex items-center justify-center">
-                            <FileChartPie className="w-6 h-6 text-white" />
+                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl">
+                            <FileChartPie className="h-6 w-6" />
                         </div>
-                        <h2 className="text-2xl font-regular text-white">Selecione um gráfico</h2>
+                        <div>
+                            <h2 className="text-2xl font-semibold">Selecione um Gráfico</h2>
+                            <p className="text-sm text-white/80">Escolha dashboards publicados para preencher o layout desta diretoria.</p>
+                        </div>
                     </div>
                     <button
+                        type="button"
                         onClick={onClose}
-                        className="w-8 h-8 bg-opacity-20 text-white hover:text-gray-100 cursor-pointer rounded-full flex items-center justify-center transition-colors"
+                        className="w-9 h-9 bg-white/15 text-white hover:bg-white/30 hover:text-white/50 rounded-2xl flex items-center justify-center transition-colors"
                     >
-                        <X className="w-6 h-6" />
+                        <ArrowLeft className="w-6 h-6" />
                     </button>
-                </div>
+                </header>
 
-                {/* Content */}
-                <div className="p-6 space-y-6">
+                <main className="flex-1 overflow-y-auto px-8 py-6">
                     <AvailableGraphsPanel graphs={graphs} onGraphSelect={onGraphSelect} />
-                </div>
+                </main>
 
-                {/* Footer */}
-                <div className="px-6 py-4 bg-gray-50 flex justify-center gap-4">
+                <footer className="flex justify-center bg-slate-50 px-8 py-4">
                     <button
+                        type="button"
                         onClick={onClose}
-                        className="px-6 py-2 bg-red-500 border border-red-700 cursor-pointer text-white rounded-2xl hover:bg-red-600 transition-colors flex items-center gap-2 font-bold"
+                        className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100"
                     >
-                        <X className="w-6 h-6" />
-                        CANCELAR
+                        <X className="h-4 w-4" />
+                        Cancelar
                     </button>
-                </div>
+                </footer>
             </div>
         </div>
     );
