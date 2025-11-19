@@ -26,7 +26,8 @@ import {
     aprovarPeloGerente, 
     publicarPeloDiretor, 
     indeferirContexto, 
-    solicitarCorrecao 
+    solicitarCorrecao,
+    getContextoById // <--- 1. NOVO IMPORT
 } from "@/services/contextoService";
 
 export default function ValidacaoContextos() {
@@ -41,9 +42,19 @@ export default function ValidacaoContextos() {
   const [contextoParaEditar, setContextoParaEditar] = useState<Partial<Contexto> | null>(null);
 
   // Handlers
-  const handleViewClick = (contexto: Contexto) => {
+  const handleViewClick = async (contexto: Contexto) => {
+    // 2. CORREÇÃO: Abre modal com dados parciais e busca os completos (com URL assinada)
     setSelectedContexto(contexto);
     setIsDetalhesModalOpen(true);
+
+    try {
+        const fullData = await getContextoById(contexto.id);
+        if (fullData) {
+            setSelectedContexto(fullData);
+        }
+    } catch (error) {
+        console.error("Erro ao carregar detalhes do arquivo:", error);
+    }
   };
 
   const handleAbrirCorrecao = (contextoParaCorrigir: Contexto) => {
@@ -165,6 +176,10 @@ export default function ValidacaoContextos() {
         aoFechar={() => setIsDetalhesModalOpen(false)}
         dadosDoContexto={selectedContexto}
         perfil={perfil}
+        
+        // 3. CORREÇÃO: Força o modo de validação para mostrar os botões Deferir/Indeferir
+        isValidation={true} 
+
         onDeferir={(id) => handleDeferir(id)} 
         onIndeferir={(id, just) => handleIndeferir(id, just)}
         onCorrigir={(id, just) => handleSolicitarCorrecao(id, just)}

@@ -4,6 +4,7 @@
 import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation"; // AQUI: Import para refresh suave
 import { Menu, Loader2 } from 'lucide-react';
 import NotificationsModal from "@/components/notifications/notificationsModal";
 import { VisualizarContextoModal } from "@/components/popups/visualizarContextoModal";
@@ -13,6 +14,8 @@ import { Notification } from "@/constants/types";
 import UpdateStatusPopover from "./UpdateStatusPopover";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useNotifications } from "@/hooks/useNotifications";
+import { authService } from "@/services/authService";
+import { showSuccessToast, showErrorToast } from "@/components/ui/Toasts"; // Import Toasts
 
 type PartialContexto = Partial<Contexto> & { id: string };
 
@@ -21,6 +24,7 @@ interface NavbarProps {
 }
 
 export default function Navbar({ onOpenSidebar }: NavbarProps) {
+  const router = useRouter(); // Hook do router
   const [lastUpdateInfo, setLastUpdateInfo] = useState({
     relative: "há 2 horas",
     label: "29/10/2025 09:15",
@@ -30,28 +34,95 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
 
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isDetalhesContextoOpen, setIsDetalhesContextoOpen] = useState(false);
-  
+  const [isValidationMode, setIsValidationMode] = useState(false);
   const [selectedContexto, setSelectedContexto] = useState<Contexto | PartialContexto | null>(null);
   const [isLoadingContexto, setIsLoadingContexto] = useState(false);
 
   const userProfile = useCurrentUser();
 
-  // Integração com o Hook de Notificações
   const {
     notifications,
     isLoading: isLoadingNotifications,
     isError: isErrorNotifications,
-    readNotifications, // Lista de IDs que já foram lidos
-    markAsRead,        // Função para marcar como lido
+    readNotifications, 
+    markAsRead, 
   } = useNotifications(userProfile?.name);
 
-  // Cálculo dinâmico de não lidas (Total - Lidas)
   const totalUnreadCount = useMemo(() => {
     if (!notifications) return 0;
     const lidas = readNotifications || [];
-    // Conta apenas as que NÃO estão na lista de lidas
     return notifications.filter(n => !lidas.includes(n.id)).length;
   }, [notifications, readNotifications]);
+
+  const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+
+  // --- HANDLERS DE AÇÃO (Corrigidos: Sem Alert, com Refresh Suave) ---
+  
+  const handleDeferir = async (versaoId: string, comentario?: string) => {
+    const role = userProfile?.role;
+    let endpoint = "";
+    
+    if (role === 'gerente') endpoint = `${apiBase}/contextos/versoes/${versaoId}/gerente-aprovar`;
+    else if (role === 'diretor') endpoint = `${apiBase}/contextos/versoes/${versaoId}/diretor-publicar`;
+    else return;
+
+    try {
+        const token = authService.getToken();
+        const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ comentario })
+        });
+        
+        if (!res.ok) throw new Error("Falha ao deferir");
+        
+        // Sucesso: Fecha modal e atualiza dados silenciosamente
+        setIsDetalhesContextoOpen(false);
+        router.refresh(); // Atualiza Server Components (listas, etc)
+        
+        // Nota: O Toast de sucesso é exibido pelo Modal (index.tsx), então não duplicamos aqui.
+    } catch (e) {
+        console.error(e);
+        showErrorToast("Erro", "Não foi possível realizar a ação.");
+    }
+  };
+
+  const handleIndeferir = async (versaoId: string, justificativa: string) => {
+     try {
+        const token = authService.getToken();
+        const res = await fetch(`${apiBase}/contextos/versoes/${versaoId}/diretor-indeferir`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ justificativa })
+        });
+        if (!res.ok) throw new Error("Falha ao indeferir");
+        
+        setIsDetalhesContextoOpen(false);
+        router.refresh();
+     } catch (e) { 
+         console.error(e); 
+         showErrorToast("Erro", "Não foi possível indeferir.");
+    }
+  };
+
+  const handleCorrigir = async (versaoId: string, justificativa: string) => {
+     try {
+        const token = authService.getToken();
+        const res = await fetch(`${apiBase}/contextos/versoes/${versaoId}/solicitar-correcao`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ justificativa })
+        });
+        if (!res.ok) throw new Error("Falha ao solicitar correção");
+        
+        setIsDetalhesContextoOpen(false);
+        router.refresh();
+     } catch (e) { 
+         console.error(e); 
+         showErrorToast("Erro", "Não foi possível solicitar correção.");
+    }
+  };
+  // ------------------------------------------------
 
   const handleNotificationsClick = () => {
     setIsNotificationsOpen(true);
@@ -64,10 +135,12 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
   const handleOpenContextoDetails = async (notification: Notification) => {
     if (!notification.contextoId) return;
 
+    const shouldValidate = (notification as any).isValidation === true;
+    setIsValidationMode(shouldValidate);
+
     setIsLoadingContexto(true);
     setIsNotificationsOpen(false);
 
-    // Ao clicar para abrir, marca como lida automaticamente
     handleMarkAsRead(notification.id);
 
     try {
@@ -82,7 +155,7 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
       }
     } catch (error) {
       console.error("Erro ao buscar detalhes do contexto:", error);
-      alert("Ocorreu um erro ao carregar os detalhes do contexto. Tente novamente.");
+      showErrorToast("Erro", "Erro ao carregar detalhes.");
       setIsNotificationsOpen(true);
     } finally {
       setIsLoadingContexto(false);
@@ -92,9 +165,9 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
   const handleCloseDetalhesContexto = () => {
     setIsDetalhesContextoOpen(false);
     setSelectedContexto(null);
+    setIsValidationMode(false);
   };
 
-  // Função intermediária para lidar com 'Mark as Read' (Individual ou Todas)
   const handleMarkAsRead = (notificationId: number | "all") => {
     if (notificationId === "all") {
       const allIds = notifications.map(n => n.id);
@@ -104,7 +177,6 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
     }
   };
 
-  // Efeito para recarregar detalhes do contexto se necessário
   useEffect(() => {
     if (selectedContexto?.id && !("titulo" in selectedContexto && selectedContexto.titulo)) {
       let mounted = true;
@@ -115,16 +187,12 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
           if (mounted && data) {
             setSelectedContexto(data);
           } else if (mounted) {
-            console.error("Não foi possível carregar os detalhes do contexto.");
             handleCloseDetalhesContexto();
           }
         } catch (error) {
-          console.error("Erro ao buscar detalhes do contexto:", error);
           if (mounted) handleCloseDetalhesContexto();
         } finally {
-          if (mounted) {
-            setIsLoadingContexto(false);
-          }
+          if (mounted) setIsLoadingContexto(false);
         }
       })();
       return () => {
@@ -200,12 +268,9 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
         isOpen={isNotificationsOpen}
         onClose={handleCloseNotifications}
         onOpenContextoDetails={handleOpenContextoDetails}
-        
         notifications={notifications}
         isLoading={isLoadingNotifications}
         isError={isErrorNotifications}
-        
-        // Passamos a lista de lidos e a função de marcar
         readNotifications={readNotifications || []}
         onMarkAsRead={handleMarkAsRead}
       />
@@ -216,9 +281,11 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
         dadosDoContexto={selectedContexto}
         perfil={userProfile?.role ?? 'membro'}
         isFromHistory={selectedContexto && 'historico' in selectedContexto && (selectedContexto.historico?.length ?? 0) > 0}
-        onDeferir={undefined}
-        onIndeferir={undefined}
-        onCorrigir={undefined}
+        
+        isValidation={isValidationMode}
+        onDeferir={handleDeferir}
+        onIndeferir={handleIndeferir}
+        onCorrigir={handleCorrigir}
       />
 
       {isLoadingContexto && (

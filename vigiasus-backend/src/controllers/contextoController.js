@@ -44,42 +44,94 @@ exports.listPublicados = async (req, res) => {
 exports.listPendentes = async (req, res) => {
     const user = req.user;
     try {
+        let where = {};
+        
         if (user.role === 'GERENTE') {
-            const versoes = await prisma.contextoversao.findMany({
-                where: {
-                    statusValidacao: 'AGUARDANDO_GERENTE',
-                    contexto: { gerenciaDonaId: user.gerenciaId || '' },
-                },
-                include: { contexto: true, versaoindicador: true, versaoarquivo: true, versaodashboard: true },
-                orderBy: { createdAt: 'desc' },
-            });
-            return res.json({ data: versoes });
+            where = {
+                statusValidacao: 'AGUARDANDO_GERENTE',
+                contexto: { gerenciaDonaId: user.gerenciaId || '' },
+            };
+        } else if (user.role === 'DIRETOR') {
+            where = {
+                statusValidacao: 'AGUARDANDO_DIRETOR',
+                contexto: { gerencia: { diretoriaId: user.diretoriaId || '' } },
+            };
+        } else if (user.role === 'MEMBRO') {
+            where = {
+                solicitanteId: user.id,
+                statusValidacao: { in: ['AGUARDANDO_GERENTE', 'AGUARDANDO_DIRETOR', 'AGUARDANDO_CORRECAO'] },
+            };
+        } else {
+             return res.json({ data: [] });
         }
-        if (user.role === 'DIRETOR') {
-            const versoes = await prisma.contextoversao.findMany({
-                where: {
-                    statusValidacao: 'AGUARDANDO_DIRETOR',
-                    contexto: { gerencia: { diretoriaId: user.diretoriaId || '' } },
+
+        const versoes = await prisma.contextoversao.findMany({
+            where,
+            include: { 
+                // Inclui dados para visualização correta
+                contexto: {
+                    include: {
+                        gerencia: { select: { nome: true, slug: true } }
+                    }
                 },
-                include: { contexto: true, versaoindicador: true, versaoarquivo: true, versaodashboard: true },
-                orderBy: { createdAt: 'desc' },
-            });
-            return res.json({ data: versoes });
-        }
-        if (user.role === 'MEMBRO') {
-            const versoes = await prisma.contextoversao.findMany({
-                where: {
-                    solicitanteId: user.id,
-                    statusValidacao: { in: ['AGUARDANDO_GERENTE', 'AGUARDANDO_DIRETOR', 'AGUARDANDO_CORRECAO'] },
-                },
-                include: { contexto: true, versaoindicador: true, versaoarquivo: true, versaodashboard: true },
-                orderBy: { createdAt: 'desc' },
-            });
-            return res.json({ data: versoes });
-        }
-        return res.json({ data: [] });
+                user: { select: { nome: true } }, // Nome do solicitante
+                
+                versaoindicador: true, 
+                versaoarquivo: true, 
+                versaodashboard: true 
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+        return res.json({ data: versoes });
+
     } catch (err) {
         console.error('Erro listPendentes:', err);
+        return res.status(500).json({ message: 'Erro interno' });
+    }
+};
+
+// GET /contextos/detalhes/:contextoId
+exports.getDetalhes = async (req, res) => {
+    const { contextoId } = req.params;
+    try {
+        const contexto = await prisma.contexto.findUnique({ 
+            where: { id: contextoId },
+            include: {
+                // Inclui nome da gerência
+                gerencia: {
+                    select: { slug: true, nome: true }
+                }
+            }
+        });
+
+        if (!contexto) return res.status(404).json({ message: 'Contexto não encontrado' });
+
+        const versoes = await prisma.contextoversao.findMany({
+            where: { contextoId },
+            include: {
+                versaoarquivo: true,
+                versaodashboard: true,
+                versaoindicador: true,
+                // Inclui nome do autor da versão
+                user: { select: { nome: true } }
+            },
+            orderBy: [{ versaoNumero: 'desc' }],
+        });
+
+        const ids = versoes.map(v => v.id);
+        const historico = ids.length ? await prisma.validacaohistorico.findMany({
+            where: { versaoId: { in: ids } },
+            orderBy: [{ timestamp: 'desc' }],
+            // Inclui nome de quem fez a ação no histórico
+            include: { user: { select: { nome: true } } }
+        }) : [];
+
+        if (typeof mapContextoDetalhe === 'function') {
+            return res.json(mapContextoDetalhe(contexto, versoes, historico));
+        }
+        return res.json({ contexto, versoes, historico });
+    } catch (err) {
+        console.error('Erro getDetalhes:', err);
         return res.status(500).json({ message: 'Erro interno' });
     }
 };
@@ -204,12 +256,21 @@ exports.createContexto = async (req, res) => {
                     timestamp: new Date()
                 }
             });
-
+            // 5. Comentário Automático
+            await tx.comentario.create({
+                data: {
+                    id: crypto.randomUUID(),
+                    versaoId: v1.id,
+                    autorId: user.id, // O próprio usuário assina a submissão
+                    texto: "📤 Contexto submetido para análise da Gerência.",
+                    isPrivate: false,
+                    timestamp: new Date()
+                }
+            });
             return { ctx, v1 };
         });
 
         // --- NOTIFICAÇÃO PARA GERENTE ---
-        // Texto ajustado para incluir a palavra "Gerente"
         try {
             await notificacaoService.notifyGerentesDaGerencia(
                 user.gerenciaId,
@@ -302,11 +363,22 @@ exports.createVersao = async (req, res) => {
                     timestamp: new Date()
                 }
             });
+
+            // --- NOVO: Comentário Automático ---
+            await tx.comentario.create({
+                data: {
+                    id: crypto.randomUUID(),
+                    versaoId: v.id,
+                    autorId: user.id,
+                    texto: `📤 Nova versão submetida.\nMotivo: ${motivoNovaVersao || 'Atualização'}. \nAguardando análise da Gerência.`,
+                    isPrivate: false,
+                    timestamp: new Date()
+                }
+            });
             return v;
         });
 
         // --- NOTIFICAÇÃO PARA GERENTE ---
-        // Texto ajustado para incluir a palavra "Gerente"
         try {
             await notificacaoService.notifyGerentesDaGerencia(
                 user.gerenciaId,
@@ -326,13 +398,11 @@ exports.createVersao = async (req, res) => {
 };
 
 // GET /contextos/:versaoId/participantes
-// Retorna a hierarquia e filtra quem interagiu
 exports.listarParticipantes = async (req, res) => {
     const { versaoId } = req.params;
-    const userId = req.user.id; // ID de quem está pedindo a lista (para excluir a si mesmo)
+    const userId = req.user.id; 
 
     try {
-        // 1. Buscar a Versão e a Estrutura Hierárquica
         const versao = await prisma.contextoversao.findUnique({
             where: { id: versaoId },
             include: { 
@@ -350,8 +420,6 @@ exports.listarParticipantes = async (req, res) => {
         const diretoriaId = versao.contexto.gerencia.diretoriaId;
         const solicitanteId = versao.solicitanteId;
 
-        // 2. Descobrir quais Secretarias interagiram nesta versão
-        // (Regra: Só listar Secretaria se ela tiver interagido anteriormente)
         const comentariosSecretaria = await prisma.comentario.findMany({
             where: {
                 versaoId: versaoId,
@@ -363,20 +431,16 @@ exports.listarParticipantes = async (req, res) => {
         
         const idsSecretariasInteragiram = comentariosSecretaria.map(c => c.autorId);
 
-        // 3. Buscar os usuários aplicando os filtros
         const participantes = await prisma.user.findMany({
             where: {
                 AND: [
-                    // Filtro 1: Excluir o próprio usuário (para não aparecer "Eu" na lista de destinatários)
                     { id: { not: userId } },
-                    
-                    // Filtro 2: Regras de quem deve aparecer
                     {
                         OR: [
-                            { role: 'DIRETOR', diretoriaId: diretoriaId }, // Diretor da área
-                            { role: 'GERENTE', gerenciaId: gerenciaId },   // Gerente da área
-                            { id: solicitanteId },                         // Membro (Dono)
-                            { id: { in: idsSecretariasInteragiram } }      // Secretarias (apenas se interagiram)
+                            { role: 'DIRETOR', diretoriaId: diretoriaId }, 
+                            { role: 'GERENTE', gerenciaId: gerenciaId },   
+                            { id: solicitanteId },                         
+                            { id: { in: idsSecretariasInteragiram } }      
                         ]
                     }
                 ]
@@ -403,7 +467,6 @@ exports.gerenteAprovar = async (req, res) => {
     try {
         await versaoService.gerenteAprova({ versaoId, actor: user });
 
-        // --- NOTIFICAR DIRETORES ---
         const versao = await prisma.contextoversao.findUnique({
             where: { id: versaoId },
             include: { contexto: { include: { gerencia: true } } }
@@ -411,7 +474,6 @@ exports.gerenteAprovar = async (req, res) => {
 
         if (versao && versao.contexto?.gerencia?.diretoriaId) {
             try {
-                // Texto ajustado para incluir "Diretor" e remover "Gerente" (para não confundir o regex do front)
                 await notificacaoService.notifyDiretoresDaDiretoria(
                     versao.contexto.gerencia.diretoriaId,
                     user.id,
@@ -456,6 +518,19 @@ exports.diretorPublicar = async (req, res) => {
                     timestamp: new Date()
                 }
             });
+
+            // --- NOVO: Comentário Automático ---
+            await tx.comentario.create({
+                data: {
+                    id: crypto.randomUUID(),
+                    versaoId: versaoId,
+                    autorId: user.id, // Assinado pelo Diretor
+                    texto: "🚀 Versão Publicada e Ativa!\nO processo de validação foi concluído.",
+                    isPrivate: false,
+                    timestamp: new Date()
+                }
+            });
+            // -----------------------------------
         });
         
         return res.json({ message: 'Publicado com sucesso' });
@@ -484,6 +559,19 @@ exports.diretorIndeferir = async (req, res) => {
                     timestamp: new Date()
                 }
             });
+
+            // --- NOVO: Comentário Automático ---
+            await tx.comentario.create({
+                data: {
+                    id: crypto.randomUUID(),
+                    versaoId: versaoId,
+                    autorId: user.id,
+                    texto: `❌ Indeferido.\nJustificativa: "${justificativa || 'Sem justificativa'}"`,
+                    isPrivate: false,
+                    timestamp: new Date()
+                }
+            });
+            // -----------------------------------
         });
         return res.json({ message: 'Indeferido com sucesso' });
     } catch (err) {
@@ -511,6 +599,19 @@ exports.solicitarCorrecao = async (req, res) => {
                     timestamp: new Date()
                 }
             });
+
+            // --- NOVO: Comentário Automático ---
+            await tx.comentario.create({
+                data: {
+                    id: crypto.randomUUID(),
+                    versaoId: versaoId,
+                    autorId: user.id,
+                    texto: `⚠️ Devolvido para Correção.\nMotivo: "${justificativa}"\nPor favor, envie uma nova versão com os ajustes.`,
+                    isPrivate: false,
+                    timestamp: new Date()
+                }
+            });
+            // -----------------------------------
         });
         return res.json({ message: 'Correção solicitada' });
     } catch (err) {
@@ -522,7 +623,25 @@ exports.solicitarCorrecao = async (req, res) => {
 exports.getDetalhes = async (req, res) => {
     const { contextoId } = req.params;
     try {
-        const contexto = await prisma.contexto.findUnique({ where: { id: contextoId } });
+        // 1. Buscar Contexto com dados da Gerência e Diretoria (SLUGS)
+        const contexto = await prisma.contexto.findUnique({ 
+            where: { id: contextoId },
+            include: {
+                gerencia: {
+                    select: {
+                        slug: true,
+                        nome: true,
+                        diretoria: {
+                            select: {
+                                slug: true,
+                                nome: true
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
         if (!contexto) return res.status(404).json({ message: 'Contexto não encontrado' });
 
         const versoes = await prisma.contextoversao.findMany({
@@ -530,7 +649,10 @@ exports.getDetalhes = async (req, res) => {
             include: {
                 versaoarquivo: true,
                 versaodashboard: true,
-                versaoindicador: true
+                versaoindicador: true,
+                user: {
+                    select: { nome: true, email: true }
+                }
             },
             orderBy: [{ versaoNumero: 'desc' }],
         });
@@ -539,6 +661,9 @@ exports.getDetalhes = async (req, res) => {
         const historico = ids.length ? await prisma.validacaohistorico.findMany({
             where: { versaoId: { in: ids } },
             orderBy: [{ timestamp: 'desc' }],
+            include: {
+                user: { select: { nome: true } } // Opcional: Nome de quem aprovou/rejeitou no histórico
+            }
         }) : [];
 
         if (typeof mapContextoDetalhe === 'function') {
@@ -550,7 +675,6 @@ exports.getDetalhes = async (req, res) => {
         return res.status(500).json({ message: 'Erro interno' });
     }
 };
-
 // GET /contextos/buscar
 exports.buscar = async (req, res) => {
     const { q, status, from, to, page = '1', pageSize = '10' } = req.query;
@@ -576,7 +700,15 @@ exports.buscar = async (req, res) => {
             prisma.contextoversao.count({ where }),
             prisma.contextoversao.findMany({
                 where,
-                include: { contexto: true },
+                include: { 
+                    contexto: {
+                        include: { 
+                            gerencia: { select: { slug: true, nome: true } } 
+                        }
+                    },
+                    // AQUI: Inclusão do usuário para trazer o nome
+                    user: { select: { nome: true } }
+                },
                 orderBy: { updatedAt: 'desc' },
                 skip,
                 take: sizeNum,

@@ -11,6 +11,7 @@ import { SearchBar } from "@/components/ui/search-bar";
 import DateInputFilter from "@/components/validar/dateInputFilter";
 import Paginacao from "@/components/ui/paginacao";
 import ContextoTable from "@/components/validar/ContextoTable";
+import { showSuccessToast, showErrorToast } from "@/components/ui/Toasts"; // Importar Toasts
 
 // Modais
 import { VisualizarContextoModal } from "@/components/popups/visualizarContextoModal";
@@ -24,7 +25,11 @@ import { membroColumns } from "@/components/validar/colunasTable/membroColumns";
 import { gerenteColumns } from "@/components/validar/colunasTable/gerenteColumns";
 import { diretorColumns } from "@/components/validar/colunasTable/diretorColumns";
 
+// Serviço para buscar detalhes
+import { getContextoById } from "@/services/contextoService"; 
+
 type DateRange = { from: Date | undefined; to: Date | undefined } | undefined;
+type PartialContexto = Partial<Contexto> & { id: string };
 
 export default function HistoricoPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -45,12 +50,30 @@ export default function HistoricoPage() {
   const perfil = (user?.role?.toLowerCase() as "diretor" | "gerente" | "membro") || "membro";
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedContexto, setSelectedContexto] = useState<Contexto | null>(null);
+  const [selectedContexto, setSelectedContexto] = useState<Contexto | PartialContexto | null>(null);
+  const [isFetchingDetails, setIsFetchingDetails] = useState(false); // Estado para loader
 
-  const handleRowClick = (row: Contexto) => {
+  // --- LÓGICA DE ABERTURA INTELIGENTE ---
+  const handleRowClick = async (row: Contexto) => {
+    // 1. Abre imediatamente com os dados parciais da tabela
     setSelectedContexto(row);
     setIsModalOpen(true);
+    setIsFetchingDetails(true);
+
+    try {
+        // 2. Busca os dados completos no backend
+        const fullData = await getContextoById(row.id);
+        if (fullData) {
+            setSelectedContexto(fullData);
+        }
+    } catch (error) {
+        console.error("Erro ao buscar detalhes:", error);
+        showErrorToast("Erro", "Não foi possível carregar os detalhes do arquivo.");
+    } finally {
+        setIsFetchingDetails(false);
+    }
   };
+  // --------------------------------------
 
   const getColumns = () => {
     const baseColumns = perfil === "diretor" ? diretorColumns 
@@ -133,7 +156,7 @@ export default function HistoricoPage() {
                 <ContextoTable 
                     data={data} 
                     columns={getColumns()} 
-                    onRowClick={handleRowClick}
+                    onRowClick={handleRowClick} // Usa o novo handler
                     emptyState={{
                         title: "Nenhum registro encontrado",
                         description: "Tente ajustar os filtros de busca ou data.",
@@ -173,6 +196,14 @@ export default function HistoricoPage() {
         onIndeferir={undefined}
         onCorrigir={undefined}
       />
+
+      {/* Loader flutuante para feedback (opcional, mas recomendado) */}
+      {isFetchingDetails && (
+        <div className="fixed bottom-6 right-6 bg-white px-4 py-3 rounded-full shadow-xl border border-blue-100 flex items-center gap-3 z-[60] animate-in slide-in-from-bottom-2">
+            <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+            <span className="text-sm font-medium text-gray-700">A carregar arquivo completo...</span>
+        </div>
+      )}
     </div>
   );
 }

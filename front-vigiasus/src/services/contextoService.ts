@@ -43,6 +43,30 @@ interface BackendDadosEspecificos {
     icone?: string;
 }
 
+// Interface atualizada para suportar a estrutura completa
+interface BackendContextoBase {
+    id: string;
+    tituloConceitual: string;
+    tipo: string;
+    gerenciaDonaId: string;
+    
+    // Campos extras para exibição amigável
+    gerenciaSlug?: string;
+    gerenciaNome?: string; 
+    diretoriaSlug?: string;
+    
+    // Caso o backend envie objetos aninhados
+    gerencia?: { 
+        slug?: string; 
+        nome?: string; 
+        id?: string;
+        diretoriaId?: string; 
+    };
+    
+    createdAt: string;
+    autorOriginalId?: string;
+}
+
 export interface BackendVersao {
     id: string;
     titulo: string;
@@ -51,21 +75,17 @@ export interface BackendVersao {
     statusValidacao: string;
     updatedAt: string;
     solicitanteId?: string;
+    
+    // Campos extras para nome do autor
+    solicitanteNome?: string;
+    user?: { nome: string; email?: string };
+    
     isAtiva: boolean;
     isDestacado: boolean;
     versaoarquivo?: BackendDadosEspecificos | null;
     versaodashboard?: BackendDadosEspecificos | null;
     versaoindicador?: BackendDadosEspecificos | null;
     contexto?: BackendContextoBase;
-}
-
-interface BackendContextoBase {
-    id: string;
-    tituloConceitual: string;
-    tipo: string;
-    gerenciaDonaId: string;
-    createdAt: string;
-    autorOriginalId?: string;
 }
 
 export interface BackendContexto extends BackendContextoBase {
@@ -76,6 +96,8 @@ export interface BackendContexto extends BackendContextoBase {
         justificativa?: string;
         timestamp: string;
         autorId: string;
+        autorNome?: string;
+        user?: { nome: string };
     }>;
     versaoAtiva?: BackendVersao;
 }
@@ -116,23 +138,15 @@ export async function criarContexto(dados: CriarContextoData, file?: File | null
 
     const res = await fetch(`${base}/contextos`, {
         method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-        },
+        headers: { 'Authorization': `Bearer ${token}` },
         body: formData
     });
 
     if (!res.ok) {
         let message = 'Erro ao criar contexto.';
         try {
-            const ct = res.headers.get('content-type') || '';
-            if (ct.includes('application/json')) {
-                const j = await res.json();
-                message = j?.message || message;
-            } else {
-                const t = await res.text();
-                if (t) message = t;
-            }
+            const j = await res.json();
+            message = j?.message || message;
         } catch {}
         throw new Error(`[${res.status}] ${message}`);
     }
@@ -162,23 +176,15 @@ export async function criarVersao(contextoId: string, dados: Partial<CriarContex
 
     const res = await fetch(`${base}/contextos/${contextoId}/versoes`, {
         method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-        },
+        headers: { 'Authorization': `Bearer ${token}` },
         body: formData
     });
 
     if (!res.ok) {
         let message = 'Erro ao criar nova versão.';
         try {
-            const ct = res.headers.get('content-type') || '';
-            if (ct.includes('application/json')) {
-                const j = await res.json();
-                message = j?.message || message;
-            } else {
-                const t = await res.text();
-                if (t) message = t;
-            }
+            const j = await res.json();
+            message = j?.message || message;
         } catch {}
         throw new Error(`[${res.status}] ${message}`);
     }
@@ -187,7 +193,6 @@ export async function criarVersao(contextoId: string, dados: Partial<CriarContex
 }
 
 // --- SERVIÇOS DE AÇÃO (VALIDAÇÃO) ---
-// Estas eram as funções que faltavam e causavam o erro
 
 export async function aprovarPeloGerente(versaoId: string): Promise<void> {
     const base = apiBase();
@@ -220,10 +225,7 @@ export async function indeferirContexto(versaoId: string, justificativa: string)
     const token = authService.getToken();
     const res = await fetch(`${base}/contextos/versoes/${versaoId}/diretor-indeferir`, {
         method: 'POST',
-        headers: { 
-            'Authorization': `Bearer ${token}`, 
-            'Content-Type': 'application/json' 
-        },
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ justificativa })
     });
     if (!res.ok) {
@@ -237,10 +239,7 @@ export async function solicitarCorrecao(versaoId: string, justificativa: string)
     const token = authService.getToken();
     const res = await fetch(`${base}/contextos/versoes/${versaoId}/solicitar-correcao`, {
         method: 'POST',
-        headers: { 
-            'Authorization': `Bearer ${token}`, 
-            'Content-Type': 'application/json' 
-        },
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ justificativa })
     });
     if (!res.ok) {
@@ -257,10 +256,7 @@ export const getContextosPendentes = async (): Promise<Contexto[]> => {
     try {
         const res = await fetch(`${base}/contextos/pendentes`, { 
             method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
             cache: 'no-store' 
         });
         
@@ -300,36 +296,24 @@ export const getContextoById = async (id: string): Promise<Contexto | null> => {
         });
         if (!res.ok) return null;
         const body: any = await res.json();
-        // Backends podem responder em dois formatos:
-        // 1) Formato "mapeado": BackendContexto direto
-        // 2) Formato bruto: { contexto, versoes, historico }
+        
+        // Normalização para lidar com diferentes estruturas de resposta
         let normalized: BackendContexto | BackendVersao;
         if (body && body.contexto && Array.isArray(body.versoes)) {
             const ctx = body.contexto;
             const versoes = body.versoes.map((v: any) => ({
                 ...v,
-                contexto: {
-                    id: ctx.id,
-                    tituloConceitual: ctx.tituloConceitual,
-                    tipo: ctx.tipo,
-                    gerenciaDonaId: ctx.gerenciaDonaId,
-                    createdAt: ctx.createdAt,
-                    autorOriginalId: ctx.autorOriginalId,
-                } as BackendContextoBase,
+                contexto: { ...ctx } as BackendContextoBase,
             }));
             normalized = {
-                id: ctx.id,
-                tituloConceitual: ctx.tituloConceitual,
-                tipo: ctx.tipo,
-                gerenciaDonaId: ctx.gerenciaDonaId,
-                createdAt: ctx.createdAt,
-                autorOriginalId: ctx.autorOriginalId,
+                ...ctx,
                 versoes,
                 historico: body.historico || [],
             } as BackendContexto;
         } else {
             normalized = body as (BackendContexto | BackendVersao);
         }
+        
         return mapBackendToFrontend(normalized);
     } catch (err) {
         console.error("Erro ao buscar detalhes do contexto:", err);
@@ -338,10 +322,7 @@ export const getContextoById = async (id: string): Promise<Contexto | null> => {
 };
 
 export async function getHistoricoContextos(
-    query: string, 
-    dateRange: { from?: Date; to?: Date } | undefined, 
-    page: number, 
-    limit: number
+    query: string, dateRange: { from?: Date; to?: Date } | undefined, page: number, limit: number
 ): Promise<HistoricoResponse> {
     const base = apiBase();
     const token = authService.getToken();
@@ -356,20 +337,13 @@ export async function getHistoricoContextos(
     try {
         const res = await fetch(`${base}/contextos/buscar?${params.toString()}`, {
             method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
             cache: 'no-store'
         });
 
-        if (!res.ok) {
-            return { data: [], total: 0, page: 1, totalPages: 1 };
-        }
+        if (!res.ok) return { data: [], total: 0, page: 1, totalPages: 1 };
 
         const body = await res.json();
-        
-        // Assumindo que o backend retorna { data: [...], meta: { total, pages } }
         const itensBackend = body.data || [];
         const itensMapeados = itensBackend.map(mapBackendToFrontend);
 
@@ -379,21 +353,22 @@ export async function getHistoricoContextos(
             page: body.meta?.page || page,
             totalPages: body.meta?.totalPages || 1
         };
-
     } catch (err) {
         console.error("Erro ao buscar histórico:", err);
         return { data: [], total: 0, page: 1, totalPages: 1 };
     }
 }
 
-// --- HELPERS ---
+// --- MAPPER (AQUI ESTÁ A MÁGICA DA EXIBIÇÃO DE NOMES) ---
 
 function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
     let contextoId: string;
     let tituloConceitual: string;
     let tipoBackend: string;
     let gerenciaId: string;
-    
+    let gerenciaSlug: string | undefined;
+    let gerenciaNome: string | undefined;
+
     let versaoRecente: BackendVersao | undefined;
     let versoesLista: BackendVersao[] = [];
     let historicoLista: any[] = [];
@@ -404,6 +379,11 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
         tituloConceitual = ctx.tituloConceitual;
         tipoBackend = ctx.tipo;
         gerenciaId = ctx.gerenciaDonaId;
+        
+        // Captura dados de exibição da gerência
+        gerenciaSlug = ctx.gerenciaSlug || ctx.gerencia?.slug;
+        gerenciaNome = ctx.gerenciaNome || ctx.gerencia?.nome;
+
         versoesLista = ctx.versoes || [];
         historicoLista = ctx.historico || [];
         if (ctx.versoes && ctx.versoes.length) {
@@ -427,33 +407,26 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
             tituloConceitual = ctxPai.tituloConceitual;
             tipoBackend = ctxPai.tipo;
             gerenciaId = ctxPai.gerenciaDonaId;
+            gerenciaSlug = ctxPai.gerenciaSlug || ctxPai.gerencia?.slug;
+            gerenciaNome = ctxPai.gerenciaNome || ctxPai.gerencia?.nome;
         }
-        
         versaoRecente = v;
         versoesLista = [v]; 
     }
 
-    // Dados específicos por tipo (parse se necessário)
     const dadosEspecificosRaw = versaoRecente 
         ? (versaoRecente.versaoarquivo || versaoRecente.versaodashboard || versaoRecente.versaoindicador || {})
         : {} as any;
+    
     const dadosEspecificos = {
         ...dadosEspecificosRaw,
-        // versaodashboard.payload pode vir como string JSON → parse
         ...(dadosEspecificosRaw && typeof (dadosEspecificosRaw as any).payload === 'string'
             ? { payload: safeJsonParse((dadosEspecificosRaw as any).payload) }
             : {}),
     } as any;
 
-    // Mapear tipo visual corretamente (link x pdf x planilha x doc)
     let frontType: Contexto['type'] = 'pdf';
-    let chartType: any = undefined;
-    if (tipoBackend === 'DASHBOARD') {
-        frontType = 'dashboard';
-        // Mapear enum do backend para TipoGrafico do front
-        const tg = (versaoRecente as any)?.versaodashboard?.tipoGrafico;
-        chartType = tg === 'PIE' ? 'pie' : tg === 'LINE' ? 'line' : 'chart';
-    }
+    if (tipoBackend === 'DASHBOARD') frontType = 'dashboard';
     else if (tipoBackend === 'INDICADOR') frontType = 'indicador';
     else if (tipoBackend === 'ARQUIVO_LINK') {
         const docType = (versaoRecente as any)?.versaoarquivo?.docType;
@@ -468,16 +441,20 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
         dbId: v.id,
         nome: v.titulo,
         data: v.updatedAt,
-        autor: v.solicitanteId || 'Sistema',
+        // Prioridade: Nome > ID
+        autor: v.solicitanteNome || v.user?.nome || v.solicitanteId || 'Sistema',
         status: mapStatus(v.statusValidacao),
         estaOculta: !v.isAtiva
     }));
 
     const historicoFrontend: HistoricoItem[] = historicoLista.map(h => ({
         data: h.timestamp,
-        autor: h.autorId || 'Sistema',
+        autor: h.autorNome || h.user?.nome || h.autorId || 'Sistema',
         acao: mapHistoricoLabel(h.statusNovo, h.justificativa)
     }));
+
+    // Definição do solicitante principal para a capa do contexto
+    const solicitantePrincipal = versaoRecente?.solicitanteNome || versaoRecente?.user?.nome || versaoRecente?.solicitanteId || '';
 
     return {
         id: contextoId,
@@ -486,8 +463,11 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
         insertedDate: versaoRecente?.updatedAt || new Date().toISOString(),
         status: versaoRecente ? mapStatus(versaoRecente.statusValidacao) : StatusContexto.AguardandoGerente,
         description: versaoRecente?.descricao || undefined,
-        gerencia: gerenciaId,
-        // Para dashboards, expor diretamente o dataset (payload) esperado pelo visualizador
+        
+        // PRIORIDADE: Nome da Gerência > Slug > ID
+        // Isso garante que o frontend exiba "Gerência de TI" em vez de "1ebef..."
+        gerencia: gerenciaNome || gerenciaSlug || gerenciaId,
+        
         payload: tipoBackend === 'DASHBOARD' ? (dadosEspecificos?.payload ?? undefined) : dadosEspecificos, 
         url: (versaoRecente as any)?.versaoarquivo?.url
             ? `${apiBase()}${(versaoRecente as any).versaoarquivo.url}`
@@ -495,26 +475,21 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
         estaOculto: false,
         versoes: versoesFrontend,
         historico: historicoFrontend,
-        solicitante: versaoRecente?.solicitanteId || '',
-        chartType,
+        solicitante: solicitantePrincipal,
+        chartType: (versaoRecente as any)?.versaodashboard?.tipoGrafico === 'PIE' ? 'pie' : 'chart',
     };
 }
 
-function safeJsonParse(s: string) {
-    try { return JSON.parse(s); } catch { return undefined; }
-}
-
+function safeJsonParse(s: string) { try { return JSON.parse(s); } catch { return undefined; } }
 function mapStatus(status: string): StatusContexto {
     switch (status) {
         case 'PUBLICADO': return StatusContexto.Publicado;
         case 'INDEFERIDO': return StatusContexto.Indeferido;
         case 'AGUARDANDO_DIRETOR': return StatusContexto.AguardandoDiretor;
         case 'AGUARDANDO_CORRECAO': return StatusContexto.AguardandoCorrecao;
-        case 'AGUARDANDO_GERENTE': 
-        default: return StatusContexto.AguardandoGerente;
+        case 'AGUARDANDO_GERENTE': default: return StatusContexto.AguardandoGerente;
     }
 }
-
 function mapHistoricoLabel(status: string, justificativa?: string): string {
     const labels: Record<string, string> = {
         'AGUARDANDO_GERENTE': 'Criado / Aguardando Gerente',
