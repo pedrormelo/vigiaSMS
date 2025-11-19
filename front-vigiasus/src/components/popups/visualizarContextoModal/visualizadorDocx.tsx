@@ -27,19 +27,20 @@ export const VisualizadorDocx: React.FC<VisualizadorDocxProps> = ({ url, emTelaC
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (!url || !viewerRef.current) return;
+        if (!url) return;
+        let active = true;
 
         const carregarDocumento = async () => {
             setLoading(true);
             setError(null);
-            if (viewerRef.current) viewerRef.current.innerHTML = "";
-
+            
             try {
                 const response = await fetch(url);
-                if (!response.ok) throw new Error(`Erro de rede: ${response.statusText}`);
+                if (!response.ok) throw new Error(`Erro ${response.status}: Ficheiro não encontrado`);
                 const blob = await response.blob();
                 
-                if (viewerRef.current) {
+                if (active && viewerRef.current) {
+                    viewerRef.current.innerHTML = ""; // Limpa anterior
                     await renderAsync(blob, viewerRef.current, undefined, {
                         className: "docx-viewer",
                         inWrapper: true,
@@ -48,50 +49,51 @@ export const VisualizadorDocx: React.FC<VisualizadorDocxProps> = ({ url, emTelaC
                     });
                 }
             } catch (err: any) {
-                console.error("Falha ao carregar ou renderizar DOCX:", err);
-                setError(`Não foi possível pré-visualizar este arquivo. (Detalhe: ${err.message})`);
+                if (active) {
+                    console.error("Falha DOCX:", err);
+                    setError("Erro ao carregar documento. Verifique se o arquivo existe.");
+                }
             } finally {
-                setLoading(false);
+                if (active) setLoading(false);
             }
         };
 
         carregarDocumento();
+        return () => { active = false; };
     }, [url]);
 
     return (
-        // O contêiner principal agora NÃO tem mais overflow, apenas a posição relativa
-        <div className="w-full h-full bg-gray-50 rounded-2xl flex flex-col relative group border border-gray-200">
+        <div className="w-full h-full bg-gray-50 rounded-2xl flex flex-col relative group border border-gray-200 overflow-hidden">
             <EstilosDocx />
             
-            {/* Este novo contêiner interno é quem controla a rolagem */}
-            <div className="flex-1 overflow-auto">
+            <div className="flex-1 overflow-auto scrollbar-custom p-4 flex justify-center">
                 {loading && (
-                    <div className="flex items-center justify-center h-full text-gray-500">
-                        <Loader2 className="w-8 h-8 animate-spin mr-2" />
-                        Carregando documento...
+                    <div className="flex flex-col items-center justify-center h-full text-gray-500 gap-2">
+                        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+                        <span className="text-sm">Processando documento...</span>
                     </div>
                 )}
+                
                 {error && (
                     <div className="flex flex-col items-center justify-center h-full text-red-600 p-4 text-center">
-                        <FileWarning className="w-12 h-12 mb-4" />
-                        <p className="font-semibold">{error}</p>
+                        <FileWarning className="w-10 h-10 mb-3 opacity-50" />
+                        <p className="font-medium text-sm">{error}</p>
                     </div>
                 )}
                 
                 <div 
                     style={{ transform: `scale(${zoomLevel})` }} 
-                    className={`docx-viewer-container ${loading || error ? 'hidden' : ''}`}
+                    className={`docx-viewer-container w-full max-w-[800px] transition-opacity duration-300 ${loading || error ? 'opacity-0 absolute' : 'opacity-100'}`}
                 >
                     <div ref={viewerRef} />
                 </div>
             </div>
             
-            {/* O botão de tela cheia agora é relativo ao contêiner principal, que não rola */}
             {!emTelaCheia && aoAlternarTelaCheia && !loading && !error && (
                 <button
                     onClick={aoAlternarTelaCheia}
-                    className="absolute top-2 right-2 p-2 bg-white/50 backdrop-blur-sm border border-gray-200 rounded-full text-gray-600 hover:bg-gray-200 hover:text-gray-900 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all"
-                    title="Ver em tela cheia"
+                    className="absolute top-2 right-2 p-2 bg-white/70 backdrop-blur-sm border border-gray-200 rounded-full text-gray-600 hover:bg-white hover:text-gray-900 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all shadow-sm"
+                    title="Expandir"
                 >
                     <Expand className="w-4 h-4" />
                 </button>

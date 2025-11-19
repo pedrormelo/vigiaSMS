@@ -2,7 +2,6 @@
 const prisma = require('../config/prismaClient');
 
 // GET /notificacoes
-// CORREÇÃO: O nome da função deve ser listForUser para bater com a rota
 exports.listForUser = async (req, res) => {
     const user = req.user;
     try {
@@ -10,18 +9,35 @@ exports.listForUser = async (req, res) => {
             where: { destinatarioId: user.id },
             orderBy: { createdAt: 'desc' },
             include: {
-                // Inclui os dados do remetente (opcional)
-                user: { // Se a relação se chamar 'user' no schema para o remetente, senão ajuste conforme seu schema
+                user: { 
                     select: { id: true, nome: true, email: true }
                 },
-                // Entramos na versão e pedimos para incluir o Contexto Pai
                 contextoversao: {
-                    include: {
+                    select: {
+                        statusValidacao: true,
+                        contextoId: true,
+                        versaoarquivo: {
+                            select: { docType: true }
+                        },
+                        versaodashboard: {
+                            select: { id: true } 
+                        },
+                        versaoindicador: {
+                            select: { id: true } 
+                        },
                         contexto: {
                             select: {
                                 id: true,
                                 tituloConceitual: true,
-                                tipo: true
+                                tipo: true,
+                                // AQUI: Buscamos IDs necessários para a validação de permissão
+                                gerencia: { 
+                                    select: { 
+                                        id: true, 
+                                        nome: true,
+                                        diretoriaId: true 
+                                    } 
+                                }
                             }
                         }
                     }
@@ -43,7 +59,6 @@ exports.markAsRead = async (req, res) => {
     const user = req.user;
 
     try {
-        // Verifica se a notificação pertence ao usuário
         const notif = await prisma.notificacao.findFirst({
             where: { id, destinatarioId: user.id }
         });

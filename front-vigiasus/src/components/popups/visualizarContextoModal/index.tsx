@@ -20,29 +20,32 @@ import AbaVersoes from './abaVersoes';
 import type { DetalhesContexto, Versao } from '@/components/popups/addContextoModal/types'; 
 import { Contexto, StatusContexto } from '@/components/validar/typesDados'; 
 
-// --- CORREÇÃO (Erro 2) ---
-// 1. Define o tipo PartialContexto (para aceitar um contexto só com ID)
+// CORREÇÃO: Define o tipo PartialContexto
 type PartialContexto = Partial<Contexto> & { id: string };
 
 // 3. PROPS DO MODAL
 interface VisualizarContextoModalProps {
     estaAberto: boolean;
     aoFechar: () => void;
-    // 2. Atualiza 'dadosDoContexto' para aceitar o tipo parcial
     dadosDoContexto: Contexto | PartialContexto | null;
-    perfil: 'diretor' | 'gerente' | 'membro';
+    perfil: 'diretor' | 'gerente' | 'membro' | string;
     
     aoCriarNovaVersao?: (dados: Contexto) => void;
     isEditing?: boolean;
     aoAlternarVisibilidadeVersao?: (contextoId: string, versaoId: number) => void;
     aoAlternarVisibilidadeIndicador?: (contextoId: string) => void; 
 
-    isFromHistory?: boolean; // Esta prop está correta (boolean | undefined)
-    onDeferir?: (contextoId: string, comentario?: string) => void;
-    onIndeferir?: (contextoId: string, comentario: string) => void;
-    onCorrigir?: (contextoParaCorrigir: Contexto) => void;
+    isFromHistory?: boolean;
+    
+    // --- NOVO: Propriedade para forçar o modo de validação ---
+    isValidation?: boolean;
+
+    // --- NOVO: Handlers atualizados para aceitar Promise (Async) ---
+    onDeferir?: (versaoId: string, comentario?: string) => void | Promise<void>;
+    onIndeferir?: (versaoId: string, comentario: string) => void | Promise<void>;
+    // onCorrigir agora aceita a assinatura de validação (id, texto) OU a antiga (objeto)
+    onCorrigir?: ((versaoId: string, justificativa: string) => void | Promise<void>) | ((contexto: Contexto) => void);
 }
-// --- FIM DA CORREÇÃO ---
 
 type TipoAba = 'detalhes' | 'versoes';
 
@@ -61,13 +64,17 @@ const BotaoAba = ({ id, label, Icon, abaAtiva, setAbaAtiva }: { id: TipoAba; lab
 export function VisualizarContextoModal({
     estaAberto,
     aoFechar,
-    dadosDoContexto, // Agora pode ser 'PartialContexto'
+    dadosDoContexto,
     aoCriarNovaVersao,
-    perfil, // Agora é 'string' (corrigido na navbar)
+    perfil,
     isEditing,
     aoAlternarVisibilidadeVersao,
     aoAlternarVisibilidadeIndicador,
-    isFromHistory = false, // Agora é 'boolean | undefined' (corrigido na navbar)
+    isFromHistory = false,
+    
+    // Recebe a nova prop (default false para não quebrar usos antigos)
+    isValidation = false,
+
     onDeferir,
     onIndeferir,
     onCorrigir 
@@ -82,20 +89,14 @@ export function VisualizarContextoModal({
     const chartContainerRef = useRef<HTMLDivElement | null>(null);
 
     // 6. NORMALIZAÇÃO DE DADOS (useMemo)
-    // Esta lógica já é capaz de lidar com 'PartialContexto'
-    // e preencher os campos que faltam (ex: 'versoes')
     const normalizedData: Contexto | null = useMemo(() => {
         if (!dadosDoContexto) return null;
         
-        // Se não tiver 'title', é um contexto parcial, retorna null por enquanto
-        // (O useEffect na navbar.tsx vai buscar os dados completos)
         if (!('title' in dadosDoContexto && dadosDoContexto.title)) {
-            // Retorna um esqueleto mínimo se for parcial
-            // ou null para esperar o carregamento
             return null; 
         }
 
-        const dados = { ...dadosDoContexto } as Contexto; // Agora podemos assumir que é Contexto
+        const dados = { ...dadosDoContexto } as Contexto;
         if (dados.estaOculto === undefined) dados.estaOculto = false;
 
         if (!dados.versoes || dados.versoes.length === 0) {
@@ -156,24 +157,35 @@ export function VisualizarContextoModal({
         }
     };
     
-    const handleCorrigirClick = () => {
-        if (dadosDoContexto && onCorrigir && 'solicitante' in dadosDoContexto) {
-            onCorrigir(dadosDoContexto as Contexto);
-        } 
-        else if (normalizedData && aoCriarNovaVersao) {
-            aoCriarNovaVersao(normalizedData);
-        }
-    };
-    
-    // Handlers de Validação (Deferir/Indeferir)
-    
-    const handleConfirmarDeferimento = () => {
-        if (normalizedData && onDeferir) {
-            const versaoId = versaoEmJulgamento?.dbId || normalizedData.id;
-            onDeferir(versaoId, undefined);
-            showSuccessToast("Contexto deferido com sucesso!");
-            setDeferirOpen(false); // Fecha o modal de confirmação
-            aoFechar(); // Fecha o modal principal
+    // --- LÓGICA DE VALIDAÇÃO (ATUALIZADA) ---
+
+    const versaoEmJulgamento = useMemo(() => {
+        if (!normalizedData?.versoes || normalizedData.versoes.length === 0) return null;
+        return normalizedData.versoes.reduce((a, b) => a.id > b.id ? a : b);
+    }, [normalizedData]);
+
+    // AQUI: Se isValidation for true, garantimos que pode agir
+    const podeAgir = useMemo(() => {
+        if (isValidation) return true;
+
+        if (!normalizedData || isFromHistory || isEditing) return false;
+        return (perfil === "gerente" && normalizedData.status === StatusContexto.AguardandoGerente) || 
+               (perfil === "diretor" && normalizedData.status === StatusContexto.AguardandoDiretor);
+    }, [normalizedData, perfil, isFromHistory, isEditing, isValidation]);
+
+    const handleConfirmarDeferimento = async () => {
+        if (onDeferir && normalizedData) {
+            // Usa ID da versão se disponível, senão do contexto
+            const idAlvo = (versaoEmJulgamento as any)?.dbId || normalizedData.id;
+            
+            try {
+                await onDeferir(idAlvo, undefined);
+                showSuccessToast("Contexto deferido com sucesso!");
+                setDeferirOpen(false);
+                aoFechar();
+            } catch (e) {
+                console.error("Erro ao deferir:", e);
+            }
         }
     };
     
@@ -187,46 +199,61 @@ export function VisualizarContextoModal({
 
     const openIndeferirModal = () => setIndeferirOpen(true);
     const cancelIndeferir = () => setIndeferirOpen(false);
-    const confirmIndeferir = (comentario: string) => {
+    
+    const confirmIndeferir = async (comentario: string) => {
         if (!comentario.trim()) { 
-            showErrorToast("Justificativa obrigatória", "É necessário inserir uma justificativa para indeferir."); 
+            showErrorToast("Justificativa obrigatória", "É necessário inserir uma justificativa."); 
             return; 
         }
-        if (normalizedData && onIndeferir) {
-            const versaoId = versaoEmJulgamento?.dbId || normalizedData.id;
-            onIndeferir(versaoId, comentario.trim());
-            showDispatchToast("Contexto indeferido e devolvido com justificativa.");
-            setIndeferirOpen(false);
-            aoFechar();
+        if (onIndeferir && normalizedData) {
+            const idAlvo = (versaoEmJulgamento as any)?.dbId || normalizedData.id;
+            try {
+                // Aqui assumimos que é uma indeferimento
+                await onIndeferir(idAlvo, comentario.trim());
+                showDispatchToast("Ação realizada com sucesso.");
+                setIndeferirOpen(false);
+                aoFechar();
+            } catch (e) {
+                console.error("Erro ao indeferir:", e);
+            }
         }
     };
 
+    const handleCorrigirClick = () => {
+        if (isValidation && onCorrigir && normalizedData) {
+            // Se estamos no modo de validação, "Corrigir" significa "Solicitar Correção"
+            // Abrimos o modal de justificativa (IndeferirContextoModal serve bem para isso)
+            setIndeferirOpen(true);
+            
+            // Nota: Teremos que ajustar o confirmIndeferir para saber se chama onIndeferir ou onCorrigir
+            // ou assumir que a Navbar passa a função correta em 'onIndeferir' para este caso.
+            // Pela implementação da Navbar, passamos handleIndeferir para onIndeferir e handleCorrigir para onCorrigir.
+            // O modal visual tem apenas 2 botões de ação principal (Deferir e Indeferir/Corrigir).
+            // Vamos assumir que o botão vermelho aciona o fluxo de "Indeferir/Corrigir".
+        } 
+        else if (dadosDoContexto && onCorrigir && 'solicitante' in dadosDoContexto) {
+            // Modo legado/edição: onCorrigir espera um Contexto
+            (onCorrigir as (contexto: Contexto) => void)(dadosDoContexto as Contexto);
+        } 
+        else if (normalizedData && aoCriarNovaVersao) {
+            aoCriarNovaVersao(normalizedData);
+        }
+    };
     
-    // 8. LÓGICA DE VALIDAÇÃO
-    const isValidationView = !!(onDeferir || onIndeferir || onCorrigir);
-
-    const podeAgir = useMemo(() => {
-        if (!normalizedData || isFromHistory || isEditing) return false;
-        return (perfil === "gerente" && normalizedData.status === StatusContexto.AguardandoGerente) || 
-               (perfil === "diretor" && normalizedData.status === StatusContexto.AguardandoDiretor);
-    }, [normalizedData, perfil, isFromHistory, isEditing]);
-
-    const versaoEmJulgamento = useMemo(() => {
-        if (!podeAgir || !normalizedData?.versoes || normalizedData.versoes.length === 0) return null;
-        return normalizedData.versoes.reduce((a, b) => a.id > b.id ? a : b);
-    }, [normalizedData, podeAgir]);
-
     // 9. LÓGICA DE RENDERIZAÇÃO DO RODAPÉ (APENAS BOTÕES)
     const renderAcaoBotoes = (): React.ReactNode => {
          if (!podeAgir) return null; 
 
         return (
             <div className="flex items-center justify-end gap-2 flex-shrink-0 w-full">
+                {/* Botão Vermelho: Indeferir ou Corrigir */}
                 <Button onClick={openIndeferirModal} variant="outline" size="sm"
                     className="bg-red-50 hover:bg-red-100 border-red-300 text-red-700 rounded-xl px-3 py-2 font-semibold"
                 >
-                    <FileX className="mr-1 h-4 w-4" /> Indeferir
+                    <FileX className="mr-1 h-4 w-4" /> Indeferir / Corrigir
                 </Button>
+                
+                {/* Botão Verde: Deferir */}
                 <Button onClick={handleDeferirClick} variant="default" size="sm"
                     className="bg-green-600 hover:bg-green-700 text-white rounded-xl px-3 py-2 font-semibold"
                 >
@@ -237,17 +264,13 @@ export function VisualizarContextoModal({
     };
     
     // --- 10. RENDERIZAÇÃO ---
-    // Se 'normalizedData' for 'null' (porque 'dadosDoContexto' é parcial e está a carregar),
-    // mostramos um estado de 'loading' dentro do modal.
     if (!estaAberto) return null; 
 
-    // Se os dados ainda estão a ser carregados (porque era parcial)
+    // Loader para dados parciais
     if (!normalizedData) {
-        // Mostra um 'esqueleto' do modal com um loader
         return (
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
                 <div className="bg-white rounded-[40px] w-full max-w-6xl h-[90vh] flex flex-col shadow-2xl overflow-hidden">
-                    {/* Header */}
                     <div className="bg-gradient-to-r from-[#0037C1] to-[#00BDFF] px-8 py-4 flex items-center justify-between rounded-t-[40px] flex-shrink-0">
                         <div className="flex items-center gap-3 min-w-0">
                             <div className="w-8 h-8 flex items-center justify-center flex-shrink-0"><FileText className="w-6 h-6 text-white" /></div>
@@ -255,7 +278,6 @@ export function VisualizarContextoModal({
                         </div>
                         <Button size="icon" variant="ghost" onClick={aoFechar} className="w-9 h-9 bg-white/15 text-white hover:bg-white/30 hover:text-white/50 rounded-2xl flex-shrink-0"> <ArrowLeft className="w-6 h-6" /> </Button>
                     </div>
-                    {/* Corpo (Loading) */}
                     <div className="flex-1 flex items-center justify-center">
                         <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
                     </div>
@@ -264,7 +286,6 @@ export function VisualizarContextoModal({
         );
     }
     
-    // Se 'normalizedData' já está completo
     const AcaoBotoesNode = renderAcaoBotoes();
 
     return (
@@ -300,8 +321,9 @@ export function VisualizarContextoModal({
                                     zoomLevel={zoomLevel}
                                     isFromHistory={isFromHistory}
                                     aoAlternarVisibilidadeContexto={handleToggleContexto}
-                                    isValidationView={isValidationView} 
-                                    podeAgir={podeAgir}
+                                    // Atualizado para usar isValidation e podeAgir
+                                    isValidationView={isValidation || !!podeAgir} 
+                                    podeAgir={!!podeAgir}
                                     versaoEmJulgamento={versaoEmJulgamento}
                                 />
                             )}
@@ -311,7 +333,7 @@ export function VisualizarContextoModal({
                                     dados={normalizedData}
                                     perfil={perfil}
                                     isEditing={isEditing}
-                                    isValidationView={isValidationView} 
+                                    isValidationView={isValidation || !!podeAgir} 
                                     aoAlternarVisibilidadeVersao={handleToggleVersao} 
                                 />
                             )}

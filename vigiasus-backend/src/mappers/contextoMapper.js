@@ -15,6 +15,12 @@ function mapVersao(prismaVersao) {
         solicitanteId: prismaVersao.solicitanteId,
         updatedAt: prismaVersao.updatedAt,
         createdAt: prismaVersao.createdAt,
+        solicitanteNome: prismaVersao.user ? prismaVersao.user.nome : null,
+        
+        // Mantém dados específicos para o visualizador
+        versaoarquivo: prismaVersao.versaoarquivo,
+        versaodashboard: prismaVersao.versaodashboard,
+        versaoindicador: prismaVersao.versaoindicador
     };
 }
 
@@ -27,6 +33,7 @@ function mapHistorico(record) {
         statusNovoLabel: StatusLabels[record.statusNovo] || record.statusNovo,
         justificativa: record.justificativa || null,
         timestamp: record.timestamp,
+        autorNome: record.user ? record.user.nome : null,
     };
 }
 
@@ -52,6 +59,10 @@ function mapContextoDetalhe(prismaContexto, versoes = [], historico = []) {
         createdAt: prismaContexto.createdAt,
         versoes: versoes.map(mapVersao),
         historico: historico.map(mapHistorico),
+
+        gerenciaSlug: prismaContexto.gerencia ? prismaContexto.gerencia.slug : null,
+        gerenciaNome: prismaContexto.gerencia ? prismaContexto.gerencia.nome : null,
+        diretoriaSlug: prismaContexto.gerencia?.diretoria ? prismaContexto.gerencia.diretoria.slug : null,
     };
 }
 
