@@ -6,7 +6,6 @@ import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
 import type { ActiveFilter } from "./notificationList";
 
-// Props que o painel de configurações precisa
 interface NotificationSettingsProps {
   onClose: () => void;
   onFilterChange: (filter: ActiveFilter) => void;
@@ -19,24 +18,24 @@ export default function NotificationSettingsView({
   activeFilter,
 }: NotificationSettingsProps) {
   
-  // Opções de fundos disponíveis (gradient + imagens em public/chat)
-  const chatBackgrounds: { id: string; label: string; src?: string; type: 'gradient' | 'image' | 'none' }[] = [
-    { id: 'none', label: 'Sem fundo', type: 'none' },
-    { id: 'gradient', label: 'Gradiente', type: 'gradient' },
-    { id: 'bg-chat', label: 'Fundo 1', src: '/chat/bg-chat.png', type: 'image' },
-    { id: 'bg-chat-2', label: 'Fundo 2', src: '/chat/bg-chat-2.png', type: 'image' },
-    { id: 'bg-chat-3', label: 'Fundo 3', src: '/chat/bg-chat-3.png', type: 'image' },
-    { id: 'bg-chat-4', label: 'Fundo 4', src: '/chat/bg-chat-4.png', type: 'image' },
-    { id: 'bg-chat-5', label: 'Fundo 5', src: '/chat/bg-chat-5.png', type: 'image' },
-    { id: 'bg-chat-6', label: 'Fundo 6', src: '/chat/bg-chat-6.png', type: 'image' },
-    { id: 'bg-chat-7', label: 'Fundo 7', src: '/chat/bg-chat-7.png', type: 'image' },
+  // AQUI: Adicionei a propriedade 'solid' para controlar o contraste de cada fundo
+  const chatBackgrounds: { id: string; label: string; src?: string; type: 'gradient' | 'image' | 'none'; solid: boolean }[] = [
+    { id: 'none', label: 'Sem fundo', type: 'none', solid: false },
+    { id: 'gradient', label: 'Gradiente', type: 'gradient', solid: false },
+    { id: 'bg-chat', label: 'Fundo 1', src: '/chat/bg-chat.png', type: 'image', solid: false },
+    { id: 'bg-chat-2', label: 'Fundo 2', src: '/chat/bg-chat-2.png', type: 'image', solid: false },
+    { id: 'bg-chat-3', label: 'Fundo 3', src: '/chat/bg-chat-3.png', type: 'image', solid: false },
+    { id: 'bg-chat-4', label: 'Fundo 4', src: '/chat/bg-chat-4.png', type: 'image', solid: false },
+    { id: 'bg-chat-5', label: 'Fundo 5', src: '/chat/bg-chat-5.png', type: 'image', solid: false },
+    { id: 'bg-chat-6', label: 'Fundo 6', src: '/chat/bg-chat-6.png', type: 'image', solid: false },
+    // Exemplo: Fundo 7 marcado como sólido (true)
+    { id: 'bg-chat-7', label: 'Fundo 7', src: '/chat/bg-chat-7.png', type: 'image', solid: true },
   ];
 
   const [selectedBg, setSelectedBg] = useState<string>(() => {
     try {
       const existing = localStorage.getItem('notifications.chatBg');
       if (existing) return existing;
-      // Migração de chave antiga
       const legacy = localStorage.getItem('notifications.useChatBg');
       const migrated = legacy === 'true' ? '/chat/bg-chat-3.png' : 'gradient';
       localStorage.setItem('notifications.chatBg', migrated);
@@ -51,7 +50,6 @@ export default function NotificationSettingsView({
     try { localStorage.setItem('notifications.chatBg', bgId); } catch (e) {}
   };
 
-  // Sincroniza entre abas
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
       if (e.key === 'notifications.chatBg' && e.newValue) {
@@ -64,7 +62,6 @@ export default function NotificationSettingsView({
 
   const handleFilterClick = (filter: ActiveFilter) => {
     onFilterChange(filter);
-    // (Opcional) Salvar no localStorage para persistir a seleção
     try { localStorage.setItem('notifications.activeFilter', filter); } catch (e) {}
   };
 
@@ -88,7 +85,6 @@ export default function NotificationSettingsView({
       </div>
 
       <div className="p-4 flex-1 overflow-auto scrollbar-custom space-y-6">
-        {/* Seção de Filtros */}
         <div>
           <p className="text-sm font-medium text-gray-700">Filtro Padrão</p>
           <p className="text-xs text-gray-500 mb-2">
@@ -106,35 +102,27 @@ export default function NotificationSettingsView({
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 )}
               >
-                {f === "all"
-                  ? "Todas"
-                  : f === "unread"
-                  ? "Não Lidas"
-                  : "Sistema"}
+                {f === "all" ? "Todas" : f === "unread" ? "Não Lidas" : "Sistema"}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Seção de Aparência */}
         <div>
           <p className="text-sm font-medium text-gray-700 mb-1">Aparência do Chat</p>
-          <p className="text-xs text-gray-500 mb-3">Escolha um fundo para a área de comentários ou use o gradiente padrão.</p>
+          <p className="text-xs text-gray-500 mb-3">Escolha um fundo para a área de comentários.</p>
           <div role="radiogroup" className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {chatBackgrounds.map(bg => {
-              const isSelected =
-                (bg.type === 'image' && selectedBg === bg.src) ||
-                (bg.type === 'gradient' && selectedBg === 'gradient') ||
-                (bg.type === 'none' && selectedBg === 'none');
+              const bgValue = bg.type === 'image' ? (bg.src as string) : bg.type;
+              const isSelected = selectedBg === bgValue;
+              
               return (
                 <button
                   key={bg.id}
                   type="button"
                   role="radio"
                   aria-checked={isSelected}
-                  onClick={() => handleSelectBackground(
-                    bg.type === 'image' ? (bg.src as string) : bg.type
-                  )}
+                  onClick={() => handleSelectBackground(bgValue)}
                   className={cn(
                     'group relative rounded-xl border text-xs font-medium overflow-hidden h-20 flex items-end justify-center p-1 transition-all',
                     isSelected ? 'border-blue-600 ring-2 ring-blue-400' : 'border-gray-200 hover:border-gray-300'

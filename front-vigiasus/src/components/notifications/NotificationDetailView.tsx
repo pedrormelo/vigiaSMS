@@ -16,6 +16,20 @@ import { authService } from "@/services/authService";
 
 interface Props { notification: Notification | null; isRead: boolean; onOpenContexto: (n: Notification) => void; }
 
+// Mesma configuração de fundos definida no Settings, para saber qual é sólido
+const backgroundConfig: { id: string; src?: string; type: string; solid: boolean }[] = [
+    { id: 'none', type: 'none', solid: false },
+    { id: 'gradient', type: 'gradient', solid: false },
+    { id: 'bg-chat', src: '/chat/bg-chat.png', type: 'image', solid: false },
+    { id: 'bg-chat-2', src: '/chat/bg-chat-2.png', type: 'image', solid: false },
+    { id: 'bg-chat-3', src: '/chat/bg-chat-3.png', type: 'image', solid: false },
+    { id: 'bg-chat-4', src: '/chat/bg-chat-4.png', type: 'image', solid: true },
+    { id: 'bg-chat-5', src: '/chat/bg-chat-5.png', type: 'image', solid: false },
+    { id: 'bg-chat-6', src: '/chat/bg-chat-6.png', type: 'image', solid: true },
+    // Fundo 7 marcado como sólido
+    { id: 'bg-chat-7', src: '/chat/bg-chat-7.png', type: 'image', solid: true },
+];
+
 function getStatusBadge(text: string, realStatus?: string) {
     if (realStatus) {
         if (realStatus === 'AGUARDANDO_GERENTE') return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-yellow-100 text-yellow-800 border border-yellow-200">AGUARDA GERENTE</span>;
@@ -40,8 +54,14 @@ const ChatNotificationDetails: React.FC<Props> = ({ notification, onOpenContexto
   const [isSending, setIsSending] = useState(false);
   const [chatBg, setChatBg] = useState<string>(() => { try { const e = localStorage.getItem('notifications.chatBg'); return e || 'gradient'; } catch { return 'gradient'; } });
   
-  // Estado para controlar se o botão deve ser "Validar"
   const [canValidate, setCanValidate] = useState(false);
+
+  // AQUI: Verifica na configuração se o fundo atual é sólido
+  const isSolidBg = backgroundConfig.find(bg => 
+      (bg.type === 'image' && bg.src === chatBg) || 
+      (bg.type === chatBg) || 
+      (bg.id === chatBg)
+  )?.solid || false;
 
   useEffect(() => {
     let active = true;
@@ -53,35 +73,20 @@ const ChatNotificationDetails: React.FC<Props> = ({ notification, onOpenContexto
              notifService.getParticipantes(notification.id)
           ]);
           
-          // --- LÓGICA DE PERMISSÃO ROBUSTA ---
           const user = authService.getUser();
           const status = (notification as any).contextStatus || '';
           const gId = (notification as any).contextGerenciaId;
           const dId = (notification as any).contextDiretoriaId;
           
-          // Debug Logs (Abra o F12 para ver isto se falhar)
-          // console.log("Validando Permissão:", { userRole: user?.role, status, userGerencia: user?.gerenciaId, notifGerencia: gId });
-
           let _canVal = false;
-
           if (user && user.role) {
-             // Normaliza para String e Maiúsculas para evitar erros de tipo
              const userRole = String(user.role).toUpperCase();
              const currentStatus = String(status).toUpperCase();
-             
-             // Verifica Gerente
              if (currentStatus === 'AGUARDANDO_GERENTE' && userRole === 'GERENTE') {
-                 // Compara IDs como string para evitar erros (ex: 1 vs "1")
-                 if (gId && String(user.gerenciaId) === String(gId)) {
-                     _canVal = true;
-                 }
+                 if (gId && String(user.gerenciaId) === String(gId)) _canVal = true;
              }
-             // Verifica Diretor
              else if (currentStatus === 'AGUARDANDO_DIRETOR' && userRole === 'DIRETOR') {
-                 // Diretor pode validar se for da diretoria correta
-                 if (dId && String(user.diretoriaId) === String(dId)) {
-                     _canVal = true;
-                 }
+                 if (dId && String(user.diretoriaId) === String(dId)) _canVal = true;
              }
           }
           
@@ -111,10 +116,8 @@ const ChatNotificationDetails: React.FC<Props> = ({ notification, onOpenContexto
   const quickReplies = ["Ciente.", "Obrigado(a).", "Recebido.", "Entendido."];
   const statusBadge = getStatusBadge(description || title, contextStatus);
 
-  // AQUI: Esta função é CRUCIAL. Ela injeta a flag isValidation.
   const handleOpenClick = () => {
       const notifToOpen = canValidate ? { ...notification, isValidation: true } : notification;
-      // console.log("Abrindo Contexto:", notifToOpen); // Debug
       onOpenContexto(notifToOpen);
   };
 
@@ -164,9 +167,17 @@ const ChatNotificationDetails: React.FC<Props> = ({ notification, onOpenContexto
           )}
         </div>
       </div>
+      
       <div className={cn("flex-1 p-4 flex flex-col gap-3 overflow-y-auto scrollbar-custom", chatBg === 'gradient' ? 'bg-gradient-to-b from-white to-blue-50' : (chatBg === 'none' ? 'bg-white' : 'bg-cover bg-center bg-no-repeat'))} style={chatBg !== 'gradient' && chatBg !== 'none' ? { backgroundImage: `url('${chatBg}')` } : undefined}>
-        {comments.length ? comments.map(c => <CommentItem key={c.id} comment={c} />) : <div className="flex-1 flex items-center justify-center text-gray-500">Nenhum comentário.</div>}
+        {comments.length ? comments.map(c => (
+            <CommentItem 
+                key={c.id} 
+                comment={c} 
+                hasSolidBg={isSolidBg} // <--- Passa a propriedade calculada
+            />
+        )) : <div className="flex-1 flex items-center justify-center text-gray-500 bg-white/80 rounded-xl m-4 backdrop-blur-sm">Nenhum comentário.</div>}
       </div>
+
       <div className="p-4 border-t border-gray-200 bg-white flex-shrink-0">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 flex-1">

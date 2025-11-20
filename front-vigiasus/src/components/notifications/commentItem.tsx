@@ -4,14 +4,14 @@ import { Lock, ShieldAlert, CheckCircle2, Rocket, AlertTriangle, XCircle, Send }
 
 interface CommentItemProps {
   comment: Comment;
+  hasSolidBg?: boolean;
 }
 
-export default function CommentItem({ comment }: CommentItemProps) {
-  // Adicionamos authorLabel à desestruturação (adicione ao type Comment se usar TS estrito)
+export default function CommentItem({ comment, hasSolidBg = false }: CommentItemProps) {
   const { author, text, time, date, isMyComment, role, isPrivate, toAuthor } = comment;
-  const authorLabel = (comment as any).authorLabel; // Cast se necessário
+  const authorLabel = (comment as any).authorLabel;
 
-  // --- ESTILO DE SISTEMA (MANTIDO) ---
+  // --- MENSAGENS DE SISTEMA (TIMELINE) ---
   if (role === 'system') {
     let sysStyle = "bg-gray-50 border-gray-200 text-gray-600";
     let Icon = ShieldAlert;
@@ -25,7 +25,7 @@ export default function CommentItem({ comment }: CommentItemProps) {
 
     return (
       <div className="w-full flex justify-center my-2">
-        <div className={`flex items-start gap-3 px-4 py-3 rounded-xl border shadow-sm max-w-[90%] ${sysStyle}`}>
+        <div className={`flex items-start gap-3 px-4 py-3 rounded-xl border shadow-sm max-w-[90%] ${sysStyle} backdrop-blur-sm bg-opacity-95`}>
           <div className="mt-0.5"><Icon className="w-5 h-5" /></div>
           <div className="flex-1">
             <p className="text-[10px] font-bold uppercase tracking-wider mb-1 opacity-90">{statusTitle}</p>
@@ -40,41 +40,62 @@ export default function CommentItem({ comment }: CommentItemProps) {
       </div>
     );
   }
-  // -----------------------------------------------
-
+  
+  // --- MENSAGENS DE USUÁRIO (CHAT) ---
   let roleStyle = "";
+  
+  // Paleta de Cores "Vidro" (Translúcida com Blur)
+  // Usamos gradientes suaves e bordas sutis para um visual moderno
   switch (role) {
-    case "info": roleStyle = "bg-white border-gray-300 text-gray-600 font-semibold"; break;
-    case "secretaria": roleStyle = "bg-gradient-to-r from-indigo-400/30 to-indigo-600/30 border-indigo-300 text-gray-800"; break;
-    case "diretoria": roleStyle = "bg-gradient-to-r from-emerald-300/30 to-emerald-400/30 border-emerald-300 text-gray-800"; break;
-    case "gerencia": roleStyle = "bg-gradient-to-r from-blue-400/30 to-blue-500/30 border-blue-400 text-gray-800"; break;
-    case "user": roleStyle = "bg-gradient-to-r from-white/70 to-white/80 border-gray-100 text-gray-800"; break;
-    default: roleStyle = "bg-blue-100 border-gray-200 text-gray-800";
+    case "info": 
+        roleStyle = "bg-white/85 border-gray-200 text-gray-800 shadow-sm"; 
+        break;
+    
+    case "secretaria": 
+        // ROXO: Diferente e sofisticado
+        roleStyle = "bg-gradient-to-r from-purple-100/90 to-purple-200/80 border-purple-200 text-purple-900 shadow-sm"; 
+        break;
+    
+    case "diretoria": 
+        // ÂMBAR/LARANJA: Destaca a autoridade e contrasta com os azuis
+        roleStyle = "bg-gradient-to-r from-amber-100/90 to-orange-100/80 border-amber-200 text-amber-900 shadow-sm"; 
+        break;
+    
+    case "gerencia": 
+        // AZUL CELESTE: Profissional, mas mais vivo que o cinza
+        roleStyle = "bg-gradient-to-r from-sky-100/90 to-blue-100/80 border-sky-200 text-blue-900 shadow-sm"; 
+        break;
+    
+    case "user": 
+        // CINZA/SLATE: Neutro para não cansar a vista
+        roleStyle = "bg-gradient-to-r from-slate-100/95 to-gray-100/85 border-gray-200 text-slate-800 shadow-sm"; 
+        break;
+    
+    default: 
+        roleStyle = "bg-gray-50/90 border-gray-200 text-gray-900 shadow-sm";
   }
 
   return (
-    <div className={`max-w-[85%] p-3 rounded-2xl shadow-sm border text-sm relative ${isMyComment ? "self-end rounded-br-none" : "self-start rounded-bl-none"} ${roleStyle}`}>
+    <div className={`max-w-[85%] p-3 rounded-2xl border text-sm relative backdrop-blur-md ${isMyComment ? "self-end rounded-br-none" : "self-start rounded-bl-none"} ${roleStyle}`}>
       <div className="flex items-center justify-between gap-2 mb-1">
         <div className="flex items-center gap-2">
-            {/* Nome do Autor */}
-            <p className="font-semibold text-xs opacity-80">{isMyComment ? "Eu" : author}</p>
-            {/* Etiqueta de Cargo (NOVO) */}
+            <p className="font-semibold text-xs opacity-90">{isMyComment ? "Eu" : author}</p>
             {!isMyComment && authorLabel && (
-                <span className="text-[9px] px-1.5 py-0.5 rounded bg-black/5 border border-black/10 font-medium uppercase tracking-tight leading-none text-black/60">
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-black/5 border border-black/10 font-bold uppercase tracking-tight leading-none text-black/60">
                     {authorLabel}
                 </span>
             )}
         </div>
         
         {isPrivate && (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-800 text-white ml-2">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-900/90 text-white ml-2 backdrop-blur-sm">
             <Lock className="w-3 h-3" />
             {toAuthor ? `Para ${toAuthor}` : "Privado"}
           </span>
         )}
       </div>
-      <p className="leading-relaxed whitespace-pre-wrap">{text}</p>
-      <span className="block text-[10px] text-right mt-1 opacity-60">{date} às {time}</span>
+      <p className="leading-relaxed whitespace-pre-wrap font-medium opacity-95">{text}</p>
+      <span className="block text-[10px] text-right mt-1 opacity-70 font-medium">{date} às {time}</span>
     </div>
   );
 }

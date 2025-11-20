@@ -6,6 +6,7 @@ const { Status } = require('../constants/status');
 const { mapContextoDetalhe } = require('../mappers/contextoMapper');
 const versaoService = require('../services/versaoService');
 const notificacaoService = require('../services/notificacaoService'); // Importação essencial
+const fileStorageService = require('../services/fileStorageService.js');
 
 // Função auxiliar para mapear resposta simples
 function mapContextoWithVersao(ctx, versao) {
@@ -237,7 +238,11 @@ exports.createContexto = async (req, res) => {
     if (!tituloConceitual || !tipo || !titulo) return res.status(400).json({ message: 'Campos obrigatórios ausentes.' });
     
     try {
-        const ger = await prisma.gerencia.findUnique({ where: { id: user.gerenciaId } });
+        const ger = await prisma.gerencia.findUnique({ 
+            where: { id: user.gerenciaId },
+            select: { id: true, slug: true } 
+        });
+        
         if (!ger) return res.status(400).json({ message: 'Gerência do usuário não encontrada.' });
         
         const result = await prisma.$transaction(async (tx) => {
@@ -272,18 +277,34 @@ exports.createContexto = async (req, res) => {
             if (tipo === 'ARQUIVO_LINK') {
                 let finalUrl = linkUrl;
                 let docType = 'LINK';
+
                 if (req.file) {
-                    finalUrl = `/files/context/${req.file.filename}`;
+                    try {
+                        // CORREÇÃO AQUI: Passamos tituloConceitual e versaoNumero (1)
+                        finalUrl = await fileStorageService.moveFileToFinalDestination(
+                            req.file, 
+                            ger.slug, 
+                            ctx.id,
+                            tituloConceitual, // <--- Título para o nome da pasta
+                            1                 // <--- Versão para o nome do arquivo
+                        );
+                    } catch (moveError) {
+                        throw new Error(`Falha ao salvar arquivo: ${moveError.message}`);
+                    }
+                    
                     const mime = req.file.mimetype;
-                    if (mime === 'application/pdf') docType = 'PDF';
-                    else if (mime.includes('spreadsheet') || mime.includes('excel')) docType = 'EXCEL';
+                    if (mime.includes('pdf')) docType = 'PDF';
+                    else if (mime.includes('sheet') || mime.includes('excel')) docType = 'EXCEL';
                     else if (mime.includes('word') || mime.includes('presentation')) docType = 'DOC';
                     else docType = 'DOC';
                 }
+                
                 if (!finalUrl) throw new Error("Arquivo ou URL é obrigatório.");
+                
                 await tx.versaoarquivo.create({
                     data: { id: crypto.randomUUID(), versaoId: v1.id, url: finalUrl, docType }
                 });
+
             } else if (tipo === 'DASHBOARD') {
                 await tx.versaodashboard.create({
                     data: {
@@ -319,21 +340,23 @@ exports.createContexto = async (req, res) => {
                     timestamp: new Date()
                 }
             });
-            // 5. Comentário Automático
+
+            // 5. Comentário
             await tx.comentario.create({
                 data: {
                     id: crypto.randomUUID(),
                     versaoId: v1.id,
-                    autorId: user.id, // O próprio usuário assina a submissão
-                    texto: "📤 Contexto submetido para análise da Gerência.",
+                    autorId: user.id, 
+                    texto: "📤 Contexto criado e submetido para análise da Gerência.",
                     isPrivate: false,
                     timestamp: new Date()
                 }
             });
+
             return { ctx, v1 };
         });
 
-        // --- NOTIFICAÇÃO PARA GERENTE ---
+        // Notificação
         try {
             await notificacaoService.notifyGerentesDaGerencia(
                 user.gerenciaId,
@@ -361,9 +384,13 @@ exports.createVersao = async (req, res) => {
     if (!titulo) return res.status(400).json({ message: 'Título obrigatório' });
 
     try {
+        // CORREÇÃO: Garantimos que o tituloConceitual vem na busca
         const contexto = await prisma.contexto.findUnique({ 
             where: { id: contextoId },
-            include: { versoes: { orderBy: { versaoNumero: 'desc' }, take: 1 } }
+            include: { 
+                versoes: { orderBy: { versaoNumero: 'desc' }, take: 1 },
+                gerencia: { select: { slug: true } } 
+            }
         });
         
         if (!contexto) return res.status(404).json({ message: 'Contexto não encontrado' });
@@ -389,23 +416,38 @@ exports.createVersao = async (req, res) => {
                 },
             });
 
-            // Lógica de arquivos/dados
             if (contexto.tipo === 'ARQUIVO_LINK') {
                 let finalUrl = linkUrl;
                 let docType = 'LINK';
+                
                 if (req.file) {
-                     finalUrl = `/files/context/${req.file.filename}`;
-                     const mime = req.file.mimetype || '';
-                     if (mime.includes('pdf')) docType = 'PDF';
-                     else if (mime.includes('sheet') || mime.includes('excel')) docType = 'EXCEL';
-                     else docType = 'DOC';
+                    try {
+                        // CORREÇÃO AQUI: Passamos tituloConceitual do contexto e nextNum
+                        finalUrl = await fileStorageService.moveFileToFinalDestination(
+                            req.file, 
+                            contexto.gerencia?.slug, 
+                            contextoId,
+                            contexto.tituloConceitual, // <--- Nome da pasta
+                            nextNum                    // <--- Nome do arquivo (v2, v3...)
+                        );
+                    } catch (moveError) {
+                        throw new Error(`Falha ao salvar arquivo da versão: ${moveError.message}`);
+                    }
+
+                    const mime = req.file.mimetype || '';
+                    if (mime.includes('pdf')) docType = 'PDF';
+                    else if (mime.includes('sheet') || mime.includes('excel')) docType = 'EXCEL';
+                    else docType = 'DOC';
+
                 } else if (!finalUrl && contexto.versoes[0]) {
                      const prev = await prisma.versaoarquivo.findUnique({ where: { versaoId: contexto.versoes[0].id }});
                      if (prev) { finalUrl = prev.url; docType = prev.docType; }
                 }
+
                 if (finalUrl) {
                     await tx.versaoarquivo.create({ data: { id: crypto.randomUUID(), versaoId: v.id, url: finalUrl, docType }});
                 }
+
             } else if (contexto.tipo === 'DASHBOARD' && dashboardPayload) {
                  await tx.versaodashboard.create({
                     data: { id: crypto.randomUUID(), versaoId: v.id, tipoGrafico: tipoGrafico || 'BAR', payload: typeof dashboardPayload === 'object' ? JSON.stringify(dashboardPayload) : dashboardPayload }
@@ -427,21 +469,20 @@ exports.createVersao = async (req, res) => {
                 }
             });
 
-            // --- NOVO: Comentário Automático ---
             await tx.comentario.create({
                 data: {
                     id: crypto.randomUUID(),
                     versaoId: v.id,
                     autorId: user.id,
-                    texto: `📤 Nova versão submetida.\nMotivo: ${motivoNovaVersao || 'Atualização'}. \nAguardando análise da Gerência.`,
+                    texto: `📤 Nova versão submetida.\nMotivo: "${motivoNovaVersao || 'Atualização'}".\nAguardando análise da Gerência.`,
                     isPrivate: false,
                     timestamp: new Date()
                 }
             });
+
             return v;
         });
 
-        // --- NOTIFICAÇÃO PARA GERENTE ---
         try {
             await notificacaoService.notifyGerentesDaGerencia(
                 user.gerenciaId,
@@ -459,7 +500,6 @@ exports.createVersao = async (req, res) => {
         return res.status(500).json({ message: err.message || 'Erro interno' });
     }
 };
-
 // GET /contextos/:versaoId/participantes
 exports.listarParticipantes = async (req, res) => {
     const { versaoId } = req.params;
