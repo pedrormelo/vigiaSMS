@@ -21,7 +21,7 @@ import { ModalAdicionarConteudo } from "@/components/popups/addContextoModal/ind
 import StatusBadge from "@/components/alerts/statusBadge";
 import StatusBanner from "@/components/ui/status-banner";
 import { showSuccessToast, showErrorToast } from "@/components/ui/Toasts";
-import OcultarContextoModal from "@/components/popups/ocultarContextoModal";
+// [REMOVIDO] OcultarContextoModal (agora vive dentro do card)
 
 
 import type { FileType } from "@/components/contextosCard/contextoCard";
@@ -59,10 +59,7 @@ export default function GerenciaPage() {
     const [error, setError] = useState<string | null>(null);
     const [todosOsContextos, setTodosOsContextos] = useState<Contexto[]>([]);
 
-    const [modalOcultarAberto, setModalOcultarAberto] = useState(false);
-    const [contextoParaOcultar, setContextoParaOcultar] = useState<Contexto | null>(null);
-
-    // (Removed carousel autoplay – handled inside IndicadoresSection if needed)
+    // [REMOVIDO] Estados do modal de ocultar (não são mais necessários aqui)
 
     const carregarDados = useCallback(async () => {
         if (!slug) return;
@@ -85,7 +82,7 @@ export default function GerenciaPage() {
         carregarDados();
     }, [carregarDados]);
 
-    // Força o modo conforme a regra de negócio: apenas membro da própria gerência edita
+    // Força o modo conforme a regra de negócio
     useEffect(() => {
         if (!gerenciaData) return;
         const canEdit = user?.role === 'membro' && user?.gerenciaId === gerenciaData.id;
@@ -93,8 +90,6 @@ export default function GerenciaPage() {
     }, [user, gerenciaData]);
 
     // --- LÓGICA DE ENVIO AO BACKEND ---
-
-    // number/graph helpers moved to utils
 
     const aoSubmeterConteudo = async (dados: SubmitData) => {
         let payload: CriarContextoData | null = null;
@@ -204,9 +199,6 @@ export default function GerenciaPage() {
         }
     };
 
-    // ... (O restante do código permanece igual: hooks de staleness, filtros, handlers, renderização) ...
-    // Para brevidade, mantenha o código existente abaixo desta linha.
-
     const stalenessExtractors = useMemo(() => [
         () => {
             const arr: Array<string> = [];
@@ -299,8 +291,6 @@ export default function GerenciaPage() {
         setTimeout(() => abrirModal(tabParaAbrir), 50);
     };
 
-    // indicator mapping moved to utils
-
     const lidarComVisualizarIndicador = (indicator: Contexto) => {
         setFicheiroSelecionado(indicator);
         setModalVisualizacaoAberto(true);
@@ -311,40 +301,21 @@ export default function GerenciaPage() {
         setModalVisualizacaoAberto(true);
     };
 
+    // [CORREÇÃO CRÍTICA] Handler Simplificado
+    // O ContextoCard já chamou o backend. Aqui nós apenas atualizamos o estado local
+    // para refletir a mudança imediatamente e fazer a etiqueta (badge) aparecer.
     const lidarComAlternarVisibilidadeContexto = (contextoId: string) => {
-        const contexto = todosOsContextos.find(f => f.id === contextoId);
-        if (!contexto) return;
-
-        if (contexto.estaOculto) {
-            setTodosOsContextos(prev =>
-                prev.map(ctx =>
-                    ctx.id === contextoId ? { ...ctx, estaOculto: false } : ctx
-                )
-            );
-            showSuccessToast("Contexto reexibido com sucesso.");
-        } else {
-            setContextoParaOcultar(contexto);
-            setModalOcultarAberto(true);
-        }
-    };
-
-    const handleConfirmarOcultar = () => {
-        if (!contextoParaOcultar) return;
-        const contextoId = contextoParaOcultar.id;
         setTodosOsContextos(prev =>
             prev.map(ctx =>
-                ctx.id === contextoId ? { ...ctx, estaOculto: true } : ctx
+                // Inverte o valor atual para refletir o que aconteceu no backend
+                ctx.id === contextoId ? { ...ctx, estaOculto: !ctx.estaOculto } : ctx
             )
         );
-        showSuccessToast("Contexto ocultado com sucesso.");
-        setModalOcultarAberto(false);
-        setContextoParaOcultar(null);
+        // Opcional: Se quiser garantir sincronia absoluta com o servidor, descomente a linha abaixo:
+        // carregarDados();
     };
 
-    const handleCancelarOcultar = () => {
-        setModalOcultarAberto(false);
-        setContextoParaOcultar(null);
-    };
+    // [REMOVIDO] handleConfirmarOcultar e handleCancelarOcultar (Lógica movida para o Card)
 
     const lidarComAlternarVisibilidadeVersao = (contextoId: string, versaoId: number) => {
         setTodosOsContextos(prev => prev.map(ctx => {
@@ -454,15 +425,10 @@ export default function GerenciaPage() {
                 isEditing={modo === 'edicao'}
                 aoAlternarVisibilidadeVersao={lidarComAlternarVisibilidadeVersao}
                 aoAlternarVisibilidadeIndicador={lidarComAlternarVisibilidadeContexto}
+                usuarioGerenciaId={user?.gerenciaId}
             />
 
-            <OcultarContextoModal
-                open={modalOcultarAberto}
-                onOpenChange={setModalOcultarAberto}
-                onCancel={handleCancelarOcultar}
-                onConfirm={handleConfirmarOcultar}
-                contextoNome={contextoParaOcultar?.title || ''}
-            />
+            {/* [REMOVIDO] O modal OcultarContextoModal não é renderizado aqui para evitar duplicação */}
 
             <div className="relative p-8 mb-6 text-white shadow-lg"
                 style={{
@@ -491,7 +457,6 @@ export default function GerenciaPage() {
                         <h1 className="text-6xl font-bold text-blue-700">{gerenciaData.sigla}</h1>
                         <h2 className="text-4xl ml-2.5 text-blue-600 uppercase">{gerenciaData.nome}</h2>
                     </div>
-                    {/* Botão de alternância removido: modo definido automaticamente pelas permissões */}
                 </div>
 
                 <div className="flex items-center gap-1 mb-7">

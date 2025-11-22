@@ -11,15 +11,17 @@ import ContextoTable from "@/components/validar/ContextoTable";
 import { VisualizarContextoModal } from "@/components/popups/visualizarContextoModal";
 import { Button } from "@/components/ui/button";
 import { ModalAdicionarConteudo } from "@/components/popups/addContextoModal/index";
+import ExcluirContextoModal from "@/components/popups/excluirContextoModal";
 
 // Definições e Tipos
 import { membroColumns } from "@/components/validar/colunasTable/membroColumns";
 import { gerenteColumns } from "@/components/validar/colunasTable/gerenteColumns";
 import { diretorColumns } from "@/components/validar/colunasTable/diretorColumns";
-import { Contexto } from "@/components/validar/typesDados";
+import { Contexto, StatusContexto } from "@/components/validar/typesDados";
 import { SubmitData } from '@/components/popups/addContextoModal/types';
-import { RefreshCw, Eye, Trash } from "lucide-react"; 
+import { RefreshCw, Eye, Trash, FilePenLine } from "lucide-react"; 
 import { showSuccessToast, showErrorToast } from "@/components/ui/Toasts";
+import { mapTipoGraficoParaBackend, normalizarNumero } from "@/lib/gerenciaUtils"; // Importado para conversão
 
 // Serviços
 import { 
@@ -27,7 +29,9 @@ import {
     publicarPeloDiretor, 
     indeferirContexto, 
     solicitarCorrecao,
-    getContextoById // <--- 1. NOVO IMPORT
+    getContextoById,
+    criarVersao,
+    deleteContexto 
 } from "@/services/contextoService";
 
 export default function ValidacaoContextos() {
@@ -40,10 +44,18 @@ export default function ValidacaoContextos() {
   const [selectedContexto, setSelectedContexto] = useState<Contexto | null>(null);
   const [isCorrecaoModalOpen, setIsCorrecaoModalOpen] = useState(false);
   const [contextoParaEditar, setContextoParaEditar] = useState<Partial<Contexto> | null>(null);
+  
+  // Estados para exclusão
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [contextoParaExcluir, setContextoParaExcluir] = useState<Contexto | null>(null);
+
+  // Helper para saber se é rollback
+  const isRollback = contextoParaExcluir 
+      ? (contextoParaExcluir.versoes?.length || 0) > 1 
+      : false;
 
   // Handlers
   const handleViewClick = async (contexto: Contexto) => {
-    // 2. CORREÇÃO: Abre modal com dados parciais e busca os completos (com URL assinada)
     setSelectedContexto(contexto);
     setIsDetalhesModalOpen(true);
 
@@ -53,14 +65,35 @@ export default function ValidacaoContextos() {
             setSelectedContexto(fullData);
         }
     } catch (error) {
-        console.error("Erro ao carregar detalhes do arquivo:", error);
+        console.error("Erro ao carregar detalhes:", error);
     }
   };
 
   const handleAbrirCorrecao = (contextoParaCorrigir: Contexto) => {
-    setIsDetalhesModalOpen(false);
+    setIsDetalhesModalOpen(false); 
     setContextoParaEditar(contextoParaCorrigir);
     setTimeout(() => { setIsCorrecaoModalOpen(true); }, 50);
+  };
+
+  const handleAbrirExclusao = (contexto: Contexto) => {
+      setContextoParaExcluir(contexto);
+      setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmarExclusao = async () => {
+      if (!contextoParaExcluir) return;
+
+      try {
+          await deleteContexto(contextoParaExcluir.id);
+          showSuccessToast("Contexto excluído com sucesso.");
+          carregarContextos(); 
+      } catch (err: any) {
+          console.error("Erro ao excluir:", err);
+          showErrorToast(err.message || "Erro ao excluir contexto.");
+      } finally {
+          setIsDeleteModalOpen(false);
+          setContextoParaExcluir(null);
+      }
   };
 
   // Ações API
@@ -103,11 +136,67 @@ export default function ValidacaoContextos() {
       }
   };
 
-  const handleSubmeterCorrecao = (dados: SubmitData) => {
-    // Implementar lógica de update no backend
-    setIsCorrecaoModalOpen(false);
-    setContextoParaEditar(null);
-    carregarContextos();
+  // [CORREÇÃO]: Extração correta dos dados baseada no tipo do payload
+  const handleSubmeterCorrecao = async (dados: SubmitData) => {
+    if (!contextoParaEditar || !contextoParaEditar.id) return;
+
+    try {
+        let payload: any = {};
+        let file: File | null = null;
+
+        // Extração condicional baseada no tipo
+        if (dados.type === 'contexto') {
+            payload = {
+                titulo: dados.payload.title?.trim(),
+                descricao: dados.payload.details?.trim(),
+                tipo: 'ARQUIVO_LINK',
+                linkUrl: dados.payload.url?.trim(),
+                motivoNovaVersao: "Correção solicitada"
+            };
+            file = dados.payload.file ?? null;
+
+        } else if (dados.type === 'dashboard') {
+            payload = {
+                titulo: dados.payload.title?.trim(),
+                descricao: dados.payload.details?.trim(),
+                tipo: 'DASHBOARD',
+                tipoGrafico: mapTipoGraficoParaBackend(dados.payload.type),
+                dashboardPayload: dados.payload.dataset
+                    ? JSON.parse(JSON.stringify(dados.payload.dataset))
+                    : undefined,
+                motivoNovaVersao: "Correção solicitada"
+            };
+
+        } else if (dados.type === 'indicador') {
+            payload = {
+                titulo: dados.payload.titulo?.trim(),
+                descricao: dados.payload.descricao?.trim(),
+                tipo: 'INDICADOR',
+                valorAtual: normalizarNumero(dados.payload.valorAtual),
+                valorAlvo: normalizarNumero(dados.payload.valorAlvo),
+                unidade: dados.payload.unidade,
+                textoComparativo: dados.payload.textoComparativo,
+                cor: dados.payload.cor,
+                icone: dados.payload.icone,
+                motivoNovaVersao: "Correção solicitada"
+            };
+        }
+
+        if (!payload.titulo) {
+             showErrorToast("Erro", "O título é obrigatório.");
+             return;
+        }
+
+        await criarVersao(contextoParaEditar.id, payload, file);
+
+        showSuccessToast("Sucesso", "Nova versão enviada para análise.");
+        setIsCorrecaoModalOpen(false);
+        setContextoParaEditar(null);
+        carregarContextos();
+    } catch (error) {
+        console.error(error);
+        showErrorToast("Erro", "Falha ao enviar correção.");
+    }
   };
 
   const getColumns = () => {
@@ -120,18 +209,48 @@ export default function ValidacaoContextos() {
       if (col.key === 'acoes') {
         return {
           ...col,
-          render: (row: Contexto) => (
-            <div className="flex items-center gap-4 text-gray-500">
-              <button onClick={() => handleViewClick(row)} className="hover:text-blue-600" title="Visualizar Contexto">
-                <Eye size={16} />
-              </button>
-              {perfil === 'membro' && !['Deferido', 'Indeferido', 'Publicado'].includes(row.status) && (
-                <button className="hover:text-red-600" title="Apagar Contexto">
-                  <Trash size={16} />
+          render: (row: Contexto) => {
+            const statusStr = String(row.status || "").toLowerCase().replace(/_/g, ' ');
+            const precisaCorrecao = statusStr.includes('aguardando correcao') || statusStr.includes('correção');
+            
+            const podeApagar = perfil === 'membro' && 
+                               (row.status === StatusContexto.AguardandoGerente);
+
+            return (
+              <div className="flex items-center gap-3 text-gray-500">
+                <button 
+                    onClick={() => handleViewClick(row)} 
+                    className="hover:text-blue-600 transition-colors p-1" 
+                    title="Visualizar Detalhes e Histórico"
+                >
+                  <Eye size={18} />
                 </button>
-              )}
-            </div>
-          )
+                
+                {perfil === 'membro' && precisaCorrecao && (
+                   <button 
+                      onClick={(e) => { e.stopPropagation(); handleAbrirCorrecao(row); }} 
+                      className="hover:text-amber-600 text-amber-500 transition-colors p-1" 
+                      title="Enviar Correção / Nova Versão"
+                   >
+                      <FilePenLine size={18} />
+                   </button>
+                )}
+
+                {podeApagar && (
+                  <button 
+                    onClick={(e) => { 
+                        e.stopPropagation(); 
+                        handleAbrirExclusao(row); 
+                    }} 
+                    className="hover:text-red-600 transition-colors p-1" 
+                    title="Cancelar e Excluir Solicitação"
+                  >
+                    <Trash size={18} />
+                  </button>
+                )}
+              </div>
+            );
+          }
         };
       }
       return col;
@@ -141,7 +260,7 @@ export default function ValidacaoContextos() {
   const pageTitle = perfil === "membro" ? "Requisição de Contextos" : "Validar Contextos";
 
   return (
-    <div className="p-8 bg-white h-screen">
+    <div className="p-8 bg-white h-screen overflow-auto">
       <h1 className="text-3xl font-bold text-[#1745FF] mb-8">{pageTitle}</h1>
 
       <div className="bg-gray-100/25 rounded-[2rem] p-6 shadow-sm">
@@ -157,7 +276,6 @@ export default function ValidacaoContextos() {
                <RefreshCw className="animate-spin text-blue-600 w-8 h-8" />
             </div>
         ) : (
-            // REMOVIDO: A verificação de data.length === 0 agora é interna na tabela
             <ContextoTable data={data} columns={getColumns()} />
         )}
 
@@ -171,27 +289,43 @@ export default function ValidacaoContextos() {
         </div>
       </div>
 
+      {/* Modal de Detalhes */}
       <VisualizarContextoModal
         estaAberto={isDetalhesModalOpen}
         aoFechar={() => setIsDetalhesModalOpen(false)}
         dadosDoContexto={selectedContexto}
         perfil={perfil}
-        
-        // 3. CORREÇÃO: Força o modo de validação para mostrar os botões Deferir/Indeferir
-        isValidation={true} 
-
+        isValidation={perfil === 'gerente' || perfil === 'diretor'}
+        aoCriarNovaVersao={perfil === 'membro' ? handleAbrirCorrecao : undefined}
         onDeferir={(id) => handleDeferir(id)} 
         onIndeferir={(id, just) => handleIndeferir(id, just)}
         onCorrigir={(id, just) => handleSolicitarCorrecao(id, just)}
         isEditing={false} 
         isFromHistory={false} 
+        usuarioGerenciaId={user?.gerenciaId}
       />
 
+      {/* Modal de Edição / Correção */}
       <ModalAdicionarConteudo
         estaAberto={isCorrecaoModalOpen}
         aoFechar={() => { setIsCorrecaoModalOpen(false); setContextoParaEditar(null); }}
         aoSubmeter={handleSubmeterCorrecao}
-        dadosIniciais={contextoParaEditar} 
+        // [CORREÇÃO]: Mapeamento de props correto
+        dadosIniciais={contextoParaEditar ? {
+             ...contextoParaEditar,
+             // Garante que se for dashboard, payload está disponível
+             payload: contextoParaEditar.payload
+        } : undefined}
+        modoEdicao={true}
+      />
+
+      <ExcluirContextoModal 
+        open={isDeleteModalOpen}
+        onOpenChange={setIsDeleteModalOpen}
+        onCancel={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleConfirmarExclusao}
+        contextoNome={contextoParaExcluir?.title || "este item"}
+        isMultiplaVersao={isRollback}
       />
     </div>
   );

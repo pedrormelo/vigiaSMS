@@ -44,19 +44,18 @@ interface BackendDadosEspecificos {
     icone?: string;
 }
 
-// Interface atualizada para suportar a estrutura completa
 interface BackendContextoBase {
     id: string;
     tituloConceitual: string;
     tipo: string;
     gerenciaDonaId: string;
+    isOculto?: boolean; 
+    estaOculto?: boolean; 
     
-    // Campos extras para exibição amigável
     gerenciaSlug?: string;
     gerenciaNome?: string; 
     diretoriaSlug?: string;
     
-    // Caso o backend envie objetos aninhados
     gerencia?: { 
         slug?: string; 
         nome?: string; 
@@ -76,17 +75,25 @@ export interface BackendVersao {
     statusValidacao: string;
     updatedAt: string;
     solicitanteId?: string;
-    
-    // Campos extras para nome do autor
     solicitanteNome?: string;
     user?: { nome: string; email?: string };
-    
     isAtiva: boolean;
     isDestacado: boolean;
+    isOculta?: boolean; 
     versaoarquivo?: BackendDadosEspecificos | null;
     versaodashboard?: BackendDadosEspecificos | null;
     versaoindicador?: BackendDadosEspecificos | null;
     contexto?: BackendContextoBase;
+    
+    historico?: any[]; 
+    validacaohistorico?: Array<{
+        id: string;
+        statusNovo: string;
+        justificativa?: string;
+        timestamp: string;
+        autorId: string;
+        user?: { nome: string };
+    }>;
 }
 
 export interface BackendContexto extends BackendContextoBase {
@@ -113,6 +120,52 @@ export interface HistoricoResponse {
     total: number;
     page: number;
     totalPages: number;
+}
+
+// --- SERVIÇOS DE VISIBILIDADE ---
+
+export async function toggleVisibilityContexto(contextoId: string): Promise<void> {
+    const base = apiBase();
+    const token = authService.getToken();
+    const res = await fetch(`${base}/contextos/${contextoId}/alternar-visibilidade`, {
+        method: 'PATCH',
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'Falha ao alternar visibilidade do contexto.');
+    }
+}
+
+export async function toggleVisibilityVersao(contextoId: string, versaoId: number): Promise<void> {
+    const base = apiBase();
+    const token = authService.getToken();
+    const res = await fetch(`${base}/contextos/${contextoId}/versoes/${versaoId}/alternar-visibilidade`, {
+        method: 'PATCH',
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'Falha ao alternar visibilidade da versão.');
+    }
+}
+
+// --- SERVIÇOS DE EXCLUSÃO (NOVO) ---
+
+export async function deleteContexto(contextoId: string): Promise<void> {
+    const base = apiBase();
+    const token = authService.getToken();
+    
+    const res = await fetch(`${base}/contextos/${contextoId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        // Repassa a mensagem específica do backend (ex: "Este contexto já passou por análise...")
+        throw new Error(err.message || 'Falha ao excluir contexto.');
+    }
 }
 
 // --- SERVIÇOS DE CRIAÇÃO ---
@@ -298,7 +351,6 @@ export const getContextoById = async (id: string): Promise<Contexto | null> => {
         if (!res.ok) return null;
         const body: any = await res.json();
         
-        // Normalização para lidar com diferentes estruturas de resposta
         let normalized: BackendContexto | BackendVersao;
         if (body && body.contexto && Array.isArray(body.versoes)) {
             const ctx = body.contexto;
@@ -360,7 +412,7 @@ export async function getHistoricoContextos(
     }
 }
 
-// --- MAPPER (AQUI ESTÁ A MÁGICA DA EXIBIÇÃO DE NOMES) ---
+// --- MAPPER CORRIGIDO ---
 
 function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
     let contextoId: string;
@@ -369,24 +421,28 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
     let gerenciaId: string;
     let gerenciaSlug: string | undefined;
     let gerenciaNome: string | undefined;
+    let estaOcultoBackend: boolean = false; 
 
     let versaoRecente: BackendVersao | undefined;
     let versoesLista: BackendVersao[] = [];
-    let historicoLista: any[] = [];
+    let historicoGeralLista: any[] = [];
 
     if ('tituloConceitual' in item) {
+        // É um Contexto Completo
         const ctx = item as BackendContexto;
         contextoId = ctx.id;
         tituloConceitual = ctx.tituloConceitual;
         tipoBackend = ctx.tipo;
         gerenciaId = ctx.gerenciaDonaId;
         
-        // Captura dados de exibição da gerência
+        estaOcultoBackend = ctx.isOculto ?? ctx.estaOculto ?? false;
+        
         gerenciaSlug = ctx.gerenciaSlug || ctx.gerencia?.slug;
         gerenciaNome = ctx.gerenciaNome || ctx.gerencia?.nome;
 
         versoesLista = ctx.versoes || [];
-        historicoLista = ctx.historico || [];
+        historicoGeralLista = ctx.historico || [];
+        
         if (ctx.versoes && ctx.versoes.length) {
             versaoRecente = ctx.versoes.reduce((acc, v) => {
                 return (!acc || (v.versaoNumero > acc.versaoNumero)) ? v : acc;
@@ -395,6 +451,7 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
             versaoRecente = ctx.versaoAtiva;
         }
     } else {
+        // É uma Versão Isolada
         const v = item as BackendVersao;
         const ctxPai = v.contexto;
         
@@ -408,11 +465,14 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
             tituloConceitual = ctxPai.tituloConceitual;
             tipoBackend = ctxPai.tipo;
             gerenciaId = ctxPai.gerenciaDonaId;
+            estaOcultoBackend = ctxPai.isOculto ?? ctxPai.estaOculto ?? false;
+            
             gerenciaSlug = ctxPai.gerenciaSlug || ctxPai.gerencia?.slug;
             gerenciaNome = ctxPai.gerenciaNome || ctxPai.gerencia?.nome;
         }
         versaoRecente = v;
-        versoesLista = [v]; 
+        versoesLista = [v];
+        historicoGeralLista = v.validacaohistorico || v.historico || [];
     }
 
     const dadosEspecificosRaw = versaoRecente 
@@ -437,24 +497,39 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
         else frontType = 'doc';
     }
 
-    const versoesFrontend: VersaoContexto[] = versoesLista.map(v => ({
-        id: v.versaoNumero,
-        dbId: v.id,
-        nome: v.titulo,
-        data: v.updatedAt,
-        // Prioridade: Nome > ID
-        autor: v.solicitanteNome || v.user?.nome || v.solicitanteId || 'Sistema',
-        status: mapStatus(v.statusValidacao),
-        estaOculta: !v.isAtiva
+    const versoesFrontend: VersaoContexto[] = versoesLista.map(v => {
+        const historicoVersaoRaw = v.historico || v.validacaohistorico || [];
+        
+        const historicoVersaoFrontend: HistoricoItem[] = historicoVersaoRaw.map((h: any) => ({
+            id: h.id,
+            data: h.timestamp || h.data,
+            autor: h.autorNome || h.user?.nome || h.autor || 'Sistema',
+            acao: mapHistoricoLabel(h.statusNovo, h.justificativa),
+            statusNovo: h.statusNovo, 
+            justificativa: h.justificativa || ""
+        }));
+
+        return {
+            id: v.versaoNumero,
+            dbId: v.id,
+            nome: v.titulo,
+            data: v.updatedAt,
+            autor: v.solicitanteNome || v.user?.nome || v.solicitanteId || 'Sistema',
+            status: mapStatus(v.statusValidacao),
+            estaOculta: v.isOculta ?? false, 
+            historico: historicoVersaoFrontend
+        };
+    });
+
+    const historicoFrontend: HistoricoItem[] = historicoGeralLista.map((h: any) => ({
+        id: h.id,
+        data: h.timestamp || h.data,
+        autor: h.autorNome || h.user?.nome || h.autor || 'Sistema',
+        acao: mapHistoricoLabel(h.statusNovo, h.justificativa),
+        statusNovo: h.statusNovo, 
+        justificativa: h.justificativa || ""
     }));
 
-    const historicoFrontend: HistoricoItem[] = historicoLista.map(h => ({
-        data: h.timestamp,
-        autor: h.autorNome || h.user?.nome || h.autorId || 'Sistema',
-        acao: mapHistoricoLabel(h.statusNovo, h.justificativa)
-    }));
-
-    // Definição do solicitante principal para a capa do contexto
     const solicitantePrincipal = versaoRecente?.solicitanteNome || versaoRecente?.user?.nome || versaoRecente?.solicitanteId || '';
 
     const rawChartType = (versaoRecente as any)?.versaodashboard?.tipoGrafico
@@ -470,16 +545,12 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
         insertedDate: versaoRecente?.updatedAt || new Date().toISOString(),
         status: versaoRecente ? mapStatus(versaoRecente.statusValidacao) : StatusContexto.AguardandoGerente,
         description: versaoRecente?.descricao || undefined,
-        
-        // PRIORIDADE: Nome da Gerência > Slug > ID
-        // Isso garante que o frontend exiba "Gerência de TI" em vez de "1ebef..."
         gerencia: gerenciaNome || gerenciaSlug || gerenciaId,
-        
         payload: tipoBackend === 'DASHBOARD' ? (dadosEspecificos?.payload ?? undefined) : dadosEspecificos, 
         url: (versaoRecente as any)?.versaoarquivo?.url
             ? `${apiBase()}${(versaoRecente as any).versaoarquivo.url}`
             : undefined,
-        estaOculto: false,
+        estaOculto: estaOcultoBackend, 
         versoes: versoesFrontend,
         historico: historicoFrontend,
         solicitante: solicitantePrincipal,

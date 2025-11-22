@@ -1,135 +1,244 @@
-// src/components/popups/visualizarContextoModal/LinhaDoTempoValidacao.tsx
+// src/components/popups/visualizarContextoModal/linhaDoTempoValidacao.tsx
 "use client";
 
 import React, { useMemo } from 'react';
-import { CheckCircle, Clock, FileWarning, Send, UserCheck, UserCog, CircleCheckBig, MessageSquare } from 'lucide-react';
+import { 
+    CheckCircle, Clock, Send, UserCog, UserCheck, 
+    CircleCheckBig, CornerUpLeft, XCircle, FileWarning, Calendar, User
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { HistoricoEvento } from '@/components/validar/typesDados';
-import { StatusContexto } from '@/components/validar/typesDados';
-import type { Comment } from "@/constants/types";
-import CommentItem from '@/components/notifications/commentItem';
 
-interface LinhaDoTempoValidacaoProps {
-    historico: HistoricoEvento[];
-    status: StatusContexto;
+// --- TYPES ---
+export interface ItemHistorico {
+    id: string;
+    timestamp: string | Date;
+    statusNovo: string;
+    statusNovoLabel: string;
+    autorNome?: string;
+    justificativa?: string;
 }
 
-const LinhaDoTempoValidacao = ({ historico, status }: LinhaDoTempoValidacaoProps) => {
-    // A definição das etapas permanece a mesma
+interface LinhaDoTempoValidacaoProps {
+    historico: ItemHistorico[];
+    status: string;
+    canViewFullHistory: boolean; 
+}
+
+// --- HELPER: Avatar com Iniciais ---
+const AvatarInicial = ({ nome, corBg, corTexto }: { nome: string, corBg: string, corTexto: string }) => {
+    const iniciais = nome
+        .split(' ')
+        .map((n) => n[0])
+        .slice(0, 2)
+        .join('')
+        .toUpperCase();
+
+    return (
+        <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-sm border-2 border-white", corBg, corTexto)}>
+            {iniciais || <User size={14} />}
+        </div>
+    );
+};
+
+// --- COMPONENTS: Cards de Eventos ---
+const CardEvento = ({ 
+    tipo, 
+    autor, 
+    data, 
+    texto 
+}: { 
+    tipo: 'correcao' | 'indeferido'; 
+    autor: string; 
+    data: string; 
+    texto: string; 
+}) => {
+    const isCorrecao = tipo === 'correcao';
+    const styles = isCorrecao ? {
+        bg: "bg-amber-50/50 hover:bg-amber-50 transition-colors",
+        border: "border-amber-200",
+        iconBg: "bg-amber-100 text-amber-600",
+        titleColor: "text-amber-900",
+        textColor: "text-gray-700",
+        quoteBorder: "border-amber-300",
+        Icon: CornerUpLeft,
+        label: "Correção Solicitada"
+    } : {
+        bg: "bg-red-50/50 hover:bg-red-50 transition-colors",
+        border: "border-red-200",
+        iconBg: "bg-red-100 text-red-600",
+        titleColor: "text-red-900",
+        textColor: "text-gray-700",
+        quoteBorder: "border-red-300",
+        Icon: XCircle,
+        label: "Indeferido"
+    };
+
+    return (
+        <div className={cn("group flex gap-4 items-start w-full animate-in slide-in-from-bottom-2 duration-500")}>
+            <div className="flex flex-col items-center gap-2 pt-1">
+                <div className={cn("w-8 h-8 rounded-xl flex items-center justify-center shadow-sm border border-white/50", styles.iconBg)}>
+                    <styles.Icon size={16} strokeWidth={2.5} />
+                </div>
+            </div>
+            <div className={cn("flex-1 rounded-2xl border p-4 shadow-sm relative", styles.bg, styles.border)}>
+                <div className="flex justify-between items-start mb-3">
+                    <div className="flex items-center gap-2">
+                        <AvatarInicial 
+                            nome={autor} 
+                            corBg={isCorrecao ? "bg-amber-200" : "bg-red-200"} 
+                            corTexto={isCorrecao ? "text-amber-800" : "text-red-800"} 
+                        />
+                        <div>
+                            <h4 className={cn("text-sm font-bold leading-tight", styles.titleColor)}>
+                                {styles.label}
+                            </h4>
+                            <p className="text-xs text-gray-500 font-medium">por {autor}</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-1 text-[10px] font-medium text-gray-400 bg-white/60 px-2 py-1 rounded-full border border-gray-100">
+                        <Calendar size={10} />
+                        {data}
+                    </div>
+                </div>
+                <div className="relative">
+                    <div className={cn("absolute top-0 bottom-0 left-0 w-1 rounded-full", styles.quoteBorder)}></div>
+                    <p className={cn("pl-3 text-sm leading-relaxed font-medium italic", styles.textColor)}>
+                        "{texto}"
+                    </p>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// --- COMPONENTE PRINCIPAL ---
+
+const LinhaDoTempoValidacao = ({ historico, status, canViewFullHistory }: LinhaDoTempoValidacaoProps) => {
+    const statusAtual = String(status || "").trim();
+
     const etapasWorkflow = [
-        { nome: "Submetido", status: [], icon: Send }, // Os status aqui não são mais usados para lógica de índice
-        { nome: "Análise Gerente", status: [], icon: UserCog },
-        { nome: "Análise Diretor", status: [], icon: UserCheck },
-        { nome: "Finalizado", status: [], icon: CircleCheckBig}
+        { nome: "Submetido", icon: Send },
+        { nome: "Análise Gerente", icon: UserCog },
+        { nome: "Análise Diretor", icon: UserCheck },
+        { nome: "Finalizado", icon: CircleCheckBig}
     ];
 
-    const statusAtual = status; 
-
-    // --- INÍCIO DA CORREÇÃO ---
-    // Substituímos o .findIndex() por um mapeamento direto (switch).
-    // Isso garante que o status correto seja mapeado para a etapa correta da timeline.
-    
+    // 1. Determinar o Índice Atual
     let indiceEtapaAtual: number;
-    
-    switch (statusAtual) {
-        case StatusContexto.AguardandoCorrecao:
-            indiceEtapaAtual = 0; // Se aguarda correção, a etapa "Submetido" fica ativa (piscando)
-            break;
-        case StatusContexto.AguardandoGerente:
-            indiceEtapaAtual = 1; // Se aguarda gerente, a etapa "Análise Gerente" fica ativa
-            break;
-        case StatusContexto.AguardandoDiretor:
-            indiceEtapaAtual = 2; // Se aguarda diretor, a etapa "Análise Diretor" fica ativa
-            break;
-        case StatusContexto.Publicado:
-        case StatusContexto.Deferido:
-        case StatusContexto.Indeferido:
-            indiceEtapaAtual = 3; // Se finalizado, a etapa "Finalizado" fica ativa
-            break;
-        default:
-            indiceEtapaAtual = 0; // Fallback
+    const statusUpper = statusAtual.toUpperCase().replace(" ", "_");
+
+    if (statusUpper.includes('AGUARDANDO_CORRECA') || statusUpper.includes('AGUARDANDO_CORREÇÃO')) {
+        indiceEtapaAtual = 0; 
+    } else if (statusUpper.includes('AGUARDANDO_GERENTE')) {
+        indiceEtapaAtual = 1;
+    } else if (statusUpper.includes('AGUARDANDO_DIRETOR')) {
+        indiceEtapaAtual = 2;
+    } else if (statusUpper.includes('PUBLICADO') || statusUpper.includes('DEFERIDO') || statusUpper.includes('INDEFERIDO')) {
+        indiceEtapaAtual = 3;
+    } else {
+        indiceEtapaAtual = 0; 
     }
-    // --- FIM DA CORREÇÃO ---
 
+    const isContextoFinalizado = indiceEtapaAtual === 3;
 
+    // 2. Lógica de Devolução
     let indiceEtapaDevolvida = -1;
-    // Esta lógica está correta, mas ajustamos o índice
-    if (statusAtual === StatusContexto.AguardandoCorrecao) {
-        const ultimoEventoAnalise = [...(historico || [])].reverse().find(h =>
-            h.acao.toLowerCase().includes("análise gerente") || h.acao.toLowerCase().includes("análise diretor")
-        );
-         if (ultimoEventoAnalise?.acao.toLowerCase().includes("análise diretor")) {
-             indiceEtapaDevolvida = 2; // Devolvido pelo Diretor
-         } else if (ultimoEventoAnalise?.acao.toLowerCase().includes("análise gerente")) {
-             indiceEtapaDevolvida = 1; // Devolvido pelo Gerente
-         } else {
-             indiceEtapaDevolvida = 1; // Fallback
-         }
-        // A etapa atual (piscando) é a 0 (Submetido), pois aguarda nova submissão
-        indiceEtapaAtual = 0;
+    if (indiceEtapaAtual === 0 && (historico || []).length > 0) {
+        const eventosOrdenados = [...historico].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        const ultimoEventoCorrecao = eventosOrdenados.find(h => String(h.statusNovo).toUpperCase().includes('CORRE'));
+        
+        if (ultimoEventoCorrecao) {
+            const jaEsteveNoDiretor = historico.some(h => String(h.statusNovo).toUpperCase().includes('DIRETOR'));
+            if (jaEsteveNoDiretor) indiceEtapaDevolvida = 2; 
+            else indiceEtapaDevolvida = 1; 
+        }
     }
 
-    // A função getUltimoEventoParaEtapa permanece a mesma
-    const getUltimoEventoParaEtapa = (etapaIndex: number): HistoricoEvento | undefined => {
-        const etapa = etapasWorkflow[etapaIndex];
-         const eventosRelevantes = (historico || []).filter(e => {
-            const acaoLower = e.acao.toLowerCase();
-            if (etapa.nome === "Submetido" && acaoLower.includes("submetido")) return true;
-            if (etapa.nome === "Análise Gerente" && acaoLower.includes("análise gerente")) return true;
-            if (etapa.nome === "Análise Diretor" && acaoLower.includes("análise diretor")) return true;
-            if (etapa.nome === "Finalizado" && (acaoLower.includes("finalizado como publicado") || acaoLower.includes("finalizado como indeferido") || acaoLower.includes("indeferido"))) return true;
+    // 3. Buscar Eventos
+    const getUltimoEventoParaEtapa = (etapaIndex: number): ItemHistorico | undefined => {
+        const eventos = historico || [];
+        const sorted = [...eventos].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+        const eventosDaEtapa = sorted.filter(h => {
+            const s = String(h.statusNovo).toUpperCase();
+            if (etapaIndex === 0) return s.includes('GERENTE') || s.includes('CRIADO');
+            if (etapaIndex === 1) return s.includes('DIRETOR') || (s.includes('CORRE') && indiceEtapaDevolvida === 1);
+            if (etapaIndex === 2) return s.includes('PUBLICADO') || s.includes('DEFERIDO') || s.includes('INDEFERIDO') || (s.includes('CORRE') && indiceEtapaDevolvida === 2);
+            if (etapaIndex === 3) return s.includes('PUBLICADO') || s.includes('DEFERIDO') || s.includes('INDEFERIDO');
             return false;
         });
-        return eventosRelevantes.length > 0 ? eventosRelevantes[eventosRelevantes.length - 1] : undefined;
+
+        return eventosDaEtapa.length > 0 ? eventosDaEtapa[eventosDaEtapa.length - 1] : undefined;
     };
     
-    // A lógica de comentários permanece a mesma
-    const comentariosParaExibir: Comment[] = useMemo(() => {
-        const eventos = historico || []; 
-        return eventos
-            .filter(h => h.acao.toLowerCase().includes("justificativa:") || h.acao.toLowerCase().includes("comentário:"))
-            .map((h, index): Comment => {
-                const textMatch = h.acao.match(/(?:justificativa|comentário):\s*(.*)/i);
-                const eventDate = new Date(h.data);
+    // 4. Filtragem de Cards
+    const eventosParaExibir = useMemo(() => {
+        return (historico || [])
+            .filter(h => {
+                const s = String(h.statusNovo).toUpperCase();
+                const ehCorrecao = s.includes('CORRE');
+                const ehIndeferido = s.includes('INDEFERIDO');
+                return (ehCorrecao || ehIndeferido) && h.justificativa && h.justificativa.trim().length > 0;
+            })
+            .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+            .map((h) => {
+                const eventDate = new Date(h.timestamp);
+                const s = String(h.statusNovo).toUpperCase();
+                let type: 'correcao' | 'indeferido' = 'correcao';
+                if (s.includes('INDEFERIDO')) type = 'indeferido';
+                
                 return {
-                    id: index,
-                    author: h.autor,
-                    text: textMatch ? textMatch[1].trim() : h.acao,
-                    time: eventDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-                    date: eventDate.toLocaleDateString('pt-BR'),
-                    isMyComment: false, 
-                    role: h.autor.toLowerCase().includes("gerente") ? "gerencia" :
-                          h.autor.toLowerCase().includes("diretor") ? "diretoria" : "info",
+                    id: h.id,
+                    author: h.autorNome || "Gestor",
+                    text: h.justificativa || "",
+                    dateFormatted: `${eventDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} • ${eventDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`,
+                    type: type
                 };
             });
     }, [historico]); 
 
     return (
-        <div className="space-y-6 pt-4">
-            {/* Timeline Visual */}
+        <div className="space-y-8 pt-4">
+            {/* A. Timeline Visual */}
             <div>
                 <h4 className="text-sm font-semibold text-gray-700 mb-4 px-3">Linha do Tempo da Versão</h4>
                 <div className="flex items-start justify-between px-4">
                     {etapasWorkflow.map((etapa, index) => {
                         const evento = getUltimoEventoParaEtapa(index);
                         
-                        // Lógica de renderização (agora funciona com o indiceEtapaAtual correto)
-                        const isFinalizada = (statusAtual === StatusContexto.Publicado || statusAtual === StatusContexto.Indeferido) && index <= indiceEtapaAtual;
+                        const isFinalizada = (indiceEtapaAtual === 3) && index <= indiceEtapaAtual;
                         const isConcluida = !isFinalizada && index < indiceEtapaAtual && index !== indiceEtapaDevolvida;
                         const isAtual = !isFinalizada && index === indiceEtapaAtual && index !== indiceEtapaDevolvida;
                         const isDevolvida = index === indiceEtapaDevolvida;
                         const isPendente = index > indiceEtapaAtual && !isDevolvida && !isFinalizada;
 
-                        let corIcone = "text-gray-400"; let corTexto = "text-gray-500"; let corFundoIcone = "bg-gray-100";
+                        let corIcone = "text-gray-400"; 
+                        let corTexto = "text-gray-500"; 
+                        let corFundoIcone = "bg-gray-100";
                         let IconeStatus = etapa.icon;
 
                         if (isConcluida || isFinalizada) {
-                            corIcone = "text-green-600"; corTexto = "text-green-700"; corFundoIcone = "bg-green-100"; IconeStatus = CheckCircle;
+                            corIcone = "text-green-600"; 
+                            corTexto = "text-green-700"; 
+                            corFundoIcone = "bg-green-100"; 
+                            IconeStatus = CheckCircle;
                         } else if (isAtual) {
-                            corIcone = "text-blue-600"; corTexto = "text-blue-700"; corFundoIcone = "bg-blue-100 animate-pulse"; IconeStatus = Clock;
+                            corIcone = "text-blue-600"; 
+                            corTexto = "text-blue-700"; 
+                            corFundoIcone = "bg-blue-100 animate-pulse"; 
+                            IconeStatus = Clock;
                         } else if (isDevolvida) {
-                            corIcone = "text-orange-600"; corTexto = "text-orange-700"; corFundoIcone = "bg-orange-100"; IconeStatus = FileWarning;
+                            corIcone = "text-orange-600"; 
+                            corTexto = "text-orange-700"; 
+                            corFundoIcone = "bg-orange-100"; 
+                            IconeStatus = FileWarning;
                         }
+
+                        const formatarNome = (n: string) => {
+                            if (!n) return "";
+                            const p = n.split(' ');
+                            return p.length > 1 ? `${p[0]} ${p[p.length-1][0]}.` : p[0];
+                        };
 
                         return (
                             <React.Fragment key={etapa.nome}>
@@ -137,19 +246,31 @@ const LinhaDoTempoValidacao = ({ historico, status }: LinhaDoTempoValidacaoProps
                                     <div className={cn("h-10 w-10 rounded-xl border flex items-center justify-center mb-2 transition-colors", corFundoIcone, isConcluida || isFinalizada ? "border-green-200" : isAtual ? "border-blue-200" : isDevolvida ? "border-orange-200" : "border-gray-200")}>
                                         <IconeStatus size={20} className={cn("transition-colors", corIcone)} />
                                     </div>
+                                    
                                     <p className={cn("text-xs font-semibold transition-colors", corTexto)}>{etapa.nome}</p>
+                                    
+                                    {/* Dados Abaixo do Ícone */}
                                     {evento && !isPendente && (
-                                        <>
-                                            <p className="mt-1 text-xs text-gray-500">{new Date(evento.data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} {' às '} {new Date(evento.data).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
-                                            <p className="text-xs text-gray-500 truncate w-full" title={evento.autor}>por {evento.autor}</p>
-                                        </>
+                                        <div className="animate-in fade-in slide-in-from-top-1">
+                                            <p className="mt-1 text-[10px] text-gray-500 leading-tight">
+                                                {new Date(evento.timestamp).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                                                <span className="mx-1">·</span>
+                                                {new Date(evento.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                            </p>
+                                            <p className="text-[10px] text-gray-500 truncate w-full font-medium mt-0.5" title={evento.autorNome}>
+                                                por {index === 3 ? "Sistema" : formatarNome(evento.autorNome || "")}
+                                            </p>
+                                        </div>
                                     )}
-                                    {isDevolvida && (<p className="text-xs font-medium text-orange-600 mt-1">Devolvido</p>)}
+                                    
+                                    {isDevolvida && (<p className="text-[10px] font-bold text-orange-600 mt-1">DEVOLVIDO</p>)}
                                 </div>
+                                
                                 {index < etapasWorkflow.length - 1 && (
-                                    <div className={`flex-1 mt-[19px] h-0.5 transition-colors ${
-                                        (isConcluida || isFinalizada || (isAtual && index < indiceEtapaAtual) || (isDevolvida && index < indiceEtapaDevolvida)) ? 'bg-green-300' : 'bg-gray-200'
-                                    } min-w-[10px]`}></div>
+                                    <div className={cn("flex-1 mt-[19px] h-0.5 transition-colors min-w-[10px]",
+                                        (isConcluida || isFinalizada || (isAtual && index < indiceEtapaAtual)) ? 'bg-green-300' : 
+                                        (isDevolvida && index < indiceEtapaDevolvida) ? 'bg-orange-300' : 'bg-gray-200'
+                                    )}></div>
                                 )}
                             </React.Fragment>
                         );
@@ -157,18 +278,38 @@ const LinhaDoTempoValidacao = ({ historico, status }: LinhaDoTempoValidacaoProps
                 </div>
             </div>
             
-            {/* Seção de Comentários/Justificativas (Sem alterações) */}
-            {comentariosParaExibir.length > 0 && (
-                <div className="px-3">
-                    <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                        <MessageSquare size={16} /> Justificativas da Versão
-                    </h4>
-                    <div className="space-y-3 max-h-40 overflow-y-auto scrollbar-custom border shadow-inner border-gray-200 rounded-xl p-3 bg-gray-50/25">
-                        {comentariosParaExibir.map((comment) => (
-                            <CommentItem key={comment.id} comment={comment} />
+            {/* B. Lista de Solicitações (Cards Bonitos) */}
+            {eventosParaExibir.length > 0 ? (
+                <div className="mt-4 px-3">
+                    <div className="flex items-center justify-between mb-4">
+                        <h4 className="text-xs font-bold text-gray-500 flex items-center gap-2 uppercase tracking-wide">
+                             Pendências
+                        </h4>
+                    </div>
+                    
+                    <div className="space-y-4">
+                        {eventosParaExibir.map((evento) => (
+                            <CardEvento
+                                key={evento.id}
+                                tipo={evento.type}
+                                autor={evento.author}
+                                data={evento.dateFormatted}
+                                texto={evento.text}
+                            />
                         ))}
                     </div>
                 </div>
+            ) : (
+                /* [CORREÇÃO DEFINITIVA]: 
+                   Só mostra o estado vazio se:
+                   1. O usuário tiver permissão de ver histórico (canViewFullHistory)
+                   2. E o contexto NÃO estiver finalizado/publicado (porque se está publicado, é óbvio que não há pendências)
+                */
+                (canViewFullHistory && !isContextoFinalizado) && (
+                    <div className="mt-4 px-4 py-6 bg-gray-50 border border-dashed border-gray-200 rounded-xl text-center mx-3">
+                        <p className="text-xs text-gray-400">Nenhuma pendência registrada.</p>
+                    </div>
+                )
             )}
         </div>
     );

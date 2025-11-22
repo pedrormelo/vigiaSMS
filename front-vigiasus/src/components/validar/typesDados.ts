@@ -11,6 +11,9 @@ export interface HistoricoEvento {
   data: string; 
   autor: string;
   acao: string;
+  statusNovo?: string;
+  justificativa?: string;
+  id?: string;
 }
 // Alias para compatibilidade com o service
 export type HistoricoItem = HistoricoEvento;

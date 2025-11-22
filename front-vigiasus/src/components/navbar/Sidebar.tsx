@@ -99,7 +99,7 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
     ],
     gerente: [
       { label: "Página Inicial", icon: icons.home, href: "/" },
-      { label: "Dashboard da Gerência", icon: icons.dashboard, href: `/dashboard/${currentSlug}` },
+      { label: "Minha Gerência", icon: icons.dashboard, href: `/dashboard/${currentSlug}` },
       { label: "Validar Contextos", icon: icons.contextos, href: "/validar" },
       { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
       { label: "Central de Ajuda", icon: icons.ajuda, href: "/ajuda"},
@@ -107,6 +107,7 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
     ],
     membro: [
       { label: "Página Inicial", icon: icons.home, href: "/" },
+      { label: "Minha Gerência", icon: icons.dashboard, href: `/dashboard/${currentSlug}` },
       { label: "Contextos Enviados", icon: icons.dashboard, href: "/validar" },
       { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
       { label: "Central de Ajuda", icon: icons.ajuda, href: "/ajuda"},

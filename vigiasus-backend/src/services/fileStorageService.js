@@ -64,3 +64,39 @@ exports.moveFileToFinalDestination = async (file, gerenciaSlug, contextoId, titu
     
     return webPath;
 };
+
+exports.softDeleteFile = (currentPath, gerenciaSlug) => {
+    if (!currentPath) return null;
+
+    // Caminho base do seu storage (ajuste conforme sua configuração real)
+    // Supondo que 'source/files' seja a raiz
+    const storageRoot = path.resolve(__dirname, '..', 'files'); 
+    const fullCurrentPath = path.join(storageRoot, currentPath.replace(/^\/files\//, '')); // Ajuste para caminho absoluto
+
+    if (!fs.existsSync(fullCurrentPath)) {
+        console.warn(`Arquivo não encontrado para mover: ${fullCurrentPath}`);
+        return null;
+    }
+
+    // Cria pasta de destino: source/files/apagados/slug-da-gerencia
+    const trashDir = path.join(storageRoot, 'apagados', gerenciaSlug);
+    
+    if (!fs.existsSync(trashDir)) {
+        fs.mkdirSync(trashDir, { recursive: true });
+    }
+
+    const fileName = path.basename(fullCurrentPath);
+    // Adiciona timestamp para evitar conflito de nomes
+    const newFileName = `${Date.now()}_${fileName}`;
+    const destinationPath = path.join(trashDir, newFileName);
+
+    try {
+        // Move o arquivo
+        fs.renameSync(fullCurrentPath, destinationPath);
+        // Retorna o novo caminho relativo para (opcionalmente) salvar no log ou apenas confirmar
+        return `/files/apagados/${gerenciaSlug}/${newFileName}`;
+    } catch (err) {
+        console.error('Erro ao mover arquivo para lixeira:', err);
+        throw new Error('Falha ao mover arquivo para a lixeira.');
+    }
+};
