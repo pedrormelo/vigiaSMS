@@ -29,6 +29,7 @@ model contexto {
   tipo             contexto_tipo
   autorOriginalId  String
   gerenciaDonaId   String
+  deletedAt        DateTime?
   createdAt        DateTime         @default(now())
   isOculto         Boolean          @default(false)
   user             user             @relation(fields: [autorOriginalId], references: [id], onDelete: Cascade, map: "Contexto_autorOriginalId_fkey")

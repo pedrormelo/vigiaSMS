@@ -28,9 +28,14 @@ router.post('/versoes/:versaoId/remover-destaque', auth(['DIRETOR']), ctrl.remov
 router.get('/detalhes/:contextoId', ctrl.getDetalhes);
 router.get('/buscar', auth(), ctrl.buscar);
 
-// --- CORREÇÃO AQUI ---
+// Rota para alternar a visibilidade do contexto (utilizada no ContextoCard e no Modal Detalhes)
+router.patch('/:id/alternar-visibilidade', auth(), ctrl.toggleVisibilityContexto); 
+// Rota para alternar a visibilidade de uma versão específica (utilizada no AbaVersoes)
+router.patch('/:contextoId/versoes/:versaoId/alternar-visibilidade', auth(), ctrl.toggleVisibilityVersao); 
+
 // Usamos 'ctrl' porque foi assim que importamos lá em cima
 router.get('/:versaoId/participantes', auth(), ctrl.listarParticipantes);
-// ---------------------
+// Rota para deletar um contexto
+router.delete('/:id', auth(), ctrl.deleteContexto);
 
 module.exports = router;

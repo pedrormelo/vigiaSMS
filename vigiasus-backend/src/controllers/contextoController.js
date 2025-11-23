@@ -29,15 +29,21 @@ function mapContextoWithVersao(ctx, versao) {
 exports.listPublicados = async (req, res) => {
     try {
         const versoes = await prisma.contextoversao.findMany({
-            where: { isAtiva: true, statusValidacao: 'PUBLICADO' },
+            where: { 
+                isAtiva: true, 
+                statusValidacao: 'PUBLICADO',
+                contexto: {
+                    deletedAt: null 
+                }
+            },
             include: { contexto: true },
             orderBy: { updatedAt: 'desc' },
         });
-        const out = versoes.map((v) => mapContextoWithVersao(v.contexto, v));
-        return res.json({ data: out });
-    } catch (err) {
-        console.error('Erro listPublicados:', err);
-        return res.status(500).json({ message: 'Erro interno' });
+        const output = versoes.map(v => mapContextoWithVersao(v.contexto, v));
+        return res.json(output);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Erro ao listar publicados.' });
     }
 };
 
@@ -47,20 +53,31 @@ exports.listPendentes = async (req, res) => {
     try {
         let where = {};
         
+        // Regra base para todos: O contexto pai não pode estar deletado
+        const baseContextFilter = { deletedAt: null };
+
         if (user.role === 'GERENTE') {
             where = {
                 statusValidacao: 'AGUARDANDO_GERENTE',
-                contexto: { gerenciaDonaId: user.gerenciaId || '' },
+                contexto: { 
+                    gerenciaDonaId: user.gerenciaId || '',
+                    ...baseContextFilter // Adiciona filtro de deletedAt
+                },
             };
         } else if (user.role === 'DIRETOR') {
             where = {
                 statusValidacao: 'AGUARDANDO_DIRETOR',
-                contexto: { gerencia: { diretoriaId: user.diretoriaId || '' } },
+                contexto: { 
+                    gerencia: { diretoriaId: user.diretoriaId || '' }, 
+                    ...baseContextFilter // Adiciona filtro de deletedAt
+                }
             };
         } else if (user.role === 'MEMBRO') {
             where = {
                 solicitanteId: user.id,
                 statusValidacao: { in: ['AGUARDANDO_GERENTE', 'AGUARDANDO_DIRETOR', 'AGUARDANDO_CORRECAO'] },
+                // Para membro, o filtro de contexto também é necessário
+                contexto: baseContextFilter 
             };
         } else {
              return res.json({ data: [] });
@@ -69,7 +86,6 @@ exports.listPendentes = async (req, res) => {
         const versoes = await prisma.contextoversao.findMany({
             where,
             include: { 
-                // Inclui dados para visualização correta
                 contexto: {
                     include: {
                         gerencia: { select: { nome: true, slug: true } }
@@ -79,7 +95,14 @@ exports.listPendentes = async (req, res) => {
                 
                 versaoindicador: true, 
                 versaoarquivo: true, 
-                versaodashboard: true 
+                versaodashboard: true,
+
+                validacaohistorico: {
+                    orderBy: { timestamp: 'asc' },
+                    include: {
+                        user: { select: { nome: true } } 
+                    }
+                }
             },
             orderBy: { createdAt: 'desc' },
         });
@@ -94,46 +117,91 @@ exports.listPendentes = async (req, res) => {
 // GET /contextos/detalhes/:contextoId
 exports.getDetalhes = async (req, res) => {
     const { contextoId } = req.params;
+
     try {
-        const contexto = await prisma.contexto.findUnique({ 
+        // 1. Buscar dados do Contexto (Pai)
+        const contexto = await prisma.contexto.findUnique({
             where: { id: contextoId },
             include: {
-                // Inclui nome da gerência
                 gerencia: {
-                    select: { slug: true, nome: true }
+                    select: { id: true, slug: true, nome: true }
+                },
+                user: {
+                    select: { id: true, nome: true, email: true }
                 }
             }
         });
 
-        if (!contexto) return res.status(404).json({ message: 'Contexto não encontrado' });
+        // [SOFT DELETE] Validação de segurança
+        if (!contexto || contexto.deletedAt !== null) {
+            return res.status(404).json({ message: 'Contexto não encontrado.' });
+        }
 
+        // 2. Buscar Versões com TODAS as relações necessárias
+        // Isso é crucial para o botão de Deferir aparecer
         const versoes = await prisma.contextoversao.findMany({
             where: { contextoId },
             include: {
+                // Tipos de conteúdo
                 versaoarquivo: true,
                 versaodashboard: true,
                 versaoindicador: true,
-                // Inclui nome do autor da versão
-                user: { select: { nome: true } }
+
+                // Autor da versão
+                user: { select: { id: true, nome: true } },
+
+                // [CRUCIAL] Histórico Específico da Versão (Timeline)
+                // O frontend precisa disso DENTRO da versão para saber se foi devolvido
+                validacaohistorico: {
+                    orderBy: { timestamp: 'asc' },
+                    include: {
+                        user: { select: { nome: true } }
+                    }
+                }
             },
-            orderBy: [{ versaoNumero: 'desc' }],
+            orderBy: { versaoNumero: 'desc' } // Da mais recente para a mais antiga
         });
 
+        // 3. Histórico Global (Opcional, mas útil para log geral)
         const ids = versoes.map(v => v.id);
-        const historico = ids.length ? await prisma.validacaohistorico.findMany({
+        const historicoGlobal = ids.length ? await prisma.validacaohistorico.findMany({
             where: { versaoId: { in: ids } },
-            orderBy: [{ timestamp: 'desc' }],
-            // Inclui nome de quem fez a ação no histórico
+            orderBy: { timestamp: 'desc' },
             include: { user: { select: { nome: true } } }
         }) : [];
 
-        if (typeof mapContextoDetalhe === 'function') {
-            return res.json(mapContextoDetalhe(contexto, versoes, historico));
-        }
-        return res.json({ contexto, versoes, historico });
+        // 4. [MONTAGEM DA RESPOSTA]
+        // Em vez de depender de mappers externos, montamos a estrutura exata
+        // que o frontend (VisualizarContextoModal) espera.
+        const response = {
+            ...contexto,
+            // Mapeia as versões para garantir que os campos tenham os nomes esperados
+            versoes: versoes.map(v => ({
+                ...v,
+                // Garante que o status esteja acessível na raiz do objeto da versão
+                status: v.statusValidacao, 
+                // Mapeia o histórico interno para o campo 'historico' que o front usa
+                historico: v.validacaohistorico.map(h => ({
+                    id: h.id,
+                    timestamp: h.timestamp,
+                    statusNovo: h.statusNovo,
+                    justificativa: h.justificativa,
+                    autorNome: h.user ? h.user.nome : 'Sistema',
+                    user: h.user
+                }))
+            })),
+            // Histórico geral
+            historico: historicoGlobal.map(h => ({
+                ...h,
+                autorNome: h.user ? h.user.nome : 'Sistema'
+            }))
+        };
+
+        return res.json(response);
+
     } catch (err) {
         console.error('Erro getDetalhes:', err);
-        return res.status(500).json({ message: 'Erro interno' });
+        return res.status(500).json({ message: 'Erro interno ao buscar detalhes.' });
     }
 };
 
@@ -159,6 +227,174 @@ exports.listByGerencia = async (req, res) => {
     } catch (error) {
         console.error('Erro listByGerencia:', error);
         return res.status(500).json({ message: 'Erro interno ao listar contextos da gerência' });
+    }
+};
+
+// Controla a visibilidade do contexto (ocultar/exibir)
+exports.toggleVisibilityContexto = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const contexto = await prisma.contexto.findUnique({
+            where: { id: id },
+            select: { isOculto: true } // isOculto: CORRETO
+        });
+
+        if (!contexto) {
+            return res.status(404).json({ message: 'Contexto não encontrado.' });
+        }
+
+        const novoEstado = !contexto.isOculto;
+
+        await prisma.contexto.update({
+            where: { id: id },
+            data: { 
+                isOculto: novoEstado,
+            } 
+        });
+
+        return res.status(204).send();
+
+    } catch (error) {
+        console.error("Erro ao alternar visibilidade do contexto:", error);
+        return res.status(500).json({ message: 'Erro interno ao processar visibilidade do contexto.' });
+    }
+};
+
+exports.toggleVisibilityVersao = async (req, res) => {
+    const { contextoId, versaoId } = req.params;
+    const idVersao = versaoId; // Mantenha como string, Prisma lida com o UUID
+
+    try {
+        const versao = await prisma.contextoversao.findFirst({
+            where: { 
+                id: idVersao,
+                contextoId: contextoId 
+            },
+            select: { isOculta: true } // CORRIGIDO: de 'estaOculta' para 'isOculta'
+        });
+
+        if (!versao) {
+            return res.status(404).json({ message: 'Versão do contexto não encontrada.' });
+        }
+
+        const novoEstado = !versao.isOculta; // CORRIGIDO: de 'estaOculta' para 'isOculta'
+
+        await prisma.contextoversao.update({
+            where: { id: idVersao },
+            data: { isOculta: novoEstado, updatedAt: new Date() } // CORRIGIDO: de 'estaOculta' para 'isOculta'
+        });
+
+        return res.status(204).send();
+
+    } catch (error) {
+        console.error("Erro ao alternar visibilidade da versão:", error);
+        return res.status(500).json({ message: 'Erro interno ao processar visibilidade da versão.' });
+    }
+};
+
+// DELETE /contextos/:id
+
+exports.deleteContexto = async (req, res) => {
+    const { id } = req.params; // ID do Contexto
+    const userId = req.user.id;
+    const userRole = req.user.role;
+
+    try {
+        // 1. Buscar o contexto com TODAS as versões (não só a ativa)
+        // Precisamos saber quantas existem para decidir a estratégia
+        const contexto = await prisma.contexto.findUnique({
+            where: { id },
+            include: {
+                gerencia: true,
+                contextoversao: {
+                    orderBy: { versaoNumero: 'desc' }, // [0] é a mais recente (a candidata a exclusão)
+                    include: { versaoarquivo: true }
+                }
+            }
+        });
+
+        if (!contexto) {
+            return res.status(404).json({ message: 'Contexto não encontrado.' });
+        }
+
+        // A versão mais recente (que deve ser a pendente)
+        const versaoAlvo = contexto.contextoversao[0];
+        
+        if (!versaoAlvo) {
+             // Se não tem versões, é um contexto vazio/corrompido, podemos apagar.
+             await prisma.contexto.delete({ where: { id } });
+             return res.status(200).json({ message: 'Contexto vazio excluído.' });
+        }
+
+        // REGRA DE SEGURANÇA: Só pode apagar se estiver PENDENTE
+        // Isso impede que alguém apague uma versão já publicada ou indeferida (finalizada).
+        const statusPermitidos = ['AGUARDANDO_GERENTE', 'AGUARDANDO_DIRETOR', 'AGUARDANDO_CORRECAO'];
+        if (!statusPermitidos.includes(versaoAlvo.statusValidacao)) {
+            return res.status(403).json({ 
+                message: 'Esta versão já foi finalizada e não pode ser excluída.' 
+            });
+        }
+
+        // CENÁRIO A: É a única versão do contexto? -> Soft Delete do Contexto Inteiro
+        if (contexto.contextoversao.length === 1) {
+            
+            // Move arquivo se existir e for local
+            if (contexto.tipo === 'ARQUIVO_LINK' && versaoAlvo.versaoarquivo?.url) {
+                if (!versaoAlvo.versaoarquivo.url.startsWith('http')) {
+                    try {
+                        fileStorageService.softDeleteFile(versaoAlvo.versaoarquivo.url, contexto.gerencia.slug);
+                    } catch (e) { console.error("Erro mover arquivo:", e); }
+                }
+            }
+
+            // Marca contexto como deletado (Soft Delete)
+            await prisma.contexto.update({
+                where: { id },
+                data: { deletedAt: new Date(), isOculto: true }
+            });
+
+            return res.status(200).json({ message: 'Solicitação cancelada e contexto excluído (era a única versão).' });
+
+        } else {
+            // CENÁRIO B: Existem versões anteriores -> Rollback (Apaga Pendente, Restaura Anterior)
+            
+            const versaoAnterior = contexto.contextoversao[1]; // A versão que vai voltar a ser a ativa
+
+            // 1. Limpeza de arquivo da versão pendente (se não for reutilizado)
+            if (contexto.tipo === 'ARQUIVO_LINK' && versaoAlvo.versaoarquivo?.url) {
+                 const arquivoAnteriorUrl = versaoAnterior?.versaoarquivo?.url;
+                 const isMesmoArquivo = arquivoAnteriorUrl === versaoAlvo.versaoarquivo.url;
+
+                if (!versaoAlvo.versaoarquivo.url.startsWith('http') && !isMesmoArquivo) {
+                    try {
+                        fileStorageService.softDeleteFile(versaoAlvo.versaoarquivo.url, contexto.gerencia.slug);
+                    } catch (e) { console.error("Erro mover arquivo versão:", e); }
+                }
+            }
+
+            // 2. Apaga a versão pendente do banco (Hard Delete do rascunho)
+            await prisma.contextoversao.delete({
+                where: { id: versaoAlvo.id }
+            });
+
+            // 3. Reativar a versão anterior (torna-se visível na grelha novamente)
+            // Nota: O statusValidacao dela não muda (se estava PUBLICADO, continua PUBLICADO).
+            if (versaoAnterior) {
+                await prisma.contextoversao.update({
+                    where: { id: versaoAnterior.id },
+                    data: { isAtiva: true } 
+                });
+            }
+
+            return res.status(200).json({ 
+                message: `Versão ${versaoAlvo.versaoNumero} cancelada. O contexto retornou à versão ${versaoAnterior.versaoNumero}.` 
+            });
+        }
+
+    } catch (error) {
+        console.error("Erro ao excluir/cancelar contexto:", error);
+        return res.status(500).json({ message: 'Erro interno ao processar a exclusão.' });
     }
 };
 
@@ -376,29 +612,57 @@ exports.createContexto = async (req, res) => {
 };
 
 // POST /contextos/:contextoId/versoes
+// src/controllers/contextoController.js
+
 exports.createVersao = async (req, res) => {
     const user = req.user;
     const { contextoId } = req.params;
-    const { titulo, descricao, motivoNovaVersao, descNovaVersao, linkUrl, tipoGrafico, dashboardPayload, valorAtual, valorAlvo, unidade, textoComparativo, cor, icone } = req.body;
+    const { 
+        titulo, 
+        descricao, 
+        motivoNovaVersao, 
+        descNovaVersao, 
+        linkUrl, 
+        tipoGrafico, 
+        dashboardPayload, 
+        valorAtual, 
+        valorAlvo, 
+        unidade, 
+        textoComparativo, 
+        cor, 
+        icone 
+    } = req.body;
 
     if (!titulo) return res.status(400).json({ message: 'Título obrigatório' });
 
     try {
-        // CORREÇÃO: Garantimos que o tituloConceitual vem na busca
+        // 1. Busca o contexto e a última versão para calcular o número
         const contexto = await prisma.contexto.findUnique({ 
             where: { id: contextoId },
             include: { 
-                versoes: { orderBy: { versaoNumero: 'desc' }, take: 1 },
+                // [CORREÇÃO]: Nome correto da relação no schema é 'contextoversao'
+                contextoversao: { 
+                    orderBy: { versaoNumero: 'desc' }, 
+                    take: 1 
+                },
                 gerencia: { select: { slug: true } } 
             }
         });
         
         if (!contexto) return res.status(404).json({ message: 'Contexto não encontrado' });
-        if (contexto.gerenciaDonaId !== user.gerenciaId) return res.status(403).json({ message: 'Gerência diferente' });
+        
+        // Verifica se o usuário pertence à mesma gerência (opcional, dependendo da regra)
+        if (contexto.gerenciaDonaId !== user.gerenciaId) {
+             // Se quiser permitir edição cruzada, remova esta linha ou ajuste a regra
+             return res.status(403).json({ message: 'Você não tem permissão para criar versões nesta gerência.' });
+        }
 
-        const nextNum = (contexto.versoes[0]?.versaoNumero || 0) + 1;
+        // [CORREÇÃO]: Acessa 'contextoversao' em vez de 'versoes'
+        const ultimaVersao = contexto.contextoversao[0];
+        const nextNum = (ultimaVersao?.versaoNumero || 0) + 1;
 
         const result = await prisma.$transaction(async (tx) => {
+            // Cria a nova versão
             const v = await tx.contextoversao.create({
                 data: {
                     id: crypto.randomUUID(),
@@ -407,7 +671,7 @@ exports.createVersao = async (req, res) => {
                     descricao: descricao || null,
                     solicitanteId: user.id,
                     versaoNumero: nextNum,
-                    motivoNovaVersao: motivoNovaVersao || null,
+                    motivoNovaVersao: motivoNovaVersao || "Nova versão", // Garante um valor default
                     descNovaVersao: descNovaVersao || null,
                     statusValidacao: 'AGUARDANDO_GERENTE',
                     isAtiva: false,
@@ -416,19 +680,19 @@ exports.createVersao = async (req, res) => {
                 },
             });
 
+            // Lógica específica por tipo
             if (contexto.tipo === 'ARQUIVO_LINK') {
                 let finalUrl = linkUrl;
                 let docType = 'LINK';
                 
                 if (req.file) {
                     try {
-                        // CORREÇÃO AQUI: Passamos tituloConceitual do contexto e nextNum
                         finalUrl = await fileStorageService.moveFileToFinalDestination(
                             req.file, 
                             contexto.gerencia?.slug, 
                             contextoId,
-                            contexto.tituloConceitual, // <--- Nome da pasta
-                            nextNum                    // <--- Nome do arquivo (v2, v3...)
+                            contexto.tituloConceitual, 
+                            nextNum
                         );
                     } catch (moveError) {
                         throw new Error(`Falha ao salvar arquivo da versão: ${moveError.message}`);
@@ -436,39 +700,70 @@ exports.createVersao = async (req, res) => {
 
                     const mime = req.file.mimetype || '';
                     if (mime.includes('pdf')) docType = 'PDF';
-                    else if (mime.includes('sheet') || mime.includes('excel')) docType = 'EXCEL';
-                    else docType = 'DOC';
+                    else if (mime.includes('sheet') || mime.includes('excel') || mime.includes('csv')) docType = 'EXCEL';
+                    else if (mime.includes('word') || mime.includes('document')) docType = 'DOC';
+                    else docType = 'PDF'; // Fallback
 
-                } else if (!finalUrl && contexto.versoes[0]) {
-                     const prev = await prisma.versaoarquivo.findUnique({ where: { versaoId: contexto.versoes[0].id }});
-                     if (prev) { finalUrl = prev.url; docType = prev.docType; }
+                } else if (!finalUrl && ultimaVersao) {
+                    // Se não enviou nada novo, tenta copiar da versão anterior
+                     const prev = await prisma.versaoarquivo.findUnique({ 
+                         where: { versaoId: ultimaVersao.id }
+                     });
+                     if (prev) { 
+                         finalUrl = prev.url; 
+                         docType = prev.docType; 
+                     }
                 }
 
                 if (finalUrl) {
-                    await tx.versaoarquivo.create({ data: { id: crypto.randomUUID(), versaoId: v.id, url: finalUrl, docType }});
+                    await tx.versaoarquivo.create({ 
+                        data: { 
+                            id: crypto.randomUUID(), 
+                            versaoId: v.id, 
+                            url: finalUrl, 
+                            docType 
+                        }
+                    });
                 }
 
             } else if (contexto.tipo === 'DASHBOARD' && dashboardPayload) {
                  await tx.versaodashboard.create({
-                    data: { id: crypto.randomUUID(), versaoId: v.id, tipoGrafico: tipoGrafico || 'BAR', payload: typeof dashboardPayload === 'object' ? JSON.stringify(dashboardPayload) : dashboardPayload }
+                    data: { 
+                        id: crypto.randomUUID(), 
+                        versaoId: v.id, 
+                        tipoGrafico: tipoGrafico || 'BAR', 
+                        payload: typeof dashboardPayload === 'object' ? JSON.stringify(dashboardPayload) : dashboardPayload 
+                    }
                 });
+
             } else if (contexto.tipo === 'INDICADOR' && valorAtual !== undefined) {
                 await tx.versaoindicador.create({
-                    data: { id: crypto.randomUUID(), versaoId: v.id, valorAtual: parseFloat(valorAtual), valorAlvo: valorAlvo ? parseFloat(valorAlvo) : null, unidade: unidade||'', textoComparativo, cor: cor||'#000', icone: icone||'Heart' }
+                    data: { 
+                        id: crypto.randomUUID(), 
+                        versaoId: v.id, 
+                        valorAtual: parseFloat(valorAtual), 
+                        valorAlvo: valorAlvo ? parseFloat(valorAlvo) : null, 
+                        unidade: unidade || '', 
+                        textoComparativo, 
+                        cor: cor || '#000', 
+                        icone: icone || 'Heart' 
+                    }
                 });
             }
 
+            // Cria histórico inicial
             await tx.validacaohistorico.create({
                 data: {
                     id: crypto.randomUUID(),
                     versaoId: v.id,
                     autorId: user.id,
                     statusNovo: 'AGUARDANDO_GERENTE',
-                    justificativa: 'Nova versão',
+                    justificativa: motivoNovaVersao || 'Criação de nova versão',
                     timestamp: new Date()
                 }
             });
 
+            // Cria comentário automático
             await tx.comentario.create({
                 data: {
                     id: crypto.randomUUID(),
@@ -483,21 +778,30 @@ exports.createVersao = async (req, res) => {
             return v;
         });
 
+        // Notificações
         try {
-            await notificacaoService.notifyGerentesDaGerencia(
-                user.gerenciaId,
-                user.id,
-                result,
-                `Nova versão "${titulo}" aguarda análise do Gerente.`
-            );
+            // Garante que notificacaoService tenha a função correta implementada
+            if (notificacaoService.notifyGerentesDaGerencia) {
+                await notificacaoService.notifyGerentesDaGerencia(
+                    user.gerenciaId,
+                    user.id,
+                    result,
+                    `Nova versão "${titulo}" aguarda análise do Gerente.`
+                );
+            } else {
+                // Fallback se a função tiver outro nome ou usar notificarNovaVersao
+                await notificacaoService.notificarNovaVersao(contexto, result, user);
+            }
         } catch (notifError) {
-            console.error('Falha notif createVersao:', notifError);
+            console.error('Falha ao enviar notificação createVersao:', notifError);
+            // Não falha a requisição se apenas a notificação falhar
         }
 
         return res.status(201).json({ versao: result });
+
     } catch (err) {
         console.error('Erro createVersao:', err);
-        return res.status(500).json({ message: err.message || 'Erro interno' });
+        return res.status(500).json({ message: err.message || 'Erro interno ao criar versão.' });
     }
 };
 // GET /contextos/:versaoId/participantes
@@ -745,8 +1049,12 @@ exports.getDetalhes = async (req, res) => {
             }
         });
 
-        if (!contexto) return res.status(404).json({ message: 'Contexto não encontrado' });
+        //  Verifique se existe E se não está deletado
+        if (!contexto || contexto.deletedAt !== null) {
+            return res.status(404).json({ message: 'Contexto não encontrado.' });
+        }
 
+        // Buscar Todas as Versões com dados do Autor
         const versoes = await prisma.contextoversao.findMany({
             where: { contextoId },
             include: {
@@ -795,7 +1103,11 @@ exports.buscar = async (req, res) => {
 
     try {
         const where = {
-            ...(q ? { contexto: { tituloConceitual: { contains: q } } } : {}), 
+            // [SOFT DELETE]: Filtra excluídos E aplica busca por título se 'q' existir
+            contexto: {
+                deletedAt: null,
+                ...(q ? { tituloConceitual: { contains: q } } : {})
+            },
             ...whereVersao
         };
 
@@ -809,7 +1121,7 @@ exports.buscar = async (req, res) => {
                             gerencia: { select: { slug: true, nome: true } } 
                         }
                     },
-                    // AQUI: Inclusão do usuário para trazer o nome
+                    // Inclusão do usuário para trazer o nome
                     user: { select: { nome: true } }
                 },
                 orderBy: { updatedAt: 'desc' },

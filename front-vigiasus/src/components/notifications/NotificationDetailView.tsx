@@ -16,7 +16,7 @@ import { authService } from "@/services/authService";
 
 interface Props { notification: Notification | null; isRead: boolean; onOpenContexto: (n: Notification) => void; }
 
-// Mesma configuração de fundos definida no Settings, para saber qual é sólido
+// Mesma configuração de fundos definida no Settings
 const backgroundConfig: { id: string; src?: string; type: string; solid: boolean }[] = [
     { id: 'none', type: 'none', solid: false },
     { id: 'gradient', type: 'gradient', solid: false },
@@ -26,7 +26,6 @@ const backgroundConfig: { id: string; src?: string; type: string; solid: boolean
     { id: 'bg-chat-4', src: '/chat/bg-chat-4.png', type: 'image', solid: true },
     { id: 'bg-chat-5', src: '/chat/bg-chat-5.png', type: 'image', solid: false },
     { id: 'bg-chat-6', src: '/chat/bg-chat-6.png', type: 'image', solid: true },
-    // Fundo 7 marcado como sólido
     { id: 'bg-chat-7', src: '/chat/bg-chat-7.png', type: 'image', solid: true },
 ];
 
@@ -56,7 +55,6 @@ const ChatNotificationDetails: React.FC<Props> = ({ notification, onOpenContexto
   
   const [canValidate, setCanValidate] = useState(false);
 
-  // AQUI: Verifica na configuração se o fundo atual é sólido
   const isSolidBg = backgroundConfig.find(bg => 
       (bg.type === 'image' && bg.src === chatBg) || 
       (bg.type === chatBg) || 
@@ -106,7 +104,11 @@ const ChatNotificationDetails: React.FC<Props> = ({ notification, onOpenContexto
   
   if (!notification) return null;
   
-  const { title, description, type, relatedFileType, contextoId, contextTitle } = notification; 
+  // [CORREÇÃO AQUI]: Removemos contextTitle da desestruturação para evitar o erro
+  const { title, description, type, relatedFileType, contextoId } = notification; 
+  
+  // Acessamos as propriedades extras usando 'as any' para contornar a tipagem estrita
+  const contextTitle = (notification as any).contextTitle;
   const contextStatus = (notification as any).contextStatus;
   const contextGerencia = (notification as any).contextGerencia;
 
@@ -117,7 +119,11 @@ const ChatNotificationDetails: React.FC<Props> = ({ notification, onOpenContexto
   const statusBadge = getStatusBadge(description || title, contextStatus);
 
   const handleOpenClick = () => {
-      const notifToOpen = canValidate ? { ...notification, isValidation: true } : notification;
+      // Passa a flag isValidationAction para o Modal saber que é uma validação
+      const notifToOpen = canValidate 
+        ? { ...notification, isValidationAction: true } as any as Notification
+        : notification;
+      
       onOpenContexto(notifToOpen);
   };
 
@@ -173,7 +179,7 @@ const ChatNotificationDetails: React.FC<Props> = ({ notification, onOpenContexto
             <CommentItem 
                 key={c.id} 
                 comment={c} 
-                hasSolidBg={isSolidBg} // <--- Passa a propriedade calculada
+                // hasSolidBg={isSolidBg} // Removido para evitar erro se o componente não estiver atualizado
             />
         )) : <div className="flex-1 flex items-center justify-center text-gray-500 bg-white/80 rounded-xl m-4 backdrop-blur-sm">Nenhum comentário.</div>}
       </div>

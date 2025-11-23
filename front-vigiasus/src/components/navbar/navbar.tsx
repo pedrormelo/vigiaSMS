@@ -4,18 +4,21 @@
 import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation"; // AQUI: Import para refresh suave
+import { useRouter } from "next/navigation";
 import { Menu, Loader2 } from 'lucide-react';
 import NotificationsModal from "@/components/notifications/notificationsModal";
 import { VisualizarContextoModal } from "@/components/popups/visualizarContextoModal";
-import { getContextoById } from "@/services/contextoService";
+import { ModalAdicionarConteudo } from "@/components/popups/addContextoModal/index";
+import { getContextoById, criarVersao } from "@/services/contextoService";
 import { Contexto } from "@/components/validar/typesDados";
 import { Notification } from "@/constants/types";
+import { SubmitData } from '@/components/popups/addContextoModal/types';
 import UpdateStatusPopover from "./UpdateStatusPopover";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useNotifications } from "@/hooks/useNotifications";
 import { authService } from "@/services/authService";
-import { showSuccessToast, showErrorToast } from "@/components/ui/Toasts"; // Import Toasts
+import { showSuccessToast, showErrorToast } from "@/components/ui/Toasts";
+import { mapTipoGraficoParaBackend, normalizarNumero } from "@/lib/gerenciaUtils";
 
 type PartialContexto = Partial<Contexto> & { id: string };
 
@@ -24,7 +27,7 @@ interface NavbarProps {
 }
 
 export default function Navbar({ onOpenSidebar }: NavbarProps) {
-  const router = useRouter(); // Hook do router
+  const router = useRouter();
   const [lastUpdateInfo, setLastUpdateInfo] = useState({
     relative: "há 2 horas",
     label: "29/10/2025 09:15",
@@ -37,6 +40,10 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
   const [isValidationMode, setIsValidationMode] = useState(false);
   const [selectedContexto, setSelectedContexto] = useState<Contexto | PartialContexto | null>(null);
   const [isLoadingContexto, setIsLoadingContexto] = useState(false);
+
+  // Estados para Correção (Membro)
+  const [isCorrecaoModalOpen, setIsCorrecaoModalOpen] = useState(false);
+  const [contextoParaCorrecao, setContextoParaCorrecao] = useState<Contexto | null>(null);
 
   const userProfile = useCurrentUser();
 
@@ -56,12 +63,11 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
 
   const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
-  // --- HANDLERS DE AÇÃO (Corrigidos: Sem Alert, com Refresh Suave) ---
+  // --- HANDLERS ---
   
   const handleDeferir = async (versaoId: string, comentario?: string) => {
     const role = userProfile?.role;
     let endpoint = "";
-    
     if (role === 'gerente') endpoint = `${apiBase}/contextos/versoes/${versaoId}/gerente-aprovar`;
     else if (role === 'diretor') endpoint = `${apiBase}/contextos/versoes/${versaoId}/diretor-publicar`;
     else return;
@@ -73,18 +79,11 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ comentario })
         });
-        
         if (!res.ok) throw new Error("Falha ao deferir");
-        
-        // Sucesso: Fecha modal e atualiza dados silenciosamente
+        showSuccessToast("Sucesso", "Ação realizada com sucesso!");
         setIsDetalhesContextoOpen(false);
-        router.refresh(); // Atualiza Server Components (listas, etc)
-        
-        // Nota: O Toast de sucesso é exibido pelo Modal (index.tsx), então não duplicamos aqui.
-    } catch (e) {
-        console.error(e);
-        showErrorToast("Erro", "Não foi possível realizar a ação.");
-    }
+        router.refresh(); 
+    } catch (e) { console.error(e); showErrorToast("Erro", "Não foi possível realizar a ação."); }
   };
 
   const handleIndeferir = async (versaoId: string, justificativa: string) => {
@@ -96,13 +95,10 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
             body: JSON.stringify({ justificativa })
         });
         if (!res.ok) throw new Error("Falha ao indeferir");
-        
+        showSuccessToast("Sucesso", "Contexto indeferido.");
         setIsDetalhesContextoOpen(false);
         router.refresh();
-     } catch (e) { 
-         console.error(e); 
-         showErrorToast("Erro", "Não foi possível indeferir.");
-    }
+     } catch (e) { console.error(e); showErrorToast("Erro", "Não foi possível indeferir."); }
   };
 
   const handleCorrigir = async (versaoId: string, justificativa: string) => {
@@ -114,33 +110,85 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
             body: JSON.stringify({ justificativa })
         });
         if (!res.ok) throw new Error("Falha ao solicitar correção");
-        
+        showSuccessToast("Sucesso", "Correção solicitada.");
         setIsDetalhesContextoOpen(false);
         router.refresh();
-     } catch (e) { 
-         console.error(e); 
-         showErrorToast("Erro", "Não foi possível solicitar correção.");
-    }
-  };
-  // ------------------------------------------------
-
-  const handleNotificationsClick = () => {
-    setIsNotificationsOpen(true);
+     } catch (e) { console.error(e); showErrorToast("Erro", "Não foi possível solicitar correção."); }
   };
 
-  const handleCloseNotifications = () => {
-    setIsNotificationsOpen(false);
+  // Lógica de Abrir e Salvar Correção (Membro)
+  const handleAbrirCorrecao = (contexto: Contexto) => {
+      setIsDetalhesContextoOpen(false);
+      setContextoParaCorrecao(contexto);
+      setTimeout(() => setIsCorrecaoModalOpen(true), 50);
+  };
+
+  // [CORREÇÃO]: Lógica de extração robusta baseada no tipo de envio
+  const handleSalvarNovaVersao = async (dados: SubmitData) => {
+      if (!contextoParaCorrecao) return;
+
+      try {
+          let payload: any = {};
+          let file: File | null = null;
+
+          // Lógica adaptada do GerenciaPage para extrair corretamente de dados.payload
+          if (dados.type === 'contexto') {
+              payload = {
+                  titulo: dados.payload.title?.trim(),
+                  descricao: dados.payload.details?.trim(),
+                  tipo: 'ARQUIVO_LINK',
+                  linkUrl: dados.payload.url?.trim(),
+                  motivoNovaVersao: "Correção solicitada"
+              };
+              file = dados.payload.file ?? null;
+
+          } else if (dados.type === 'dashboard') {
+              payload = {
+                  titulo: dados.payload.title?.trim(),
+                  descricao: dados.payload.details?.trim(),
+                  tipo: 'DASHBOARD',
+                  tipoGrafico: mapTipoGraficoParaBackend(dados.payload.type),
+                  dashboardPayload: dados.payload.dataset
+                      ? JSON.parse(JSON.stringify(dados.payload.dataset))
+                      : undefined,
+                  motivoNovaVersao: "Correção solicitada"
+              };
+
+          } else if (dados.type === 'indicador') {
+              payload = {
+                  titulo: dados.payload.titulo?.trim(),
+                  descricao: dados.payload.descricao?.trim(),
+                  tipo: 'INDICADOR',
+                  valorAtual: normalizarNumero(dados.payload.valorAtual),
+                  valorAlvo: normalizarNumero(dados.payload.valorAlvo),
+                  unidade: dados.payload.unidade,
+                  textoComparativo: dados.payload.textoComparativo,
+                  cor: dados.payload.cor,
+                  icone: dados.payload.icone,
+                  motivoNovaVersao: "Correção solicitada"
+              };
+          }
+
+          // Envia para o serviço
+          await criarVersao(contextoParaCorrecao.id, payload, file);
+          
+          showSuccessToast("Sucesso", "Nova versão enviada para análise.");
+          setIsCorrecaoModalOpen(false);
+          setContextoParaCorrecao(null);
+          router.refresh();
+
+      } catch (error) { 
+          console.error(error); 
+          showErrorToast("Erro", "Falha ao enviar correção."); 
+      }
   };
 
   const handleOpenContextoDetails = async (notification: Notification) => {
     if (!notification.contextoId) return;
-
-    const shouldValidate = (notification as any).isValidation === true;
+    const shouldValidate = (notification as any).isValidationAction === true;
     setIsValidationMode(shouldValidate);
-
     setIsLoadingContexto(true);
     setIsNotificationsOpen(false);
-
     handleMarkAsRead(notification.id);
 
     try {
@@ -149,17 +197,12 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
         setSelectedContexto(contextoDetails);
         setIsDetalhesContextoOpen(true);
       } else {
-        console.warn(`Contexto com ID ${notification.contextoId} não encontrado.`);
+        console.warn(`Contexto não encontrado.`);
         setSelectedContexto({ id: notification.contextoId }); 
         setIsDetalhesContextoOpen(true);
       }
-    } catch (error) {
-      console.error("Erro ao buscar detalhes do contexto:", error);
-      showErrorToast("Erro", "Erro ao carregar detalhes.");
-      setIsNotificationsOpen(true);
-    } finally {
-      setIsLoadingContexto(false);
-    }
+    } catch (error) { console.error(error); showErrorToast("Erro", "Erro ao carregar detalhes."); setIsNotificationsOpen(true); } 
+    finally { setIsLoadingContexto(false); }
   };
 
   const handleCloseDetalhesContexto = () => {
@@ -168,131 +211,58 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
     setIsValidationMode(false);
   };
 
-  const handleMarkAsRead = (notificationId: number | "all") => {
-    if (notificationId === "all") {
-      const allIds = notifications.map(n => n.id);
-      markAsRead(allIds);
-    } else {
-      markAsRead([notificationId]);
-    }
-  };
-
-  useEffect(() => {
-    if (selectedContexto?.id && !("titulo" in selectedContexto && selectedContexto.titulo)) {
-      let mounted = true;
-      (async () => {
-        setIsLoadingContexto(true);
-        try {
-          const data = await getContextoById(selectedContexto.id);
-          if (mounted && data) {
-            setSelectedContexto(data);
-          } else if (mounted) {
-            handleCloseDetalhesContexto();
-          }
-        } catch (error) {
-          if (mounted) handleCloseDetalhesContexto();
-        } finally {
-          if (mounted) setIsLoadingContexto(false);
-        }
-      })();
-      return () => {
-        mounted = false;
-      };
-    }
-  }, [selectedContexto?.id]);
+  const handleMarkAsRead = (id: number | "all") => markAsRead(id === "all" ? notifications.map(n => n.id) : [id]);
+  const handleNotificationsClick = () => setIsNotificationsOpen(true);
+  const handleCloseNotifications = () => setIsNotificationsOpen(false);
 
   return (
     <>
       <header className="bg-white w-full drop-shadow-md sticky top-0 z-35">
         <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
-          <button
-            onClick={onOpenSidebar}
-            className="text-blue-700 hover:text-blue-500 transition-colors p-2 -ml-2 md:ml-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1"
-            aria-label="Abrir menu lateral"
-          >
-            <Menu strokeWidth={2.5} className="w-6 h-6 md:w-7 md:h-7" />
-          </button>
-
-          <div className="flex items-center gap-4 md:gap-6 lg:gap-8">
-            <Link href="/" className="block flex-shrink-0">
-              <h1 className="text-xl md:text-2xl text-blue-700 hover:text-blue-500 transition-colors">
-                Vigia<b>SUS</b>
-              </h1>
-            </Link>
-            <Image
-              src="/logos/logo-jaboatao.png"
-              alt="Prefeitura de Jaboatão"
-              width={150}
-              height={30}
-              className="h-7 md:h-8 w-auto hidden sm:block"
-              priority
-            />
-          </div>
-
-          <div className="flex items-center gap-3 md:gap-4 text-blue-700">
-            <UpdateStatusPopover
-              lastUpdateRelative={lastUpdateInfo.relative}
-              lastUpdateLabel={lastUpdateInfo.label}
-              lastUpdateItemName={lastUpdateInfo.itemName}
-              isRecent={lastUpdateInfo.isRecent}
-            />
-
-            <div className="relative">
-              <button
-                onClick={handleNotificationsClick}
-                className="hover:opacity-70 p-1 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1"
-                aria-label={`Notificações (${totalUnreadCount} não lidas)`}
-              >
-                <Image
-                  src="/icons/sininho.svg"
-                  alt=""
-                  width={24}
-                  height={24}
-                  className="w-6 h-6"
-                />
-              </button>
-              {totalUnreadCount > 0 && (
-                <div
-                  className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full border-2 border-white text-white text-[10px] flex items-center justify-center font-bold pointer-events-none"
-                  aria-hidden="true"
-                >
-                  {totalUnreadCount > 9 ? '9+' : totalUnreadCount}
-                </div>
-              )}
-            </div>
-          </div>
+          <button onClick={onOpenSidebar} className="text-blue-700 hover:text-blue-500 transition-colors p-2 -ml-2 md:ml-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1"> <Menu strokeWidth={2.5} className="w-6 h-6 md:w-7 md:h-7" /> </button>
+          <div className="flex items-center gap-4 md:gap-6 lg:gap-8"> <Link href="/" className="block flex-shrink-0"> <h1 className="text-xl md:text-2xl text-blue-700 hover:text-blue-500 transition-colors"> Vigia<b>SUS</b> </h1> </Link> <Image src="/logos/logo-jaboatao.png" alt="Prefeitura de Jaboatão" width={150} height={30} className="h-7 md:h-8 w-auto hidden sm:block" priority /> </div>
+          <div className="flex items-center gap-3 md:gap-4 text-blue-700"> <UpdateStatusPopover lastUpdateRelative={lastUpdateInfo.relative} lastUpdateLabel={lastUpdateInfo.label} lastUpdateItemName={lastUpdateInfo.itemName} isRecent={lastUpdateInfo.isRecent} /> <div className="relative"> <button onClick={handleNotificationsClick} className="hover:opacity-70 p-1 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1"> <Image src="/icons/sininho.svg" alt="" width={24} height={24} className="w-6 h-6" /> </button> {totalUnreadCount > 0 && ( <div className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full border-2 border-white text-white text-[10px] flex items-center justify-center font-bold pointer-events-none"> {totalUnreadCount > 9 ? '9+' : totalUnreadCount} </div> )} </div> </div>
         </div>
       </header>
 
-      <NotificationsModal
-        isOpen={isNotificationsOpen}
-        onClose={handleCloseNotifications}
-        onOpenContextoDetails={handleOpenContextoDetails}
-        notifications={notifications}
-        isLoading={isLoadingNotifications}
-        isError={isErrorNotifications}
-        readNotifications={readNotifications || []}
-        onMarkAsRead={handleMarkAsRead}
-      />
+      <NotificationsModal isOpen={isNotificationsOpen} onClose={handleCloseNotifications} onOpenContextoDetails={handleOpenContextoDetails} notifications={notifications} isLoading={isLoadingNotifications} isError={isErrorNotifications} readNotifications={readNotifications || []} onMarkAsRead={handleMarkAsRead} />
 
       <VisualizarContextoModal
         estaAberto={isDetalhesContextoOpen}
         aoFechar={handleCloseDetalhesContexto}
         dadosDoContexto={selectedContexto}
         perfil={userProfile?.role ?? 'membro'}
-        isFromHistory={selectedContexto && 'historico' in selectedContexto && (selectedContexto.historico?.length ?? 0) > 0}
         
+        isFromHistory={false} 
         isValidation={isValidationMode}
+        
+        // Se não estiver em validação (Membro), passa o handler de correção
+        aoCriarNovaVersao={!isValidationMode ? handleAbrirCorrecao : undefined}
+        
         onDeferir={handleDeferir}
         onIndeferir={handleIndeferir}
         onCorrigir={handleCorrigir}
+        
+        usuarioGerenciaId={userProfile?.gerenciaId}
       />
 
-      {isLoadingContexto && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center">
-          <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
-        </div>
-      )}
+      {/* Modal de Correção (Upload de nova versão) */}
+      <ModalAdicionarConteudo
+        estaAberto={isCorrecaoModalOpen}
+        aoFechar={() => { setIsCorrecaoModalOpen(false); setContextoParaCorrecao(null); }}
+        aoSubmeter={handleSalvarNovaVersao}
+        abaInicial={contextoParaCorrecao?.type === 'dashboard' ? 'dashboard' : contextoParaCorrecao?.type === 'indicador' ? 'indicador' : 'contexto'}
+        // [CORREÇÃO]: Passamos as props corretas para o Modal (Partial<Contexto>)
+        // Usamos 'title' e 'description' que são as chaves de Contexto, não 'titulo'
+        dadosIniciais={contextoParaCorrecao ? {
+             ...contextoParaCorrecao, // Espalha propriedades compatíveis
+             // Garante que payload do dashboard esteja disponível se necessário
+             payload: contextoParaCorrecao.payload
+        } : undefined}
+        isEditing={true}
+      />
+
+      {isLoadingContexto && ( <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center"> <Loader2 className="h-10 w-10 animate-spin text-blue-600" /> </div> )}
     </>
   );
 }

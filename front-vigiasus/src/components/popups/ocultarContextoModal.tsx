@@ -15,7 +15,7 @@ import { EyeOff, AlertTriangle } from "lucide-react";
 interface OcultarContextoModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    onConfirm: () => void;
+    onConfirm: () => void | Promise<void>;
     onCancel: () => void;
     contextoNome: string;
 }
@@ -38,8 +38,7 @@ const OcultarContextoModal = ({
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <AlertTriangle className="w-5 h-5 text-yellow-600" />
-                        <h1 className="text-lg text-gray-700 font-semibold">Ocultar Contexto</h1>
-                    </DialogTitle>
+                        <span className="text-lg text-gray-700 font-semibold">Ocultar Contexto</span>                    </DialogTitle>
                     <DialogDescription className="pt-2 text-gray-700">
                         Tem certeza que deseja ocultar o contexto <strong>"{contextoNome}"</strong>?
                         <br />
