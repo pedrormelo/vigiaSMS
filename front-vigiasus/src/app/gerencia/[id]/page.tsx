@@ -236,25 +236,27 @@ export default function GerenciaPage() {
         setSelectedTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]);
     };
 
+    const canSeePending = modo === 'edicao' || perfil === 'gerente';
+
     const filteredIndicators = useMemo(() => {
         return todosOsContextos.filter(ctx => {
             if (ctx.type !== 'indicador') return false;
             const matchesSearch = ctx.title.toLowerCase().includes(debouncedSearchValue.toLowerCase());
-            const matchesStatus = modo === 'edicao' || ctx.status === StatusContexto.Publicado;
+            const matchesStatus = canSeePending || ctx.status === StatusContexto.Publicado;
             const matchesVisibility = (modo === 'edicao') || !ctx.estaOculto;
             return matchesStatus && matchesVisibility && matchesSearch;
         });
-    }, [todosOsContextos, debouncedSearchValue, modo]);
+    }, [todosOsContextos, debouncedSearchValue, modo, canSeePending]);
 
     const filteredDashboards = useMemo(() => {
         return todosOsContextos.filter(ctx => {
             if (ctx.type !== 'dashboard') return false;
             const matchesSearch = ctx.title.toLowerCase().includes(debouncedSearchValue.toLowerCase());
-            const matchesStatus = ctx.status === StatusContexto.Publicado;
+            const matchesStatus = canSeePending || ctx.status === StatusContexto.Publicado;
             const matchesVisibility = (modo === 'edicao') || !ctx.estaOculto;
             return matchesStatus && matchesVisibility && matchesSearch;
         });
-    }, [todosOsContextos, debouncedSearchValue, modo]);
+    }, [todosOsContextos, debouncedSearchValue, modo, canSeePending]);
 
     const filteredFiles = useMemo(() => {
         const sevenDaysAgo = new Date();
@@ -266,12 +268,12 @@ export default function GerenciaPage() {
             const matchesSearch = file.title.toLowerCase().includes(debouncedSearchValue.toLowerCase());
             const matchesTab = activeTab === 'todas' || new Date(file.insertedDate) >= sevenDaysAgo;
             const matchesType = selectedTypes.length === 0 || selectedTypes.includes(file.type);
-            const matchesStatus = (modo === 'edicao') || file.status === StatusContexto.Publicado;
+            const matchesStatus = canSeePending || file.status === StatusContexto.Publicado;
             const matchesVisibility = (modo === 'edicao') || !file.estaOculto;
 
             return matchesStatus && matchesVisibility && matchesSearch && matchesTab && matchesType;
         });
-    }, [debouncedSearchValue, activeTab, selectedTypes, todosOsContextos, modo]);
+    }, [debouncedSearchValue, activeTab, selectedTypes, todosOsContextos, modo, canSeePending]);
 
     const abrirModal = (aba: AbaAtiva) => {
         setAbaInicial(aba);
