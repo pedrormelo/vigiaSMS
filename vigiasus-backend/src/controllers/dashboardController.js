@@ -514,3 +514,34 @@ exports.getKpiHighlights = async (req, res) => {
         return res.status(500).json({ message: 'Erro interno no servidor.' });
     }
 };
+
+// Efetua as contagem das métricas da página inicial
+exports.getGlobalMetrics = async (req, res) => {
+    try {
+        // Executa as contagens em paralelo para ser mais rápido
+        const [totalDiretorias, totalGerencias, totalUsuarios, totalContextos] = await Promise.all([
+            prisma.diretoria.count(),
+            prisma.gerencia.count(),
+            prisma.user.count(),
+            // Conta apenas contextos não excluídos e publicados (opcional, ou todos)
+            prisma.contexto.count({
+                where: { 
+                    deletedAt: null,
+                    // Se quiser mostrar apenas publicados, descomente abaixo:
+                    // contextoversao: { some: { statusValidacao: 'PUBLICADO', isAtiva: true } }
+                }
+            })
+        ]);
+
+        return res.json({
+            diretorias: totalDiretorias,
+            gerencias: totalGerencias,
+            usuarios: totalUsuarios,
+            documentos: totalContextos
+        });
+
+    } catch (error) {
+        console.error("Erro ao buscar métricas globais:", error);
+        return res.status(500).json({ message: "Erro ao carregar métricas." });
+    }
+};

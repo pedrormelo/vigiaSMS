@@ -18,4 +18,6 @@ router.get('/:diretoriaId', ctrl.getLayout);
 router.post('/:diretoriaId', auth(), ctrl.saveLayout);
 router.get('/health', (req, res) => res.json({ ok: true }));
 
+router.get('/global-metrics', auth(), ctrl.getGlobalMetrics);
+
 module.exports = router;

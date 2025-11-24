@@ -25,6 +25,13 @@ export interface DiretoriaDashboardLayout {
     items: DashboardLayoutItem[];
 }
 
+export interface GlobalMetrics {
+    diretorias: number;
+    gerencias: number;
+    usuarios: number;
+    documentos: number;
+}
+
 export async function getDiretoriaDashboardLayout(diretoriaId: string): Promise<DiretoriaDashboardLayout | null> {
     if (!diretoriaId) return null;
     const base = apiBase();
@@ -318,6 +325,7 @@ export async function saveDiretoriaDashboardLayout(
     }
 }
 
+
 // Mark/unmark a versão as destaque (for Secretaria dashboard)
 interface HighlightResponse {
     ok: boolean
@@ -347,4 +355,24 @@ export async function setVersaoDestaque(versaoId: string, highlighted: boolean):
         console.error('Erro ao alterar destaque da versão:', e);
         return { ok: false, message: 'Erro ao comunicar com o servidor.' };
     }
+}
+
+export async function getGlobalMetrics(): Promise<GlobalMetrics> {
+    const base = apiBase();
+    const token = authService.getToken();
+    
+    const res = await fetch(`${base}/dashboard-layouts/global-metrics`, { // Ajuste a rota conforme o prefixo do seu arquivo de rotas
+        method: 'GET',
+        headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        next: { revalidate: 60 } // Cache de 60 segundos para não pesar o banco
+    });
+
+    if (!res.ok) {
+        throw new Error('Falha ao carregar métricas.');
+    }
+
+    return await res.json();
 }
