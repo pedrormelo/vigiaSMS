@@ -1255,31 +1255,32 @@ exports.getContextosDaGerencia = async (req, res) => {
 
 // Função auxiliar de mapeamento (atualize ou adicione se não existir)
 function mapContextoWithVersao(ctx, versaoPrincipal, todasVersoes) {
-    // Usa o mapper existente ou cria este objeto consolidado
+    let parsedPayload = null;
+    if (versaoPrincipal.versaodashboard?.payload) {
+        try {
+            parsedPayload = JSON.parse(versaoPrincipal.versaodashboard.payload);
+        } catch (error) {
+            parsedPayload = null;
+        }
+    }
+
     return {
         id: ctx.id,
         tituloConceitual: ctx.tituloConceitual,
         tipo: ctx.tipo,
         gerenciaDonaId: ctx.gerenciaDonaId,
-        estaOculto: ctx.isOculto, // Importante para o badge
+        estaOculto: ctx.isOculto,
         createdAt: ctx.createdAt,
-        
-        // Dados da versão "Capa"
+        versaoAtiva: versaoPrincipal,
         titulo: versaoPrincipal.titulo,
         descricao: versaoPrincipal.descricao,
         status: versaoPrincipal.statusValidacao,
         versaoNumero: versaoPrincipal.versaoNumero,
         updatedAt: versaoPrincipal.updatedAt,
         autor: versaoPrincipal.user?.nome || 'Sistema',
-        
-        // Anexos da versão capa
         url: versaoPrincipal.versaoarquivo?.url,
         docType: versaoPrincipal.versaoarquivo?.docType,
-        payload: versaoPrincipal.versaodashboard?.payload 
-            ? JSON.parse(versaoPrincipal.versaodashboard.payload) 
-            : null,
-        
-        // Lista completa para o histórico no modal
-        versoes: todasVersoes
+        payload: parsedPayload,
+        versoes: todasVersoes,
     };
 }

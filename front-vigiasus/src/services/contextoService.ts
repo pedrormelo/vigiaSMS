@@ -329,7 +329,12 @@ export const getContextosPorGerencia = async (idGerencia: string): Promise<Conte
     if (!idGerencia) return [];
     const base = apiBase();
     try {
-        const res = await fetch(`${base}/gerencias/${idGerencia}/contextos`, { cache: 'no-store' });
+        const token = authService.getToken();
+        const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
+        const res = await fetch(`${base}/gerencias/${idGerencia}/contextos`, {
+            cache: 'no-store',
+            headers,
+        });
         if (!res.ok) return [];
         
         const body: (BackendVersao | BackendContexto)[] = await res.json();
@@ -443,13 +448,15 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
         versoesLista = ctx.versoes || [];
         historicoGeralLista = ctx.historico || [];
         
-        if (ctx.versoes && ctx.versoes.length) {
-            versaoRecente = ctx.versoes.reduce((acc, v) => {
-                return (!acc || (v.versaoNumero > acc.versaoNumero)) ? v : acc;
-            }, ctx.versoes[0] as BackendVersao);
-        } else {
-            versaoRecente = ctx.versaoAtiva;
-        }
+            if (ctx.versaoAtiva) {
+                versaoRecente = ctx.versaoAtiva;
+            } else if (ctx.versoes && ctx.versoes.length) {
+                versaoRecente = ctx.versoes.reduce((acc, v) => {
+                    return (!acc || (v.versaoNumero > acc.versaoNumero)) ? v : acc;
+                }, ctx.versoes[0] as BackendVersao);
+            } else {
+                versaoRecente = undefined;
+            }
     } else {
         // É uma Versão Isolada
         const v = item as BackendVersao;
@@ -538,6 +545,13 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
         ?? (typeof dadosEspecificos?.payload?.type === 'string' ? dadosEspecificos.payload.type : undefined);
     const chartType = normalizeGraphType(rawChartType);
 
+    const rawUrl = (versaoRecente as any)?.versaoarquivo?.url;
+    const absoluteUrl = typeof rawUrl === 'string' && /^https?:\/\//i.test(rawUrl)
+        ? rawUrl
+        : rawUrl
+            ? `${apiBase()}${rawUrl}`
+            : undefined;
+
     return {
         id: contextoId,
         title: tituloConceitual,
@@ -547,9 +561,7 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
         description: versaoRecente?.descricao || undefined,
         gerencia: gerenciaNome || gerenciaSlug || gerenciaId,
         payload: tipoBackend === 'DASHBOARD' ? (dadosEspecificos?.payload ?? undefined) : dadosEspecificos, 
-        url: (versaoRecente as any)?.versaoarquivo?.url
-            ? `${apiBase()}${(versaoRecente as any).versaoarquivo.url}`
-            : undefined,
+        url: absoluteUrl,
         estaOculto: estaOcultoBackend, 
         versoes: versoesFrontend,
         historico: historicoFrontend,
