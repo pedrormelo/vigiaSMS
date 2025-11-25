@@ -9,7 +9,7 @@ import { Menu, Loader2 } from 'lucide-react';
 import NotificationsModal from "@/components/notifications/notificationsModal";
 import { VisualizarContextoModal } from "@/components/popups/visualizarContextoModal";
 import { ModalAdicionarConteudo } from "@/components/popups/addContextoModal/index";
-import { getContextoById, criarVersao } from "@/services/contextoService";
+import { getContextoById, criarVersao, getUltimaAtualizacaoContexto } from "@/services/contextoService";
 import { Contexto } from "@/components/validar/typesDados";
 import { Notification } from "@/constants/types";
 import { SubmitData } from '@/components/popups/addContextoModal/types';
@@ -22,17 +22,34 @@ import { mapTipoGraficoParaBackend, normalizarNumero } from "@/lib/gerenciaUtils
 
 type PartialContexto = Partial<Contexto> & { id: string };
 
+type LastUpdateInfo = {
+  relative: string;
+  label: string;
+  itemName: string | null;
+  authorName: string | null;
+  gerenciaName: string | null;
+  gerenciaSlug: string | null;
+  gerenciaId: string | null;
+  contextoId: string | null;
+  isRecent: boolean;
+};
+
 interface NavbarProps {
   onOpenSidebar: () => void;
 }
 
 export default function Navbar({ onOpenSidebar }: NavbarProps) {
   const router = useRouter();
-  const [lastUpdateInfo, setLastUpdateInfo] = useState({
-    relative: "há 2 horas",
-    label: "29/10/2025 09:15",
-    itemName: "Relatório Mensal de Atendimentos - Setembro",
-    isRecent: true
+  const [lastUpdateInfo, setLastUpdateInfo] = useState<LastUpdateInfo>({
+    relative: "",
+    label: "",
+    itemName: null,
+    authorName: null,
+    gerenciaName: null,
+    gerenciaSlug: null,
+    gerenciaId: null,
+    contextoId: null,
+    isRecent: false
   });
 
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -62,6 +79,127 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
   }, [notifications, readNotifications]);
 
   const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+
+  const formatRelativeTime = (date: Date) => {
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    if (!Number.isFinite(diffMs) || diffMs < 0) return "agora";
+
+    const minute = 60 * 1000;
+    const hour = 60 * minute;
+    const day = 24 * hour;
+    const month = 30 * day;
+    const year = 12 * month;
+
+    if (diffMs < minute) return "agora mesmo";
+    if (diffMs < hour) {
+      const minutes = Math.floor(diffMs / minute);
+      return minutes === 1 ? "há 1 minuto" : `há ${minutes} minutos`;
+    }
+    if (diffMs < day) {
+      const hours = Math.floor(diffMs / hour);
+      return hours === 1 ? "há 1 hora" : `há ${hours} horas`;
+    }
+    if (diffMs < month) {
+      const days = Math.floor(diffMs / day);
+      return days === 1 ? "há 1 dia" : `há ${days} dias`;
+    }
+    if (diffMs < year) {
+      const months = Math.floor(diffMs / month);
+      return months === 1 ? "há 1 mês" : `há ${months} meses`;
+    }
+    const years = Math.floor(diffMs / year);
+    return years === 1 ? "há 1 ano" : `há ${years} anos`;
+  };
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const data = await getUltimaAtualizacaoContexto();
+        if (!active) return;
+
+        if (!data || !data.updatedAt) {
+          setLastUpdateInfo({
+            relative: "",
+            label: "",
+            itemName: null,
+            authorName: null,
+            gerenciaName: null,
+            gerenciaSlug: null,
+            gerenciaId: null,
+            contextoId: null,
+            isRecent: false
+          });
+          return;
+        }
+
+        const updatedAt = new Date(data.updatedAt);
+        if (Number.isNaN(updatedAt.getTime())) {
+          setLastUpdateInfo({
+            relative: "",
+            label: "",
+            itemName: null,
+            authorName: null,
+            gerenciaName: null,
+            gerenciaSlug: null,
+            gerenciaId: null,
+            contextoId: null,
+            isRecent: false
+          });
+          return;
+        }
+
+        const relative = formatRelativeTime(updatedAt);
+        const label = updatedAt.toLocaleString('pt-BR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        const itemName = data.tituloVersao || data.tituloContexto || null;
+        const diffDays = (Date.now() - updatedAt.getTime()) / (1000 * 60 * 60 * 24);
+
+        setLastUpdateInfo({
+          relative,
+          label,
+          itemName,
+          authorName: data.autorNome || null,
+          gerenciaName: data.gerenciaNome || null,
+          gerenciaSlug: data.gerenciaSlug || null,
+          gerenciaId: data.gerenciaId || null,
+          contextoId: data.contextoId || null,
+          isRecent: diffDays <= 7
+        });
+      } catch (error) {
+        console.error('Erro ao carregar última atualização:', error);
+        if (active) {
+          setLastUpdateInfo({
+            relative: "",
+            label: "",
+            itemName: null,
+            authorName: null,
+            gerenciaName: null,
+            gerenciaSlug: null,
+            gerenciaId: null,
+            contextoId: null,
+            isRecent: false
+          });
+        }
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const handleLastUpdateClick = () => {
+    const target = lastUpdateInfo.gerenciaSlug || lastUpdateInfo.gerenciaId;
+    if (!target) return;
+    router.push(`/gerencia/${target}`);
+  };
 
   // --- HANDLERS ---
   
@@ -221,7 +359,27 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
         <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
           <button onClick={onOpenSidebar} className="text-blue-700 hover:text-blue-500 transition-colors p-2 -ml-2 md:ml-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1"> <Menu strokeWidth={2.5} className="w-6 h-6 md:w-7 md:h-7" /> </button>
           <div className="flex items-center gap-4 md:gap-6 lg:gap-8"> <Link href="/" className="block flex-shrink-0"> <h1 className="text-xl md:text-2xl text-blue-700 hover:text-blue-500 transition-colors"> Vigia<b>SUS</b> </h1> </Link> <Image src="/logos/logo-jaboatao.png" alt="Prefeitura de Jaboatão" width={150} height={30} className="h-7 md:h-8 w-auto hidden sm:block" priority /> </div>
-          <div className="flex items-center gap-3 md:gap-4 text-blue-700"> <UpdateStatusPopover lastUpdateRelative={lastUpdateInfo.relative} lastUpdateLabel={lastUpdateInfo.label} lastUpdateItemName={lastUpdateInfo.itemName} isRecent={lastUpdateInfo.isRecent} /> <div className="relative"> <button onClick={handleNotificationsClick} className="hover:opacity-70 p-1 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1"> <Image src="/icons/sininho.svg" alt="" width={24} height={24} className="w-6 h-6" /> </button> {totalUnreadCount > 0 && ( <div className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full border-2 border-white text-white text-[10px] flex items-center justify-center font-bold pointer-events-none"> {totalUnreadCount > 9 ? '9+' : totalUnreadCount} </div> )} </div> </div>
+          <div className="flex items-center gap-3 md:gap-4 text-blue-700">
+            <UpdateStatusPopover
+              lastUpdateRelative={lastUpdateInfo.relative}
+              lastUpdateLabel={lastUpdateInfo.label}
+              lastUpdateItemName={lastUpdateInfo.itemName}
+              isRecent={lastUpdateInfo.isRecent}
+              authorName={lastUpdateInfo.authorName}
+              gerenciaName={lastUpdateInfo.gerenciaName}
+              onContextClick={lastUpdateInfo.gerenciaSlug || lastUpdateInfo.gerenciaId ? handleLastUpdateClick : undefined}
+            />
+            <div className="relative">
+              <button onClick={handleNotificationsClick} className="hover:opacity-70 p-1 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1">
+                <Image src="/icons/sininho.svg" alt="" width={24} height={24} className="w-6 h-6" />
+              </button>
+              {totalUnreadCount > 0 && (
+                <div className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full border-2 border-white text-white text-[10px] flex items-center justify-center font-bold pointer-events-none">
+                  {totalUnreadCount > 9 ? '9+' : totalUnreadCount}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </header>
 

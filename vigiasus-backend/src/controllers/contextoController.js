@@ -1194,7 +1194,6 @@ exports.getContextosDaGerencia = async (req, res) => {
     
     // Define se o usuário pode ver itens ocultos/pendentes
     const isInterno = user && (user.role === 'GERENTE' || user.role === 'DIRETOR' || (user.role === 'MEMBRO' && user.gerenciaId === gerenciaId));
-
     try {
         const contextos = await prisma.contexto.findMany({
             where: {
@@ -1250,6 +1249,58 @@ exports.getContextosDaGerencia = async (req, res) => {
     } catch (error) {
         console.error("Erro ao listar contextos da gerência:", error);
         return res.status(500).json({ message: 'Erro ao carregar contextos.' });
+    }
+};
+
+// Última atualização global (contexto mais recente publicado)
+exports.getUltimaAtualizacao = async (_req, res) => {
+    try {
+        const versao = await prisma.contextoversao.findFirst({
+            where: {
+                statusValidacao: 'PUBLICADO',
+                isAtiva: true,
+                contexto: {
+                    deletedAt: null
+                }
+            },
+            orderBy: { updatedAt: 'desc' },
+            include: {
+                contexto: {
+                    select: {
+                        id: true,
+                        tituloConceitual: true,
+                        tipo: true,
+                        gerencia: {
+                            select: { nome: true, slug: true, id: true }
+                        }
+                    }
+                },
+                user: {
+                    select: { id: true, nome: true }
+                }
+            }
+        });
+
+        if (!versao) {
+            return res.json({ data: null });
+        }
+
+        return res.json({
+            contextoId: versao.contextoId,
+            versaoId: versao.id,
+            tituloVersao: versao.titulo,
+            tituloContexto: versao.contexto?.tituloConceitual || null,
+            tipo: versao.contexto?.tipo || null,
+            updatedAt: versao.updatedAt,
+            gerenciaNome: versao.contexto?.gerencia?.nome || null,
+            gerenciaSlug: versao.contexto?.gerencia?.slug || null,
+            gerenciaId: versao.contexto?.gerencia?.id || null,
+            autorId: versao.user?.id || null,
+            autorNome: versao.user?.nome || null
+        });
+    } catch (error) {
+        console.error('Erro ao buscar última atualização:', error);
+        return res.status(500).json({ message: 'Erro ao buscar última atualização.' });
     }
 };
 

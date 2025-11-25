@@ -6,6 +6,7 @@ const ctrl = require('../controllers/contextoController'); // Aqui importamos co
 const upload = require('../config/uploadsConfig');
 
 // Públicos
+router.get('/ultima-atualizacao', ctrl.getUltimaAtualizacao);
 router.get('/publicados', ctrl.listPublicados);
 
 // Protegidos

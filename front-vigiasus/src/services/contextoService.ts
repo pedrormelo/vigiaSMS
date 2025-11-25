@@ -110,6 +110,20 @@ export interface BackendContexto extends BackendContextoBase {
     versaoAtiva?: BackendVersao;
 }
 
+export interface UltimaAtualizacaoContexto {
+    contextoId: string;
+    versaoId: string;
+    tituloVersao?: string | null;
+    tituloContexto?: string | null;
+    tipo?: string | null;
+    updatedAt: string;
+    gerenciaNome?: string | null;
+    gerenciaSlug?: string | null;
+    gerenciaId?: string | null;
+    autorId?: string | null;
+    autorNome?: string | null;
+}
+
 interface CreateContextoResponse {
     novoContexto: BackendContextoBase;
     novaVersao: BackendVersao;
@@ -342,6 +356,25 @@ export const getContextosPorGerencia = async (idGerencia: string): Promise<Conte
     } catch (err) {
         console.error("Erro ao buscar contextos por gerência:", err);
         return [];
+    }
+};
+
+export const getUltimaAtualizacaoContexto = async (): Promise<UltimaAtualizacaoContexto | null> => {
+    const base = apiBase();
+    try {
+        const res = await fetch(`${base}/contextos/ultima-atualizacao`, { cache: 'no-store' });
+        if (!res.ok) return null;
+
+        const body = await res.json();
+        if (!body) return null;
+
+        const data = body?.data !== undefined ? body.data : body;
+        if (!data || !data.updatedAt) return null;
+
+        return data as UltimaAtualizacaoContexto;
+    } catch (err) {
+        console.error("Erro ao buscar última atualização de contexto:", err);
+        return null;
     }
 };
 
