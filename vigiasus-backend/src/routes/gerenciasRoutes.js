@@ -5,6 +5,8 @@ const ctrl = require('../controllers/gerenciasController');
 // IMPORTANTE: Importar o controller de contextos para usar a função de listagem
 const contextoCtrl = require('../controllers/contextoController');
 
+router.get('/:gerenciaId/contextos', contextoCtrl.getContextosDaGerencia);
+
 // Rotas existentes de Gerência
 router.get('/', ctrl.listAll);
 router.get('/pordiretoria/:diretoriaId', ctrl.listByDiretoria);

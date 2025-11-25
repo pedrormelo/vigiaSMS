@@ -614,6 +614,8 @@ exports.createContexto = async (req, res) => {
 // POST /contextos/:contextoId/versoes
 // src/controllers/contextoController.js
 
+// src/controllers/contextoController.js
+
 exports.createVersao = async (req, res) => {
     const user = req.user;
     const { contextoId } = req.params;
@@ -636,11 +638,11 @@ exports.createVersao = async (req, res) => {
     if (!titulo) return res.status(400).json({ message: 'Título obrigatório' });
 
     try {
-        // 1. Busca o contexto e a última versão para calcular o número
+        // 1. Busca o contexto e a última versão
+        // [CORREÇÃO]: Nome correto da relação no schema é 'contextoversao'
         const contexto = await prisma.contexto.findUnique({ 
             where: { id: contextoId },
             include: { 
-                // [CORREÇÃO]: Nome correto da relação no schema é 'contextoversao'
                 contextoversao: { 
                     orderBy: { versaoNumero: 'desc' }, 
                     take: 1 
@@ -651,81 +653,126 @@ exports.createVersao = async (req, res) => {
         
         if (!contexto) return res.status(404).json({ message: 'Contexto não encontrado' });
         
-        // Verifica se o usuário pertence à mesma gerência (opcional, dependendo da regra)
+        // Verifica se o usuário pertence à mesma gerência
         if (contexto.gerenciaDonaId !== user.gerenciaId) {
-             // Se quiser permitir edição cruzada, remova esta linha ou ajuste a regra
              return res.status(403).json({ message: 'Você não tem permissão para criar versões nesta gerência.' });
         }
 
         // [CORREÇÃO]: Acessa 'contextoversao' em vez de 'versoes'
         const ultimaVersao = contexto.contextoversao[0];
-        const nextNum = (ultimaVersao?.versaoNumero || 0) + 1;
+        
+        // [LÓGICA DE CORREÇÃO]: Verifica se é uma resposta a uma correção solicitada
+        // Se a última versão está AGUARDANDO_CORRECAO, não criamos uma nova (v2), 
+        // mas atualizamos a mesma versão para AGUARDANDO_GERENTE.
+        const isCorrectionSubmission = ultimaVersao?.statusValidacao === 'AGUARDANDO_CORRECAO';
+        
+        // Se for correção, mantém o número. Se for nova versão sequencial, incrementa.
+        const nextNum = isCorrectionSubmission 
+            ? ultimaVersao.versaoNumero 
+            : (ultimaVersao?.versaoNumero || 0) + 1;
+
+        // Variáveis para o arquivo
+        let finalUrl = linkUrl;
+        let docType = 'LINK';
+        let isFileUploaded = !!req.file;
+
+        // Processamento de Arquivo (para ambos os casos)
+        if (contexto.tipo === 'ARQUIVO_LINK') {
+            if (req.file) {
+                try {
+                    finalUrl = await fileStorageService.moveFileToFinalDestination(
+                        req.file, 
+                        contexto.gerencia?.slug, 
+                        contextoId,
+                        contexto.tituloConceitual, 
+                        nextNum
+                    );
+                } catch (moveError) {
+                    throw new Error(`Falha ao salvar arquivo da versão: ${moveError.message}`);
+                }
+
+                const mime = req.file.mimetype || '';
+                if (mime.includes('pdf')) docType = 'PDF';
+                else if (mime.includes('sheet') || mime.includes('excel') || mime.includes('csv')) docType = 'EXCEL';
+                else if (mime.includes('word') || mime.includes('document')) docType = 'DOC';
+                else docType = 'PDF';
+
+            } else if (!finalUrl && ultimaVersao) {
+                 // Se não enviou nada novo, tenta copiar da versão anterior
+                 const prev = await prisma.versaoarquivo.findUnique({ 
+                     where: { versaoId: ultimaVersao.id }
+                 });
+                 if (prev) { 
+                     finalUrl = prev.url; 
+                     docType = prev.docType; 
+                 }
+            }
+        }
 
         const result = await prisma.$transaction(async (tx) => {
-            // Cria a nova versão
-            const v = await tx.contextoversao.create({
-                data: {
-                    id: crypto.randomUUID(),
-                    contextoId,
-                    titulo,
-                    descricao: descricao || null,
-                    solicitanteId: user.id,
-                    versaoNumero: nextNum,
-                    motivoNovaVersao: motivoNovaVersao || "Nova versão", // Garante um valor default
-                    descNovaVersao: descNovaVersao || null,
-                    statusValidacao: 'AGUARDANDO_GERENTE',
-                    isAtiva: false,
-                    isDestacado: false,
-                    updatedAt: new Date(),
-                },
-            });
+            let v; // A versão que estamos trabalhando
 
-            // Lógica específica por tipo
-            if (contexto.tipo === 'ARQUIVO_LINK') {
-                let finalUrl = linkUrl;
-                let docType = 'LINK';
+            if (isCorrectionSubmission) {
+                // --- FLUXO DE CORREÇÃO (UPDATE) ---
+                // Atualizamos a versão existente para voltar ao fluxo de aprovação
                 
-                if (req.file) {
-                    try {
-                        finalUrl = await fileStorageService.moveFileToFinalDestination(
-                            req.file, 
-                            contexto.gerencia?.slug, 
-                            contextoId,
-                            contexto.tituloConceitual, 
-                            nextNum
-                        );
-                    } catch (moveError) {
-                        throw new Error(`Falha ao salvar arquivo da versão: ${moveError.message}`);
+                v = await tx.contextoversao.update({
+                    where: { id: ultimaVersao.id },
+                    data: {
+                        titulo,
+                        descricao: descricao || null,
+                        // Mantemos o ID do solicitante original ou atualizamos? Geralmente atualizamos para quem corrigiu.
+                        solicitanteId: user.id, 
+                        motivoNovaVersao: motivoNovaVersao || null, // Motivo da correção
+                        descNovaVersao: descNovaVersao || null,
+                        statusValidacao: 'AGUARDANDO_GERENTE', // VOLTA PARA O GERENTE
+                        updatedAt: new Date(),
+                    },
+                });
+
+                // Se houve upload de novo arquivo, removemos o anexo antigo antes de criar o novo
+                if (contexto.tipo === 'ARQUIVO_LINK' && (isFileUploaded || (linkUrl && linkUrl !== ultimaVersao.versaoarquivo?.url))) {
+                    await tx.versaoarquivo.deleteMany({ where: { versaoId: v.id } });
+                }
+                
+                // Limpa dados antigos se for dashboard/indicador para recriar (opcional, ou update)
+                if (contexto.tipo === 'DASHBOARD') await tx.versaodashboard.deleteMany({ where: { versaoId: v.id } });
+                if (contexto.tipo === 'INDICADOR') await tx.versaoindicador.deleteMany({ where: { versaoId: v.id } });
+
+            } else {
+                // --- FLUXO DE NOVA VERSÃO (CREATE) ---
+                // Criamos uma nova entrada no histórico de versões
+                
+                v = await tx.contextoversao.create({
+                    data: {
+                        id: crypto.randomUUID(),
+                        contextoId,
+                        titulo,
+                        descricao: descricao || null,
+                        solicitanteId: user.id,
+                        versaoNumero: nextNum,
+                        motivoNovaVersao: motivoNovaVersao || "Nova versão",
+                        descNovaVersao: descNovaVersao || null,
+                        statusValidacao: 'AGUARDANDO_GERENTE',
+                        isAtiva: false,
+                        isDestacado: false,
+                        isOculta: false,
+                        updatedAt: new Date(),
+                    },
+                });
+            }
+
+            // --- CRIAÇÃO DOS DADOS ESPECÍFICOS (Comum aos dois fluxos) ---
+
+            if (contexto.tipo === 'ARQUIVO_LINK' && finalUrl) {
+                await tx.versaoarquivo.create({ 
+                    data: { 
+                        id: crypto.randomUUID(), 
+                        versaoId: v.id, 
+                        url: finalUrl, 
+                        docType 
                     }
-
-                    const mime = req.file.mimetype || '';
-                    if (mime.includes('pdf')) docType = 'PDF';
-                    else if (mime.includes('sheet') || mime.includes('excel') || mime.includes('csv')) docType = 'EXCEL';
-                    else if (mime.includes('word') || mime.includes('document')) docType = 'DOC';
-                    else docType = 'PDF'; // Fallback
-
-                } else if (!finalUrl && ultimaVersao) {
-                    // Se não enviou nada novo, tenta copiar da versão anterior
-                     const prev = await prisma.versaoarquivo.findUnique({ 
-                         where: { versaoId: ultimaVersao.id }
-                     });
-                     if (prev) { 
-                         finalUrl = prev.url; 
-                         docType = prev.docType; 
-                     }
-                }
-
-                if (finalUrl) {
-                    await tx.versaoarquivo.create({ 
-                        data: { 
-                            id: crypto.randomUUID(), 
-                            versaoId: v.id, 
-                            url: finalUrl, 
-                            docType 
-                        }
-                    });
-                }
-
+                });
             } else if (contexto.tipo === 'DASHBOARD' && dashboardPayload) {
                  await tx.versaodashboard.create({
                     data: { 
@@ -735,7 +782,6 @@ exports.createVersao = async (req, res) => {
                         payload: typeof dashboardPayload === 'object' ? JSON.stringify(dashboardPayload) : dashboardPayload 
                     }
                 });
-
             } else if (contexto.tipo === 'INDICADOR' && valorAtual !== undefined) {
                 await tx.versaoindicador.create({
                     data: { 
@@ -751,25 +797,27 @@ exports.createVersao = async (req, res) => {
                 });
             }
 
-            // Cria histórico inicial
+            // --- HISTÓRICO E NOTIFICAÇÕES ---
+            
+            // Sempre cria um novo registro no histórico, mesmo que seja uma correção (Update)
+            // Isso garante que sabemos quantas vezes foi corrigido.
             await tx.validacaohistorico.create({
                 data: {
                     id: crypto.randomUUID(),
                     versaoId: v.id,
                     autorId: user.id,
                     statusNovo: 'AGUARDANDO_GERENTE',
-                    justificativa: motivoNovaVersao || 'Criação de nova versão',
+                    justificativa: isCorrectionSubmission ? 'Correção enviada' : (motivoNovaVersao || 'Nova versão'),
                     timestamp: new Date()
                 }
             });
 
-            // Cria comentário automático
             await tx.comentario.create({
                 data: {
                     id: crypto.randomUUID(),
                     versaoId: v.id,
                     autorId: user.id,
-                    texto: `📤 Nova versão submetida.\nMotivo: "${motivoNovaVersao || 'Atualização'}".\nAguardando análise da Gerência.`,
+                    texto: `📤 ${isCorrectionSubmission ? 'Correção' : 'Nova versão'} submetida.\nMotivo: "${motivoNovaVersao || 'Atualização'}".\nAguardando análise da Gerência.`,
                     isPrivate: false,
                     timestamp: new Date()
                 }
@@ -780,21 +828,18 @@ exports.createVersao = async (req, res) => {
 
         // Notificações
         try {
-            // Garante que notificacaoService tenha a função correta implementada
-            if (notificacaoService.notifyGerentesDaGerencia) {
+            if (notificacaoService && typeof notificacaoService.notifyGerentesDaGerencia === 'function') {
                 await notificacaoService.notifyGerentesDaGerencia(
                     user.gerenciaId,
                     user.id,
                     result,
-                    `Nova versão "${titulo}" aguarda análise do Gerente.`
+                    `${isCorrectionSubmission ? 'Correção' : 'Nova versão'} "${titulo}" aguarda análise do Gerente.`
                 );
             } else {
-                // Fallback se a função tiver outro nome ou usar notificarNovaVersao
                 await notificacaoService.notificarNovaVersao(contexto, result, user);
             }
         } catch (notifError) {
-            console.error('Falha ao enviar notificação createVersao:', notifError);
-            // Não falha a requisição se apenas a notificação falhar
+            console.error('Falha notif createVersao:', notifError);
         }
 
         return res.status(201).json({ versao: result });
@@ -1139,3 +1184,102 @@ exports.buscar = async (req, res) => {
         return res.status(500).json({ message: 'Erro interno' });
     }
 };
+
+// src/controllers/contextoController.js
+
+// [NOVA FUNÇÃO]: Lista Contextos únicos (Caixas Organizadoras)
+exports.getContextosDaGerencia = async (req, res) => {
+    const { gerenciaId } = req.params;
+    const user = req.user;
+    
+    // Define se o usuário pode ver itens ocultos/pendentes
+    const isInterno = user && (user.role === 'GERENTE' || user.role === 'DIRETOR' || (user.role === 'MEMBRO' && user.gerenciaId === gerenciaId));
+
+    try {
+        const contextos = await prisma.contexto.findMany({
+            where: {
+                gerenciaDonaId: gerenciaId,
+                deletedAt: null, // Ignora lixeira
+                // Se não for interno, só traz contextos que tenham pelo menos uma versão publicada e ativa
+                ...( !isInterno ? {
+                    isOculto: false,
+                    contextoversao: {
+                        some: { statusValidacao: 'PUBLICADO', isAtiva: true }
+                    }
+                } : {})
+            },
+            include: {
+                gerencia: { select: { slug: true, nome: true } },
+                // Trazemos as versões para o frontend decidir qual mostrar
+                contextoversao: {
+                    orderBy: { versaoNumero: 'desc' }, // A [0] será a mais recente (seja pendente ou publicada)
+                    include: {
+                        versaoarquivo: true,
+                        versaodashboard: true,
+                        versaoindicador: true,
+                        user: { select: { nome: true } }
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+
+        // Mapeamento inteligente: Define qual versão é a "Capa" da caixa
+        const output = contextos.map(ctx => {
+            // Se for interno (Gestor), vê a versão mais recente absoluta (mesmo que seja rascunho/pendente)
+            // Se for público, vê a versão mais recente que esteja PUBLICADA
+            
+            let versaoAtiva = null;
+            
+            if (isInterno) {
+                // Pega a topo da pilha (ex: v2 pendente)
+                versaoAtiva = ctx.contextoversao[0];
+            } else {
+                // Pega a primeira que for PUBLICADA e ATIVA
+                versaoAtiva = ctx.contextoversao.find(v => v.statusValidacao === 'PUBLICADO' && v.isAtiva);
+            }
+
+            // Se não houver versão visível para este perfil, ignora o contexto (ou retorna null para filtrar depois)
+            if (!versaoAtiva) return null;
+
+            return mapContextoWithVersao(ctx, versaoAtiva, ctx.contextoversao);
+        }).filter(Boolean); // Remove os nulos
+
+        return res.json(output);
+
+    } catch (error) {
+        console.error("Erro ao listar contextos da gerência:", error);
+        return res.status(500).json({ message: 'Erro ao carregar contextos.' });
+    }
+};
+
+// Função auxiliar de mapeamento (atualize ou adicione se não existir)
+function mapContextoWithVersao(ctx, versaoPrincipal, todasVersoes) {
+    // Usa o mapper existente ou cria este objeto consolidado
+    return {
+        id: ctx.id,
+        tituloConceitual: ctx.tituloConceitual,
+        tipo: ctx.tipo,
+        gerenciaDonaId: ctx.gerenciaDonaId,
+        estaOculto: ctx.isOculto, // Importante para o badge
+        createdAt: ctx.createdAt,
+        
+        // Dados da versão "Capa"
+        titulo: versaoPrincipal.titulo,
+        descricao: versaoPrincipal.descricao,
+        status: versaoPrincipal.statusValidacao,
+        versaoNumero: versaoPrincipal.versaoNumero,
+        updatedAt: versaoPrincipal.updatedAt,
+        autor: versaoPrincipal.user?.nome || 'Sistema',
+        
+        // Anexos da versão capa
+        url: versaoPrincipal.versaoarquivo?.url,
+        docType: versaoPrincipal.versaoarquivo?.docType,
+        payload: versaoPrincipal.versaodashboard?.payload 
+            ? JSON.parse(versaoPrincipal.versaodashboard.payload) 
+            : null,
+        
+        // Lista completa para o histórico no modal
+        versoes: todasVersoes
+    };
+}
