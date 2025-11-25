@@ -2,7 +2,7 @@
 "use client";
 import { motion } from "framer-motion";
 import { authService } from "@/services/authService";
-import { useState, useEffect } from "react"; // 1. Importar Hooks
+import { useState, useEffect } from "react"; 
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -63,24 +63,26 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
   // --- LÓGICA DE DADOS ---
   
   // 3. Normalizar o role
-  // SE NÃO ESTIVER MONTADO (Server/First Render), forçamos "membro" para evitar erro de hidratação
   const normalizedRole = (isMounted ? role : "membro")?.toLowerCase() || "membro";
   const safeRole = normalizedRole === "admin" ? "secretario" : normalizedRole;
 
-  // 4. Obter o slug dinamicamente
-  const getDiretoriaSlug = () => {
-    // Só acessa o localStorage se estiver montado
-    if (!isMounted) return "secretaria";
-    
+  // 4. Obter os dados do usuário dinamicamente
+  const getUserData = () => {
+    if (!isMounted) return null;
     try {
-      const user = authService.getUser();
-      return user?.diretoriaSlug || "secretaria";
+      return authService.getUser();
     } catch {
-      return "secretaria";
+      return null;
     }
   };
-  
-  const currentSlug = getDiretoriaSlug();
+
+  const userData = getUserData();
+
+  // Slugs e IDs para os links
+  // Fallback para string vazia ou rota segura se não encontrar
+  const diretoriaSlug = userData?.diretoriaSlug || userData?.diretoriaId || "gestao-sus";
+  const diretoriaId = userData?.diretoriaId || userData?.diretoriaSlug || ""; // Usado para a página Minhas Gerências
+  const gerenciaSlug = userData?.gerenciaSlug || userData?.gerenciaId || "";
 
   // 5. Definição do Menu
   const menuOptions: Record<string, any[]> = {
@@ -94,8 +96,9 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
     ],
     diretor: [
       { label: "Página Inicial", icon: icons.home, href: "/" },
-      { label: "Dashboard da Diretoria", icon: icons.dashboard, href: `/dashboard/${currentSlug}` },
-      { label: "Minhas Gerências", icon: icons.minhasGerencias, href: "/diretorias" },
+      { label: "Dashboard da Diretoria", icon: icons.dashboard, href: `/dashboard/${diretoriaSlug}` },
+      // Link dinâmico para a página de lista de gerências
+      { label: "Minhas Gerências", icon: icons.minhasGerencias, href: `/minhas-gerencias/${diretoriaId}` }, 
       { label: "Validar Contextos", icon: icons.contextos, href: "/validar" },
       { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
       { label: "Central de Ajuda", icon: icons.ajuda, href: "/ajuda"},
@@ -103,7 +106,9 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
     ],
     gerente: [
       { label: "Página Inicial", icon: icons.home, href: "/" },
-      { label: "Minha Gerência", icon: icons.gerencia, href: `/dashboard/${currentSlug}` },
+      //{ label: "Minha Gerência", icon: icons.gerencia, href: `/dashboard/${currentSlug}` },
+      // Link dinâmico para a página da gerência específica
+      { label: "Minha Gerência", icon: icons.gerencia, href: `/gerencia/${gerenciaSlug}` }, 
       { label: "Validar Contextos", icon: icons.contextos, href: "/validar" },
       { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
       { label: "Central de Ajuda", icon: icons.ajuda, href: "/ajuda"},
@@ -111,27 +116,30 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
     ],
     membro: [
       { label: "Página Inicial", icon: icons.home, href: "/" },
-      { label: "Minha Gerência", icon: icons.gerencia, href: `/dashboard/${currentSlug}` },
-      { label: "Contextos Enviados", icon: icons.contextos, href: "/validar" },
+      // Link dinâmico para a página da gerência específica
+      { label: "Minha Gerência", icon: icons.gerencia, href: `/gerencia/${gerenciaSlug}` },
+      { label: "Contextos Enviados", icon: icons.contextosEnviados, href: "/validar" },
       { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
       { label: "Central de Ajuda", icon: icons.ajuda, href: "/ajuda"},
       { label: "Sair do Sistema", icon: icons.logout, href: "/logout" },
     ],
   };
 
-  // Seleciona as opções com base no role seguro, ou usa membro como fallback
+  // Seleciona as opções com base no role seguro
   const currentOptions = menuOptions[safeRole] || menuOptions['membro'];
 
   const isActive = (href: string) => {
     if (!pathname) return false;
     if (href === "/") return pathname === "/";
-    if (href.startsWith("/dashboard")) {
-      return pathname.startsWith("/dashboard");
-    }
+    
+    // Lógica especial para dashboards e gerências para manter ativo em sub-rotas
+    if (href.startsWith("/dashboard")) return pathname.startsWith("/dashboard");
+    if (href.startsWith("/gerencia")) return pathname.startsWith("/gerencia");
+    if (href.startsWith("/minhas-gerencias")) return pathname.startsWith("/minhas-gerencias");
+
     return pathname === href || pathname.startsWith(href + "/");
   };
 
-  // Renderização: O layout permanece, mas os dados sensíveis só aparecem após montagem
   return (
     <>
       {/* Overlay escuro no fundo */}
@@ -167,20 +175,27 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
           <div className="w-16 h-16 flex items-center justify-center mx-auto mb-2">
             <span className=" text-blue-600"><CircleUserRound strokeWidth={0.75} className="w-20 h-20" /></span>
           </div>
-          <h2 className="font-bold text-blue-700 text-sm">Usuário</h2>
-          {/* Exibe o role apenas quando montado para evitar flash de texto errado */}
-          <p className="text-xs text-blue-600 capitalize">{isMounted ? role : "Membro"}</p>
+          <h2 className="font-bold text-blue-700 text-sm">
+             {isMounted ? userData?.name || "Usuário" : "..."}
+          </h2>
+          <p className="text-xs text-blue-600 capitalize">{isMounted ? role : "..."}</p>
         </div>
 
         {/* Menu com scroll */}
         <nav className="flex flex-col gap-2 w-full overflow-y-auto px-2 pr-1 scrollbar-thin scrollbar-thumb-blue-300 scrollbar-track-transparent">
           {currentOptions.map(({ label, icon: Icon, href }) => {
             const active = isActive(href);
+            
+            // Se o link estiver vazio (ex: gerente sem gerencia vinculada), desabilita ou esconde
+            // Aqui optamos por manter mas talvez desativado visualmente se href for curto demais
+            if (href.length < 2 && label !== "Página Inicial") return null; 
+
             return (
               <Link
                 key={label}
                 href={href}
                 aria-current={active ? "page" : undefined}
+                onClick={onClose} // Fecha o menu ao clicar
                 className={cn(
                   "flex items-center gap-2 px-3 py-2 rounded-[15px] text-sm justify-center w-full border transition-colors",
                   active
