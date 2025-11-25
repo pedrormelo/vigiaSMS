@@ -3,6 +3,8 @@ const router = express.Router();
 const auth = require('../middlewares/authMiddleware');
 const ctrl = require('../controllers/dashboardController');
 
+router.get('/global-metrics', ctrl.getGlobalMetrics);
+
 // Highlights for Secretaria (must be before param route)
 router.get('/destaques', ctrl.getHighlights);
 router.get('/destaques/kpis', ctrl.getKpiHighlights);
@@ -17,7 +19,5 @@ router.get('/:diretoriaId', ctrl.getLayout);
 // Save layout - requires auth; controller enforces director/directoria match
 router.post('/:diretoriaId', auth(), ctrl.saveLayout);
 router.get('/health', (req, res) => res.json({ ok: true }));
-
-router.get('/global-metrics', auth(), ctrl.getGlobalMetrics);
 
 module.exports = router;

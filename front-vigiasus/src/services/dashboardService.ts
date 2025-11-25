@@ -28,8 +28,10 @@ export interface DiretoriaDashboardLayout {
 export interface GlobalMetrics {
     diretorias: number;
     gerencias: number;
-    usuarios: number;
-    documentos: number;
+    usuarios?: number;
+    documentos?: number;
+    contextos?: number;
+    dashboards?: number;
 }
 
 export async function getDiretoriaDashboardLayout(diretoriaId: string): Promise<DiretoriaDashboardLayout | null> {
@@ -357,22 +359,33 @@ export async function setVersaoDestaque(versaoId: string, highlighted: boolean):
     }
 }
 
-export async function getGlobalMetrics(): Promise<GlobalMetrics> {
+export async function getGlobalMetrics(): Promise<GlobalMetrics | null> {
     const base = apiBase();
-    const token = authService.getToken();
-    
-    const res = await fetch(`${base}/dashboard-layouts/global-metrics`, { // Ajuste a rota conforme o prefixo do seu arquivo de rotas
-        method: 'GET',
-        headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        },
-        next: { revalidate: 60 } // Cache de 60 segundos para não pesar o banco
-    });
+    if (!base) return null;
 
-    if (!res.ok) {
-        throw new Error('Falha ao carregar métricas.');
+    const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+    };
+
+    const token = authService.getToken();
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
     }
 
-    return await res.json();
+    try {
+        const res = await fetch(`${base}/dashboardlayout/global-metrics`, {
+            method: 'GET',
+            headers,
+            cache: 'no-store'
+        });
+
+        if (!res.ok) {
+            return null;
+        }
+
+        return await res.json();
+    } catch (error) {
+        console.error('Falha ao carregar métricas globais:', error);
+        return null;
+    }
 }

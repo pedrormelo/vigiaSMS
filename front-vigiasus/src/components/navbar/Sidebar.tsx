@@ -22,7 +22,9 @@ import {
   Layers,
   MessageSquareMore,
   FolderClock,
-  MessageCircleQuestionMark
+  MessageCircleQuestionMark,
+  Folder,
+  Box
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -35,13 +37,15 @@ interface SidebarProps {
 const icons = {
   home: HiHome,
   validarContextos: HiOutlineClipboardList,
-  contextos: BookCheck,
+  contextos: Box,
+  // contextos: BookCheck,
   logout: HiOutlineLogout,
   comentarios: MessageSquareMore,
   book: BookCheck,
   dashboard: LayoutDashboard,
   dadosGerais: GalleryVerticalEnd,
   minhasGerencias: Layers,
+  gerencia: Folder,
   contextosEnviados: FolderClock,
   ajuda: MessageCircleQuestionMark
 };
@@ -99,7 +103,7 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
     ],
     gerente: [
       { label: "Página Inicial", icon: icons.home, href: "/" },
-      { label: "Minha Gerência", icon: icons.dashboard, href: `/dashboard/${currentSlug}` },
+      { label: "Minha Gerência", icon: icons.gerencia, href: `/dashboard/${currentSlug}` },
       { label: "Validar Contextos", icon: icons.contextos, href: "/validar" },
       { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
       { label: "Central de Ajuda", icon: icons.ajuda, href: "/ajuda"},
@@ -107,8 +111,8 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
     ],
     membro: [
       { label: "Página Inicial", icon: icons.home, href: "/" },
-      { label: "Minha Gerência", icon: icons.dashboard, href: `/dashboard/${currentSlug}` },
-      { label: "Contextos Enviados", icon: icons.dashboard, href: "/validar" },
+      { label: "Minha Gerência", icon: icons.gerencia, href: `/dashboard/${currentSlug}` },
+      { label: "Contextos Enviados", icon: icons.contextos, href: "/validar" },
       { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
       { label: "Central de Ajuda", icon: icons.ajuda, href: "/ajuda"},
       { label: "Sair do Sistema", icon: icons.logout, href: "/logout" },

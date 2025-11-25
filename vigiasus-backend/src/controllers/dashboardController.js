@@ -519,7 +519,7 @@ exports.getKpiHighlights = async (req, res) => {
 exports.getGlobalMetrics = async (req, res) => {
     try {
         // Executa as contagens em paralelo para ser mais rápido
-        const [totalDiretorias, totalGerencias, totalUsuarios, totalContextos] = await Promise.all([
+        const [totalDiretorias, totalGerencias, totalUsuarios, totalContextos, totalDashboards] = await Promise.all([
             prisma.diretoria.count(),
             prisma.gerencia.count(),
             prisma.user.count(),
@@ -530,6 +530,12 @@ exports.getGlobalMetrics = async (req, res) => {
                     // Se quiser mostrar apenas publicados, descomente abaixo:
                     // contextoversao: { some: { statusValidacao: 'PUBLICADO', isAtiva: true } }
                 }
+            }),
+            prisma.contexto.count({
+                where: {
+                    deletedAt: null,
+                    tipo: 'DASHBOARD'
+                }
             })
         ]);
 
@@ -537,6 +543,8 @@ exports.getGlobalMetrics = async (req, res) => {
             diretorias: totalDiretorias,
             gerencias: totalGerencias,
             usuarios: totalUsuarios,
+            contextos: totalContextos,
+            dashboards: totalDashboards,
             documentos: totalContextos
         });
 

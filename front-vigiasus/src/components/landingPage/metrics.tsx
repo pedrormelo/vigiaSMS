@@ -1,7 +1,8 @@
 "use client"
 
-import { ReactNode, CSSProperties } from 'react'; 
-import { FileText, Users, Database, BarChart3 } from "lucide-react"; 
+import { ReactNode, CSSProperties, useEffect, useMemo, useState } from 'react';
+import { FileText, Users, Database, BarChart3 } from "lucide-react";
+import { getGlobalMetrics, type GlobalMetrics } from "@/services/dashboardService";
 
 interface MetricCardProps {
   icon: ReactNode;
@@ -13,7 +14,7 @@ interface MetricCardProps {
 
 function MetricCard({ icon, value, label, className, style }: MetricCardProps) {
   return (
-    <div 
+    <div
       className={`
         bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-6
         flex flex-col items-start gap-4 
@@ -26,7 +27,7 @@ function MetricCard({ icon, value, label, className, style }: MetricCardProps) {
       <div className="bg-gradient-to-br from-cyan-500 to-blue-600 p-3 rounded-full shadow-lg">
         {icon}
       </div>
-      
+
       <div>
         <p className="text-5xl font-bold text-white">{value}</p>
         <span className="text-sm text-blue-200">{label}</span>
@@ -36,39 +37,76 @@ function MetricCard({ icon, value, label, className, style }: MetricCardProps) {
 }
 
 export default function Metrics() {
+  const [metrics, setMetrics] = useState<GlobalMetrics | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+        try {
+          const data = await getGlobalMetrics();
+          if (active) {
+            setMetrics(data);
+          }
+        } finally {
+          if (active) setIsLoading(false);
+        }
+    })();
+    return () => { active = false; };
+  }, []);
+
+  const formatValue = (value?: number | null) => {
+    if (value === undefined || value === null) {
+      return isLoading ? "..." : "0";
+    }
+    const formatter = new Intl.NumberFormat('pt-BR');
+    const formatted = formatter.format(value);
+    return value >= 1000 ? `+${formatted}` : formatted;
+  };
+
+  const cards = useMemo(() => {
+    const contextos = metrics?.contextos ?? metrics?.documentos ?? null;
+    return [
+      {
+        icon: <BarChart3 size={28} className="text-white" />,
+        value: formatValue(contextos),
+        label: "Contextos no sistema",
+        delay: '0ms'
+      },
+      {
+        icon: <FileText size={28} className="text-white" />,
+        value: formatValue(metrics?.dashboards ?? null),
+        label: "Dashboards",
+        delay: '150ms'
+      },
+      {
+        icon: <Users size={28} className="text-white" />,
+        value: formatValue(metrics?.diretorias ?? null),
+        label: "Diretorias",
+        delay: '300ms'
+      },
+      {
+        icon: <Database size={28} className="text-white" />,
+        value: formatValue(metrics?.gerencias ?? null),
+        label: "Gerências",
+        delay: '450ms'
+      }
+    ];
+  }, [metrics, isLoading]);
+
   return (
     <div className="max-w-6xl mx-auto px-4 -mt-10 mb-16">
-     
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        
-        <MetricCard 
-          icon={<BarChart3 size={28} className="text-white" />}
-          value="+2 mil"
-          label="Contextos no sistema"
-          className="animate-fade-in-up"
-        />
-        
-        <MetricCard 
-          icon={<FileText size={28} className="text-white" />}
-          value="+20"
-          label="Dashboards"
-          className="animate-fade-in-up"
-          style={{ animationDelay: '150ms' }}
-        />
-        <MetricCard 
-          icon={<Users size={28} className="text-white" />}
-          value="5"
-          label="Diretorias"
-          className="animate-fade-in-up" 
-          style={{ animationDelay: '300ms' }}
-        />
-        <MetricCard 
-          icon={<Database size={28} className="text-white" />}
-          value="+40"
-          label="Gerências"
-          className="animate-fade-in-up" 
-          style={{ animationDelay: '450ms' }}
-        />
+        {cards.map((card, index) => (
+          <MetricCard
+            key={card.label}
+            icon={card.icon}
+            value={card.value}
+            label={card.label}
+            className="animate-fade-in-up"
+            style={{ animationDelay: card.delay || `${index * 150}ms` }}
+          />
+        ))}
       </div>
     </div>
   );
