@@ -290,7 +290,7 @@ export default function DashboardView() {
                 <div className="flex justify-between items-center">
                     <div className="min-h-[150px]">
                         <h1 className="text-4xl font-regular">{diretoria.nome}</h1>
-                        <p className="text-5xl mt-2 font-bold opacity-90">DASHBOARD</p>
+                        <p className="text-5xl mt-2 font-bold opacity-100">DASHBOARD</p>
                     </div>
 
                     {/* Botões do canto direito */}

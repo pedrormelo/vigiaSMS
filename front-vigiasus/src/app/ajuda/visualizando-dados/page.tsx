@@ -2,8 +2,9 @@
 
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   BookOpen, // Ícone da área (mantendo padrão do modelo)
@@ -288,9 +289,45 @@ const topicos = [
 // --- 3. COMPONENTE PRINCIPAL DA PÁGINA ---
 
 export default function VisualizandoDadosPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const topicParam = searchParams.get("topic");
+  const topicPrefix = "/ajuda/visualizando-dados/";
+
   const [activeTopicHref, setActiveTopicHref] = useState(topicos[0].href);
   const ActiveContentComponent = contentComponents[activeTopicHref] || DadosGeraisContent;
   const [searchValue, setSearchValue] = useState("");
+
+  const scrollToTop = () => {
+    const mainEl = document.getElementById('main-content-area');
+    if (mainEl) {
+      mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  useEffect(() => {
+    if (!topicParam) return;
+    const candidate = `${topicPrefix}${topicParam}`;
+    if (candidate !== activeTopicHref && topicos.some(topico => topico.href === candidate)) {
+      setActiveTopicHref(candidate);
+      scrollToTop();
+    }
+  }, [topicParam, activeTopicHref, topicPrefix]);
+
+  const handleTopicSelect = (href: string) => {
+    setActiveTopicHref(href);
+    setSearchValue("");
+    const slug = href.split("/").pop();
+    if (slug) {
+      router.replace(`${pathname}?topic=${slug}`, { scroll: false });
+    } else {
+      router.replace(pathname, { scroll: false });
+    }
+    scrollToTop();
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -337,10 +374,7 @@ export default function VisualizandoDadosPage() {
                 return (
                   <button
                     key={topico.href}
-                    onClick={() => {
-                      setActiveTopicHref(topico.href);
-                       window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
+                    onClick={() => handleTopicSelect(topico.href)}
                     className={cn(
                       "w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-left transition-colors",
                       isActive

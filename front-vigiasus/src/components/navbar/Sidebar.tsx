@@ -64,7 +64,7 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
   
   // 3. Normalizar o role
   const normalizedRole = (isMounted ? role : "membro")?.toLowerCase() || "membro";
-  const safeRole = normalizedRole === "admin" ? "secretario" : normalizedRole;
+  const safeRole = normalizedRole === "admin" ? "secretaria" : normalizedRole;
 
   // 4. Obter os dados do usuário dinamicamente
   const getUserData = () => {
@@ -86,11 +86,11 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
 
   // 5. Definição do Menu
   const menuOptions: Record<string, any[]> = {
-    secretario: [
+    secretaria: [
       { label: "Página Inicial", icon: icons.home, href: "/" },
       { label: "Dashboard", icon: icons.dashboard, href: `/dashboard/secretaria` },
       { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
-      { label: "Meus Comentários", icon: icons.comentarios, href: "/comentarios" },
+      //{ label: "Meus Comentários", icon: icons.comentarios, href: "/comentarios" },
       { label: "Central de Ajuda", icon: icons.ajuda, href: "/ajuda"},
       { label: "Sair do Sistema", icon: icons.logout, href: "/logout" },
     ],

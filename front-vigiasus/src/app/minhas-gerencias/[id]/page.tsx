@@ -12,13 +12,9 @@ import {
     Diretoria, 
     Gerencia 
 } from "@/services/organizacaoService";
+import { diretoriasConfig } from "@/constants/diretorias";
 
-// Componentes de UI para o Popover de Informação
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import InfoPopover from "@/components/dashboard/InfoPopover";
 
 export default function MinhasGerenciasPage() {
   const params = useParams();
@@ -93,56 +89,59 @@ export default function MinhasGerenciasPage() {
     );
   }
 
+  const diretoriaConfig = diretoria.slug ? diretoriasConfig[diretoria.slug] : undefined;
+  const bannerImage = diretoria.bannerImage || diretoriaConfig?.bannerImage || null;
+  const gradientFrom = diretoria.corFrom || diretoriaConfig?.cores?.from || "#1745FF";
+  const gradientTo = diretoria.corTo || diretoriaConfig?.cores?.to || "#1D4ED8";
+  const sobreDiretoria = diretoria.sobre || diretoriaConfig?.sobre || "Sem descrição disponível para esta diretoria.";
+
   return (
     <div className="bg-gray-50 min-h-screen">
-      {/* Header com gradiente dinâmico */}
+      {/* Header alinhado ao dashboard de diretoria */}
       <div
-        className="relative p-8 text-white shadow-lg"
+        className="relative p-10 text-white shadow-md"
         style={
-          diretoria.bannerImage
+          bannerImage
             ? {
-                backgroundImage: `url(${diretoria.bannerImage})`,
+                backgroundImage: `url(${bannerImage})`,
                 backgroundSize: "cover",
                 backgroundPosition: "center",
               }
             : {
-                background: `linear-gradient(to right, ${diretoria.corFrom || '#1e40af'}, ${diretoria.corTo || '#3b82f6'})`
+                background: `linear-gradient(to right, ${gradientFrom}, ${gradientTo})`,
               }
         }
       >
-        {/* Overlay para melhorar leitura */}
-        <div className="absolute inset-0 bg-black/20 z-0" />
-
-        <div className="flex justify-between items-center relative z-10">
+        <div className="flex justify-between items-center">
           {/* Títulos */}
-          <div>
-            <h1 className="text-4xl font-bold">
+          <div className="min-h-[150px]">
+            <h1 className="text-4xl font-regular">
               {diretoria.nome}
             </h1>
-            <p className="text-2xl font-light opacity-90 mt-1">Minhas Gerências</p>
+            <p className="text-5xl mt-2 font-bold opacity-100">MINHAS GERÊNCIAS</p>
           </div>
 
           {/* Botões do canto direito */}
           <div className="flex flex-col items-center gap-3">
-            
-            {/* Botão de Informação com Popover */}
-            <Popover>
-                <PopoverTrigger asChild>
-                    <button className="flex items-center justify-center mb-9 w-8 h-8 cursor-pointer bg-[#ffffff] text-[#1745FF] rounded-full border-none hover:bg-white/80 transition-all duration-200 shadow-sm">
-                        <Info size={20} />
-                    </button>
-                </PopoverTrigger>
-                <PopoverContent 
-                    align="end" 
-                    side="left"
-                    className="w-80 bg-white/95 backdrop-blur-sm p-5 rounded-2xl shadow-xl border-none text-gray-700"
+
+            <InfoPopover
+              trigger={
+                <button
+                  className="flex items-center justify-center mb-9 w-8 h-8 cursor-pointer bg-[#ffffff] text-[#1745FF] rounded-full border-none hover:bg-white/80 transition-all duration-200 shadow-sm"
+                  aria-label="Sobre esta diretoria"
                 >
-                    <h4 className="font-bold text-lg text-[#1745FF] mb-2">{diretoria.nome}</h4>
-                    <p className="text-sm leading-relaxed text-gray-600">
-                        {diretoria.sobre || "Sem descrição disponível para esta diretoria."}
-                    </p>
-                </PopoverContent>
-            </Popover>
+                  <Info size={20} />
+                </button>
+              }
+              heading="Sobre"
+              title={diretoria.nome}
+              description={sobreDiretoria}
+              side="left"
+              align="center"
+              sideOffset={12}
+              alignOffset={0}
+              showTail={false}
+            />
 
             {/* Botão de Dashboard com Redirecionamento */}
             <button 
@@ -167,16 +166,8 @@ export default function MinhasGerenciasPage() {
             title={`Acessar ${g.nome}`}
           >
               <GerenciaCard
-                key={g.id} // Mantém a key no componente filho também por segurança, ou remove do pai se for único
-                id={g.id}
                 label={g.nome}
-                // Dados extras para o card, se ele suportar
-                title={g.sigla || g.nome}
-                slug={g.slug}
-                image={g.image}
-                description={g.descricao}
-                // Passa a cor principal da diretoria
-                color={diretoria.corFrom || '#1e40af'}
+                color={gradientFrom}
               />
           </div>
         ))}

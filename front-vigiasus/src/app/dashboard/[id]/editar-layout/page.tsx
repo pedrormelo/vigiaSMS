@@ -350,7 +350,7 @@ export default function DashboardBuilder() {
         <div className="min-h-screen bg-[#FDFDFD]">
             {/* Header com gradiente dinâmico via 'style' */}
             <div
-                className="relative p-10 text-white shadow-lg"
+                className="relative p-10 text-white shadow-md"
                 style={
                     diretoria.bannerImage
                         ? {
@@ -369,14 +369,7 @@ export default function DashboardBuilder() {
                         <h1 className="text-4xl font-regular">
                             {diretoria.nome}
                         </h1>
-                        <p className="text-5xl mt-2 font-bold opacity-90">Painel de Dashboards</p>
-                    </div>
-
-                    {/* Botões do canto direito */}
-                    <div className="flex flex-col items-center gap-3">
-                        <button className="flex items-center justify-center mb-9 w-8 h-8 cursor-pointer bg-[#ffffff] text-[#1745FF] rounded-full border-none hover:bg-white/80 transition-all duration-200 shadow-sm">
-                            <Info size={20} />
-                        </button>
+                        <p className="text-5xl mt-2 font-bold opacity-100">Painel de Dashboards</p>
                     </div>
                 </div>
             </div>

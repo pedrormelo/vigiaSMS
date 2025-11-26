@@ -2,8 +2,9 @@
 
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   BookOpen,
@@ -123,14 +124,44 @@ const topicos = [
 // --- Componente Principal da Página ---
 
 export default function ModulosPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const topicParam = searchParams.get("topic");
+  const topicPrefix = "/ajuda/modulos/";
+
   const [activeTopicHref, setActiveTopicHref] = useState(topicos[0].href);
   const ActiveContentComponent = contentComponents[activeTopicHref] || GuiaCMSContent; // Fallback para o primeiro
   const [searchValue, setSearchValue] = useState("");
 
+  const scrollToTop = () => {
+    const mainEl = document.getElementById('main-content-area');
+    if (mainEl) {
+      mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  useEffect(() => {
+    if (!topicParam) return;
+    const candidate = `${topicPrefix}${topicParam}`;
+    if (candidate !== activeTopicHref && topicos.some(topico => topico.href === candidate)) {
+      setActiveTopicHref(candidate);
+      scrollToTop();
+    }
+  }, [topicParam, activeTopicHref, topicPrefix]);
+
   const handleTopicSelect = (href: string) => {
-      setActiveTopicHref(href);
-      setSearchValue(""); // Limpa busca ao selecionar
-       window.scrollTo({ top: 0, behavior: 'smooth' });
+    setActiveTopicHref(href);
+    setSearchValue("");
+    const slug = href.split("/").pop();
+    if (slug) {
+      router.replace(`${pathname}?topic=${slug}`, { scroll: false });
+    } else {
+      router.replace(pathname, { scroll: false });
+    }
+    scrollToTop();
   };
 
   return (

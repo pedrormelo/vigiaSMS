@@ -2,8 +2,9 @@
 
 "use client";
 
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft, BookOpen, ChevronRight, Navigation, Users, HelpCircle, LayoutDashboard, History, FilePlus, FileSymlink, UploadCloud, FileText as FileTextIcon, Link as LinkIcon, Eye, Trash2, Database, Upload, PieChart, BarChart3, AreaChart, Gauge, CopyPlus, SearchX, FileUp, Expand, Heart,
   Settings
@@ -13,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 // ATUALIZADO: Importar a SearchBar padrão
 import { SearchBar } from "@/components/ui/search-bar-faq";
-import { useDebounce } from "@/hooks/useDebounce";
 
 // --- Componentes de Conteúdo dos Tópicos (Permanecem os mesmos) ---
 
@@ -263,20 +263,44 @@ const contentComponents: { [key: string]: React.FC } = {
 };
 
 export default function GerenciandoConteudoPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const topicParam = searchParams.get("topic");
+  const topicPrefix = "/ajuda/gerenciando-conteudo/";
+
   const [activeTopicHref, setActiveTopicHref] = useState(currentAreaTopics[0]?.href || "");
   const ActiveContentComponent = contentComponents[activeTopicHref] || OQueEContextoContent; // Fallback
   const [searchValue, setSearchValue] = useState("");
-  
-  // Lógica de busca removida (useMemo, useEffect, etc.) para corresponder a primeiros-passos
 
-  // Lógica de seleção de tópico simplificada
+  const scrollToTop = () => {
+    const mainEl = document.getElementById('main-content-area');
+    if (mainEl) {
+      mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  useEffect(() => {
+    if (!topicParam) return;
+    const candidate = `${topicPrefix}${topicParam}`;
+    if (candidate !== activeTopicHref && currentAreaTopics.some(topico => topico.href === candidate)) {
+      setActiveTopicHref(candidate);
+      scrollToTop();
+    }
+  }, [topicParam, activeTopicHref, topicPrefix]);
+
   const handleTopicSelect = (href: string) => {
-      setActiveTopicHref(href);
-      setSearchValue(""); // Limpa busca ao selecionar um tópico da área
-      // Tentar scroll suave para o topo do conteúdo principal
-       const mainEl = document.getElementById('main-content-area');
-       if(mainEl) mainEl.scrollTo({ top: 0, behavior: 'smooth' });
-       else window.scrollTo({ top: 0, behavior: 'smooth' }); // Fallback para a janela
+    setActiveTopicHref(href);
+    setSearchValue(""); // Limpa busca ao selecionar um tópico da área
+    const slug = href.split("/").pop();
+    if (slug) {
+      router.replace(`${pathname}?topic=${slug}`, { scroll: false });
+    } else {
+      router.replace(pathname, { scroll: false });
+    }
+    scrollToTop();
   };
 
   return (
