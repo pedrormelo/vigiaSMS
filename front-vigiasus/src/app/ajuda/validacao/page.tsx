@@ -2,7 +2,7 @@
 
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
@@ -35,6 +35,8 @@ import Image from 'next/image';
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { SearchBar } from "@/components/ui/search-bar-faq"; // Usando a mesma barra de busca de "primeiros-passos"
+import { buildHelpSearchTokens, searchAjudaEntries } from "@/lib/ajudaSearch";
+import type { HelpSearchEntry } from "@/constants/ajudaSearchIndex";
 
 // --- Componentes de Conteúdo dos Tópicos ---
 
@@ -268,10 +270,16 @@ export default function ValidacaoPage() {
   const pathname = usePathname();
   const topicParam = searchParams.get("topic");
   const topicPrefix = "/ajuda/validacao/";
+  const areaId = "validacao";
 
   const [activeTopicHref, setActiveTopicHref] = useState(topicos[0].href);
   const ActiveContentComponent = contentComponents[activeTopicHref] || FluxoValidacaoContent;
   const [searchValue, setSearchValue] = useState("");
+  const searchTokens = useMemo(() => buildHelpSearchTokens(searchValue), [searchValue]);
+  const searchResults = useMemo<HelpSearchEntry[]>(
+    () => searchAjudaEntries(areaId, searchTokens, 6),
+    [searchTokens, areaId]
+  );
 
   const scrollToTop = () => {
     const mainEl = document.getElementById('main-content-area');
@@ -324,12 +332,34 @@ export default function ValidacaoPage() {
             </div>
             {/* Barra de Busca (Estilo "primeiros-passos") */}
             <div className="w-full md:w-full lg:max-w-3xl rounded-3xl">
-               <SearchBar
-                 placeholder="Buscar nesta seção..."
-                 value={searchValue}
-                 onChange={setSearchValue}
-                 className="shadow-sm"
-               />
+              <SearchBar
+                placeholder="Buscar nesta seção..."
+                value={searchValue}
+                onChange={setSearchValue}
+                className="shadow-sm"
+              />
+              {searchTokens.length > 0 && (
+                <div className="mt-4">
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-blue-700">Resultados nesta seção</h3>
+                  {searchResults.length > 0 ? (
+                    <div className="mt-2 space-y-2">
+                      {searchResults.map((result) => (
+                        <button
+                          key={result.id}
+                          type="button"
+                          onClick={() => handleTopicSelect(result.href)}
+                          className="w-full rounded-2xl border border-gray-200 bg-white/90 p-3 text-left transition-all duration-200 hover:border-blue-300 hover:shadow"
+                        >
+                          <div className="text-sm font-semibold text-gray-900">{result.title}</div>
+                          <p className="mt-1 text-xs text-gray-600">{result.summary}</p>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-2 text-xs text-gray-500">Nenhum tópico encontrado. Tente outras palavras.</p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

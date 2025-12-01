@@ -1,16 +1,29 @@
 // src/hooks/useHistoricoContextos.ts
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, type Dispatch, type SetStateAction } from "react";
 import { Contexto } from "@/components/validar/typesDados";
 import { getHistoricoContextos } from "@/services/contextoService";
 
 const ITEMS_PER_PAGE = 10;
 
-// 1. Definir o tipo para o dateRange
-type DateRange = { from: Date | undefined; to: Date | undefined };
+// 1. Definir o tipo para o dateRange (permite estado inicial indefinido)
+export type HistoricoDateRange = { from: Date | undefined; to: Date | undefined } | undefined;
 
-export const useHistoricoContextos = (searchQuery: string, dateRange: DateRange) => {
+interface UseHistoricoContextosReturn {
+  data: Contexto[];
+  error: string | null;
+  isLoading: boolean;
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  setCurrentPage: Dispatch<SetStateAction<number>>;
+}
+
+export const useHistoricoContextos = (
+  searchQuery: string,
+  dateRange: HistoricoDateRange
+): UseHistoricoContextosReturn => {
   const [data, setData] = useState<Contexto[]>([]);
   const [error, setError] = useState<string | null>(null);
   
@@ -19,6 +32,7 @@ export const useHistoricoContextos = (searchQuery: string, dateRange: DateRange)
   
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
+  const [totalItems, setTotalItems] = useState(0);
 
   useEffect(() => {
     const carregarHistorico = async () => {
@@ -31,6 +45,7 @@ export const useHistoricoContextos = (searchQuery: string, dateRange: DateRange)
         const response = await getHistoricoContextos(searchQuery, dateRange, currentPage, ITEMS_PER_PAGE);
         setData(response.data);
         setTotalPages(Math.ceil(response.total / ITEMS_PER_PAGE));
+        setTotalItems(response.total);
       } catch (err) {
         setError("Não foi possível carregar o histórico. Tente novamente mais tarde.");
         console.error(err);
@@ -50,5 +65,5 @@ export const useHistoricoContextos = (searchQuery: string, dateRange: DateRange)
   }, [searchQuery, dateRange]);
 
   // 7. Retornar o isLoading
-  return { data, error, isLoading, currentPage, totalPages, setCurrentPage };
+  return { data, error, isLoading, currentPage, totalPages, totalItems, setCurrentPage };
 };

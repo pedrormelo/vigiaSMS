@@ -2,7 +2,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
@@ -14,6 +14,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 // ATUALIZADO: Importar a SearchBar padrão
 import { SearchBar } from "@/components/ui/search-bar-faq";
+import { buildHelpSearchTokens, searchAjudaEntries } from "@/lib/ajudaSearch";
+import type { HelpSearchEntry } from "@/constants/ajudaSearchIndex";
 
 // --- Componentes de Conteúdo dos Tópicos (Permanecem os mesmos) ---
 
@@ -268,10 +270,16 @@ export default function GerenciandoConteudoPage() {
   const pathname = usePathname();
   const topicParam = searchParams.get("topic");
   const topicPrefix = "/ajuda/gerenciando-conteudo/";
+  const areaId = currentAreaId;
 
   const [activeTopicHref, setActiveTopicHref] = useState(currentAreaTopics[0]?.href || "");
   const ActiveContentComponent = contentComponents[activeTopicHref] || OQueEContextoContent; // Fallback
   const [searchValue, setSearchValue] = useState("");
+  const searchTokens = useMemo(() => buildHelpSearchTokens(searchValue), [searchValue]);
+  const searchResults = useMemo<HelpSearchEntry[]>(
+    () => searchAjudaEntries(areaId, searchTokens, 6),
+    [searchTokens, areaId]
+  );
 
   const scrollToTop = () => {
     const mainEl = document.getElementById('main-content-area');
@@ -325,14 +333,34 @@ export default function GerenciandoConteudoPage() {
 
             {/* Container da Barra de Busca (Direita) - Idêntico a primeiros-passos */}
             <div className="w-full md:w-full lg:max-w-3xl rounded-3xl">
-               <SearchBar
-                 placeholder="Buscar nesta seção..." // Placeholder idêntico
-                 value={searchValue}
-                 onChange={setSearchValue}
-                 className="shadow-sm"
-                 // Removido onFocus, onSearch, etc.
-               />
-               {/* Dropdown de Resultados Globais REMOVIDO */}
+              <SearchBar
+                placeholder="Buscar nesta seção..."
+                value={searchValue}
+                onChange={setSearchValue}
+                className="shadow-sm"
+              />
+              {searchTokens.length > 0 && (
+                <div className="mt-4">
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-blue-700">Resultados nesta seção</h3>
+                  {searchResults.length > 0 ? (
+                    <div className="mt-2 space-y-2">
+                      {searchResults.map((result) => (
+                        <button
+                          key={result.id}
+                          type="button"
+                          onClick={() => handleTopicSelect(result.href)}
+                          className="w-full rounded-2xl border border-gray-200 bg-white/90 p-3 text-left transition-all duration-200 hover:border-blue-300 hover:shadow"
+                        >
+                          <div className="text-sm font-semibold text-gray-900">{result.title}</div>
+                          <p className="mt-1 text-xs text-gray-600">{result.summary}</p>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-2 text-xs text-gray-500">Nenhum tópico encontrado. Tente outras palavras.</p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

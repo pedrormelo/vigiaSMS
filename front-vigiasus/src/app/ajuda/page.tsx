@@ -8,6 +8,7 @@ import type { LucideIcon } from 'lucide-react';
 import { SearchBar } from '@/components/ui/search-bar';
 import { BookOpen, FilePlus, Eye, CheckCheck, Settings, LifeBuoy } from 'lucide-react';
 import { ajudaSearchIndex } from '@/constants/ajudaSearchIndex';
+import { buildHelpSearchTokens, normalizeHelpSearchText } from '@/lib/ajudaSearch';
 
 interface AjudaArea {
   id: string;
@@ -32,13 +33,6 @@ const areasById: Record<string, AjudaArea> = areas.reduce((acc, area) => {
   return acc;
 }, {} as Record<string, AjudaArea>);
 
-const normalizeText = (value: string) =>
-  value
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim();
-
 type SearchResult = {
   areaId: string;
   areaName: string;
@@ -51,11 +45,7 @@ type SearchResult = {
 export default function PaginaAjudaPrincipal() {
   const [searchValue, setSearchValue] = useState(""); // Estado para a busca
 
-  const normalizedSearch = normalizeText(searchValue);
-  const searchTokens = useMemo(() => {
-    if (!normalizedSearch) return [] as string[];
-    return normalizedSearch.split(/\s+/).filter(Boolean);
-  }, [normalizedSearch]);
+  const searchTokens = useMemo(() => buildHelpSearchTokens(searchValue), [searchValue]);
 
   const searchResults = useMemo(() => {
     if (searchTokens.length === 0) return [] as SearchResult[];
@@ -63,7 +53,7 @@ export default function PaginaAjudaPrincipal() {
     return ajudaSearchIndex
       .map<SearchResult | null>(entry => {
         const area = areasById[entry.areaId];
-        const haystack = normalizeText(
+        const haystack = normalizeHelpSearchText(
           `${entry.title} ${entry.summary} ${(entry.keywords ?? []).join(' ')} ${area?.nome ?? ''} ${area?.description ?? ''}`
         );
         const matches = searchTokens.every(token => haystack.includes(token));

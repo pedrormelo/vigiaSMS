@@ -316,7 +316,6 @@ export default function ValidacaoContextos() {
              // Garante que se for dashboard, payload está disponível
              payload: contextoParaEditar.payload
         } : undefined}
-        modoEdicao={true}
       />
 
       <ExcluirContextoModal 

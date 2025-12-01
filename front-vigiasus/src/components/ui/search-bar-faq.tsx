@@ -99,7 +99,7 @@ export function SearchBar({
                 onClick={handleIconClick}
                 className={cn(
                     "z-10 grid place-items-center rounded-full",
-                    "h-10 w-10 sm:h-11 sm:h-11",
+                    "h-10 w-10 sm:h-11 sm:w-11",
                     "text-blue-600 hover:text-blue-500",
                     expanded ? "absolute left-2" : "relative bg-white shadow-sm border border-gray-200"
                 )}

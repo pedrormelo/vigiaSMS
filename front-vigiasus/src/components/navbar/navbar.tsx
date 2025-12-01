@@ -68,8 +68,8 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
     notifications,
     isLoading: isLoadingNotifications,
     isError: isErrorNotifications,
-    readNotifications, 
-    markAsRead, 
+    readNotifications,
+    markAsRead,
   } = useNotifications(userProfile?.name);
 
   const totalUnreadCount = useMemo(() => {
@@ -202,7 +202,7 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
   };
 
   // --- HANDLERS ---
-  
+
   const handleDeferir = async (versaoId: string, comentario?: string) => {
     const role = userProfile?.role;
     let endpoint = "";
@@ -211,114 +211,114 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
     else return;
 
     try {
-        const token = authService.getToken();
-        const res = await fetch(endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ comentario })
-        });
-        if (!res.ok) throw new Error("Falha ao deferir");
-        showSuccessToast("Sucesso", "Ação realizada com sucesso!");
-        setIsDetalhesContextoOpen(false);
-        router.refresh(); 
+      const token = authService.getToken();
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ comentario })
+      });
+      if (!res.ok) throw new Error("Falha ao deferir");
+      showSuccessToast("Sucesso", "Ação realizada com sucesso!");
+      setIsDetalhesContextoOpen(false);
+      router.refresh();
     } catch (e) { console.error(e); showErrorToast("Erro", "Não foi possível realizar a ação."); }
   };
 
   const handleIndeferir = async (versaoId: string, justificativa: string) => {
-     try {
-        const token = authService.getToken();
-        const res = await fetch(`${apiBase}/contextos/versoes/${versaoId}/diretor-indeferir`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ justificativa })
-        });
-        if (!res.ok) throw new Error("Falha ao indeferir");
-        showSuccessToast("Sucesso", "Contexto indeferido.");
-        setIsDetalhesContextoOpen(false);
-        router.refresh();
-     } catch (e) { console.error(e); showErrorToast("Erro", "Não foi possível indeferir."); }
+    try {
+      const token = authService.getToken();
+      const res = await fetch(`${apiBase}/contextos/versoes/${versaoId}/diretor-indeferir`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ justificativa })
+      });
+      if (!res.ok) throw new Error("Falha ao indeferir");
+      showSuccessToast("Sucesso", "Contexto indeferido.");
+      setIsDetalhesContextoOpen(false);
+      router.refresh();
+    } catch (e) { console.error(e); showErrorToast("Erro", "Não foi possível indeferir."); }
   };
 
   const handleCorrigir = async (versaoId: string, justificativa: string) => {
-     try {
-        const token = authService.getToken();
-        const res = await fetch(`${apiBase}/contextos/versoes/${versaoId}/solicitar-correcao`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ justificativa })
-        });
-        if (!res.ok) throw new Error("Falha ao solicitar correção");
-        showSuccessToast("Sucesso", "Correção solicitada.");
-        setIsDetalhesContextoOpen(false);
-        router.refresh();
-     } catch (e) { console.error(e); showErrorToast("Erro", "Não foi possível solicitar correção."); }
+    try {
+      const token = authService.getToken();
+      const res = await fetch(`${apiBase}/contextos/versoes/${versaoId}/solicitar-correcao`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ justificativa })
+      });
+      if (!res.ok) throw new Error("Falha ao solicitar correção");
+      showSuccessToast("Sucesso", "Correção solicitada.");
+      setIsDetalhesContextoOpen(false);
+      router.refresh();
+    } catch (e) { console.error(e); showErrorToast("Erro", "Não foi possível solicitar correção."); }
   };
 
   // Lógica de Abrir e Salvar Correção (Membro)
   const handleAbrirCorrecao = (contexto: Contexto) => {
-      setIsDetalhesContextoOpen(false);
-      setContextoParaCorrecao(contexto);
-      setTimeout(() => setIsCorrecaoModalOpen(true), 50);
+    setIsDetalhesContextoOpen(false);
+    setContextoParaCorrecao(contexto);
+    setTimeout(() => setIsCorrecaoModalOpen(true), 50);
   };
 
   // [CORREÇÃO]: Lógica de extração robusta baseada no tipo de envio
   const handleSalvarNovaVersao = async (dados: SubmitData) => {
-      if (!contextoParaCorrecao) return;
+    if (!contextoParaCorrecao) return;
 
-      try {
-          let payload: any = {};
-          let file: File | null = null;
+    try {
+      let payload: any = {};
+      let file: File | null = null;
 
-          // Lógica adaptada do GerenciaPage para extrair corretamente de dados.payload
-          if (dados.type === 'contexto') {
-              payload = {
-                  titulo: dados.payload.title?.trim(),
-                  descricao: dados.payload.details?.trim(),
-                  tipo: 'ARQUIVO_LINK',
-                  linkUrl: dados.payload.url?.trim(),
-                  motivoNovaVersao: "Correção solicitada"
-              };
-              file = dados.payload.file ?? null;
+      // Lógica adaptada do GerenciaPage para extrair corretamente de dados.payload
+      if (dados.type === 'contexto') {
+        payload = {
+          titulo: dados.payload.title?.trim(),
+          descricao: dados.payload.details?.trim(),
+          tipo: 'ARQUIVO_LINK',
+          linkUrl: dados.payload.url?.trim(),
+          motivoNovaVersao: "Correção solicitada"
+        };
+        file = dados.payload.file ?? null;
 
-          } else if (dados.type === 'dashboard') {
-              payload = {
-                  titulo: dados.payload.title?.trim(),
-                  descricao: dados.payload.details?.trim(),
-                  tipo: 'DASHBOARD',
-                  tipoGrafico: mapTipoGraficoParaBackend(dados.payload.type),
-                  dashboardPayload: dados.payload.dataset
-                      ? JSON.parse(JSON.stringify(dados.payload.dataset))
-                      : undefined,
-                  motivoNovaVersao: "Correção solicitada"
-              };
+      } else if (dados.type === 'dashboard') {
+        payload = {
+          titulo: dados.payload.title?.trim(),
+          descricao: dados.payload.details?.trim(),
+          tipo: 'DASHBOARD',
+          tipoGrafico: mapTipoGraficoParaBackend(dados.payload.type),
+          dashboardPayload: dados.payload.dataset
+            ? JSON.parse(JSON.stringify(dados.payload.dataset))
+            : undefined,
+          motivoNovaVersao: "Correção solicitada"
+        };
 
-          } else if (dados.type === 'indicador') {
-              payload = {
-                  titulo: dados.payload.titulo?.trim(),
-                  descricao: dados.payload.descricao?.trim(),
-                  tipo: 'INDICADOR',
-                  valorAtual: normalizarNumero(dados.payload.valorAtual),
-                  valorAlvo: normalizarNumero(dados.payload.valorAlvo),
-                  unidade: dados.payload.unidade,
-                  textoComparativo: dados.payload.textoComparativo,
-                  cor: dados.payload.cor,
-                  icone: dados.payload.icone,
-                  motivoNovaVersao: "Correção solicitada"
-              };
-          }
-
-          // Envia para o serviço
-          await criarVersao(contextoParaCorrecao.id, payload, file);
-          
-          showSuccessToast("Sucesso", "Nova versão enviada para análise.");
-          setIsCorrecaoModalOpen(false);
-          setContextoParaCorrecao(null);
-          router.refresh();
-
-      } catch (error) { 
-          console.error(error); 
-          showErrorToast("Erro", "Falha ao enviar correção."); 
+      } else if (dados.type === 'indicador') {
+        payload = {
+          titulo: dados.payload.titulo?.trim(),
+          descricao: dados.payload.descricao?.trim(),
+          tipo: 'INDICADOR',
+          valorAtual: normalizarNumero(dados.payload.valorAtual),
+          valorAlvo: normalizarNumero(dados.payload.valorAlvo),
+          unidade: dados.payload.unidade,
+          textoComparativo: dados.payload.textoComparativo,
+          cor: dados.payload.cor,
+          icone: dados.payload.icone,
+          motivoNovaVersao: "Correção solicitada"
+        };
       }
+
+      // Envia para o serviço
+      await criarVersao(contextoParaCorrecao.id, payload, file);
+
+      showSuccessToast("Sucesso", "Nova versão enviada para análise.");
+      setIsCorrecaoModalOpen(false);
+      setContextoParaCorrecao(null);
+      router.refresh();
+
+    } catch (error) {
+      console.error(error);
+      showErrorToast("Erro", "Falha ao enviar correção.");
+    }
   };
 
   const handleOpenContextoDetails = async (notification: Notification) => {
@@ -336,10 +336,10 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
         setIsDetalhesContextoOpen(true);
       } else {
         console.warn(`Contexto não encontrado.`);
-        setSelectedContexto({ id: notification.contextoId }); 
+        setSelectedContexto({ id: notification.contextoId });
         setIsDetalhesContextoOpen(true);
       }
-    } catch (error) { console.error(error); showErrorToast("Erro", "Erro ao carregar detalhes."); setIsNotificationsOpen(true); } 
+    } catch (error) { console.error(error); showErrorToast("Erro", "Erro ao carregar detalhes."); setIsNotificationsOpen(true); }
     finally { setIsLoadingContexto(false); }
   };
 
@@ -390,17 +390,17 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
         aoFechar={handleCloseDetalhesContexto}
         dadosDoContexto={selectedContexto}
         perfil={userProfile?.role ?? 'membro'}
-        
-        isFromHistory={false} 
+
+        isFromHistory={false}
         isValidation={isValidationMode}
-        
+
         // Se não estiver em validação (Membro), passa o handler de correção
         aoCriarNovaVersao={!isValidationMode ? handleAbrirCorrecao : undefined}
-        
+
         onDeferir={handleDeferir}
         onIndeferir={handleIndeferir}
         onCorrigir={handleCorrigir}
-        
+
         usuarioGerenciaId={userProfile?.gerenciaId}
       />
 
@@ -413,14 +413,13 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
         // [CORREÇÃO]: Passamos as props corretas para o Modal (Partial<Contexto>)
         // Usamos 'title' e 'description' que são as chaves de Contexto, não 'titulo'
         dadosIniciais={contextoParaCorrecao ? {
-             ...contextoParaCorrecao, // Espalha propriedades compatíveis
-             // Garante que payload do dashboard esteja disponível se necessário
-             payload: contextoParaCorrecao.payload
+          ...contextoParaCorrecao, // Espalha propriedades compatíveis
+          // Garante que payload do dashboard esteja disponível se necessário
+          payload: contextoParaCorrecao.payload
         } : undefined}
-        isEditing={true}
       />
 
-      {isLoadingContexto && ( <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center"> <Loader2 className="h-10 w-10 animate-spin text-blue-600" /> </div> )}
+      {isLoadingContexto && (<div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center"> <Loader2 className="h-10 w-10 animate-spin text-blue-600" /> </div>)}
     </>
   );
 }
