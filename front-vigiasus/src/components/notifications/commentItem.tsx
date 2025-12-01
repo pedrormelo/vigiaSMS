@@ -12,7 +12,7 @@ export default function CommentItem({ comment, hasSolidBg = false }: CommentItem
   const authorLabel = (comment as any).authorLabel;
 
   // --- MENSAGENS DE SISTEMA (TIMELINE) ---
-  if (role === 'system') {
+  if ((comment as any).role === 'system') {
     let sysStyle = "bg-gray-50 border-gray-200 text-gray-600";
     let Icon = ShieldAlert;
     let statusTitle = "Atualização de Status";

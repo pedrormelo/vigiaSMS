@@ -15,14 +15,14 @@ import { showErrorToast, showSuccessToast } from '@/components/ui/Toasts';
 import AbaDetalhes from './abaDetalhes';
 import AbaVersoes from './abaVersoes';
 
-import type { Contexto } from '@/components/validar/typesDados'; 
+import type { Contexto } from '@/components/validar/typesDados';
 import { getContextoById, toggleVisibilityContexto, toggleVisibilityVersao } from '@/services/contextoService';
 import { normalizarContexto } from '@/lib/normalizers';
 
 // [NOVO]: Importar o hook de usuário para auto-detecção de perfil
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 
-type PartialContexto = Partial<Contexto> & { id: string; [key: string]: any };
+type PartialContexto = Partial<Contexto> & { id: string;[key: string]: any };
 
 interface VisualizarContextoModalProps {
     estaAberto: boolean;
@@ -33,7 +33,7 @@ interface VisualizarContextoModalProps {
     aoCriarNovaVersao?: (dados: Contexto) => void;
     isEditing?: boolean;
     aoAlternarVisibilidadeVersao?: (contextoId: string, versaoId: number) => void;
-    aoAlternarVisibilidadeIndicador?: (contextoId: string) => void; 
+    aoAlternarVisibilidadeIndicador?: (contextoId: string) => void;
     isFromHistory?: boolean;
     isValidation?: boolean;
     onDeferir?: (versaoId: string, comentario?: string) => void | Promise<void>;
@@ -56,23 +56,23 @@ const BotaoAba = ({ id, label, Icon, abaAtiva, setAbaAtiva }: { id: TipoAba; lab
 export function VisualizarContextoModal({
     estaAberto,
     aoFechar,
-    dadosDoContexto, 
+    dadosDoContexto,
     aoCriarNovaVersao,
     perfil: perfilProp, // Renomeado para distinguir do hook
     isEditing,
     aoAlternarVisibilidadeVersao,
     aoAlternarVisibilidadeIndicador,
-    isFromHistory = false, 
+    isFromHistory = false,
     isValidation = false,
     onDeferir,
     onIndeferir,
     onCorrigir,
     usuarioGerenciaId: gerenciaIdProp
 }: VisualizarContextoModalProps) {
-    
+
     // [CORREÇÃO DE TIPAGEM]: O hook retorna o objeto do usuário diretamente
     const currentUser = useCurrentUser();
-    
+
     // Prioriza a prop passada, senão usa o do hook (role)
     const perfil = perfilProp || currentUser.role || 'membro';
     // Prioriza a prop passada, senão usa o do hook (gerenciaId)
@@ -81,9 +81,9 @@ export function VisualizarContextoModal({
     const [abaAtiva, setAbaAtiva] = useState<TipoAba>('detalhes');
     const [emTelaCheia, setEmTelaCheia] = useState(false);
     const [zoomLevel, setZoomLevel] = useState(1);
-    
-    const [correcaoOpen, setCorrecaoOpen] = useState(false); 
-    const [deferirOpen, setDeferirOpen] = useState(false); 
+
+    const [correcaoOpen, setCorrecaoOpen] = useState(false);
+    const [deferirOpen, setDeferirOpen] = useState(false);
 
     const [dadosLocais, setDadosLocais] = useState<Contexto | PartialContexto | null>(dadosDoContexto);
     const [isLoadingDetails, setIsLoadingDetails] = useState(false);
@@ -115,14 +115,14 @@ export function VisualizarContextoModal({
     // --- Lógica de Permissão para ver Histórico ---
     const contextoGerenciaId = useMemo(() => {
         if (!dadosLocais?.gerencia) return '';
-        return dadosLocais.gerencia as string; 
+        return dadosLocais.gerencia as string;
     }, [dadosLocais?.gerencia]);
-    
+
     const canViewApprovalHistory = useMemo(() => {
         const isAdmin = perfil === 'diretor' || perfil === 'gerente';
-        const isMemberOfContextGerencia = usuarioGerenciaId && contextoGerenciaId && 
-            (usuarioGerenciaId === contextoGerenciaId); 
-            
+        const isMemberOfContextGerencia = usuarioGerenciaId && contextoGerenciaId &&
+            (usuarioGerenciaId === contextoGerenciaId);
+
         if (isValidation) return true;
         return isAdmin || !!isMemberOfContextGerencia;
     }, [perfil, usuarioGerenciaId, contextoGerenciaId, isValidation]);
@@ -130,7 +130,7 @@ export function VisualizarContextoModal({
     // --- Normalização ---
     const normalizedData: Contexto | null = useMemo(() => {
         if (!dadosLocais) return null;
-        
+
         let dados: Contexto;
         try {
             dados = normalizarContexto(dadosLocais);
@@ -138,7 +138,7 @@ export function VisualizarContextoModal({
             console.error("Erro ao normalizar dados no modal:", error);
             return null;
         }
-        
+
         if (!canViewApprovalHistory) {
             if (dados.versoes && dados.versoes.length > 0) {
                 dados.versoes = dados.versoes.map(v => {
@@ -151,7 +151,7 @@ export function VisualizarContextoModal({
                 });
             }
             if (dados.historico && dados.historico.length > 0) {
-                 dados.historico = dados.historico.filter(h => {
+                dados.historico = dados.historico.filter(h => {
                     const s = String(h.statusNovo).toUpperCase();
                     return s.includes('PUBLICADO') || s.includes('INDEFERIDO') || s.includes('CRIADO');
                 });
@@ -167,39 +167,39 @@ export function VisualizarContextoModal({
         try {
             await toggleVisibilityVersao(normalizedData.id, versaoId);
             if (aoAlternarVisibilidadeVersao) {
-                 aoAlternarVisibilidadeVersao(normalizedData.id, versaoId);
+                aoAlternarVisibilidadeVersao(normalizedData.id, versaoId);
             }
             showSuccessToast(`Visibilidade da versão ${versaoId} atualizada.`);
         } catch (e: any) {
             showErrorToast(e.message || "Erro ao atualizar visibilidade da versão.");
         }
     };
-    
-    const handleToggleContexto = async (contextoId: string) => { 
+
+    const handleToggleContexto = async (contextoId: string) => {
         if (!normalizedData || !aoAlternarVisibilidadeIndicador) return;
         try {
             await toggleVisibilityContexto(contextoId);
             if (aoAlternarVisibilidadeIndicador) {
-                aoAlternarVisibilidadeIndicador(contextoId); 
+                aoAlternarVisibilidadeIndicador(contextoId);
             }
             showSuccessToast("Visibilidade do contexto atualizada.");
         } catch (e: any) {
             showErrorToast(e.message || "Erro ao atualizar visibilidade do contexto.");
         }
     };
-    
+
     const alternarTelaCheia = () => { setEmTelaCheia(!emTelaCheia); setZoomLevel(1); };
-    
+
     useEffect(() => {
         if (estaAberto) {
-            setAbaAtiva('detalhes'); 
+            setAbaAtiva('detalhes');
             setEmTelaCheia(false);
             setZoomLevel(1);
             setCorrecaoOpen(false);
-            setDeferirOpen(false); 
+            setDeferirOpen(false);
         }
     }, [estaAberto]);
-    
+
     const lidarComDownload = () => {
         if (!normalizedData?.url) return;
         const a = document.createElement('a');
@@ -207,14 +207,14 @@ export function VisualizarContextoModal({
         a.download = normalizedData.title || 'arquivo';
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
     };
-    
+
     const versaoEmJulgamento = useMemo(() => {
         if (!normalizedData?.versoes || normalizedData.versoes.length === 0) return null;
-        
+
         return normalizedData.versoes.reduce((prev, current) => {
             const prevNum = (prev as any).versaoNumero || (prev as any).numero || 0;
             const currNum = (current as any).versaoNumero || (current as any).numero || 0;
-            
+
             if (prevNum !== 0 || currNum !== 0) {
                 return prevNum > currNum ? prev : current;
             }
@@ -225,26 +225,26 @@ export function VisualizarContextoModal({
     // [LÓGICA DE PERMISSÃO ROBUSTA]
     const podeAgir = useMemo(() => {
         if (!normalizedData || isFromHistory || isEditing) return false;
-        
+
         // 1. Se veio explicitamente para validar
         if (isValidation) return true;
-        
+
         // 2. Se for Membro e estiver em correção
         if (perfil === 'membro' && aoCriarNovaVersao && versaoEmJulgamento) {
-             const statusParaChecar = versaoEmJulgamento.status || '';
-             const statusStr = String(statusParaChecar).toLowerCase().replace(/_/g, ' ');
-             return statusStr.includes('correção') || statusStr.includes('correcao') || statusStr.includes('aguardando correcao');
+            const statusParaChecar = versaoEmJulgamento.status || '';
+            const statusStr = String(statusParaChecar).toLowerCase().replace(/_/g, ' ');
+            return statusStr.includes('correção') || statusStr.includes('correcao') || statusStr.includes('aguardando correcao');
         }
 
         // 3. Lógica de Auto-Detecção (Funciona para Notificações)
         if ((perfil === 'gerente' || perfil === 'diretor') && versaoEmJulgamento) {
             const rawStatus = String(versaoEmJulgamento.status || "").toUpperCase();
             const status = rawStatus.replace(/\s+/g, '_');
-            
+
             if (perfil === 'gerente' && status.includes('AGUARDANDO_GERENTE')) return true;
             if (perfil === 'diretor' && status.includes('AGUARDANDO_DIRETOR')) return true;
         }
-        
+
         return false;
     }, [normalizedData, perfil, isFromHistory, isEditing, isValidation, aoCriarNovaVersao, versaoEmJulgamento]);
 
@@ -257,10 +257,10 @@ export function VisualizarContextoModal({
                 await onDeferir(String(idAlvo), undefined);
                 setDeferirOpen(false);
                 aoFechar();
-            } catch (e) {}
+            } catch (e) { }
         }
     };
-    
+
     const confirmCorrecao = async (justificativa: string) => {
         if (!justificativa.trim()) { showErrorToast("Justificativa obrigatória"); return; }
         if (onCorrigir && normalizedData) {
@@ -271,7 +271,7 @@ export function VisualizarContextoModal({
                 await onCorrigir(String(idAlvo), justificativa.trim());
                 setCorrecaoOpen(false);
                 aoFechar();
-            } catch (e) {}
+            } catch (e) { }
         }
     };
 
@@ -280,17 +280,17 @@ export function VisualizarContextoModal({
     };
 
     const renderAcaoBotoes = () => {
-         if (!podeAgir) return null; 
+        if (!podeAgir) return null;
 
-         if (!isValidation && perfil === 'membro') {
+        if (!isValidation && perfil === 'membro') {
             return (
                 <Button onClick={handleMembroEnviarCorrecao} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-6 py-2 shadow-sm">
                     <Upload className="mr-2 h-4 w-4" /> Enviar Correção
                 </Button>
             );
-         }
+        }
 
-         return (
+        return (
             <div className="flex gap-2">
                 <Button onClick={() => setCorrecaoOpen(true)} variant="outline" className="bg-amber-50 hover:bg-amber-100 border-amber-300 text-amber-700 rounded-xl">
                     <CornerUpLeft className="mr-1 h-4 w-4" /> Solicitar Correção
@@ -301,27 +301,27 @@ export function VisualizarContextoModal({
             </div>
         );
     };
-    
-    if (!estaAberto) return null; 
-    
+
+    if (!estaAberto) return null;
+
     // [PROTEÇÃO CONTRA CRASH]: Garante que normalizedData existe antes de renderizar
     if (!normalizedData) return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
             <div className="bg-white rounded-[40px] w-full max-w-6xl h-[90vh] flex flex-col shadow-2xl overflow-hidden">
                 <div className="bg-gradient-to-r from-[#0037C1] to-[#00BDFF] px-8 py-4 flex items-center justify-between rounded-t-[40px] flex-shrink-0">
                     <div className="flex items-center gap-3 min-w-0">
-                         <div className="w-8 h-8 flex items-center justify-center flex-shrink-0"><FileText className="w-6 h-6 text-white" /></div>
-                         <h2 className="text-2xl font-semibold text-white truncate">A carregar...</h2>
+                        <div className="w-8 h-8 flex items-center justify-center flex-shrink-0"><FileText className="w-6 h-6 text-white" /></div>
+                        <h2 className="text-2xl font-semibold text-white truncate">A carregar...</h2>
                     </div>
                     <Button size="icon" variant="ghost" onClick={aoFechar} className="bg-white/15 text-white hover:bg-white/30 rounded-2xl"> <ArrowLeft className="w-6 h-6" /> </Button>
                 </div>
-                 <div className="flex-1 flex items-center justify-center">
+                <div className="flex-1 flex items-center justify-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                 </div>
+                </div>
             </div>
         </div>
     );
-    
+
     const AcaoBotoesNode = renderAcaoBotoes();
 
     return (
@@ -363,7 +363,7 @@ export function VisualizarContextoModal({
                                     zoomLevel={zoomLevel}
                                     isFromHistory={isFromHistory}
                                     aoAlternarVisibilidadeContexto={handleToggleContexto}
-                                    isValidationView={isValidation || !!podeAgir} 
+                                    isValidationView={isValidation || !!podeAgir}
                                     podeAgir={!!podeAgir}
                                     versaoEmJulgamento={versaoEmJulgamento}
                                 />
@@ -381,11 +381,11 @@ export function VisualizarContextoModal({
                             )}
                         </div>
                     </div>
-                    
+
                     {/* Rodapé */}
                     {AcaoBotoesNode && (
                         <div className="px-6 py-3 bg-gray-50 flex justify-end items-center gap-4 flex-shrink-0 border-t border-gray-200 rounded-b-[40px]">
-                           {AcaoBotoesNode}
+                            {AcaoBotoesNode}
                         </div>
                     )}
                 </div>
@@ -412,10 +412,10 @@ export function VisualizarContextoModal({
                 onConfirm={handleConfirmarDeferimento}
                 contextoNome={normalizedData?.title || ''}
             />
-             
-             {emTelaCheia && normalizedData && (
+
+            {emTelaCheia && normalizedData && (
                 <div className="fixed inset-0 bg-white z-[60] flex flex-col animate-fade-in">
-                     <div className="absolute top-4 right-4 z-[70] flex items-center gap-2 p-2 bg-white/50 backdrop-blur-sm rounded-full shadow-lg border border-gray-200">
+                    <div className="absolute top-4 right-4 z-[70] flex items-center gap-2 p-2 bg-white/50 backdrop-blur-sm rounded-full shadow-lg border border-gray-200">
                         {(normalizedData.type === 'pdf' || normalizedData.type === 'doc') && (
                             <>
                                 <Button onClick={() => setZoomLevel(prev => Math.max(0.2, prev - 0.2))} variant="ghost" size="icon" className="rounded-full w-8 h-8"><ZoomOut className="w-5 h-5" /></Button>

@@ -5,7 +5,7 @@ import { authService } from "./authService";
 import { normalizeGraphType } from "@/lib/graphTypes";
 
 function apiBase() {
-  return (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/$/, "");
+    return (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/$/, "");
 }
 
 // --- INTERFACES DE ENTRADA (REQ) ---
@@ -49,20 +49,20 @@ interface BackendContextoBase {
     tituloConceitual: string;
     tipo: string;
     gerenciaDonaId: string;
-    isOculto?: boolean; 
-    estaOculto?: boolean; 
-    
+    isOculto?: boolean;
+    estaOculto?: boolean;
+
     gerenciaSlug?: string;
-    gerenciaNome?: string; 
+    gerenciaNome?: string;
     diretoriaSlug?: string;
-    
-    gerencia?: { 
-        slug?: string; 
-        nome?: string; 
+
+    gerencia?: {
+        slug?: string;
+        nome?: string;
         id?: string;
-        diretoriaId?: string; 
+        diretoriaId?: string;
     };
-    
+
     createdAt: string;
     autorOriginalId?: string;
 }
@@ -79,13 +79,13 @@ export interface BackendVersao {
     user?: { nome: string; email?: string };
     isAtiva: boolean;
     isDestacado: boolean;
-    isOculta?: boolean; 
+    isOculta?: boolean;
     versaoarquivo?: BackendDadosEspecificos | null;
     versaodashboard?: BackendDadosEspecificos | null;
     versaoindicador?: BackendDadosEspecificos | null;
     contexto?: BackendContextoBase;
-    
-    historico?: any[]; 
+
+    historico?: any[];
     validacaohistorico?: Array<{
         id: string;
         statusNovo: string;
@@ -169,7 +169,7 @@ export async function toggleVisibilityVersao(contextoId: string, versaoId: numbe
 export async function deleteContexto(contextoId: string): Promise<void> {
     const base = apiBase();
     const token = authService.getToken();
-    
+
     const res = await fetch(`${base}/contextos/${contextoId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
@@ -215,7 +215,7 @@ export async function criarContexto(dados: CriarContextoData, file?: File | null
         try {
             const j = await res.json();
             message = j?.message || message;
-        } catch {}
+        } catch { }
         throw new Error(`[${res.status}] ${message}`);
     }
 
@@ -253,7 +253,7 @@ export async function criarVersao(contextoId: string, dados: Partial<CriarContex
         try {
             const j = await res.json();
             message = j?.message || message;
-        } catch {}
+        } catch { }
         throw new Error(`[${res.status}] ${message}`);
     }
 
@@ -322,14 +322,14 @@ export const getContextosPendentes = async (): Promise<Contexto[]> => {
     const base = apiBase();
     const token = authService.getToken();
     try {
-        const res = await fetch(`${base}/contextos/pendentes`, { 
+        const res = await fetch(`${base}/contextos/pendentes`, {
             method: 'GET',
             headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-            cache: 'no-store' 
+            cache: 'no-store'
         });
-        
+
         if (!res.ok) return [];
-        
+
         const raw = await res.json();
         const list: (BackendVersao | BackendContexto)[] = Array.isArray(raw) ? raw : (raw?.data || []);
         return list.map(mapBackendToFrontend);
@@ -350,7 +350,7 @@ export const getContextosPorGerencia = async (idGerencia: string): Promise<Conte
             headers,
         });
         if (!res.ok) return [];
-        
+
         const body: (BackendVersao | BackendContexto)[] = await res.json();
         return body.map(mapBackendToFrontend);
     } catch (err) {
@@ -382,13 +382,13 @@ export const getContextoById = async (id: string): Promise<Contexto | null> => {
     const base = apiBase();
     const token = authService.getToken();
     try {
-        const res = await fetch(`${base}/contextos/detalhes/${id}`, { 
+        const res = await fetch(`${base}/contextos/detalhes/${id}`, {
             headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-            cache: 'no-store' 
+            cache: 'no-store'
         });
         if (!res.ok) return null;
         const body: any = await res.json();
-        
+
         let normalized: BackendContexto | BackendVersao;
         if (body && body.contexto && Array.isArray(body.versoes)) {
             const ctx = body.contexto;
@@ -404,7 +404,7 @@ export const getContextoById = async (id: string): Promise<Contexto | null> => {
         } else {
             normalized = body as (BackendContexto | BackendVersao);
         }
-        
+
         return mapBackendToFrontend(normalized);
     } catch (err) {
         console.error("Erro ao buscar detalhes do contexto:", err);
@@ -417,7 +417,7 @@ export async function getHistoricoContextos(
 ): Promise<HistoricoResponse> {
     const base = apiBase();
     const token = authService.getToken();
-    
+
     const params = new URLSearchParams();
     if (query) params.append('q', query);
     if (dateRange?.from) params.append('from', dateRange.from.toISOString());
@@ -459,7 +459,7 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
     let gerenciaId: string;
     let gerenciaSlug: string | undefined;
     let gerenciaNome: string | undefined;
-    let estaOcultoBackend: boolean = false; 
+    let estaOcultoBackend: boolean = false;
 
     let versaoRecente: BackendVersao | undefined;
     let versoesLista: BackendVersao[] = [];
@@ -472,32 +472,32 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
         tituloConceitual = ctx.tituloConceitual;
         tipoBackend = ctx.tipo;
         gerenciaId = ctx.gerenciaDonaId;
-        
+
         estaOcultoBackend = ctx.isOculto ?? ctx.estaOculto ?? false;
-        
+
         gerenciaSlug = ctx.gerenciaSlug || ctx.gerencia?.slug;
         gerenciaNome = ctx.gerenciaNome || ctx.gerencia?.nome;
 
         versoesLista = ctx.versoes || [];
         historicoGeralLista = ctx.historico || [];
-        
-            if (ctx.versaoAtiva) {
-                versaoRecente = ctx.versaoAtiva;
-            } else if (ctx.versoes && ctx.versoes.length) {
-                versaoRecente = ctx.versoes.reduce((acc, v) => {
-                    return (!acc || (v.versaoNumero > acc.versaoNumero)) ? v : acc;
-                }, ctx.versoes[0] as BackendVersao);
-            } else {
-                versaoRecente = undefined;
-            }
+
+        if (ctx.versaoAtiva) {
+            versaoRecente = ctx.versaoAtiva;
+        } else if (ctx.versoes && ctx.versoes.length) {
+            versaoRecente = ctx.versoes.reduce((acc, v) => {
+                return (!acc || (v.versaoNumero > acc.versaoNumero)) ? v : acc;
+            }, ctx.versoes[0] as BackendVersao);
+        } else {
+            versaoRecente = undefined;
+        }
     } else {
         // É uma Versão Isolada
         const v = item as BackendVersao;
         const ctxPai = v.contexto;
-        
+
         if (!ctxPai) {
             contextoId = "unknown";
-            tituloConceitual = v.titulo; 
+            tituloConceitual = v.titulo;
             tipoBackend = "ARQUIVO_LINK";
             gerenciaId = "";
         } else {
@@ -506,7 +506,7 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
             tipoBackend = ctxPai.tipo;
             gerenciaId = ctxPai.gerenciaDonaId;
             estaOcultoBackend = ctxPai.isOculto ?? ctxPai.estaOculto ?? false;
-            
+
             gerenciaSlug = ctxPai.gerenciaSlug || ctxPai.gerencia?.slug;
             gerenciaNome = ctxPai.gerenciaNome || ctxPai.gerencia?.nome;
         }
@@ -515,10 +515,10 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
         historicoGeralLista = v.validacaohistorico || v.historico || [];
     }
 
-    const dadosEspecificosRaw = versaoRecente 
+    const dadosEspecificosRaw = versaoRecente
         ? (versaoRecente.versaoarquivo || versaoRecente.versaodashboard || versaoRecente.versaoindicador || {})
         : {} as any;
-    
+
     const dadosEspecificos = {
         ...dadosEspecificosRaw,
         ...(dadosEspecificosRaw && typeof (dadosEspecificosRaw as any).payload === 'string'
@@ -539,13 +539,13 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
 
     const versoesFrontend: VersaoContexto[] = versoesLista.map(v => {
         const historicoVersaoRaw = v.historico || v.validacaohistorico || [];
-        
+
         const historicoVersaoFrontend: HistoricoItem[] = historicoVersaoRaw.map((h: any) => ({
             id: h.id,
             data: h.timestamp || h.data,
             autor: h.autorNome || h.user?.nome || h.autor || 'Sistema',
             acao: mapHistoricoLabel(h.statusNovo, h.justificativa),
-            statusNovo: h.statusNovo, 
+            statusNovo: h.statusNovo,
             justificativa: h.justificativa || ""
         }));
 
@@ -556,7 +556,7 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
             data: v.updatedAt,
             autor: v.solicitanteNome || v.user?.nome || v.solicitanteId || 'Sistema',
             status: mapStatus(v.statusValidacao),
-            estaOculta: v.isOculta ?? false, 
+            estaOculta: v.isOculta ?? false,
             historico: historicoVersaoFrontend
         };
     });
@@ -566,7 +566,7 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
         data: h.timestamp || h.data,
         autor: h.autorNome || h.user?.nome || h.autor || 'Sistema',
         acao: mapHistoricoLabel(h.statusNovo, h.justificativa),
-        statusNovo: h.statusNovo, 
+        statusNovo: h.statusNovo,
         justificativa: h.justificativa || ""
     }));
 
@@ -593,9 +593,9 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
         status: versaoRecente ? mapStatus(versaoRecente.statusValidacao) : StatusContexto.AguardandoGerente,
         description: versaoRecente?.descricao || undefined,
         gerencia: gerenciaNome || gerenciaSlug || gerenciaId,
-        payload: tipoBackend === 'DASHBOARD' ? (dadosEspecificos?.payload ?? undefined) : dadosEspecificos, 
+        payload: tipoBackend === 'DASHBOARD' ? (dadosEspecificos?.payload ?? undefined) : dadosEspecificos,
         url: absoluteUrl,
-        estaOculto: estaOcultoBackend, 
+        estaOculto: estaOcultoBackend,
         versoes: versoesFrontend,
         historico: historicoFrontend,
         solicitante: solicitantePrincipal,
