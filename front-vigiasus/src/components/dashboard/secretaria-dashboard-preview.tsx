@@ -8,16 +8,22 @@ import { cn } from "@/lib/utils"
 import { useEffect } from "react"
 import { getDiretorias, getGerencias, type Diretoria, type Gerencia } from "@/services/organizacaoService"
 
-import { ArrowLeft, ArrowRight, Icon } from "lucide-react"
+import { ArrowLeft, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface SecretariaDashboardPreviewProps {
     graphs: (GraphData | null)[]
-    pageSize?: number
     className?: string
 }
 
-export function SecretariaDashboardPreview({ graphs, pageSize = 6, className }: SecretariaDashboardPreviewProps) {
+type DiretoriaGroup = {
+    id: string;
+    nome: string;
+    graphs: GraphData[];
+    color?: string;
+}
+
+export function SecretariaDashboardPreview({ graphs, className }: SecretariaDashboardPreviewProps) {
     const [diretorias, setDiretorias] = useState<Diretoria[]>([])
     const [gerencias, setGerencias] = useState<Gerencia[]>([])
 
@@ -32,12 +38,12 @@ export function SecretariaDashboardPreview({ graphs, pageSize = 6, className }: 
         return () => { active = false }
     }, [])
     const highlighted = useMemo(
-        () => graphs.filter((g): g is GraphData => !!g && !!g.isHighlighted),
+        () => graphs.filter((g): g is GraphData => Boolean(g && g.isHighlighted)),
         [graphs]
     )
 
     // Group highlighted graphs by diretoria, using direct ids when available
-    const groups = useMemo(() => {
+    const groups = useMemo<DiretoriaGroup[]>(() => {
         const dirIdToSlug = new Map(diretorias.map(d => [d.id, d.slug || d.id]))
         const dirSlugToName = new Map(diretorias.map(d => [d.slug || d.id, d.nome]))
         const dirSlugToColor = new Map(diretorias.map(d => [d.slug || d.id, d.corFrom]))
@@ -81,7 +87,7 @@ export function SecretariaDashboardPreview({ graphs, pageSize = 6, className }: 
             map.get(dirSlug)!.push(graph)
         }
 
-        const ordered: { id: string; nome: string; graphs: GraphData[]; color?: string }[] = []
+        const ordered: DiretoriaGroup[] = []
         for (const slug of orderedSlugs) {
             ordered.push({
                 id: slug,
@@ -103,14 +109,6 @@ export function SecretariaDashboardPreview({ graphs, pageSize = 6, className }: 
     const prev = () => setPage(p => Math.max(1, p - 1))
     const next = () => setPage(p => Math.min(totalPages, p + 1))
 
-    if (highlighted.length === 0) {
-        return (
-            <div className={cn("bg-gray-50 rounded-2xl p-6 border-2 border-dashed border-gray-200", className)}>
-                <div className="text-center text-gray-500 py-16">Nenhum gráfico destacado pelas diretorias.</div>
-            </div>
-        )
-    }
-
     // choose DashboardPreview layout based on count
     const count = current?.graphs.length ?? 0
     const chooseLayout = (n: number): LayoutType => {
@@ -131,9 +129,17 @@ export function SecretariaDashboardPreview({ graphs, pageSize = 6, className }: 
     }, [page, layout, current?.graphs.length])
 
     const titleStyle = useMemo(() => {
-        const color = (current as any)?.color as string | undefined
+        const color = current?.color
         return color ? { color } : undefined
-    }, [current])
+    }, [current?.color])
+
+    if (highlighted.length === 0) {
+        return (
+            <div className={cn("bg-gray-50 rounded-2xl p-6 border-2 border-dashed border-gray-200", className)}>
+                <div className="text-center text-gray-500 py-16">Nenhum gráfico destacado pelas diretorias.</div>
+            </div>
+        )
+    }
 
     return (
         <div className={cn("bg-gray-50/25 rounded-2xl p-6 border border-gray-200 shadow-sm", className)}>

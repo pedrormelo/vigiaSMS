@@ -16,19 +16,6 @@ import { authService } from "@/services/authService";
 
 interface Props { notification: Notification | null; isRead: boolean; onOpenContexto: (n: Notification) => void; }
 
-// Mesma configuração de fundos definida no Settings
-const backgroundConfig: { id: string; src?: string; type: string; solid: boolean }[] = [
-    { id: 'none', type: 'none', solid: false },
-    { id: 'gradient', type: 'gradient', solid: false },
-    { id: 'bg-chat', src: '/chat/bg-chat.png', type: 'image', solid: false },
-    { id: 'bg-chat-2', src: '/chat/bg-chat-2.png', type: 'image', solid: false },
-    { id: 'bg-chat-3', src: '/chat/bg-chat-3.png', type: 'image', solid: false },
-    { id: 'bg-chat-4', src: '/chat/bg-chat-4.png', type: 'image', solid: true },
-    { id: 'bg-chat-5', src: '/chat/bg-chat-5.png', type: 'image', solid: false },
-    { id: 'bg-chat-6', src: '/chat/bg-chat-6.png', type: 'image', solid: true },
-    { id: 'bg-chat-7', src: '/chat/bg-chat-7.png', type: 'image', solid: true },
-];
-
 function getStatusBadge(text: string, realStatus?: string) {
     if (realStatus) {
         if (realStatus === 'AGUARDANDO_GERENTE') return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-yellow-100 text-yellow-800 border border-yellow-200">AGUARDA GERENTE</span>;
