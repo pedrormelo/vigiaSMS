@@ -71,9 +71,10 @@ export function toIndicatorCardProps(indicator: Contexto) {
         "#EC4899": "border-l-pink-500",
     };
 
-    const changeTypeMap = (text: string = ""): "positive" | "negative" | "neutral" => {
-        if (text.startsWith('+')) return 'positive';
-        if (text.startsWith('-')) return 'negative';
+    const changeTypeMap = (text?: string | null): "positive" | "negative" | "neutral" => {
+        const normalized = text?.trim() ?? "";
+        if (normalized.startsWith('+')) return 'positive';
+        if (normalized.startsWith('-')) return 'negative';
         return 'neutral';
     };
 
@@ -83,7 +84,7 @@ export function toIndicatorCardProps(indicator: Contexto) {
         value: payload.valorAtual || "0",
         unidade: payload.unidade || "",
         subtitle: payload.description || indicator.description || "",
-        change: payload.textoComparativo || "",
+        change: payload.textoComparativo?.trim() || "",
         changeType: changeTypeMap(payload.textoComparativo),
         borderColor: borderColorMap[payload.cor] || "border-l-gray-500",
         iconType: iconMap[iconName] || "cruz",
