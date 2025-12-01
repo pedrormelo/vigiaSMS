@@ -55,26 +55,20 @@ const ChatNotificationDetails: React.FC<Props> = ({ notification, onOpenContexto
   
   const [canValidate, setCanValidate] = useState(false);
 
-  const isSolidBg = backgroundConfig.find(bg => 
-      (bg.type === 'image' && bg.src === chatBg) || 
-      (bg.type === chatBg) || 
-      (bg.id === chatBg)
-  )?.solid || false;
-
   useEffect(() => {
     let active = true;
     async function loadData() {
       if (notification?.id) {
         try {
-          const [msgs, parts] = await Promise.all([
+           const [msgs, parts] = await Promise.all([
              notifService.getCommentsForNotification(notification.id),
              notifService.getParticipantes(notification.id)
-          ]);
-          
-          const user = authService.getUser();
-          const status = (notification as any).contextStatus || '';
-          const gId = (notification as any).contextGerenciaId;
-          const dId = (notification as any).contextDiretoriaId;
+           ]);
+
+           const user = authService.getUser();
+           const status = notification.contextStatus || '';
+           const gId = notification.contextGerenciaId;
+           const dId = notification.contextDiretoriaId;
           
           let _canVal = false;
           if (user && user.role) {
@@ -105,12 +99,7 @@ const ChatNotificationDetails: React.FC<Props> = ({ notification, onOpenContexto
   if (!notification) return null;
   
   // [CORREÇÃO AQUI]: Removemos contextTitle da desestruturação para evitar o erro
-  const { title, description, type, relatedFileType, contextoId } = notification; 
-  
-  // Acessamos as propriedades extras usando 'as any' para contornar a tipagem estrita
-  const contextTitle = (notification as any).contextTitle;
-  const contextStatus = (notification as any).contextStatus;
-  const contextGerencia = (notification as any).contextGerencia;
+  const { title, description, type, relatedFileType, contextoId, contextTitle, contextStatus, contextGerencia } = notification; 
 
   const mainTitle = contextTitle || title;
   const iconType = (relatedFileType || type) as FileType;
@@ -120,8 +109,8 @@ const ChatNotificationDetails: React.FC<Props> = ({ notification, onOpenContexto
 
   const handleOpenClick = () => {
       // Passa a flag isValidationAction para o Modal saber que é uma validação
-      const notifToOpen = canValidate 
-        ? { ...notification, isValidationAction: true } as any as Notification
+      const notifToOpen: Notification = canValidate 
+        ? { ...notification, isValidationAction: true }
         : notification;
       
       onOpenContexto(notifToOpen);
@@ -179,7 +168,6 @@ const ChatNotificationDetails: React.FC<Props> = ({ notification, onOpenContexto
             <CommentItem 
                 key={c.id} 
                 comment={c} 
-                // hasSolidBg={isSolidBg} // Removido para evitar erro se o componente não estiver atualizado
             />
         )) : <div className="flex-1 flex items-center justify-center text-gray-500 bg-white/80 rounded-xl m-4 backdrop-blur-sm">Nenhum comentário.</div>}
       </div>

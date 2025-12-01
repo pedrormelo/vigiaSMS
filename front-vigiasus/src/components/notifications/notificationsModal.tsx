@@ -38,7 +38,7 @@ export default function NotificationsModal({
         return savedFilter;
       }
       return 'all';
-    } catch (e) {
+    } catch {
       return 'all';
     }
   });
@@ -85,7 +85,7 @@ export default function NotificationsModal({
 
   const handleFilterChange = (filter: ActiveFilter) => {
     setActiveFilter(filter);
-    try { localStorage.setItem('notifications.activeFilter', filter); } catch (e) { }
+    try { localStorage.setItem('notifications.activeFilter', filter); } catch { /* noop */ }
   };
 
   useEffect(() => {

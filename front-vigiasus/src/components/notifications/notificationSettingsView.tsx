@@ -40,14 +40,14 @@ export default function NotificationSettingsView({
       const migrated = legacy === 'true' ? '/chat/bg-chat-3.png' : 'gradient';
       localStorage.setItem('notifications.chatBg', migrated);
       return migrated;
-    } catch (e) {
+    } catch {
       return 'gradient';
     }
   });
 
   const handleSelectBackground = (bgId: string) => {
     setSelectedBg(bgId);
-    try { localStorage.setItem('notifications.chatBg', bgId); } catch (e) {}
+    try { localStorage.setItem('notifications.chatBg', bgId); } catch { /* noop */ }
   };
 
   useEffect(() => {
@@ -62,7 +62,7 @@ export default function NotificationSettingsView({
 
   const handleFilterClick = (filter: ActiveFilter) => {
     onFilterChange(filter);
-    try { localStorage.setItem('notifications.activeFilter', filter); } catch (e) {}
+    try { localStorage.setItem('notifications.activeFilter', filter); } catch { /* noop */ }
   };
 
   return (

@@ -2,25 +2,49 @@
 // Ensures the loader script is injected once and returns a promise that resolves
 // when google.charts is ready to use.
 
-let loaderPromise: Promise<any> | null = null;
+type GoogleChartsLoaderStatus = 'ready' | 'timeout' | 'error';
 
-export function loadGoogleCharts(packages: string[] = ['corechart', 'bar']): Promise<any> {
+interface GoogleVisualizationNamespace {
+    DataTable?: new (...args: unknown[]) => unknown;
+    PieChart?: unknown;
+}
+
+interface GoogleChartsNamespace {
+    load: (version: 'current', options: { packages: string[] }) => void;
+    setOnLoadCallback: (callback: () => void) => void;
+}
+
+interface GoogleGlobal {
+    charts?: GoogleChartsNamespace;
+    visualization?: GoogleVisualizationNamespace;
+}
+
+declare global {
+    interface Window {
+        google?: GoogleGlobal;
+        __googleChartsLoaderStatus?: GoogleChartsLoaderStatus;
+    }
+}
+
+let loaderPromise: Promise<GoogleGlobal> | null = null;
+
+export function loadGoogleCharts(packages: string[] = ['corechart', 'bar']): Promise<GoogleGlobal> {
     if (typeof window === 'undefined') {
         return Promise.reject(new Error('Google Charts can only be loaded in the browser'));
     }
 
     // If google.visualization already exists AND the core packages seem loaded, resolve immediately.
     // (Esta verificação é otimista, mas agora verifica PieChart)
-    if ((window as any).google && (window as any).google.visualization && (window as any).google.visualization.PieChart) {
-        return Promise.resolve((window as any).google);
+    const existingGoogle = window.google;
+    if (existingGoogle && existingGoogle.visualization?.PieChart) {
+        return Promise.resolve(existingGoogle);
     }
 
-    if (loaderPromise) return loaderPromise;
-
-    loaderPromise = new Promise((resolve, reject) => {
+    if (!loaderPromise) {
+        loaderPromise = new Promise<GoogleGlobal>((resolve, reject) => {
             try {
                 const existing = document.querySelector('script[data-google-charts-loader]');
-                const debug = (...args: any[]) => {
+                const debug = (...args: unknown[]) => {
                     if (typeof console !== 'undefined' && (console.debug || console.log)) {
                         (console.debug || console.log)('[googleCharts]', ...args)
                     }
@@ -31,11 +55,11 @@ export function loadGoogleCharts(packages: string[] = ['corechart', 'bar']): Pro
                     const start = Date.now();
                     const timeoutMs = 12000;
                     const interval = setInterval(() => {
-                        const g = (window as any).google;
+                        const g = window.google;
                         if (g && g.visualization && typeof g.visualization.DataTable === 'function') {
                             clearInterval(interval);
                             debug('google.visualization.DataTable ready (polled)');
-                            (window as any).__googleChartsLoaderStatus = 'ready';
+                            window.__googleChartsLoaderStatus = 'ready';
                             resolve(g);
                             return;
                         }
@@ -56,7 +80,7 @@ export function loadGoogleCharts(packages: string[] = ['corechart', 'bar']): Pro
                     script.onload = () => {
                         debug('loader script onload')
                         try {
-                            (window as any).google.charts.load('current', { packages })
+                            window.google?.charts?.load('current', { packages })
 
                             const timeoutMs = 12000
                             let timeoutId: number | undefined
@@ -68,16 +92,21 @@ export function loadGoogleCharts(packages: string[] = ['corechart', 'bar']): Pro
                                 }
                             }
 
-                            ;(window as any).google.charts.setOnLoadCallback(() => {
+                            window.google?.charts?.setOnLoadCallback(() => {
                                 clear()
                                 debug('google.charts.setOnLoadCallback fired')
-                                ;(window as any).__googleChartsLoaderStatus = 'ready'
-                                resolve((window as any).google)
+                                window.__googleChartsLoaderStatus = 'ready'
+                                const googleInstance = window.google
+                                if (!googleInstance) {
+                                    reject(new Error('Google Charts callback fired without global google object'))
+                                    return
+                                }
+                                resolve(googleInstance)
                             })
 
                             timeoutId = window.setTimeout(() => {
                                 debug('timeout waiting google.charts.setOnLoadCallback')
-                                ;(window as any).__googleChartsLoaderStatus = 'timeout'
+                                window.__googleChartsLoaderStatus = 'timeout'
                                 reject(new Error('Timed out loading Google Charts'))
                             }, timeoutMs)
 
@@ -85,46 +114,57 @@ export function loadGoogleCharts(packages: string[] = ['corechart', 'bar']): Pro
                             finishWhenVisualizationReady()
                         } catch (err) {
                             debug('error during onload handling', err)
-                            ;(window as any).__googleChartsLoaderStatus = 'error'
+                            window.__googleChartsLoaderStatus = 'error'
                             reject(err)
                         }
                     }
                     script.onerror = () => {
                         debug('loader script error')
-                        ;(window as any).__googleChartsLoaderStatus = 'error'
+                        window.__googleChartsLoaderStatus = 'error'
                         reject(new Error('Failed to load Google Charts script'))
                     }
                     document.head.appendChild(script)
                 } else {
                     debug('loader script already present')
                     // Se o script já existe, a lógica de fallback (com polling) é aceitável
-                    if ((window as any).google && (window as any).google.visualization && typeof (window as any).google.visualization.DataTable === 'function') {
+                    const googleInstance = window.google;
+                    if (googleInstance && googleInstance.visualization && typeof googleInstance.visualization.DataTable === 'function') {
                         debug('google.visualization.DataTable already available')
-                        resolve((window as any).google)
-                    } else if ((window as any).google && (window as any).google.charts) {
+                        resolve(googleInstance)
+                    } else if (googleInstance?.charts) {
                         debug('google.charts present, calling load')
                         try {
-                            ;(window as any).google.charts.load('current', { packages })
-                            ;(window as any).google.charts.setOnLoadCallback(() => {
+                            googleInstance.charts.load('current', { packages })
+                            googleInstance.charts.setOnLoadCallback(() => {
                                 debug('google.charts.setOnLoadCallback fired (existing script)')
-                                ;(window as any).__googleChartsLoaderStatus = 'ready'
-                                resolve((window as any).google)
+                                window.__googleChartsLoaderStatus = 'ready'
+                                const updatedGoogle = window.google
+                                if (!updatedGoogle) {
+                                    reject(new Error('Google Charts callback fired without global google object'))
+                                    return
+                                }
+                                resolve(updatedGoogle)
                             })
                             // O polling aqui é OK como fallback caso o callback falhe
                             finishWhenVisualizationReady() 
                         } catch (err) {
                                     debug('error while calling google.charts.load', err)
-                                    ;(window as any).__googleChartsLoaderStatus = 'error'
+                                    window.__googleChartsLoaderStatus = 'error'
                                     reject(err)
                         }
                     } else {
                         debug('waiting for existing script load event')
                         const onLoad = () => {
                             try {
-                                ;(window as any).google.charts.load('current', { packages })
-                                ;(window as any).google.charts.setOnLoadCallback(() => {
+                                window.google?.charts?.load('current', { packages })
+                                window.google?.charts?.setOnLoadCallback(() => {
                                     debug('google.charts.setOnLoadCallback fired (after existing load)')
-                                    resolve((window as any).google)
+                                    const reloadedGoogle = window.google
+                                    if (!reloadedGoogle) {
+                                        reject(new Error('Google Charts callback fired without global google object'))
+                                        return
+                                    }
+                                    resolve(reloadedGoogle)
                                 })
                                 finishWhenVisualizationReady()
                             } catch (err) {
@@ -136,7 +176,7 @@ export function loadGoogleCharts(packages: string[] = ['corechart', 'bar']): Pro
                     }
                 }
             } catch (err) {
-                ;(window as any).__googleChartsLoaderStatus = 'error'
+                window.__googleChartsLoaderStatus = 'error'
                 reject(err)
             }
         })
@@ -145,10 +185,15 @@ export function loadGoogleCharts(packages: string[] = ['corechart', 'bar']): Pro
             loaderPromise = null;
             throw err;
         });
+    }
+
+    if (!loaderPromise) {
+        throw new Error('Google Charts loader failed to initialize');
+    }
 
     return loaderPromise;
 }
 
 export function isGoogleChartsLoaded(): boolean {
-    return !!((window as any).google && (window as any).google.visualization && typeof (window as any).google.visualization.DataTable === 'function');
+    return Boolean(window.google?.visualization && typeof window.google.visualization.DataTable === 'function');
 }

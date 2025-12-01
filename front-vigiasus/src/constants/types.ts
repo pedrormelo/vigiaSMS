@@ -8,7 +8,7 @@ export type NotificationType = "doc" | "pdf" | "dashboard" | "resolucao" | "come
 export type NotificationStatus = "deferido" | "indeferido" | "visto";
 
 // Tipos de roles para estilização dos comentários
-export type CommentRole = "info" | "secretaria" | "diretoria" | "gerencia" | "user" | "zelma";
+export type CommentRole = "info" | "secretaria" | "diretoria" | "gerencia" | "user" | "zelma" | "system";
 
 // Interface para um comentário dentro de uma notificação
 export interface Comment {
@@ -21,6 +21,7 @@ export interface Comment {
   role?: CommentRole; // Role opcional para estilização
   isPrivate?: boolean; // Mensagem enviada em privado (apenas local/visual)
   toAuthor?: string; // Destinatário específico quando mensagem é privada
+  authorLabel?: string;
 }
 
 // Interface principal para uma Notificação
@@ -39,4 +40,10 @@ export interface Notification {
   contextoId?: string; // ID do contexto relacionado (se aplicável)
   url?: string; // URL do documento/link (se aplicável)
   createdAt?: string; // Data/hora ISO da criação (opcional, usada para ordenação)
+  contextStatus?: string;
+  contextTitle?: string;
+  contextGerencia?: string;
+  contextGerenciaId?: string | number;
+  contextDiretoriaId?: string | number;
+  isValidationAction?: boolean;
 }

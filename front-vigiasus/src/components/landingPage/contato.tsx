@@ -48,8 +48,9 @@ export default function Contato() {
       } else {
         setErrorMsg(res?.message || "Não foi possível enviar sua mensagem");
       }
-    } catch (err: any) {
-      setErrorMsg(err?.message || "Erro ao enviar a mensagem");
+    } catch (err: unknown) {
+      const message = (err as { message?: string } | null)?.message;
+      setErrorMsg(message || "Erro ao enviar a mensagem");
     } finally {
       setSubmitting(false);
     }

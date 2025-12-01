@@ -4,15 +4,13 @@ import { Lock, ShieldAlert, CheckCircle2, Rocket, AlertTriangle, XCircle, Send }
 
 interface CommentItemProps {
   comment: Comment;
-  hasSolidBg?: boolean;
 }
 
-export default function CommentItem({ comment, hasSolidBg = false }: CommentItemProps) {
-  const { author, text, time, date, isMyComment, role, isPrivate, toAuthor } = comment;
-  const authorLabel = (comment as any).authorLabel;
+export default function CommentItem({ comment }: CommentItemProps) {
+  const { author, text, time, date, isMyComment, role, isPrivate, toAuthor, authorLabel } = comment;
 
   // --- MENSAGENS DE SISTEMA (TIMELINE) ---
-  if ((comment as any).role === 'system') {
+  if (role === 'system') {
     let sysStyle = "bg-gray-50 border-gray-200 text-gray-600";
     let Icon = ShieldAlert;
     let statusTitle = "Atualização de Status";
