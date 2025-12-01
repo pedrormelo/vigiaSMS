@@ -11,6 +11,7 @@ import { useMemo, useState } from "react"
 import { VisualizarContextoModal } from "@/components/popups/visualizarContextoModal"
 import type { DetalhesContexto, ConjuntoDeDadosGrafico, TipoGrafico } from "@/components/popups/addContextoModal/types"
 import type { FileType } from "@/components/contextosCard/contextoCard"
+import { StatusContexto } from "@/components/validar/typesDados"
 
 export interface GraphData {
     id: string
@@ -25,6 +26,7 @@ export interface GraphData {
     diretoriaId?: string
     gerenciaId?: string
     gerenciaNome?: string
+    status?: StatusContexto
 }
 
 
@@ -72,6 +74,7 @@ export function DashboardPreview({
             chartType,
             description: undefined,
             solicitante: undefined,
+            status: graph.status ?? StatusContexto.Publicado,
         }
         return detalhes
     }

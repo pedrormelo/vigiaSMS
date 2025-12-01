@@ -47,6 +47,24 @@ interface GoogleVisualization {
     };
 }
 
+function coerceVisualization(ns: unknown): GoogleVisualization | null {
+    if (!ns || typeof ns !== "object") return null;
+    const viz = ns as Partial<GoogleVisualization>;
+    const hasDataTable = typeof viz.DataTable === "function";
+    const hasArray = typeof viz.arrayToDataTable === "function";
+    const hasPie = typeof viz.PieChart === "function";
+    const hasArea = typeof viz.AreaChart === "function";
+    const hasColumn = typeof viz.ColumnChart === "function";
+    const hasNumberFormat = typeof viz.NumberFormat === "function";
+    const hasEvents = !!viz.events && typeof viz.events.addListener === "function";
+
+    if ((!hasDataTable && !hasArray) || !hasPie || !hasArea || !hasColumn || !hasNumberFormat || !hasEvents) {
+        return null;
+    }
+
+    return viz as GoogleVisualization;
+}
+
 // Interface estendida para Window para compatibilidade com ResizeObserver
 interface WindowWithResizeObserver extends Window {
     ResizeObserver: typeof ResizeObserver;
@@ -264,9 +282,13 @@ export const PrevisualizacaoGrafico: React.FC<PrevisualizacaoGraficoProps> = ({
                     return;
                 }
                 
-                googleVisualization = google.visualization as GoogleVisualization;
-
-                if (!googleVisualization) throw new Error("Biblioteca Google Charts não carregada.");
+                const visualization = coerceVisualization(google.visualization);
+                if (!visualization) {
+                    console.warn("[previsualizacaoGrafico] google.visualization indisponível, reintentando... ");
+                    setTimeout(() => { if (isMounted) draw(); }, 250);
+                    return;
+                }
+                googleVisualization = visualization;
 
                 // Preparação do DataTable (preferir arrayToDataTable; fallback para DataTable manual)
                 if (!dadosGrafico) throw new Error("Dados do gráfico ausentes");

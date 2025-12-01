@@ -5,8 +5,10 @@
 type GoogleChartsLoaderStatus = 'ready' | 'timeout' | 'error';
 
 interface GoogleVisualizationNamespace {
+    [key: string]: unknown;
     DataTable?: new (...args: unknown[]) => unknown;
     PieChart?: unknown;
+    arrayToDataTable?: (data: unknown[][], firstRowIsData?: boolean) => unknown;
 }
 
 interface GoogleChartsNamespace {

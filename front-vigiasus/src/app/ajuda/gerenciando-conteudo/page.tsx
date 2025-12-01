@@ -2,12 +2,13 @@
 
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, Suspense } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft, BookOpen, ChevronRight, Navigation, Users, HelpCircle, LayoutDashboard, History, FilePlus, FileSymlink, UploadCloud, FileText as FileTextIcon, Link as LinkIcon, Eye, Trash2, Database, Upload, PieChart, BarChart3, AreaChart, Gauge, CopyPlus, SearchX, FileUp, Expand, Heart,
-  Settings
+  Settings,
+  Loader2
 } from "lucide-react";
 import Image from 'next/image';
 import { Button } from "@/components/ui/button";
@@ -264,7 +265,7 @@ const contentComponents: { [key: string]: React.FC } = {
   // Adicionar mapeamento para componentes de conteúdo das OUTRAS ÁREAS
 };
 
-export default function GerenciandoConteudoPage() {
+function GerenciandoConteudoPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -273,7 +274,7 @@ export default function GerenciandoConteudoPage() {
   const areaId = currentAreaId;
 
   const [activeTopicHref, setActiveTopicHref] = useState(currentAreaTopics[0]?.href || "");
-  const ActiveContentComponent = contentComponents[activeTopicHref] || OQueEContextoContent; // Fallback
+  const ActiveContentComponent = contentComponents[activeTopicHref] || OQueEContextoContent;
   const [searchValue, setSearchValue] = useState("");
   const searchTokens = useMemo(() => buildHelpSearchTokens(searchValue), [searchValue]);
   const searchResults = useMemo<HelpSearchEntry[]>(
@@ -282,11 +283,11 @@ export default function GerenciandoConteudoPage() {
   );
 
   const scrollToTop = () => {
-    const mainEl = document.getElementById('main-content-area');
+    const mainEl = document.getElementById("main-content-area");
     if (mainEl) {
-      mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+      mainEl.scrollTo({ top: 0, behavior: "smooth" });
     } else {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
@@ -301,7 +302,7 @@ export default function GerenciandoConteudoPage() {
 
   const handleTopicSelect = (href: string) => {
     setActiveTopicHref(href);
-    setSearchValue(""); // Limpa busca ao selecionar um tópico da área
+    setSearchValue("");
     const slug = href.split("/").pop();
     if (slug) {
       router.replace(`${pathname}?topic=${slug}`, { scroll: false });
@@ -313,15 +314,14 @@ export default function GerenciandoConteudoPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Cabeçalho Fixo da Área */}
       <div className="border-b border-gray-200 bg-blue-50 sticky top-16 z-10">
         <div className="max-w-6xl mx-auto px-6 py-4">
-          {/* Layout do cabeçalho idêntico a primeiros-passos */}
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            {/* Título e Breadcrumb (Esquerda) */}
             <div>
               <div className="flex items-center gap-2 text-sm text-blue-700/80 mb-2">
-                <Link href="/ajuda" className="hover:text-blue-900 transition-colors"> Ajuda </Link>
+                <Link href="/ajuda" className="hover:text-blue-900 transition-colors">
+                  Ajuda
+                </Link>
                 <ChevronRight className="h-4 w-4" />
                 <span className="font-medium text-blue-900">Adicionando Conteúdo</span>
               </div>
@@ -330,8 +330,6 @@ export default function GerenciandoConteudoPage() {
                 <h1 className="text-2xl font-bold text-blue-900">Adicionando e Gerenciando Conteúdo</h1>
               </div>
             </div>
-
-            {/* Container da Barra de Busca (Direita) - Idêntico a primeiros-passos */}
             <div className="w-full md:w-full lg:max-w-3xl rounded-3xl">
               <SearchBar
                 placeholder="Buscar nesta seção..."
@@ -366,50 +364,41 @@ export default function GerenciandoConteudoPage() {
         </div>
       </div>
 
-      {/* Conteúdo Principal com Sidebar (Ajustes de espaçamento) */}
       <div className="max-w-6xl mx-auto px-6 py-8 md:py-12 flex flex-col md:flex-row gap-8 lg:gap-12 relative">
-        {/* AJUSTADO: Adicionado 'mr-3' e 'lg:gap-12' no container pai */}
         <aside className="w-full md:w-64 flex-shrink-0 order-last md:order-first mr-3">
-          {/* AJUSTADO: Alterado 'top-40' para 'top-52' */}
           <div className="sticky top-52">
             <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
               Nesta Seção
             </h2>
-            {/* Sidebar usa currentAreaTopics */}
             <nav className="space-y-1">
               {currentAreaTopics.map((topico) => {
                 const isActive = activeTopicHref === topico.href;
                 const Icon = topicIconMap[topico.href] || ChevronRight;
-                // Remover aspas literais do título para exibição
-                const displayTitle = topico.titulo.replace(/"/g, '');
+                const displayTitle = topico.titulo.replace(/"/g, "");
 
                 return (
                   <button
                     key={topico.href}
-                    onClick={() => { handleTopicSelect(topico.href); }} // Usa handleTopicSelect simplificado
+                    onClick={() => handleTopicSelect(topico.href)}
                     className={cn(
                       "w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-left transition-colors",
-                       isActive ? "bg-blue-100 text-blue-700 font-medium" :
-                       "text-gray-700 hover:bg-gray-100" // Removida lógica de highlight de busca
+                      isActive ? "bg-blue-100 text-blue-700 font-medium" : "text-gray-700 hover:bg-gray-100"
                     )}
                   >
-                    <Icon className={cn("w-4 h-4 flex-shrink-0",
-                        isActive ? "text-blue-600" :
-                        "text-gray-400" // Removida lógica de highlight de busca
+                    <Icon className={cn(
+                      "w-4 h-4 flex-shrink-0",
+                      isActive ? "text-blue-600" : "text-gray-400"
                     )} />
-                    <span className="truncate">{displayTitle}</span> {/* Usa título limpo */}
+                    <span className="truncate">{displayTitle}</span>
                   </button>
                 );
               })}
-              {/* Mensagens de busca REMOVIDAS */}
             </nav>
           </div>
         </aside>
 
-        {/* Conteúdo Principal (Direita) */}
         <main id="main-content-area" className="flex-1 min-w-0">
           <ActiveContentComponent />
-          {/* Botão Voltar */}
           <div className="mt-16 pt-8 border-t border-gray-200">
             <Link href="/ajuda">
               <Button variant="ghost" className="text-sm text-gray-600 hover:text-gray-900 gap-1.5">
@@ -421,5 +410,19 @@ export default function GerenciandoConteudoPage() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function GerenciandoConteudoPage() {
+  return (
+    <Suspense
+      fallback={(
+        <div className="flex min-h-screen items-center justify-center bg-white">
+          <Loader2 className="h-6 w-6 animate-spin text-blue-600" aria-label="Carregando gerenciamento de conteúdo" />
+        </div>
+      )}
+    >
+      <GerenciandoConteudoPageContent />
+    </Suspense>
   );
 }

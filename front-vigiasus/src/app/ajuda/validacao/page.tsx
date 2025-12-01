@@ -2,7 +2,7 @@
 
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, Suspense } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
@@ -30,6 +30,7 @@ import {
   MessageSquare,
   History
 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { HiOutlineLogout } from "react-icons/hi";
 import Image from 'next/image';
 import { Button } from "@/components/ui/button";
@@ -264,7 +265,7 @@ const topicos = [
 
 // --- Componente Principal da Página ---
 
-export default function ValidacaoPage() {
+function ValidacaoPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -411,5 +412,19 @@ export default function ValidacaoPage() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function ValidacaoPage() {
+  return (
+    <Suspense
+      fallback={(
+        <div className="flex min-h-screen items-center justify-center bg-white">
+          <Loader2 className="h-6 w-6 animate-spin text-blue-600" aria-label="Carregando validação" />
+        </div>
+      )}
+    >
+      <ValidacaoPageContent />
+    </Suspense>
   );
 }

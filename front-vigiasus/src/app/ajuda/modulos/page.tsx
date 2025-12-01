@@ -2,7 +2,7 @@
 
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, Suspense } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
@@ -27,7 +27,8 @@ import {
   // Ícones específicos desta seção
   Settings, // Ícone da Área
   CalendarDays,
-  FileText as FileTextIcon
+  FileText as FileTextIcon,
+  Loader2
 } from "lucide-react";
 import { HiOutlineLogout } from "react-icons/hi";
 import Image from 'next/image';
@@ -125,7 +126,7 @@ const topicos = [
 
 // --- Componente Principal da Página ---
 
-export default function ModulosPage() {
+function ModulosPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -273,5 +274,19 @@ export default function ModulosPage() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function ModulosPage() {
+  return (
+    <Suspense
+      fallback={(
+        <div className="flex min-h-screen items-center justify-center bg-white">
+          <Loader2 className="h-6 w-6 animate-spin text-blue-600" aria-label="Carregando módulos" />
+        </div>
+      )}
+    >
+      <ModulosPageContent />
+    </Suspense>
   );
 }

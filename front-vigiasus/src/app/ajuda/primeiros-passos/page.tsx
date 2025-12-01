@@ -2,7 +2,7 @@
 
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, Suspense } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
@@ -24,6 +24,7 @@ import {
   UserCog,
   UserCheck as UserCheckIcon,
   User as UserIcon,
+  Loader2,
 } from "lucide-react";
 import { HiOutlineLogout } from "react-icons/hi";
 import Image from 'next/image';
@@ -312,7 +313,7 @@ const topicos = [
   { titulo: "Perfis de Usuário", href: "/ajuda/primeiros-passos/perfis" },
 ];
 
-export default function PrimeirosPassosPage() {
+function PrimeirosPassosPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -457,5 +458,19 @@ export default function PrimeirosPassosPage() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function PrimeirosPassosPage() {
+  return (
+    <Suspense
+      fallback={(
+        <div className="flex min-h-screen items-center justify-center bg-white">
+          <Loader2 className="h-6 w-6 animate-spin text-blue-600" aria-label="Carregando primeiros passos" />
+        </div>
+      )}
+    >
+      <PrimeirosPassosPageContent />
+    </Suspense>
   );
 }

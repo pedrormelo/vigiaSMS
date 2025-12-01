@@ -2,7 +2,7 @@
 
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, Suspense } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
@@ -41,6 +41,7 @@ import {
   LayoutDashboard, // Ícone de Tópico
   Pen, // Ícone para "Editar"
   Funnel, // <-- 1. CORREÇÃO: Ícone Funnel adicionado
+  Loader2,
 } from "lucide-react";
 import { HiOutlineLogout } from "react-icons/hi";
 import Image from 'next/image';
@@ -290,7 +291,7 @@ const topicos = [
 
 // --- 3. COMPONENTE PRINCIPAL DA PÁGINA ---
 
-export default function VisualizandoDadosPage() {
+function VisualizandoDadosPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -435,5 +436,19 @@ export default function VisualizandoDadosPage() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function VisualizandoDadosPage() {
+  return (
+    <Suspense
+      fallback={(
+        <div className="flex min-h-screen items-center justify-center bg-white">
+          <Loader2 className="h-6 w-6 animate-spin text-blue-600" aria-label="Carregando visualização de dados" />
+        </div>
+      )}
+    >
+      <VisualizandoDadosPageContent />
+    </Suspense>
   );
 }

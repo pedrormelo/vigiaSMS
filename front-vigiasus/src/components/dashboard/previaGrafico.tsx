@@ -5,6 +5,12 @@ import React, { useEffect, useRef } from "react";
 import { PieChart, BarChart3, TrendingUp, Eye } from "lucide-react";
 import { loadGoogleCharts } from "@/lib/googleCharts";
 
+type GoogleChartInstance = {
+    draw: (dataTable: unknown, options: unknown) => void;
+};
+
+type GoogleChartConstructor = new (container: Element) => GoogleChartInstance;
+
 interface ChartPreviewProps {
     graphType: "pie" | "chart" | "line";
     dataset: {
@@ -52,7 +58,7 @@ export function ChartPreview({ graphType, dataset, title }: ChartPreviewProps) {
             if (!hasValidData) return;
             try {
                 const google = await loadGoogleCharts(['corechart', 'bar']);
-                if (!google || !google.visualization) return;
+                if (!google || !google.visualization || typeof google.visualization.arrayToDataTable !== 'function') return;
 
                 const dataTable = google.visualization.arrayToDataTable(chartData as any);
 
@@ -64,20 +70,23 @@ export function ChartPreview({ graphType, dataset, title }: ChartPreviewProps) {
                     colors: ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444']
                 };
 
+                let ChartConstructor: GoogleChartConstructor | undefined;
                 switch (graphType) {
                     case 'pie':
-                        chartInstance = new google.visualization.PieChart(chartRef.current);
+                        ChartConstructor = google.visualization.PieChart as GoogleChartConstructor | undefined;
                         break;
                     case 'chart':
-                        chartInstance = new google.visualization.ColumnChart(chartRef.current);
+                        ChartConstructor = google.visualization.ColumnChart as GoogleChartConstructor | undefined;
                         break;
                     case 'line':
-                        chartInstance = new google.visualization.LineChart(chartRef.current);
+                        ChartConstructor = google.visualization.LineChart as GoogleChartConstructor | undefined;
                         break;
                     default:
-                        chartInstance = new google.visualization.ColumnChart(chartRef.current);
+                        ChartConstructor = google.visualization.ColumnChart as GoogleChartConstructor | undefined;
                 }
 
+                if (!ChartConstructor) return;
+                chartInstance = new ChartConstructor(chartRef.current);
                 chartInstance.draw(dataTable, options);
             } catch (err) {
                 // silently ignore draw errors for now

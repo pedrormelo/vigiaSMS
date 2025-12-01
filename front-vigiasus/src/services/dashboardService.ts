@@ -64,6 +64,7 @@ export async function getDashboardHighlights(): Promise<DashboardLayoutItem[]> {
 import { type GraphType, normalizeGraphType } from "@/lib/graphTypes";
 import { getGerenciasPorDiretoria } from "./organizacaoService";
 import { getContextosPorGerencia } from "./contextoService";
+import { StatusContexto } from "@/components/validar/typesDados";
 import type { Contexto } from "@/components/validar/typesDados";
 import type { NomeIcone } from "@/components/popups/addContextoModal/types";
 
@@ -83,7 +84,8 @@ export function mapLayoutItemsToGraphData(items: DashboardLayoutItem[]) {
             gerenciaId: it.gerenciaId || undefined,
             gerenciaNome,
             data: [payload.colunas || [], ...(payload.linhas || [])],
-            colors: payload.cores
+            colors: payload.cores,
+            status: StatusContexto.Publicado,
         };
     });
 }
@@ -292,6 +294,7 @@ export async function listAvailableGraphsForDiretoria(diretoriaId: string) {
             insertedDate: published.data || c.insertedDate,
             data: [payload.colunas || [], ...(payload.linhas || [])],
             colors: payload.cores,
+            status: StatusContexto.Publicado,
         };
     });
     return mapped.filter((item): item is NonNullable<typeof mapped[number]> => item !== null);

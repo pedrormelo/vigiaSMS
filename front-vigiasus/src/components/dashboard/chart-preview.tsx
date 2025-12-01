@@ -7,6 +7,19 @@ import type { GraphType } from "./graficoCard"; // Ajuste o caminho se necessár
 import { Info, Loader2, AlertTriangle } from "lucide-react"; // Adicionado AlertTriangle
 import { cn } from "@/lib/utils"; // Adicionado cn
 
+type GoogleChartInstance = {
+    draw: (dataTable: unknown, options: unknown) => void;
+    clearChart?: () => void;
+};
+
+type GoogleChartConstructor = new (container: Element) => GoogleChartInstance;
+
+type GoogleVisualizationEvents = {
+    addListener: (chart: GoogleChartInstance, eventName: string, handler: (...args: unknown[]) => void) => unknown;
+    removeListener?: (handle: unknown) => void;
+    removeAllListeners?: (chart: GoogleChartInstance) => void;
+};
+
 interface ChartPreviewProps {
     type: GraphType;
     title: string;
@@ -29,8 +42,8 @@ export function ChartPreview({ type, title, data, colors, isHighlighted, editMod
 
     useEffect(() => {
         let resizeObserver: ResizeObserver | null = null;
-        let chartInstance: any = null;
-        let readyListener: any = null;
+        let chartInstance: GoogleChartInstance | null = null;
+        let readyListener: unknown = null;
         let isMounted = true; // Flag para verificar se o componente ainda está montado
 
         const draw = async () => {
@@ -100,10 +113,10 @@ export function ChartPreview({ type, title, data, colors, isHighlighted, editMod
                 };
 
                 // Escolhe o tipo de gráfico e ajusta opções específicas
-                let ChartClass;
+                let ChartClass: GoogleChartConstructor | undefined;
                 switch (type) {
                     case "pie":
-                        ChartClass = google.visualization.PieChart;
+                        ChartClass = google.visualization.PieChart as GoogleChartConstructor | undefined;
                         // Match modal style: percentages inside slices and legend at the bottom (no leader lines)
                         (options as any).pieSliceText = 'percentage';
                         (options as any).legend = { position: 'bottom', alignment: 'center', textStyle: { fontSize: 12 } };
@@ -112,27 +125,33 @@ export function ChartPreview({ type, title, data, colors, isHighlighted, editMod
                         delete (options as any).hAxis;
                         break;
                     case "line":
-                        ChartClass = google.visualization.AreaChart;
+                        ChartClass = google.visualization.AreaChart as GoogleChartConstructor | undefined;
                         break;
                     case "chart":
                     default:
-                        ChartClass = google.visualization.ColumnChart;
+                        ChartClass = google.visualization.ColumnChart as GoogleChartConstructor | undefined;
                         break;
                 }
 
                 // Última verificação antes de instanciar
                 if (!chartRef.current || !isMounted) return;
+                if (!ChartClass) {
+                    setDrawError("Tipo de gráfico não suportado pelo Google Charts.");
+                    setIsLoading(false);
+                    return;
+                }
 
                 // Cria a instância do gráfico
                 chartInstance = new ChartClass(chartRef.current);
 
                 // Adiciona listener para saber quando o gráfico está pronto
-                if (google.visualization.events) { // Verifica se 'events' existe
-                    readyListener = google.visualization.events.addListener(chartInstance, 'ready', () => {
+                const events = google.visualization.events as GoogleVisualizationEvents | undefined;
+                if (events) { // Verifica se 'events' existe
+                    readyListener = events.addListener(chartInstance, 'ready', () => {
                         if (isMounted) { setIsLoading(false); }
                     });
                     // Adiciona listener para erros de desenho do Google Charts
-                    google.visualization.events.addListener(chartInstance, 'error', (err: any) => {
+                    events.addListener(chartInstance, 'error', (err: any) => {
                         if (isMounted) {
                             console.error('[ChartPreview] Erro no desenho do Google Charts:', err);
                             setDrawError(err?.message || 'Erro ao desenhar o gráfico.');
@@ -189,10 +208,11 @@ export function ChartPreview({ type, title, data, colors, isHighlighted, editMod
             resizeObserver = null;
 
             // Remove listeners do Google Charts
-            if (readyListener && (window as any).google?.visualization?.events && chartInstance) {
+            const events = (window as any).google?.visualization?.events as GoogleVisualizationEvents | undefined;
+            if (readyListener && events && chartInstance) {
                 try {
-                    (window as any).google.visualization.events.removeListener(readyListener);
-                    (window as any).google.visualization.events.removeAllListeners(chartInstance);
+                    events.removeListener?.(readyListener);
+                    events.removeAllListeners?.(chartInstance);
                     console.debug('[ChartPreview] Listeners do Google Charts removidos.'); // Log
                 } catch { }
             }

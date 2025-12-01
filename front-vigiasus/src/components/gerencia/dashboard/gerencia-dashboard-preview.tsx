@@ -44,7 +44,8 @@ export function GerenciaDashboardPreview({ graphs, gerencia, className, disabled
                         payload.colunas,
                         ...payload.linhas
                     ], 
-                    colors: payload.cores
+                    colors: payload.cores,
+                    status: ctx.status
                 };
             });
     }, [graphs, gerencia]);

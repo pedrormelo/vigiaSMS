@@ -1,3 +1,6 @@
+import type { ElementType } from "react";
+import { BarChart3, BookOpen, CopyPlus, FilePlus, FileUp, Gauge, HelpCircle, LayoutDashboard, Navigation, Users } from "lucide-react";
+
 // Estrutura de dados global (exemplo)
 interface HelpTopic {
   titulo: string;
@@ -9,7 +12,7 @@ interface HelpTopic {
 interface HelpArea {
   id: string; // Identificador único da área
   nome: string;
-  icon: React.ElementType;
+  icon: ElementType;
   topicos: HelpTopic[];
 }
 
@@ -42,7 +45,7 @@ const allHelpData: HelpArea[] = [
 ];
 
 // Mapeamento de ícones para TÓPICOS (mantido como antes para a sidebar)
-const topicIconMap: { [key: string]: React.ElementType } = {
+const topicIconMap: Record<string, ElementType> = {
   "/ajuda/primeiros-passos/o-que-e": HelpCircle,
   "/ajuda/primeiros-passos/navbar": Navigation,
   "/ajuda/primeiros-passos/sidebar": LayoutDashboard,

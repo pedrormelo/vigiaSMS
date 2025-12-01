@@ -2,7 +2,7 @@
 
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, Suspense } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
@@ -21,7 +21,8 @@ import {
   ListOrdered,
   Camera,
   Terminal,
-  Send
+  Send,
+  Loader2
 } from "lucide-react";
 import Image from 'next/image';
 import { Button } from "@/components/ui/button";
@@ -224,7 +225,7 @@ const topicos = [
 
 // --- Componente Principal da Página ---
 
-export default function SuportePage() {
+function SuportePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -371,5 +372,19 @@ export default function SuportePage() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function SuportePage() {
+  return (
+    <Suspense
+      fallback={(
+        <div className="flex min-h-screen items-center justify-center bg-white">
+          <Loader2 className="h-6 w-6 animate-spin text-blue-600" aria-label="Carregando suporte" />
+        </div>
+      )}
+    >
+      <SuportePageContent />
+    </Suspense>
   );
 }
