@@ -256,6 +256,7 @@ enum user_role {
   GERENTE
   DIRETOR
   SECRETARIA
+  ADMIN
 }
 
 enum contextoversao_statusValidacao {

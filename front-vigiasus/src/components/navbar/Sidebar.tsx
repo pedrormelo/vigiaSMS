@@ -24,7 +24,8 @@ import {
   FolderClock,
   MessageCircleQuestionMark,
   Folder,
-  Box
+  Box,
+  ShieldCheck,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -47,7 +48,8 @@ const icons = {
   minhasGerencias: Layers,
   gerencia: Folder,
   contextosEnviados: FolderClock,
-  ajuda: MessageCircleQuestionMark
+  ajuda: MessageCircleQuestionMark,
+  admin: ShieldCheck,
 };
 
 export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
@@ -62,71 +64,73 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
 
   // --- LÓGICA DE DADOS ---
   
-  // 3. Normalizar o role
-  const normalizedRole = (isMounted ? role : "membro")?.toLowerCase() || "membro";
-  const safeRole = normalizedRole === "admin" ? "secretaria" : normalizedRole;
+ // 1. Normalizar role sem afetar o SSR
+const normalizedRole = (role || "membro").toLowerCase();
 
-  // 4. Obter os dados do usuário dinamicamente
-  const getUserData = () => {
-    if (!isMounted) return null;
-    try {
-      return authService.getUser();
-    } catch {
-      return null;
-    }
-  };
+// 2. Garantir roles válidos (fallback seguro)
+const allowedRoles = ["admin", "secretaria", "diretor", "gerente", "membro"];
+const safeRole = allowedRoles.includes(normalizedRole)
+  ? normalizedRole
+  : "membro";
 
-  const userData = getUserData();
+// 3. Pegar dados do usuário de forma segura
+const userData = isMounted ? authService.getUser() : null;
 
-  // Slugs e IDs para os links
-  // Fallback para string vazia ou rota segura se não encontrar
-  const diretoriaSlug = userData?.diretoriaSlug || userData?.diretoriaId || "gestao-sus";
-  const diretoriaId = userData?.diretoriaId || userData?.diretoriaSlug || ""; // Usado para a página Minhas Gerências
-  const gerenciaSlug = userData?.gerenciaSlug || userData?.gerenciaId || "";
+// 4. Definir slugs de diretoria/gerência
+const diretoriaSlug = userData?.diretoriaSlug || "gestao-sus";
+const diretoriaId = userData?.diretoriaId || diretoriaSlug;
+const gerenciaSlug =
+  userData?.gerenciaSlug || userData?.gerenciaId || "";
 
-  // 5. Definição do Menu
-  const menuOptions: Record<string, any[]> = {
-    secretaria: [
-      { label: "Página Inicial", icon: icons.home, href: "/" },
-      { label: "Dashboard", icon: icons.dashboard, href: `/dashboard/secretaria` },
-      { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
-      //{ label: "Meus Comentários", icon: icons.comentarios, href: "/comentarios" },
-      { label: "Central de Ajuda", icon: icons.ajuda, href: "/ajuda"},
-      { label: "Sair do Sistema", icon: icons.logout, href: "/logout" },
-    ],
-    diretor: [
-      { label: "Página Inicial", icon: icons.home, href: "/" },
-      { label: "Dashboard da Diretoria", icon: icons.dashboard, href: `/dashboard/${diretoriaSlug}` },
-      // Link dinâmico para a página de lista de gerências
-      { label: "Minhas Gerências", icon: icons.minhasGerencias, href: `/minhas-gerencias/${diretoriaId}` }, 
-      { label: "Validar Contextos", icon: icons.contextos, href: "/validar" },
-      { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
-      { label: "Central de Ajuda", icon: icons.ajuda, href: "/ajuda"},
-      { label: "Sair do Sistema", icon: icons.logout, href: "/logout" },
-    ],
-    gerente: [
-      { label: "Página Inicial", icon: icons.home, href: "/" },
-      //{ label: "Minha Gerência", icon: icons.gerencia, href: `/dashboard/${currentSlug}` },
-      // Link dinâmico para a página da gerência específica
-      { label: "Minha Gerência", icon: icons.gerencia, href: `/gerencia/${gerenciaSlug}` }, 
-      { label: "Validar Contextos", icon: icons.contextos, href: "/validar" },
-      { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
-      { label: "Central de Ajuda", icon: icons.ajuda, href: "/ajuda"},
-      { label: "Sair do Sistema", icon: icons.logout, href: "/logout" },
-    ],
-    membro: [
-      { label: "Página Inicial", icon: icons.home, href: "/" },
-      // Link dinâmico para a página da gerência específica
-      { label: "Minha Gerência", icon: icons.gerencia, href: `/gerencia/${gerenciaSlug}` },
-      { label: "Contextos Enviados", icon: icons.contextosEnviados, href: "/validar" },
-      { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
-      { label: "Central de Ajuda", icon: icons.ajuda, href: "/ajuda"},
-      { label: "Sair do Sistema", icon: icons.logout, href: "/logout" },
-    ],
-  };
+// 5. Menus por role
+const menuOptions: Record<string, any[]> = {
+  admin: [
+    { label: "Página Inicial", icon: icons.home, href: "/" },
+    { label: "Dashboard Geral", icon: icons.dashboard, href: `/dashboard/secretaria` },
+    { label: "Gestão de Usuários", icon: icons.admin, href: "/admin/usuarios" },
+    { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
+    { label: "Sair do Sistema", icon: icons.logout, href: "/logout" },
+  ],
 
-  // Seleciona as opções com base no role seguro
-  const currentOptions = menuOptions[safeRole] || menuOptions['membro'];
+  secretaria: [
+    { label: "Página Inicial", icon: icons.home, href: "/" },
+    { label: "Dashboard", icon: icons.dashboard, href: `/dashboard/secretaria` },
+    { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
+    { label: "Central de Ajuda", icon: icons.ajuda, href: "/ajuda" },
+    { label: "Sair do Sistema", icon: icons.logout, href: "/logout" },
+  ],
+
+  diretor: [
+    { label: "Página Inicial", icon: icons.home, href: "/" },
+    { label: "Dashboard da Diretoria", icon: icons.dashboard, href: `/dashboard/${diretoriaSlug}` },
+    { label: "Minhas Gerências", icon: icons.minhasGerencias, href: `/minhas-gerencias/${diretoriaId}` },
+    { label: "Validar Contextos", icon: icons.contextos, href: "/validar" },
+    { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
+    { label: "Central de Ajuda", icon: icons.ajuda, href: "/ajuda" },
+    { label: "Sair do Sistema", icon: icons.logout, href: "/logout" },
+  ],
+
+  gerente: [
+    { label: "Página Inicial", icon: icons.home, href: "/" },
+    { label: "Minha Gerência", icon: icons.gerencia, href: `/gerencia/${gerenciaSlug}` },
+    { label: "Validar Contextos", icon: icons.contextos, href: "/validar" },
+    { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
+    { label: "Central de Ajuda", icon: icons.ajuda, href: "/ajuda" },
+    { label: "Sair do Sistema", icon: icons.logout, href: "/logout" },
+  ],
+
+  membro: [
+    { label: "Página Inicial", icon: icons.home, href: "/" },
+    { label: "Minha Gerência", icon: icons.gerencia, href: `/gerencia/${gerenciaSlug}` },
+    { label: "Contextos Enviados", icon: icons.contextosEnviados, href: "/validar" },
+    { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
+    { label: "Central de Ajuda", icon: icons.ajuda, href: "/ajuda" },
+    { label: "Sair do Sistema", icon: icons.logout, href: "/logout" },
+  ],
+};
+
+// menu atual baseado no role seguro
+const currentOptions = menuOptions[safeRole];
 
   const isActive = (href: string) => {
     if (!pathname) return false;

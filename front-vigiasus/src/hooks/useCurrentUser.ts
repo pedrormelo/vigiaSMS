@@ -4,29 +4,36 @@
 import { useEffect, useState } from "react";
 import { authService, type AuthUser } from "@/services/authService";
 
-// Atualizamos o tipo UserRole para corresponder ao da Sidebar
-export type UserRole = "secretaria" | "diretor" | "gerente" | "membro";
+// [ATUALIZADO]: Adicionado 'admin' à lista de tipos permitidos
+export type UserRole = "admin" | "secretaria" | "diretor" | "gerente" | "membro";
 
 export interface CurrentUser {
   name: string;
   role: UserRole;
-  diretoriaId?: string; // for diretor(a)
-  diretoriaSlug?: string; // ADICIONADO
-  gerenciaId?: string;  // for gerente ou membro
-  gerenciaSlug?: string; // ADICIONADO
+  diretoriaId?: string; 
+  diretoriaSlug?: string; 
+  gerenciaId?: string;  
+  gerenciaSlug?: string; 
 }
 
 // Reads a simple user object from localStorage (key: 'vigiasus:user') if present.
 export function useCurrentUser(): CurrentUser {
   const readUser = (): CurrentUser => {
     const stored = authService.getUser();
+    
     if (stored) {
       const parsed = stored as AuthUser;
       let role: UserRole;
-      const rawRole = (parsed.role as string) || "membro";
-      if (rawRole === "usuario") role = "membro";
-      else if (["secretaria", "diretor", "gerente", "membro"].includes(rawRole)) role = rawRole as UserRole;
-      else role = "membro";
+      
+      // Normaliza para minúsculas para evitar erros de case-sensitive
+      const rawRole = (parsed.role as string)?.toLowerCase() || "membro";
+      
+      if (["admin", "secretaria", "diretor", "gerente", "membro"].includes(rawRole)) {
+        role = rawRole as UserRole;
+      } else {
+        // Fallback padrão para qualquer outro valor (ex: 'usuario')
+        role = "membro";
+      }
 
       return {
         name: typeof parsed.name === "string" ? parsed.name : "Visitante",
@@ -37,6 +44,7 @@ export function useCurrentUser(): CurrentUser {
         gerenciaSlug: typeof parsed.gerenciaSlug === "string" ? parsed.gerenciaSlug : undefined,
       } satisfies CurrentUser;
     }
+    
     // Safe fallback: non-editing default
     return { name: "Visitante", role: "membro" } satisfies CurrentUser;
   };
@@ -49,9 +57,12 @@ export function useCurrentUser(): CurrentUser {
         setUser(readUser());
       }
     };
+    
     const onUserChange = () => setUser(readUser());
+    
     window.addEventListener('storage', onStorage);
     window.addEventListener('vigiasus:user-change', onUserChange as EventListener);
+    
     return () => {
       window.removeEventListener('storage', onStorage);
       window.removeEventListener('vigiasus:user-change', onUserChange as EventListener);
