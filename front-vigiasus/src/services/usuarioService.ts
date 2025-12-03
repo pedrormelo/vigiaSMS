@@ -106,14 +106,21 @@ export async function resetarSenha(id: string, novaSenha: string): Promise<void>
     if (!res.ok) throw new Error('Falha ao redefinir senha');
 }
 
-export async function excluirUsuario(id: string): Promise<void> {
+export async function excluirUsuario(id: string, adminPassword: string): Promise<void> {
     const base = apiBase();
     const token = authService.getToken();
     
     const res = await fetch(`${base}/usuarios/${id}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify({ password: adminPassword }) // Envia a senha no corpo
     });
     
-    if (!res.ok) throw new Error('Falha ao excluir usuário');
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'Falha ao excluir usuário.');
+    }
 }

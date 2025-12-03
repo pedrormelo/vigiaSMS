@@ -86,9 +86,9 @@ const gerenciaSlug =
 const menuOptions: Record<string, any[]> = {
   admin: [
     { label: "Página Inicial", icon: icons.home, href: "/" },
-    { label: "Dashboard Geral", icon: icons.dashboard, href: `/dashboard/secretaria` },
-    { label: "Gestão de Usuários", icon: icons.admin, href: "/admin/usuarios" },
+    { label: "Gestão do Sistema", icon: icons.admin, href: "/admin" },
     { label: "Dados Gerais", icon: icons.dadosGerais, href: "/dados" },
+    { label: "Central de Ajuda", icon: icons.ajuda, href: "/ajuda" },
     { label: "Sair do Sistema", icon: icons.logout, href: "/logout" },
   ],
 
