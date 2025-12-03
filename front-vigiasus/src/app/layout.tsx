@@ -1,15 +1,15 @@
 // src/app/layout.tsx
 
-//import type { Metadata } from 'next';
 import { Montserrat } from 'next/font/google';
 import './globals.css';
 // App shell (handles Navbar/Footer visibility)
 import AppShell from '@/components/layout/AppShell';
-import { PanelRightOpen, Scroll } from 'lucide-react';
 import GlobalScrollArea from '@/components/ui/global-scroll-area';
 import { Toaster } from "sonner"; 
-import Footer from '@/components/footer/footer';
-
+// [NOVO IMPORT] Importa o provedor de sessão
+import SessionTimeoutProvider from "@/components/providers/session-timeout-provider";
+import OnboardingModal from '@/components/onboarding/onboardingModal';
+import OnboardingWrapper from '@/components/onboarding/onboardingWrapper';
 
 const montserrat = Montserrat({
   subsets: ['latin'],
@@ -29,10 +29,13 @@ export default function RootLayout({
     <html lang="pt-BR">
       <body className={`${montserrat.className} antialiased flex flex-col selection:bg-green-400 selection:text-white`}>
         <GlobalScrollArea>
-          <AppShell>
-            {children}
-          </AppShell>
-          <Toaster />
+          <SessionTimeoutProvider>
+            <AppShell>
+              {children}
+            </AppShell>
+            <Toaster />
+          <OnboardingWrapper />
+          </SessionTimeoutProvider>
         </GlobalScrollArea>
       </body>
     </html>
