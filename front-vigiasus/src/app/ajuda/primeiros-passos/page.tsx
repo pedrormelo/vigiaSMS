@@ -39,7 +39,7 @@ const OQueEContent = () => (
     <div className="space-y-10">
       <div>
         <h1 className="text-4xl font-bold text-gray-900 mb-3 flex items-center gap-3">
-          <HelpCircle className="w-9 h-9 text-blue-600"/> O que é o VigiaSUS?
+          <HelpCircle className="w-9 h-9 text-blue-600"/> O que é o SIGE?
         </h1>
         <p className="text-xl text-gray-600">
           Plataforma digital oficial da Secretaria Municipal de Saúde de Jaboatão dos Guararapes.
@@ -48,7 +48,7 @@ const OQueEContent = () => (
 
       <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed">
         <p>
-          O <strong>VigiaSUS</strong> centraliza e organiza informações cruciais para a gestão da saúde pública no município, transformando dados em conhecimento estratégico para apoiar a tomada de decisões. Ele reúne diversos tipos de <strong>&ldquo;Contextos&rdquo;</strong> – como relatórios, links, dashboards e indicadores – em um único local.
+          O <strong>SIGE</strong> (Sistema Integrado de Gestão Estratégica em Saude do Jaboatão dos Guararapes) centraliza e organiza informações cruciais para a gestão da saúde pública no município, transformando dados em conhecimento estratégico para apoiar a tomada de decisões. Ele reúne diversos tipos de <strong>&ldquo;Contextos&rdquo;</strong> – como relatórios, links, dashboards e indicadores – em um único local.
         </p>
       </div>
 
@@ -116,9 +116,9 @@ const NavbarContent = () => (
                     </div>
                 </div>
                  <div className="flex gap-4 items-start p-4 border border-gray-200 rounded-lg bg-gray-50/50">
-                     <span className="font-bold text-blue-700 text-lg mt-0.5 flex-shrink-0">VigiaSUS</span>
+                     <span className="font-bold text-blue-700 text-lg mt-0.5 flex-shrink-0">SIGE</span>
                     <div>
-                        <h3 className="font-semibold text-gray-800">Logo VigiaSUS</h3>
+                        <h3 className="font-semibold text-gray-800">Logo SIGE</h3>
                         <p className="text-sm text-gray-600">Leva você de volta para a Página Inicial da plataforma.</p>
                     </div>
                 </div>
@@ -163,7 +163,7 @@ const SidebarContent = () => (
 
     <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed">
       <p>
-        O menu lateral (Sidebar), acessado pelo botão (☰) na Navbar, agrupa os links para todas as seções do VigiaSUS. Ele é dinâmico e mostra apenas as opções relevantes para o seu perfil de acesso.
+        O menu lateral (Sidebar), acessado pelo botão (☰) na Navbar, agrupa os links para todas as seções do SIGE. Ele é dinâmico e mostra apenas as opções relevantes para o seu perfil de acesso.
       </p>
     </div>
 
@@ -224,12 +224,12 @@ const PerfisContent = () => (
             <h1 className="text-4xl font-bold text-gray-900 mb-3 flex items-center gap-3">
                 <Users className="w-9 h-9 text-blue-600"/> Perfis de Usuário
             </h1>
-            <p className="text-xl text-gray-600">Níveis de acesso e permissões no VigiaSUS.</p>
+            <p className="text-xl text-gray-600">Níveis de acesso e permissões no SIGE.</p>
         </div>
 
         <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed">
             <p>
-                O VigiaSUS utiliza diferentes perfis para garantir que cada usuário tenha acesso às informações e funcionalidades adequadas à sua função. As permissões são geralmente cumulativas.
+                O SIGE utiliza diferentes perfis para garantir que cada usuário tenha acesso às informações e funcionalidades adequadas à sua função. As permissões são geralmente cumulativas.
             </p>
         </div>
 
@@ -307,7 +307,7 @@ const iconMap: { [key: string]: React.ElementType } = {
 };
 
 const topicos = [
-  { titulo: "O que é o VigiaSUS?", href: "/ajuda/primeiros-passos/o-que-e" },
+  { titulo: "O que é o SIGE?", href: "/ajuda/primeiros-passos/o-que-e" },
   { titulo: "Barra de Navegação", href: "/ajuda/primeiros-passos/navbar" },
   { titulo: "Menu Lateral", href: "/ajuda/primeiros-passos/sidebar" },
   { titulo: "Perfis de Usuário", href: "/ajuda/primeiros-passos/perfis" },

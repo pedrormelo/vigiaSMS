@@ -48,12 +48,12 @@ export default function Footer() {
             {/* Texto institucional */}
             <div className="border-t border-blue-600 py-3 px-4 text-center text-xs md:text-sm text-gray-700">
                 <p>
-                    <span className="font-bold text-blue-700">VigiaSUS</span>
+                    <span className="font-bold text-blue-700">SIGE</span>
                     <span className="text-blue-700">
                         {" "}
-                        – Sistema de Contextos Internos –{" "}
+                        – Sistema Integrado de Gestão Estratégica em Saúde do Jaboatão dos Guararapes –{" "}
                         <span className="font-bold">GTI </span>
-                        Secretaria Municipal de Saúde de Jaboatão dos Guararapes. Av.
+                        - Secretaria Municipal de Saúde de Jaboatão dos Guararapes. Av.
                         Barreto de Menezes, S/N – Prazeres – Jaboatão dos Guararapes – PE.
                         CEP: 54.330-900 – CNPJ: 03.904.395/0001-45 – Julho de 2025 – Ver:
                         0.1

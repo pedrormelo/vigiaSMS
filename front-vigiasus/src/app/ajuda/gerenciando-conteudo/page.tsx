@@ -27,19 +27,19 @@ const OQueEContextoContent = () => (
                 <HelpCircle className="w-8 h-8 text-blue-600"/> O que é um &ldquo;Contexto&rdquo;?
             </h1>
             <p className="text-lg text-gray-600">
-                A unidade fundamental de informação no VigiaSUS.
+                A unidade fundamental de informação no SIGE.
             </p>
         </header>
         {/* [IMAGEM: Visão geral da tela de gerência mostrando cards de diferentes tipos de contexto] */}
         {/* <Image src="/caminho/para/imagem.png" width={800} height={200} alt="Visão geral dos cards de contexto" className="rounded-lg shadow-md mb-4" /> */}
         <section className="prose max-w-none text-gray-700 space-y-4">
-            <p>No VigiaSUS, um <strong>&ldquo;Contexto&rdquo;</strong> representa qualquer peça de informação relevante que você deseja registrar, compartilhar e acompanhar dentro da sua gerência ou diretoria. Pense nele como um container para seus dados importantes.</p>
+            <p>No SIGE (Sistema Integrado de Gestão Estratégica em Saúde), um <strong>&ldquo;Contexto&rdquo;</strong> representa qualquer peça de informação relevante que você deseja registrar, compartilhar e acompanhar dentro da sua gerência ou diretoria. Pense nele como uma caixa organizadora para seus dados importantes.</p>
             <p>Os contextos são a base para a organização e visualização das informações na plataforma. Eles podem ser de diferentes tipos, cada um adequado para um tipo específico de dado:</p>
         </section>
         <section className="space-y-4">
             <h2 className="text-xl font-semibold text-gray-800 mb-3">Tipos de Contexto:</h2>
             <div className="p-4 border border-gray-200 rounded-lg bg-gray-50/50"><h3 className="font-medium text-gray-700 mb-1 flex items-center gap-2"><FileTextIcon className="w-5 h-5 text-blue-600"/> Arquivos (PDF, DOC, Excel, etc.)</h3><p className="text-sm text-gray-600">Para documentos estáticos como relatórios, planilhas, resoluções, portarias, comprovantes. Você faz o upload do arquivo.</p></div>
-            <div className="p-4 border border-gray-200 rounded-lg bg-gray-50/50"><h3 className="font-medium text-gray-700 mb-1 flex items-center gap-2"><LinkIcon className="w-5 h-5 text-green-600"/> Links Externos</h3><p className="text-sm text-gray-600">Para referenciar páginas web, dashboards externos, documentos online (Google Drive, etc.) que não estão armazenados diretamente no VigiaSUS.</p></div>
+            <div className="p-4 border border-gray-200 rounded-lg bg-gray-50/50"><h3 className="font-medium text-gray-700 mb-1 flex items-center gap-2"><LinkIcon className="w-5 h-5 text-green-600"/> Links Externos</h3><p className="text-sm text-gray-600">Para referenciar páginas web, dashboards externos, documentos online (Google Drive, etc.) que não estão armazenados diretamente no SIGE.</p></div>
             <div className="p-4 border border-gray-200 rounded-lg bg-gray-50/50"><h3 className="font-medium text-gray-700 mb-1 flex items-center gap-2"><BarChart3 className="w-5 h-5 text-purple-600"/> Dashboards (Gráficos)</h3><p className="text-sm text-gray-600">Para visualizações de dados interativas (Pizza, Barras, Linha/Área) criadas diretamente na plataforma, seja inserindo os dados manualmente ou via upload de CSV.</p></div>
             <div className="p-4 border border-gray-200 rounded-lg bg-gray-50/50"><h3 className="font-medium text-gray-700 mb-1 flex items-center gap-2"><Gauge className="w-5 h-5 text-teal-600"/> Indicadores (KPIs)</h3><p className="text-sm text-gray-600">Para monitorar métricas chave de desempenho, com valor atual, meta (opcional), unidade, e comparação visual (tendência, cor, ícone).</p></div>
         </section>
@@ -82,7 +82,7 @@ const AddGraficoContent = () => (
             <p className="text-lg text-gray-600">Transforme seus dados em gráficos interativos de Pizza, Barras ou Linha/Área.</p>
         </header>
         <section className="prose max-w-none text-gray-700 space-y-4">
-            <p>Crie visualizações dinâmicas diretamente no VigiaSUS:</p>
+            <p>Crie visualizações dinâmicas diretamente no SIGE:</p>
             <ol className="list-decimal pl-5 space-y-3">
                 <li><strong>Abra o Modal:</strong> Clique em &ldquo;Adicionar Contexto&rdquo; (<FilePlus className="inline w-4 h-4 mx-1"/>).</li>
                 <li><strong>Selecione a Aba &ldquo;Dashboard&rdquo;:</strong> Escolha a aba &ldquo;Dashboard&rdquo; (ícone <LayoutDashboard className="inline w-4 h-4 mx-1"/>) no topo do modal. <br/><Image src="/ajuda/contextos/3.png" width={1000} height={40} alt="IMAGEM: Captura do modal &ldquo;Adicionar Contexto&rdquo; com a aba &ldquo;Dashboard&rdquo; selecionada" className="rounded-md my-2" /></li>
@@ -211,7 +211,7 @@ const allHelpData: HelpArea[] = [
     nome: "Primeiros Passos",
     icon: BookOpen,
     topicos: [
-      { titulo: "O que é o VigiaSUS?", href: "/ajuda/primeiros-passos/o-que-e", descricao: "Plataforma digital saúde Jaboatão gestão propósito objetivo" },
+      { titulo: "O que é o SIGE?", href: "/ajuda/primeiros-passos/o-que-e", descricao: "Plataforma digital saúde Jaboatão gestão propósito objetivo" },
       { titulo: "Barra de Navegação", href: "/ajuda/primeiros-passos/navbar", descricao: "Menu superior navbar notificações sino menu lateral sidebar logo" },
       { titulo: "Menu Lateral", href: "/ajuda/primeiros-passos/sidebar", descricao: "Sidebar navegação links perfil dashboard dados gerais validar sair" },
       { titulo: "Perfis de Usuário", href: "/ajuda/primeiros-passos/perfis", descricao: "Roles membro gerente diretor secretário permissões acesso validar adicionar" },

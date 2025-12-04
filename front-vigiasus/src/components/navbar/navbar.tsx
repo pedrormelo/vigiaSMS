@@ -358,7 +358,7 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
       <header className="bg-white w-full drop-shadow-md sticky top-0 z-35">
         <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
           <button onClick={onOpenSidebar} className="text-blue-700 hover:text-blue-500 transition-colors p-2 -ml-2 md:ml-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1"> <Menu strokeWidth={2.5} className="w-6 h-6 md:w-7 md:h-7" /> </button>
-          <div className="flex items-center gap-4 md:gap-6 lg:gap-8"> <Link href="/" className="block flex-shrink-0"> <h1 className="text-xl md:text-2xl text-blue-700 hover:text-blue-500 transition-colors"> Vigia<b>SUS</b> </h1> </Link> <Image src="/logos/logo-jaboatao.png" alt="Prefeitura de Jaboatão" width={150} height={30} className="h-7 md:h-8 w-auto hidden sm:block" priority /> </div>
+          <div className="flex items-center gap-4 md:gap-6 lg:gap-8"> <Link href="/" className="block flex-shrink-0"> <h1 className="text-xl md:text-2xl text-blue-700 hover:text-blue-500 transition-colors"><b>SIGE</b> </h1> </Link> <Image src="/logos/logo-jaboatao.png" alt="Prefeitura de Jaboatão" width={150} height={30} className="h-7 md:h-8 w-auto hidden sm:block" priority /> </div>
           <div className="flex items-center gap-3 md:gap-4 text-blue-700">
             <UpdateStatusPopover
               lastUpdateRelative={lastUpdateInfo.relative}

@@ -61,7 +61,7 @@ export default function Hero({
         <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
           <div className="flex-1 lg:max-w-2xl">
             <h2 className="text-lg font-medium text-blue-100">👋 Olá, {userName} ({roleLabel}), seja bem-vinda(o) ao:</h2>
-            <h1 className="text-5xl font-bold mt-2">VigiaSUS</h1>
+            <h1 className="text-5xl font-bold mt-2">SIGE</h1>
             <p className="mt-4 text-lg text-blue-100">
               Plataforma digital da Secretaria de Saúde de Jaboatão dos Guararapes que 
               centraliza dados, relatórios e informações estratégicas para apoiar 

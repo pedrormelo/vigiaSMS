@@ -194,7 +194,7 @@ const FAQContent = () => (
         </div>
         <div className="p-4 prose text-gray-700 text-sm">
           <p>R: Não. Para garantir o histórico, contextos publicados não podem ser editados. Você deve criar uma "Nova Versão" dele. Vá até o contexto, abra os detalhes, clique na aba "Versões" e use o botão "+ Criar Nova Versão".</p>
-          <p>Para mais detalhes, veja o guia <Link href="/ajuda/gerenciando-conteudo/nova-versao" className="text-blue-600 hover:underline">Criar Nova Versão</Link>.</p>
+          <p>Para mais detalhes, veja o guia <Link href="/ajuda/gerenciando-conteudo/?topic=nova-versao" className="text-blue-600 hover:underline">Criar Nova Versão</Link>.</p>
         </div>
       </div>
     </div>

@@ -64,11 +64,17 @@ export default function LoginPage() {
                 {/* Brand (left side) */}
                 <div className="flex flex-col items-center md:items-start text-center md:text-left gap-4">
                     <div>
-                        <h1 className="text-5xl md:text-6xl text-white leading-tight">
-                            Vigia<span className="font-bold">SUS</span>
+                        <h1 className="text-3xl md:text-6xl text-white leading-tight">
+                        <span className="font-bold">SIGE</span>
+                        <span className="font-light"> Jaboatão</span>
                         </h1>
-                        <p className="text-white/95 text-lg md:text-xl mt-2 max-w-md">
-                            O olhar digital da saúde pública.
+
+                          <p className="text-white/95 text-lg md:text-[0.69rem] max-w-md text-center">
+                            Sistema Integrado de Gestão Estratégica em Saúde do Jaboatão dos Guararapes
+                        </p>
+
+                        <p className="text-white/95 text-lg md:text-xl mt-2 max-w-md text-center">
+                            <b>O olhar digital da saúde pública.</b>
                         </p>
                     </div>
                     {/* preciso da logo branca */}
@@ -94,7 +100,7 @@ export default function LoginPage() {
                         <form onSubmit={onSubmit} className="space-y-4">
                         <div>
                             <h1 className="text-2xl mb-2 font-bold text-blue-600">Entrar</h1>
-                            <p className="text-sm mb-4 font-medium text-gray-600">Use suas credenciais VigiaSUS para entrar</p>
+                            <p className="text-sm mb-4 font-medium text-gray-600">Use suas credenciais do SIGE para entrar</p>
                             <label htmlFor="cpf" className="block text-sm font-medium text-gray-700 mb-1">CPF</label>
                             <Input
                                 id="cpf"

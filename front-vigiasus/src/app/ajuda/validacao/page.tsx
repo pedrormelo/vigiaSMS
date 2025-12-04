@@ -57,7 +57,7 @@ const FluxoValidacaoContent = () => (
 
       <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed">
         <p>
-          Para garantir que todas as informações no <strong>VigiaSUS</strong> sejam precisas, relevantes e corretas, cada novo "Contexto" (seja um arquivo, gráfico ou indicador) passa por um fluxo de aprovação simples antes de se tornar público para a gerência ou diretoria.
+          Para garantir que todas as informações no <strong>SIGE</strong> sejam precisas, relevantes e corretas, cada novo "Contexto" (seja um arquivo, gráfico ou indicador) passa por um fluxo de aprovação simples antes de se tornar público para a gerência ou diretoria.
         </p>
       </div>
 
