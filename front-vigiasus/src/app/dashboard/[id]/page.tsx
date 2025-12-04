@@ -15,6 +15,7 @@ import type { LucideIcon } from "lucide-react"
 import InfoPopover from "@/components/dashboard/InfoPopover"
 import React from "react"
 import type { MetricItem, MetricColor } from "@/components/dashboard/secretaria/metricsGrid"
+import GlobalLoading from "@/components/ui/global-loading"
 
 // Indicator and KPI helpers
 const indicatorIconComponentMap: Record<NomeIcone, LucideIcon> = {
@@ -262,7 +263,7 @@ export default function DashboardView() {
     const diretoria = diretoriaApi || diretoriasConfig[id]
 
     if (!id) {
-        return <p className="text-center mt-10">Carregando...</p>
+        return <GlobalLoading />
     }
     if (!diretoria) {
         return <p className="text-center mt-10">Diretoria não encontrada</p>

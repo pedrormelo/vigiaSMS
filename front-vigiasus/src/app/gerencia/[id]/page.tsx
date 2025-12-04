@@ -4,7 +4,7 @@
 import Image from 'next/image';
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
-import { SearchX, UploadCloud, Loader2 } from 'lucide-react';
+import { SearchX, UploadCloud } from 'lucide-react';
 
 // Hooks
 import { useDebounce } from "@/hooks/useDebounce";
@@ -20,6 +20,7 @@ import { VisualizarContextoModal } from "@/components/popups/visualizarContextoM
 import { ModalAdicionarConteudo } from "@/components/popups/addContextoModal/index";
 import StatusBadge from "@/components/alerts/statusBadge";
 import StatusBanner from "@/components/ui/status-banner";
+import GlobalLoading from "@/components/ui/global-loading";
 import { showSuccessToast, showErrorToast } from "@/components/ui/Toasts";
 // [REMOVIDO] OcultarContextoModal (agora vive dentro do card)
 
@@ -374,7 +375,7 @@ export default function GerenciaPage() {
         }
     }, [modo]);
 
-    if (!slug) return <div className="p-8 text-center text-gray-500">Carregando...</div>;
+    if (!slug) return <GlobalLoading />;
 
     if (error && !isLoading) {
         return (
@@ -387,12 +388,7 @@ export default function GerenciaPage() {
     }
 
     if (isLoading || !gerenciaData) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-[400px] text-gray-500">
-                <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
-                <p className="mt-4 text-lg font-medium">A carregar dados da gerência...</p>
-            </div>
-        );
+        return <GlobalLoading message="Carregando dados da gerência..." subMessage="Estamos buscando arquivos, indicadores e dashboards cadastrados." />;
     }
 
     const { diretoria } = gerenciaData;
