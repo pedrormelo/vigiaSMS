@@ -30,135 +30,135 @@ import { HiOutlineLogout } from "react-icons/hi";
 import Image from 'next/image';
 import { Button } from "@/components/ui/button"; //
 import { cn } from "@/lib/utils"; //
-import { SearchBar } from "@/components/ui/search-bar-faq"; 
+import { SearchBar } from "@/components/ui/search-bar-faq";
 import { buildHelpSearchTokens, searchAjudaEntries } from "@/lib/ajudaSearch";
 import type { HelpSearchEntry } from "@/constants/ajudaSearchIndex";
 
 
 const OQueEContent = () => (
-    <div className="space-y-10">
-      <div>
-        <h1 className="text-4xl font-bold text-gray-900 mb-3 flex items-center gap-3">
-          <HelpCircle className="w-9 h-9 text-blue-600"/> O que é o SIGE?
-        </h1>
-        <p className="text-xl text-gray-600">
-          Plataforma digital oficial da Secretaria Municipal de Saúde de Jaboatão dos Guararapes.
-        </p>
-      </div>
+  <div className="space-y-10">
+    <div>
+      <h1 className="text-4xl font-bold text-gray-900 mb-3 flex items-center gap-3">
+        <HelpCircle className="w-9 h-9 text-blue-600" /> O que é o SIGE?
+      </h1>
+      <p className="text-xl text-gray-600">
+        Plataforma digital oficial da Secretaria Municipal de Saúde de Jaboatão dos Guararapes.
+      </p>
+    </div>
 
-      <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed">
-        <p>
-          O <strong>SIGE</strong> (Sistema Integrado de Gestão Estratégica em Saude do Jaboatão dos Guararapes) centraliza e organiza informações cruciais para a gestão da saúde pública no município, transformando dados em conhecimento estratégico para apoiar a tomada de decisões. Ele reúne diversos tipos de <strong>&ldquo;Contextos&rdquo;</strong> – como relatórios, links, dashboards e indicadores – em um único local.
-        </p>
-      </div>
+    <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed">
+      <p>
+        O <strong>SIGE</strong> (Sistema Integrado de Gestão Estratégica em Saúde do Jaboatão dos Guararapes) centraliza e organiza informações cruciais para a gestão da saúde pública no município, transformando dados em conhecimento estratégico para apoiar a tomada de decisões. Ele reúne diversos tipos de <strong>&ldquo;Contextos&rdquo;</strong> – como relatórios, links, dashboards e indicadores – em um único local.
+      </p>
+    </div>
 
-      <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
-        <h3 className="font-semibold text-blue-800 mb-2 text-lg">Objetivo Principal</h3>
-        <p className="text-blue-700">
-          Otimizar o fluxo de informações dentro da Secretaria de Saúde, tornando os dados mais acessíveis, confiáveis e úteis para melhorar a gestão e a saúde da população.
-        </p>
-      </div>
+    <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
+      <h3 className="font-semibold text-blue-800 mb-2 text-lg">Objetivo Principal</h3>
+      <p className="text-blue-700">
+        Otimizar o fluxo de informações dentro da Secretaria de Saúde, tornando os dados mais acessíveis, confiáveis e úteis para melhorar a gestão e a saúde da população.
+      </p>
+    </div>
 
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Principais Recursos:</h2>
-        <div className="space-y-3 text-gray-700">
-          <div className="flex gap-3 items-start">
-            <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2.5 flex-shrink-0" />
-            <p><strong>Coleta e Centralização de Dados:</strong> Reúne informações das gerências e diretorias (Contextos).</p>
-          </div>
-          <div className="flex gap-3 items-start">
-            <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2.5 flex-shrink-0" />
-            <p><strong>Análise e Visualização:</strong> Oferece relatórios, gráficos interativos (Dashboards) e indicadores (KPIs).</p>
-          </div>
-           <div className="flex gap-3 items-start">
-            <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2.5 flex-shrink-0" />
-            <p><strong>Fluxo de Validação:</strong> Garante a qualidade da informação com um processo de submissão, revisão e publicação.</p>
-          </div>
-          <div className="flex gap-3 items-start">
-            <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2.5 flex-shrink-0" />
-            <p><strong>Apoio à Decisão:</strong> Transforma dados em insights para embasar decisões e políticas públicas.</p>
-          </div>
-           <div className="flex gap-3 items-start">
-            <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2.5 flex-shrink-0" />
-            <p><strong>Notificações e Colaboração:</strong> Mantém os usuários informados através da Central de Notificações e comentários.</p>
-          </div>
+    <div>
+      <h2 className="text-2xl font-bold text-gray-900 mb-6">Principais Recursos:</h2>
+      <div className="space-y-3 text-gray-700">
+        <div className="flex gap-3 items-start">
+          <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2.5 flex-shrink-0" />
+          <p><strong>Coleta e Centralização de Dados:</strong> Reúne informações das gerências e diretorias (Contextos).</p>
+        </div>
+        <div className="flex gap-3 items-start">
+          <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2.5 flex-shrink-0" />
+          <p><strong>Análise e Visualização:</strong> Oferece relatórios, gráficos interativos (Dashboards) e indicadores (KPIs).</p>
+        </div>
+        <div className="flex gap-3 items-start">
+          <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2.5 flex-shrink-0" />
+          <p><strong>Fluxo de Validação:</strong> Garante a qualidade da informação com um processo de submissão, revisão e publicação.</p>
+        </div>
+        <div className="flex gap-3 items-start">
+          <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2.5 flex-shrink-0" />
+          <p><strong>Apoio à Decisão:</strong> Transforma dados em insights para embasar decisões e políticas públicas.</p>
+        </div>
+        <div className="flex gap-3 items-start">
+          <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2.5 flex-shrink-0" />
+          <p><strong>Notificações e Colaboração:</strong> Mantém os usuários informados através da Central de Notificações e comentários.</p>
         </div>
       </div>
     </div>
+  </div>
 );
 
 const NavbarContent = () => (
-    <div className="space-y-10">
-        <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-3 flex items-center gap-3">
-                <Navigation className="w-9 h-9 text-blue-600"/> Barra de Navegação (Navbar)
-            </h1>
-            <p className="text-xl text-gray-600">Menu superior fixo para acesso rápido às funcionalidades.</p>
-        </div>
-
-        <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed">
-            <p>
-                A barra de navegação (Navbar) fica sempre visível no topo da tela, com altura padrão de 64px (`min-h-[64px]`), permitindo acesso rápido aos principais recursos e informações do sistema.
-            </p>
-        </div>
-
-        {/* Adicionar imagem aqui se disponível */}
-        {/* <Image src="/docs/images/navbar_example.png" ... /> */}
-
-        <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Componentes Principais:</h2>
-            <div className="space-y-4">
-                <div className="flex gap-4 items-start p-4 border border-gray-200 rounded-lg bg-gray-50/50">
-                    <Menu className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1"/>
-                    <div>
-                        <h3 className="font-semibold text-gray-800">Botão Menu (☰)</h3>
-                        <p className="text-sm text-gray-600">Abre o Menu Lateral (Sidebar) com links específicos para seu perfil.</p>
-                    </div>
-                </div>
-                 <div className="flex gap-4 items-start p-4 border border-gray-200 rounded-lg bg-gray-50/50">
-                     <span className="font-bold text-blue-700 text-lg mt-0.5 flex-shrink-0">SIGE</span>
-                    <div>
-                        <h3 className="font-semibold text-gray-800">Logo SIGE</h3>
-                        <p className="text-sm text-gray-600">Leva você de volta para a Página Inicial da plataforma.</p>
-                    </div>
-                </div>
-                 <div className="flex gap-4 items-start p-4 border border-gray-200 rounded-lg bg-gray-50/50">
-                    <Image src="/logos/logo-jaboatao.png" alt="Logo Jaboatão" width={100} height={24} className="h-6 w-auto mt-1 flex-shrink-0"/>
-                    <div>
-                        <h3 className="font-semibold text-gray-800">Logo da Prefeitura</h3>
-                        <p className="text-sm text-gray-600">Logotipo oficial da Prefeitura de Jaboatão dos Guararapes.</p>
-                    </div>
-                </div>
-                 <div className="flex gap-4 items-start p-4 border border-gray-200 rounded-lg bg-gray-50/50">
-                    <Image src="/icons/online.svg" alt="Status" width={24} height={24} className="h-6 w-6 mt-1 flex-shrink-0"/>
-                    <div>
-                        <h3 className="font-semibold text-gray-800">Ícone de Status do Sistema</h3>
-                        <p className="text-sm text-gray-600">Indica atualizações ou informações importantes sobre o sistema (clicável para ver detalhes, como em `SystemUpdateView`).</p>
-                    </div>
-                </div>
-                <div className="flex gap-4 items-start p-4 border border-gray-200 rounded-lg bg-gray-50/50">
-                     <div className="relative mt-1 flex-shrink-0">
-                         <Bell className="w-6 h-6 text-blue-600"/>
-                         <div className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full border-2 border-white text-white text-[10px] flex items-center justify-center font-bold">5</div>
-                     </div>
-                    <div>
-                        <h3 className="font-semibold text-gray-800">Ícone de Notificações (🔔)</h3>
-                        <p className="text-sm text-gray-600">Abre a Central de Notificações, mostrando atualizações sobre status de contextos, comentários e avisos do sistema. O número indica notificações não lidas.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+  <div className="space-y-10">
+    <div>
+      <h1 className="text-4xl font-bold text-gray-900 mb-3 flex items-center gap-3">
+        <Navigation className="w-9 h-9 text-blue-600" /> Barra de Navegação (Navbar)
+      </h1>
+      <p className="text-xl text-gray-600">Menu superior fixo para acesso rápido às funcionalidades.</p>
     </div>
+
+    <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed">
+      <p>
+        A barra de navegação (Navbar) fica sempre visível no topo da tela, com altura padrão de 64px (`min-h-[64px]`), permitindo acesso rápido aos principais recursos e informações do sistema.
+      </p>
+    </div>
+
+    {/* Adicionar imagem aqui se disponível */}
+    {/* <Image src="/docs/images/navbar_example.png" ... /> */}
+
+    <div>
+      <h2 className="text-2xl font-bold text-gray-900 mb-6">Componentes Principais:</h2>
+      <div className="space-y-4">
+        <div className="flex gap-4 items-start p-4 border border-gray-200 rounded-lg bg-gray-50/50">
+          <Menu className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
+          <div>
+            <h3 className="font-semibold text-gray-800">Botão Menu (☰)</h3>
+            <p className="text-sm text-gray-600">Abre o Menu Lateral (Sidebar) com links específicos para seu perfil.</p>
+          </div>
+        </div>
+        <div className="flex gap-4 items-start p-4 border text-blue-600 border-gray-200 rounded-lg bg-gray-50/50">
+          <span className="font-semibold">Sige<span className="font-light">Saúde</span></span>
+          <div>
+            <h3 className="font-semibold text-gray-800">Logo SIGE</h3>
+            <p className="text-sm text-gray-600">Leva você de volta para a Página Inicial da plataforma.</p>
+          </div>
+        </div>
+        <div className="flex gap-4 items-start p-4 border border-gray-200 rounded-lg bg-gray-50/50">
+          <Image src="/logos/logo-jaboatao.png" alt="Logo Jaboatão" width={100} height={24} className="h-6 w-auto mt-1 flex-shrink-0" />
+          <div>
+            <h3 className="font-semibold text-gray-800">Logo da Prefeitura</h3>
+            <p className="text-sm text-gray-600">Logotipo oficial da Prefeitura de Jaboatão dos Guararapes.</p>
+          </div>
+        </div>
+        <div className="flex gap-4 items-start p-4 border border-gray-200 rounded-lg bg-gray-50/50">
+          <Image src="/icons/online.svg" alt="Status" width={24} height={24} className="h-6 w-6 mt-1 flex-shrink-0" />
+          <div>
+            <h3 className="font-semibold text-gray-800">Ícone de Status do Sistema</h3>
+            <p className="text-sm text-gray-600">Indica atualizações ou informações importantes sobre o sistema (clicável para ver detalhes, como em `SystemUpdateView`).</p>
+          </div>
+        </div>
+        <div className="flex gap-4 items-start p-4 border border-gray-200 rounded-lg bg-gray-50/50">
+          <div className="relative mt-1 flex-shrink-0">
+            <Bell className="w-6 h-6 text-blue-600" />
+            <div className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full border-2 border-white text-white text-[10px] flex items-center justify-center font-bold">5</div>
+          </div>
+          <div>
+            <h3 className="font-semibold text-gray-800">Ícone de Notificações (🔔)</h3>
+            <p className="text-sm text-gray-600">Abre a Central de Notificações, mostrando atualizações sobre status de contextos, comentários e avisos do sistema. O número indica notificações não lidas.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 );
 
 
 const SidebarContent = () => (
   <div className="space-y-10">
     <div>
-        <h1 className="text-4xl font-bold text-gray-900 mb-3 flex items-center gap-3">
-            <LayoutDashboard className="w-9 h-9 text-blue-600"/> Menu Lateral (Sidebar)
-        </h1>
-        <p className="text-xl text-gray-600">Navegação principal organizada por perfil de usuário.</p>
+      <h1 className="text-4xl font-bold text-gray-900 mb-3 flex items-center gap-3">
+        <LayoutDashboard className="w-9 h-9 text-blue-600" /> Menu Lateral (Sidebar)
+      </h1>
+      <p className="text-xl text-gray-600">Navegação principal organizada por perfil de usuário.</p>
     </div>
 
     <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed">
@@ -174,43 +174,43 @@ const SidebarContent = () => (
       <h2 className="text-2xl font-bold text-gray-900 mb-6">Estrutura Comum:</h2>
       <div className="space-y-4">
         <div className="border border-gray-200 rounded-lg p-4 bg-gray-50/50">
-           <h3 className="font-semibold text-gray-800 mb-2 flex items-center gap-2"><UserIcon className="w-5 h-5 text-blue-600"/> Informações do Usuário</h3>
-           <p className="text-sm text-gray-600">Mostra seu nome e perfil (Membro, Gerente, etc.).</p>
+          <h3 className="font-semibold text-gray-800 mb-2 flex items-center gap-2"><UserIcon className="w-5 h-5 text-blue-600" /> Informações do Usuário</h3>
+          <p className="text-sm text-gray-600">Mostra seu nome e perfil (Membro, Gerente, etc.).</p>
         </div>
         <div className="border border-gray-200 rounded-lg p-4 bg-gray-50/50">
-           <h3 className="font-semibold text-gray-800 mb-2">Links de Navegação</h3>
-           <p className="text-sm text-gray-600 mb-3">A lista exata depende do seu perfil, mas geralmente inclui:</p>
-            <div className="space-y-2">
-                <div className="flex gap-3 items-start">
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" />
-                  <p className="text-sm text-gray-700"><strong>Página Inicial (<Home className="inline h-4 w-4"/>):</strong> Retorna à tela principal.</p>
-                </div>
-                <div className="flex gap-3 items-start">
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" />
-                  <p className="text-sm text-gray-700"><strong>Dashboard (<LayoutDashboard className="inline h-4 w-4"/>):</strong> Painel de gráficos (varia por perfil)/page.tsx].</p>
-                </div>
-                 <div className="flex gap-3 items-start">
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" />
-                  <p className="text-sm text-gray-700"><strong>Dados Gerais (<GalleryVerticalEnd className="inline h-4 w-4"/>):</strong> Visão de todas as Diretorias e Gerências.</p>
-                </div>
-                 <div className="flex gap-3 items-start">
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" />
-                  <p className="text-sm text-gray-700"><strong>Validar Contextos / Contextos Enviados (<BookCheck className="inline h-4 w-4"/> / <FolderClock className="inline h-4 w-4"/>):</strong> Acompanhamento e/ou aprovação de contextos (varia por perfil).</p>
-                </div>
-                 <div className="flex gap-3 items-start">
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" />
-                  <p className="text-sm text-gray-700"><strong>Minhas Gerências (<Layers className="inline h-4 w-4"/>):</strong> (Visível para Diretor) Acesso rápido às gerências da sua diretoria/page.tsx].</p>
-                </div>
-                <div className="flex gap-3 items-start">
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" />
-                  <p className="text-sm text-gray-700"><strong>Meus Comentários (<MessageSquareMore className="inline h-4 w-4"/>):</strong> Lista dos seus comentários no sistema.</p>
-                </div>
-                 <div className="flex gap-3 items-start">
-                  <div className="w-1.5 h-1.5 rounded-full bg-gray-600 mt-1.5 flex-shrink-0" />
-                  <p className="text-sm text-gray-700"><strong>Sair do Sistema (<HiOutlineLogout className="inline h-4 w-4"/>):</strong> Desconecta sua sessão.</p>
-                </div>
+          <h3 className="font-semibold text-gray-800 mb-2">Links de Navegação</h3>
+          <p className="text-sm text-gray-600 mb-3">A lista exata depende do seu perfil, mas geralmente inclui:</p>
+          <div className="space-y-2">
+            <div className="flex gap-3 items-start">
+              <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" />
+              <p className="text-sm text-gray-700"><strong>Página Inicial (<Home className="inline h-4 w-4" />):</strong> Retorna à tela principal.</p>
             </div>
-             <p className="text-xs text-gray-500 mt-3 italic"></p>
+            <div className="flex gap-3 items-start">
+              <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" />
+              <p className="text-sm text-gray-700"><strong>Dashboard (<LayoutDashboard className="inline h-4 w-4" />):</strong> Painel de gráficos (varia por perfil)/page.tsx].</p>
+            </div>
+            <div className="flex gap-3 items-start">
+              <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" />
+              <p className="text-sm text-gray-700"><strong>Dados Gerais (<GalleryVerticalEnd className="inline h-4 w-4" />):</strong> Visão de todas as Diretorias e Gerências.</p>
+            </div>
+            <div className="flex gap-3 items-start">
+              <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" />
+              <p className="text-sm text-gray-700"><strong>Validar Contextos / Contextos Enviados (<BookCheck className="inline h-4 w-4" /> / <FolderClock className="inline h-4 w-4" />):</strong> Acompanhamento e/ou aprovação de contextos (varia por perfil).</p>
+            </div>
+            <div className="flex gap-3 items-start">
+              <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" />
+              <p className="text-sm text-gray-700"><strong>Minhas Gerências (<Layers className="inline h-4 w-4" />):</strong> (Visível para Diretor) Acesso rápido às gerências da sua diretoria/page.tsx].</p>
+            </div>
+            <div className="flex gap-3 items-start">
+              <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" />
+              <p className="text-sm text-gray-700"><strong>Meus Comentários (<MessageSquareMore className="inline h-4 w-4" />):</strong> Lista dos seus comentários no sistema.</p>
+            </div>
+            <div className="flex gap-3 items-start">
+              <div className="w-1.5 h-1.5 rounded-full bg-gray-600 mt-1.5 flex-shrink-0" />
+              <p className="text-sm text-gray-700"><strong>Sair do Sistema (<HiOutlineLogout className="inline h-4 w-4" />):</strong> Desconecta sua sessão.</p>
+            </div>
+          </div>
+          <p className="text-xs text-gray-500 mt-3 italic"></p>
         </div>
       </div>
     </div>
@@ -219,76 +219,76 @@ const SidebarContent = () => (
 
 
 const PerfisContent = () => (
-    <div className="space-y-10">
-        <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-3 flex items-center gap-3">
-                <Users className="w-9 h-9 text-blue-600"/> Perfis de Usuário
-            </h1>
-            <p className="text-xl text-gray-600">Níveis de acesso e permissões no SIGE.</p>
-        </div>
-
-        <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed">
-            <p>
-                O SIGE utiliza diferentes perfis para garantir que cada usuário tenha acesso às informações e funcionalidades adequadas à sua função. As permissões são geralmente cumulativas.
-            </p>
-        </div>
-
-        <div className="space-y-6">
-            <div className="border border-gray-200 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2"><UserIcon className="w-5 h-5 text-blue-600"/> Membro</h3>
-                <p className="text-gray-600 mb-4 text-sm">
-                    <strong>Função Principal:</strong> Adicionar e gerenciar os &ldquo;Contextos&rdquo; de sua gerência.
-                </p>
-                <strong className="text-sm text-gray-800">Principais Permissões:</strong>
-                <div className="space-y-2 text-sm text-gray-600 mt-2">
-                    <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" /> Visualizar Dados Gerais e página da Gerência.</div>
-                    <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" /> Adicionar novos contextos (arquivos, links, gráficos, indicadores).</div>
-                    <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" /> Criar novas versões de contextos submetidos.</div>
-                    <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" /> Acompanhar status em &ldquo;Contextos Enviados&rdquo;.</div>
-                </div>
-            </div>
-
-            <div className="border border-gray-200 rounded-lg p-6">
-                 <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2"><UserCog className="w-5 h-5 text-green-600"/> Gerente</h3>
-                <p className="text-gray-600 mb-4 text-sm">
-                    <strong>Função Principal:</strong> Validar contextos enviados pelos membros de sua gerência.
-                </p>
-                 <strong className="text-sm text-gray-800">Principais Permissões (além das de Membro):</strong>
-                <div className="space-y-2 text-sm text-gray-600 mt-2">
-                    <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-green-600 mt-1.5 flex-shrink-0" /> Acessar &ldquo;Validar Contextos&rdquo; para revisar envios.</div>
-                    <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-green-600 mt-1.5 flex-shrink-0" /> <strong>Deferir:</strong> Aprovar e enviar para o Diretor.</div>
-                    <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-green-600 mt-1.5 flex-shrink-0" /> <strong>Indeferir / Pedir Correção:</strong> Reprovar ou devolver ao Membro com justificativa.</div>
-                </div>
-            </div>
-
-             <div className="border border-gray-200 rounded-lg p-6">
-                 <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2"><UserCheckIcon className="w-5 h-5 text-purple-600"/> Diretor(a)</h3>
-                <p className="text-gray-600 mb-4 text-sm">
-                    <strong>Função Principal:</strong> Validar contextos aprovados pelos Gerentes e gerenciar dashboard da diretoria.
-                </p>
-                 <strong className="text-sm text-gray-800">Principais Permissões (além das de Gerente):</strong>
-                <div className="space-y-2 text-sm text-gray-600 mt-2">
-                    <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-purple-600 mt-1.5 flex-shrink-0" /> Validar contextos aprovados pelo Gerente.</div>
-                    <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-purple-600 mt-1.5 flex-shrink-0" /> Visualizar dados de todas as gerências da diretoria/page.tsx].</div>
-                    <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-purple-600 mt-1.5 flex-shrink-0" /> Acessar e Editar Layout do Dashboard da Diretoria/editar-layout/page.tsx].</div>
-                </div>
-            </div>
-
-            <div className="border border-gray-200 rounded-lg p-6">
-                 <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2"><UserIcon className="w-5 h-5 text-yellow-600"/> Secretário(a)</h3>
-                <p className="text-gray-600 mb-4 text-sm">
-                    <strong>Função Principal:</strong> Visão geral e consolidada das informações estratégicas.
-                </p>
-                 <strong className="text-sm text-gray-800">Principais Permissões:</strong>
-                <div className="space-y-2 text-sm text-gray-600 mt-2">
-                    <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-yellow-600 mt-1.5 flex-shrink-0" /> Visualizar Dados Gerais.</div>
-                    <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-yellow-600 mt-1.5 flex-shrink-0" /> Acessar Dashboard da Secretaria (gráficos destacados).</div>
-                    <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-yellow-600 mt-1.5 flex-shrink-0" /> Visualizar Métricas Globais.</div>
-                     <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-yellow-600 mt-1.5 flex-shrink-0" /> Foco na visualização estratégica, geralmente não valida contextos.</div>
-                </div>
-            </div>
-        </div>
+  <div className="space-y-10">
+    <div>
+      <h1 className="text-4xl font-bold text-gray-900 mb-3 flex items-center gap-3">
+        <Users className="w-9 h-9 text-blue-600" /> Perfis de Usuário
+      </h1>
+      <p className="text-xl text-gray-600">Níveis de acesso e permissões no SIGE.</p>
     </div>
+
+    <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed">
+      <p>
+        O SIGE utiliza diferentes perfis para garantir que cada usuário tenha acesso às informações e funcionalidades adequadas à sua função. As permissões são geralmente cumulativas.
+      </p>
+    </div>
+
+    <div className="space-y-6">
+      <div className="border border-gray-200 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2"><UserIcon className="w-5 h-5 text-blue-600" /> Membro</h3>
+        <p className="text-gray-600 mb-4 text-sm">
+          <strong>Função Principal:</strong> Adicionar e gerenciar os &ldquo;Contextos&rdquo; de sua gerência.
+        </p>
+        <strong className="text-sm text-gray-800">Principais Permissões:</strong>
+        <div className="space-y-2 text-sm text-gray-600 mt-2">
+          <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" /> Visualizar Dados Gerais e página da Gerência.</div>
+          <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" /> Adicionar novos contextos (arquivos, links, gráficos, indicadores).</div>
+          <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" /> Criar novas versões de contextos submetidos.</div>
+          <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" /> Acompanhar status em &ldquo;Contextos Enviados&rdquo;.</div>
+        </div>
+      </div>
+
+      <div className="border border-gray-200 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2"><UserCog className="w-5 h-5 text-green-600" /> Gerente</h3>
+        <p className="text-gray-600 mb-4 text-sm">
+          <strong>Função Principal:</strong> Validar contextos enviados pelos membros de sua gerência.
+        </p>
+        <strong className="text-sm text-gray-800">Principais Permissões (além das de Membro):</strong>
+        <div className="space-y-2 text-sm text-gray-600 mt-2">
+          <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-green-600 mt-1.5 flex-shrink-0" /> Acessar &ldquo;Validar Contextos&rdquo; para revisar envios.</div>
+          <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-green-600 mt-1.5 flex-shrink-0" /> <strong>Deferir:</strong> Aprovar e enviar para o Diretor.</div>
+          <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-green-600 mt-1.5 flex-shrink-0" /> <strong>Indeferir / Pedir Correção:</strong> Reprovar ou devolver ao Membro com justificativa.</div>
+        </div>
+      </div>
+
+      <div className="border border-gray-200 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2"><UserCheckIcon className="w-5 h-5 text-purple-600" /> Diretor(a)</h3>
+        <p className="text-gray-600 mb-4 text-sm">
+          <strong>Função Principal:</strong> Validar contextos aprovados pelos Gerentes e gerenciar dashboard da diretoria.
+        </p>
+        <strong className="text-sm text-gray-800">Principais Permissões (além das de Gerente):</strong>
+        <div className="space-y-2 text-sm text-gray-600 mt-2">
+          <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-purple-600 mt-1.5 flex-shrink-0" /> Validar contextos aprovados pelo Gerente.</div>
+          <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-purple-600 mt-1.5 flex-shrink-0" /> Visualizar dados de todas as gerências da diretoria/page.tsx].</div>
+          <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-purple-600 mt-1.5 flex-shrink-0" /> Acessar e Editar Layout do Dashboard da Diretoria/editar-layout/page.tsx].</div>
+        </div>
+      </div>
+
+      <div className="border border-gray-200 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2"><UserIcon className="w-5 h-5 text-yellow-600" /> Secretário(a)</h3>
+        <p className="text-gray-600 mb-4 text-sm">
+          <strong>Função Principal:</strong> Visão geral e consolidada das informações estratégicas.
+        </p>
+        <strong className="text-sm text-gray-800">Principais Permissões:</strong>
+        <div className="space-y-2 text-sm text-gray-600 mt-2">
+          <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-yellow-600 mt-1.5 flex-shrink-0" /> Visualizar Dados Gerais.</div>
+          <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-yellow-600 mt-1.5 flex-shrink-0" /> Acessar Dashboard da Secretaria (gráficos destacados).</div>
+          <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-yellow-600 mt-1.5 flex-shrink-0" /> Visualizar Métricas Globais.</div>
+          <div className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-yellow-600 mt-1.5 flex-shrink-0" /> Foco na visualização estratégica, geralmente não valida contextos.</div>
+        </div>
+      </div>
+    </div>
+  </div>
 );
 // --- Fim dos Componentes de Conteúdo ---
 
@@ -380,12 +380,12 @@ function PrimeirosPassosPageContent() {
               </div>
             </div>
             <div className="w-full md:w-full lg:max-w-3xl rounded-3xl">
-               <SearchBar
-                 placeholder="Buscar nesta seção..."
-                 value={searchValue}
-                 onChange={setSearchValue}
-                 className="shadow-sm"
-               />
+              <SearchBar
+                placeholder="Buscar nesta seção..."
+                value={searchValue}
+                onChange={setSearchValue}
+                className="shadow-sm"
+              />
 
               {searchTokens.length > 0 && (
                 <div className="mt-4">

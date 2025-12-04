@@ -25,10 +25,10 @@ import { showSuccessToast, showErrorToast } from "@/components/ui/Toasts";
 
 
 import type { FileType } from "@/components/contextosCard/contextoCard";
-import type { AbaAtiva, DetalhesContexto, SubmitData } from "@/components/popups/addContextoModal/types";
+import type { AbaAtiva, DetalhesContexto, SubmitData, VersionInfo } from "@/components/popups/addContextoModal/types";
 import { Contexto, StatusContexto } from "@/components/validar/typesDados";
 
-import { getContextosPorGerencia, criarContexto, CriarContextoData } from "@/services/contextoService";
+import { getContextosPorGerencia, criarContexto, criarVersao, CriarContextoData } from "@/services/contextoService";
 import { getGerenciaBySlug, Gerencia } from "@/services/organizacaoService";
 import { mapTipoGraficoParaBackend, normalizarNumero } from "@/lib/gerenciaUtils";
 import IndicadoresSection from "@/components/gerencia/sections/IndicadoresSection";
@@ -95,6 +95,9 @@ export default function GerenciaPage() {
         let payload: CriarContextoData | null = null;
         let arquivo: File | null = null;
 
+        const versionInfo = (dados.payload as { versionInfo?: VersionInfo | null })?.versionInfo ?? null;
+        const isNovaVersao = Boolean(versionInfo && dadosParaEditar?.id);
+
         try {
             if (dados.type === 'contexto') {
                 const titulo = dados.payload.title?.trim();
@@ -112,8 +115,12 @@ export default function GerenciaPage() {
                     return;
                 }
 
+                const baseTituloConceitual = isNovaVersao && dadosParaEditar?.title
+                    ? dadosParaEditar.title
+                    : titulo;
+
                 payload = {
-                    tituloConceitual: titulo,
+                    tituloConceitual: baseTituloConceitual,
                     tipo: 'ARQUIVO_LINK',
                     titulo,
                     descricao: descricao || undefined,
@@ -142,8 +149,12 @@ export default function GerenciaPage() {
                     return;
                 }
 
+                const baseTituloConceitual = isNovaVersao && dadosParaEditar?.title
+                    ? dadosParaEditar.title
+                    : titulo;
+
                 payload = {
-                    tituloConceitual: titulo,
+                    tituloConceitual: baseTituloConceitual,
                     tipo: 'DASHBOARD',
                     titulo,
                     descricao: descricao || undefined,
@@ -170,8 +181,12 @@ export default function GerenciaPage() {
                     return;
                 }
 
+                const baseTituloConceitual = isNovaVersao && dadosParaEditar?.title
+                    ? dadosParaEditar.title
+                    : titulo;
+
                 payload = {
-                    tituloConceitual: titulo,
+                    tituloConceitual: baseTituloConceitual,
                     tipo: 'INDICADOR',
                     titulo,
                     descricao: descricao || undefined,
@@ -188,14 +203,28 @@ export default function GerenciaPage() {
                 return;
             }
 
-            await criarContexto(payload, arquivo);
+            let successMessage = 'Contexto enviado com sucesso! Aguardando aprovação.';
 
-            showSuccessToast('Contexto enviado com sucesso! Aguardando aprovação.');
+            if (isNovaVersao && dadosParaEditar?.id) {
+                const { tituloConceitual: _omit, ...rest } = payload;
+                const versaoPayload: CriarContextoData = {
+                    ...rest,
+                    motivoNovaVersao: versionInfo?.type,
+                    descNovaVersao: versionInfo?.description,
+                };
+
+                await criarVersao(dadosParaEditar.id, versaoPayload, arquivo);
+                successMessage = 'Nova versão enviada! Aguardando aprovação.';
+            } else {
+                await criarContexto(payload, arquivo);
+            }
+
+            showSuccessToast(successMessage);
             fecharModalAdicionar();
             carregarDados();
         } catch (err: any) {
-            console.error('Erro ao criar contexto:', err);
-            showErrorToast(err?.message || 'Erro ao enviar contexto.');
+            console.error(isNovaVersao ? 'Erro ao criar nova versão:' : 'Erro ao criar contexto:', err);
+            showErrorToast(err?.message || (isNovaVersao ? 'Erro ao enviar nova versão.' : 'Erro ao enviar contexto.'));
         }
     };
 

@@ -38,21 +38,21 @@ export default function LoginPage() {
             return;
         }
         setLoading(true);
-       try {
+        try {
             const user = await authService.login(cpf, password);
             authService.saveUser(user, remember);
             showSuccessToast(`Bem-vindo(a), ${user.name}!`);
             router.push("/");
-        } catch (err) { 
+        } catch (err) {
             //  verificação
             let errorMessage = "Falha no login";
             if (err instanceof Error) {
                 errorMessage = err.message;
             }
-            
+
             // a variável segura
             showErrorToast(errorMessage);
-            
+
         } finally {
             setLoading(false);
         }
@@ -65,23 +65,18 @@ export default function LoginPage() {
                 <div className="flex flex-col items-center md:items-start text-center md:text-left gap-4">
                     <div>
                         <h1 className="text-3xl md:text-6xl text-white leading-tight">
-                        <span className="font-bold">SIGE</span>
-                        <span className="font-light"> Jaboatão</span>
+                            <span className="font-semibold">Sige</span>
+                            <span className="font-light">Saúde</span>
                         </h1>
 
-                          <p className="text-white/95 text-lg md:text-[0.69rem] max-w-md text-center">
+                        {/* <p className="text-white/95 text-lg md:text-[0.69rem] max-w-md text-center">
                             Sistema Integrado de Gestão Estratégica em Saúde do Jaboatão dos Guararapes
-                        </p>
+                        </p> */}
 
-                        <p className="text-white/95 text-lg md:text-xl mt-2 max-w-md text-center">
-                            <b>O olhar digital da saúde pública.</b>
+                        <p className="text-white/95 text-lg font-medium md:text-xl mt-2 max-w-md text-center">
+                            O olhar digital da <b>saúde pública.</b>
                         </p>
                     </div>
-                    {/* preciso da logo branca */}
-                    {/* <div className="flex flex-col md:flex-row items-center md:items-start text-center md:text-left gap-6 mt-6">
-                        <Image src="/logos/logo-gti.png" alt="GTI" width={60} height={60} priority />
-                        <Image src="/logos/logo-jaboatao.png" alt="Jaboatão" width={280} height={280} priority />
-                    </div> */}
                 </div>
 
                 {/* Card (right side) */}
@@ -98,69 +93,69 @@ export default function LoginPage() {
                     {/* Card */}
                     <div className="relative z-10 rounded-3xl bg-white backdrop-blur-sm border border-white/40 shadow-lg p-6 md:p-8">
                         <form onSubmit={onSubmit} className="space-y-4">
-                        <div>
-                            <h1 className="text-2xl mb-2 font-bold text-blue-600">Entrar</h1>
-                            <p className="text-sm mb-4 font-medium text-gray-600">Use suas credenciais do SIGE para entrar</p>
-                            <label htmlFor="cpf" className="block text-sm font-medium text-gray-700 mb-1">CPF</label>
-                            <Input
-                                id="cpf"
-                                type="text"
-                                inputMode="numeric"
-                                placeholder="000.000.000-00"
-                                value={cpf}
-                                onChange={(e) => {
-                                    const masked = formatCPF(e.target.value);
-                                    setCpf(masked);
-                                    if (cpfError) setCpfError(null);
-                                }}
-                                onBlur={() => {
-                                    if (cpf && cpf.replace(/\D/g, "").length !== 11) {
-                                        setCpfError("Informe os 11 dígitos do CPF");
-                                    }
-                                }}
-                                pattern="\d{3}\.\d{3}\.\d{3}-\d{2}"
-                                maxLength={14} // 000.000.000-00
-                                className={`rounded-2xl border ${cpfError ? 'border-red-500 ring-red-300' : 'border-gray-400/80 focus:ring-blue-400 focus:border-blue-300'} focus:ring-3 ring-offset-1`}
-                                autoComplete="off"
-                            />
-                            {cpfError && <p className="mt-1 text-xs text-red-600 font-medium">{cpfError}</p>}
-                        </div>
-                        <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
-                            <Input
-                                id="password"
-                                type="password"
-                                placeholder="••••••••"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="rounded-2xl border border-gray-400/80 focus:ring-blue-400 focus:border-blue-300 focus:ring-3 ring-offset-1"
-                                autoComplete="current-password"
-                            />
-                        </div>
-
-                        <div className="flex items-center justify-between pt-2">
-                            <label className="inline-flex items-center gap-2 text-sm text-gray-600">
-                                <input
-                                    type="checkbox"
-                                    checked={remember}
-                                    onChange={(e) => setRemember(e.target.checked)}
-                                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            <div>
+                                <h1 className="text-2xl mb-2 font-bold text-blue-600">Entrar</h1>
+                                <p className="text-sm mb-4 font-medium text-gray-600">Use suas credenciais do SIGE para entrar</p>
+                                <label htmlFor="cpf" className="block text-sm font-medium text-gray-700 mb-1">CPF</label>
+                                <Input
+                                    id="cpf"
+                                    type="text"
+                                    inputMode="numeric"
+                                    placeholder="000.000.000-00"
+                                    value={cpf}
+                                    onChange={(e) => {
+                                        const masked = formatCPF(e.target.value);
+                                        setCpf(masked);
+                                        if (cpfError) setCpfError(null);
+                                    }}
+                                    onBlur={() => {
+                                        if (cpf && cpf.replace(/\D/g, "").length !== 11) {
+                                            setCpfError("Informe os 11 dígitos do CPF");
+                                        }
+                                    }}
+                                    pattern="\d{3}\.\d{3}\.\d{3}-\d{2}"
+                                    maxLength={14} // 000.000.000-00
+                                    className={`rounded-2xl border ${cpfError ? 'border-red-500 ring-red-300' : 'border-gray-400/80 focus:ring-blue-400 focus:border-blue-300'} focus:ring-3 ring-offset-1`}
+                                    autoComplete="off"
                                 />
-                                Lembrar de mim
-                            </label>
-                            <button type="button" className="text-sm text-blue-600 hover:underline">
-                                Esqueci minha senha
-                            </button>
-                        </div>
+                                {cpfError && <p className="mt-1 text-xs text-red-600 font-medium">{cpfError}</p>}
+                            </div>
+                            <div>
+                                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+                                <Input
+                                    id="password"
+                                    type="password"
+                                    placeholder="••••••••"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="rounded-2xl border border-gray-400/80 focus:ring-blue-400 focus:border-blue-300 focus:ring-3 ring-offset-1"
+                                    autoComplete="current-password"
+                                />
+                            </div>
 
-                        <Button type="submit" className="w-full hover:bg-gradient-to-b from-white to-gray-200/20 hover:delay-5000" disabled={loading}>
-                            {loading ? "Entrando..." : "Entrar"}
-                        </Button>
+                            <div className="flex items-center justify-between pt-2">
+                                <label className="inline-flex items-center gap-2 text-sm text-gray-600">
+                                    <input
+                                        type="checkbox"
+                                        checked={remember}
+                                        onChange={(e) => setRemember(e.target.checked)}
+                                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    />
+                                    Lembrar de mim
+                                </label>
+                                <button type="button" className="text-sm text-blue-600 hover:underline">
+                                    Esqueci minha senha
+                                </button>
+                            </div>
 
-                        {/* Demo creds hint */}
-                        <div className="text-[11px] text-gray-500 mt-2">
-                            Use seu CPF e sua senha.
-                        </div>
+                            <Button type="submit" className="w-full hover:bg-gradient-to-b from-white to-gray-200/20 hover:delay-5000" disabled={loading}>
+                                {loading ? "Entrando..." : "Entrar"}
+                            </Button>
+
+                            {/* Demo creds hint */}
+                            <div className="text-[11px] text-gray-500 mt-2">
+                                Use seu CPF e sua senha.
+                            </div>
                         </form>
                     </div>
                 </div>

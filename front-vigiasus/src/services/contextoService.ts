@@ -26,6 +26,8 @@ export interface CriarContextoData {
     textoComparativo?: string;
     cor?: string;
     icone?: string;
+    motivoNovaVersao?: string;
+    descNovaVersao?: string;
 }
 
 // --- INTERFACES DE SAÍDA (RES / BACKEND) ---
