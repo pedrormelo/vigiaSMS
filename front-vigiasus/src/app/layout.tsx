@@ -10,6 +10,9 @@ import { Toaster } from "sonner";
 import SessionTimeoutProvider from "@/components/providers/session-timeout-provider";
 import OnboardingModal from '@/components/onboarding/onboardingModal';
 import OnboardingWrapper from '@/components/onboarding/onboardingWrapper';
+import AppTour from '@/components/tour/appTour';
+import { TourProvider } from '@/contexts/tourContext';
+import TourManager from '@/components/tour/tourManager';
 
 const montserrat = Montserrat({
   subsets: ['latin'],
@@ -28,14 +31,19 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className={`${montserrat.className} antialiased flex flex-col selection:bg-green-400 selection:text-white`}>
-        <GlobalScrollArea>
-          <SessionTimeoutProvider>
-            <AppShell>
-              {children}
-            </AppShell>
-            <Toaster />
-          <OnboardingWrapper />
-          </SessionTimeoutProvider>
+   <GlobalScrollArea>
+          {/* Envolvemos com o TourProvider */}
+          <TourProvider>
+             <SessionTimeoutProvider>
+                <AppShell>
+                  {children}
+                </AppShell>
+                 {/*<OnboardingWrapper />*/}
+                <TourManager />
+                <AppTour />
+                <Toaster />
+             </SessionTimeoutProvider>
+          </TourProvider>
         </GlobalScrollArea>
       </body>
     </html>
