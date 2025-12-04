@@ -2,9 +2,13 @@
 "use client"
 
 import { FileItem } from "../contextosCard/contextoCard"
+import { FileListItem } from "../contextosCard/fileListItem"
+import { FileDetailedListItem } from "../contextosCard/fileDetailedListItem"
 import { AddContextButton } from "./adicionarContexto"
 import { Contexto } from "@/components/validar/typesDados"
 import { cn } from "@/lib/utils"
+
+export type ViewMode = 'grid' | 'list' | 'detailed'
 
 interface FileGridProps {
     files: Contexto[]
@@ -16,6 +20,7 @@ interface FileGridProps {
     scroll?: boolean
     maxHeight?: string
     containerId?: string
+    viewMode?: ViewMode
 }
 
 export function FileGrid({
@@ -27,32 +32,68 @@ export function FileGrid({
     onToggleOculto,
     scroll = true,
     maxHeight = '70vh',
-    containerId
+    containerId,
+    viewMode = 'grid'
 }: FileGridProps) {
-    const items = [
-        ...(isEditing ? [<AddContextButton key="add-context" id="tour-gerencia-add" onClick={() => onAddContextClick?.()} />] : []),
-        ...files.map(file => (
-            <FileItem
-                key={file.id}
-                id={file.id}
-                title={file.title}
-                type={file.type}
-                insertedDate={file.insertedDate}
-                status={file.status}
-                versoes={file.versoes}
-                estaOculto={file.estaOculto}
-                isEditing={isEditing}
-                onClick={() => onFileClick?.(file)}
-                onToggleOculto={onToggleOculto}
-            />
-        ))
-    ]
+    // Renderiza os itens baseado no modo de visualização
+    const renderItems = () => {
+        const addButton = isEditing ? (
+            <AddContextButton key="add-context" id="tour-gerencia-add" onClick={() => onAddContextClick?.()} />
+        ) : null;
 
-    const grid = (
-        <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 py-6">
-            {items}
-        </div>
-    )
+        const fileItems = files.map(file => {
+            const commonProps = {
+                key: file.id,
+                id: file.id,
+                title: file.title,
+                type: file.type,
+                insertedDate: file.insertedDate,
+                status: file.status,
+                versoes: file.versoes,
+                estaOculto: file.estaOculto,
+                isEditing,
+                onClick: () => onFileClick?.(file),
+                onToggleOculto
+            };
+
+            switch (viewMode) {
+                case 'list':
+                    return <FileListItem {...commonProps} />;
+                case 'detailed':
+                    return <FileDetailedListItem {...commonProps} descricao={file.descricao} />;
+                case 'grid':
+                default:
+                    return <FileItem {...commonProps} />;
+            }
+        });
+
+        if (viewMode === 'grid') {
+            return [addButton, ...fileItems].filter(Boolean);
+        }
+        return fileItems;
+    };
+
+    const content = (() => {
+        const items = renderItems();
+
+        if (viewMode === 'grid') {
+            return (
+                <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 py-6">
+                    {items}
+                </div>
+            );
+        } else {
+            // Lista ou Detalhada
+            return (
+                <div className="space-y-3 py-4">
+                    {isEditing && (
+                        <AddContextButton id="tour-gerencia-add" onClick={() => onAddContextClick?.()} />
+                    )}
+                    {items}
+                </div>
+            );
+        }
+    })();
 
     return (
         <div className={cn("w-full", className)}>
@@ -62,10 +103,10 @@ export function FileGrid({
                     style={{ maxHeight }}
                     id={containerId}
                 >
-                    {grid}
+                    {content}
                 </div>
             ) : (
-                <div id={containerId}>{grid}</div>
+                <div id={containerId}>{content}</div>
             )}
         </div>
     )

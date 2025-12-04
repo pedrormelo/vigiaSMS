@@ -13,6 +13,7 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 // Componentes
 import { FileGrid } from "@/components/contextosCard/contextosGrid";
+import { ViewToggle, ViewMode } from "@/components/contextosCard/viewToggle";
 import FilterBar from "@/components/gerencia/painel-filterBar";
 import { AddDashboardButton } from "@/components/gerencia/dashboard-btn1";
 import GerenciaDashboardPreview from "@/components/gerencia/dashboard/gerencia-dashboard-preview";
@@ -59,6 +60,7 @@ export default function GerenciaPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [todosOsContextos, setTodosOsContextos] = useState<Contexto[]>([]);
+    const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
     // [REMOVIDO] Estados do modal de ocultar (não são mais necessários aqui)
 
@@ -406,16 +408,21 @@ export default function GerenciaPage() {
                     <StatusBadge variant={stalenessVariant} label={stalenessLabel} />
                 </div>
 
-                <FilterBar
-                    searchValue={searchValue}
-                    onSearchChange={setSearchValue}
-                    activeTab={activeTab}
-                    onTabChange={setActiveTab}
-                    selectedTypes={selectedTypes}
-                    onSelectedTypesChange={handleSelectedTypesChange}
-                    clearTypeFilter={() => setSelectedTypes([])}
-                    tourId="tour-gerencia-filter"
-                />
+                <div className="flex items-center justify-between gap-4 mb-4">
+                    <div className="flex-1">
+                        <FilterBar
+                            searchValue={searchValue}
+                            onSearchChange={setSearchValue}
+                            activeTab={activeTab}
+                            onTabChange={setActiveTab}
+                            selectedTypes={selectedTypes}
+                            onSelectedTypesChange={handleSelectedTypesChange}
+                            clearTypeFilter={() => setSelectedTypes([])}
+                            tourId="tour-gerencia-filter"
+                        />
+                    </div>
+                    <ViewToggle value={viewMode} onValueChange={setViewMode} />
+                </div>
 
                 <div className="border-2 border-none border-gray-300 rounded-4xl bg-[#FDFDFD] min-h-[300px] flex items-center justify-center" id="tour-gerencia-grid">
                     {filteredFiles.length > 0 || (modo === 'edicao') ? (
@@ -425,6 +432,7 @@ export default function GerenciaPage() {
                             isEditing={modo === 'edicao'}
                             onAddContextClick={() => abrirModal('contexto')}
                             onToggleOculto={lidarComAlternarVisibilidadeContexto}
+                            viewMode={viewMode}
                         />
                     ) : (
                         <div className="flex flex-col items-center justify-center text-center p-6">
