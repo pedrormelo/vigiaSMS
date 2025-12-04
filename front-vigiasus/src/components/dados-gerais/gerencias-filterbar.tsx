@@ -16,6 +16,7 @@ interface GerenciasFilterBarProps {
   onSelectDiretoria: (diretoriaId: string) => void; // Função para (des)selecionar diretoria
   clearDiretoriaFilter: () => void; // Função para limpar o filtro
   diretorias: Diretoria[]; // Lista de diretorias carregadas
+  tourId?: string;
 }
 
 export default function GerenciasFilterBar({
@@ -25,12 +26,13 @@ export default function GerenciasFilterBar({
   onSelectDiretoria,
   clearDiretoriaFilter,
   diretorias,
+  tourId,
 }: GerenciasFilterBarProps) {
   // Lista de diretorias (exceto 'secretaria') para o filtro
   const diretoriasParaFiltro = (diretorias || []).filter((d) => d.id !== "secretaria");
 
   return (
-    <div className="mb-10 mt-4"> {/* Adicionado margem superior */}
+    <div className="mb-10 mt-4" id={tourId}> {/* Adicionado margem superior */}
       {/* Container Principal da Barra de Filtros */}
       <h1 className="mb-4 text-4xl text-blue-600 font-light">Painel de Gerências</h1>
       <div className="flex items-center gap-4">

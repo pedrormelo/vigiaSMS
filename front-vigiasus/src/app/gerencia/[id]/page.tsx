@@ -410,9 +410,18 @@ export default function GerenciaPage() {
                     <StatusBadge variant={stalenessVariant} label={stalenessLabel} />
                 </div>
 
-                <FilterBar searchValue={searchValue} onSearchChange={setSearchValue} activeTab={activeTab} onTabChange={setActiveTab} selectedTypes={selectedTypes} onSelectedTypesChange={handleSelectedTypesChange} clearTypeFilter={() => setSelectedTypes([])} />
+                <FilterBar
+                    searchValue={searchValue}
+                    onSearchChange={setSearchValue}
+                    activeTab={activeTab}
+                    onTabChange={setActiveTab}
+                    selectedTypes={selectedTypes}
+                    onSelectedTypesChange={handleSelectedTypesChange}
+                    clearTypeFilter={() => setSelectedTypes([])}
+                    tourId="tour-gerencia-filter"
+                />
 
-                <div className="border-2 border-none border-gray-300 rounded-4xl bg-[#FDFDFD] min-h-[300px] flex items-center justify-center">
+                <div className="border-2 border-none border-gray-300 rounded-4xl bg-[#FDFDFD] min-h-[300px] flex items-center justify-center" id="tour-gerencia-grid">
                     {filteredFiles.length > 0 || (modo === 'edicao') ? (
                         <FileGrid
                             files={filteredFiles}

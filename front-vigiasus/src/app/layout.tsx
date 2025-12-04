@@ -5,7 +5,7 @@ import './globals.css';
 // App shell (handles Navbar/Footer visibility)
 import AppShell from '@/components/layout/AppShell';
 import GlobalScrollArea from '@/components/ui/global-scroll-area';
-import { Toaster } from "sonner"; 
+import { Toaster } from "sonner";
 // [NOVO IMPORT] Importa o provedor de sessão
 import SessionTimeoutProvider from "@/components/providers/session-timeout-provider";
 import OnboardingModal from '@/components/onboarding/onboardingModal';
@@ -31,18 +31,18 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className={`${montserrat.className} antialiased flex flex-col selection:bg-green-400 selection:text-white`}>
-   <GlobalScrollArea>
+        <GlobalScrollArea>
           {/* Envolvemos com o TourProvider */}
           <TourProvider>
-             <SessionTimeoutProvider>
-                <AppShell>
-                  {children}
-                </AppShell>
-                 {/*<OnboardingWrapper />*/}
-                <TourManager />
-                <AppTour />
-                <Toaster />
-             </SessionTimeoutProvider>
+            <SessionTimeoutProvider>
+              <AppShell>
+                {children}
+              </AppShell>
+              <OnboardingWrapper />
+              <TourManager />
+              <AppTour />
+              <Toaster />
+            </SessionTimeoutProvider>
           </TourProvider>
         </GlobalScrollArea>
       </body>

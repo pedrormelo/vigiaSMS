@@ -5,6 +5,8 @@ interface TourConfig {
   key: string; // Chave única para o localStorage
   routeMatch: (pathname: string) => boolean; // Função para verificar a rota
   steps: TourStep[];
+  onStart?: () => void;
+  onFinish?: () => void;
 }
 
 export const APP_TOURS: TourConfig[] = [
@@ -79,5 +81,77 @@ export const APP_TOURS: TourConfig[] = [
         position: "left"
       }
     ]
-  }
+  },
+
+  // --- 4. Dados Gerais ---
+  {
+    key: "tour-dados-gerais",
+    routeMatch: (path) => path === "/dados",
+    steps: [
+      {
+        targetId: "tour-dados-diretorias",
+        title: "Diretorias em Destaque",
+        description: "Use estes cartões para acessar rapidamente os dashboards e indicadores de cada diretoria.",
+        position: "bottom"
+      },
+      {
+        targetId: "tour-dados-filtros",
+        title: "Refine a Visualização",
+        description: "Pesquise por gerência ou filtre por diretoria para encontrar exatamente o que precisa.",
+        position: "bottom"
+      },
+      {
+        targetId: "tour-dados-gerencias",
+        title: "Gerências em Evidência",
+        description: "Percorra o carrossel para explorar rapidamente cada gerência e abrir seu painel dedicado.",
+        position: "top"
+      }
+    ]
+  },
+
+  // --- 5. Dashboard (Visualização) ---
+  {
+    key: "tour-dashboard-view",
+    routeMatch: (path) => /^\/dashboard\/[^/]+$/.test(path),
+    steps: [
+      {
+        targetId: "tour-dashboard-hero",
+        title: "Painel da Diretoria",
+        description: "Este cabeçalho destaca o contexto da diretoria e os atalhos de informação desta página.",
+        position: "bottom"
+      },
+      {
+        targetId: "tour-dashboard-graphs",
+        title: "Visualizações e Gráficos",
+        description: "Aqui ficam os gráficos configurados para contar a história desta diretoria.",
+        position: "top"
+      },
+      {
+        targetId: "tour-dashboard-metrics",
+        title: "Indicadores Prioritários",
+        description: "Acompanhe os indicadores-chave de forma centralizada para monitorar metas e avanços.",
+        position: "top"
+      }
+    ]
+  },
+
+  // --- 6. Central de Ajuda ---
+  {
+    key: "tour-ajuda",
+    routeMatch: (path) => path === "/ajuda",
+    steps: [
+      {
+        targetId: "tour-ajuda-search",
+        title: "Busque por Tópicos",
+        description: "Comece digitando palavras-chave para encontrar guias específicos na Central de Ajuda.",
+        position: "bottom",
+      },
+      {
+        targetId: "tour-ajuda-areas",
+        title: "Categorias em Destaque",
+        description: "Navegue pelas áreas principais para acessar tutoriais completos sobre cada módulo.",
+        position: "top",
+      },
+    ],
+  },
 ];

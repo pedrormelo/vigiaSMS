@@ -11,28 +11,28 @@ export default function TourManager() {
   const { startTour, isTourOpen } = useTour();
 
   useEffect(() => {
-    // Pequeno delay para garantir que a página carregou e os elementos (IDs) existem
-    const timer = setTimeout(() => {
-      // Se já tem um tour rodando, não faz nada
+    const timer = window.setTimeout(() => {
       if (isTourOpen) return;
 
-      // Procura na configuração se a rota atual tem um tour
       const tourConfig = APP_TOURS.find((t) => t.routeMatch(pathname));
+      if (!tourConfig) return;
 
-      if (tourConfig) {
-        // Verifica se o usuário já viu este tour específico
-        const hasSeen = localStorage.getItem(`vigiasus:tour-completed:${tourConfig.key}`);
+      const hasSeen = localStorage.getItem(`vigiasus:tour-completed:${tourConfig.key}`);
+      if (hasSeen) return;
 
-        if (!hasSeen) {
-          startTour(tourConfig.steps, () => {
-            // Callback: Quando o tour terminar, marca como visto
-            localStorage.setItem(`vigiasus:tour-completed:${tourConfig.key}`, "true");
-          });
-        }
-      }
+      tourConfig.onStart?.();
+
+      if (!tourConfig.steps.length) return;
+
+      startTour(tourConfig.steps, () => {
+        localStorage.setItem(`vigiasus:tour-completed:${tourConfig.key}`, "true");
+        tourConfig.onFinish?.();
+      });
     }, 1000); // Espera 1 segundo após a mudança de rota
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+    };
   }, [pathname, startTour, isTourOpen]);
 
   return null; // Componente invisível, apenas lógica

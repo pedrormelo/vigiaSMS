@@ -23,6 +23,7 @@ interface GerenciaParaFiltrar {
 
 interface GerenciasCarouselProps {
   gerencias: GerenciaParaFiltrar[]; 
+  tourId?: string;
 }
 // --- END INTERFACE ---
 
@@ -41,7 +42,7 @@ function chunk<T>(array: T[], size: number): T[][] {
   return chunked_arr;
 }
 
-export default function GerenciasCarousel({ gerencias }: GerenciasCarouselProps) {
+export default function GerenciasCarousel({ gerencias, tourId }: GerenciasCarouselProps) {
   const router = useRouter();
 
   // Transforma a lista de gerências em grupos de 3 para os slides
@@ -56,6 +57,7 @@ export default function GerenciasCarousel({ gerencias }: GerenciasCarouselProps)
   }
 
   return (
+    <div id={tourId}>
     <Carousel
       opts={{
         align: "start",
@@ -92,5 +94,6 @@ export default function GerenciasCarousel({ gerencias }: GerenciasCarouselProps)
          </>
        )}
     </Carousel>
+    </div>
   );
 }

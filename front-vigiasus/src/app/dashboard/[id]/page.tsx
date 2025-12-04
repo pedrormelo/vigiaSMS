@@ -286,6 +286,7 @@ export default function DashboardView() {
                                 : `linear-gradient(to right, ${(diretoria as any).cores?.from}, ${(diretoria as any).cores?.to})`,
                         }
                 }
+                id="tour-dashboard-hero"
             >
                 <div className="flex justify-between items-center">
                     <div className="min-h-[150px]">
@@ -330,7 +331,7 @@ export default function DashboardView() {
             </div>
 
             {/* Dashboard Charts - Secretaria uses a special preview showing only highlighted graphs */}
-            <div className="flex justify-center items-center w-full pt-2 mb-10">
+            <div className="flex justify-center items-center w-full pt-2 mb-10" id="tour-dashboard-graphs">
                 <div className="max-w-[90%] w-full">
                     {loadingGraphs && (
                         <div className="text-center py-16 text-gray-500">Carregando gráficos...</div>
@@ -342,7 +343,7 @@ export default function DashboardView() {
                         id === 'secretaria' ? (
                             <>
                                 <SecretariaDashboardPreview graphs={graphs} />
-                                <div className="mt-10">
+                                <div className="mt-10" id="tour-dashboard-metrics">
                                     {metricsError && !loadingMetrics ? (
                                         <div className="text-center text-red-500 py-10">{metricsError}</div>
                                     ) : (
@@ -385,7 +386,7 @@ export default function DashboardView() {
             </div>
 
             {id !== 'secretaria' && (
-                <div className="flex flex-col items-center gap-6 mb-22 z-10 relative w-full px-8">
+                <div className="flex flex-col items-center gap-6 mb-22 z-10 relative w-full px-8" id="tour-dashboard-metrics">
                     {loadingMetrics && (
                         <div className="text-center text-gray-500">Carregando métricas...</div>
                     )}

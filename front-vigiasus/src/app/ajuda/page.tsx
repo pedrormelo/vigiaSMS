@@ -89,7 +89,7 @@ export default function PaginaAjudaPrincipal() {
         </p>
 
         {/* Barra de Busca */}
-        <div className="mb-12 max-w-2xl mx-auto">
+        <div className="mb-12 max-w-2xl mx-auto" id="tour-ajuda-search">
           <SearchBar
             placeholder="Buscar tópicos na Central de Ajuda..."
             value={searchValue}
@@ -132,7 +132,7 @@ export default function PaginaAjudaPrincipal() {
         </div>
 
         {/* Grid de Áreas */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="tour-ajuda-areas">
           {areas.map((area) => (
             <Link href={area.href} key={area.id} legacyBehavior>
               <a className="block p-6 bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg hover:border-blue-300 transition-all duration-200 group transform hover:-translate-y-1">

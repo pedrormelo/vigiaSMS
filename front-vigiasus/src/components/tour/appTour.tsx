@@ -1,7 +1,7 @@
 // src/components/tour/AppTour.tsx
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useTour } from "@/contexts/tourContext";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, X } from "lucide-react";
@@ -10,50 +10,129 @@ import { cn } from "@/lib/utils";
 export default function AppTour() {
   const { isTourOpen, activeStepData, nextStep, stopTour, currentStep, totalSteps } = useTour();
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
+
+  useEffect(() => {
+    if (!isTourOpen || !activeStepData) return;
+    activeStepData.onEnter?.();
+  }, [isTourOpen, activeStepData]);
   
   // Atualiza a posição do destaque quando o passo muda ou a tela redimensiona
   useEffect(() => {
-    if (!isTourOpen || !activeStepData) return;
+    if (!isTourOpen || !activeStepData) {
+      setTargetRect(null);
+      return;
+    }
+
+    let rafId: number | null = null;
+    let retryTimeoutId: number | null = null;
+    let attempts = 0;
+    const MAX_ATTEMPTS = 12;
 
     const updatePosition = () => {
       const element = document.getElementById(activeStepData.targetId);
-      if (element) {
-        // Scroll suave até o elemento se ele estiver fora da tela
-        element.scrollIntoView({ behavior: "smooth", block: "center" });
-        setTargetRect(element.getBoundingClientRect());
+      if (!element) {
+        setTargetRect(null);
+        if (attempts >= MAX_ATTEMPTS) {
+          nextStep();
+          return;
+        }
+        attempts += 1;
+        retryTimeoutId = window.setTimeout(() => {
+          rafId = window.requestAnimationFrame(updatePosition);
+        }, 150);
+        return;
+      }
+
+      element.scrollIntoView({ behavior: "auto", block: "nearest", inline: "nearest" });
+      const rect = element.getBoundingClientRect();
+      const hasSize = rect.width > 1 && rect.height > 1;
+      const isOffscreen = rect.right < 0 || rect.left > window.innerWidth || rect.bottom < 0 || rect.top > window.innerHeight;
+
+      if (!hasSize || isOffscreen) {
+        if (attempts >= MAX_ATTEMPTS) {
+          nextStep();
+          return;
+        }
+        attempts += 1;
+        retryTimeoutId = window.setTimeout(() => {
+          rafId = window.requestAnimationFrame(updatePosition);
+        }, 160);
+        return;
+      }
+      const fullyVisible = rect.top >= 0 && rect.bottom <= window.innerHeight;
+
+      if (!fullyVisible) {
+        element.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+        rafId = window.requestAnimationFrame(() => {
+          setTargetRect(element.getBoundingClientRect());
+        });
+      } else {
+        setTargetRect(rect);
       }
     };
 
-    // Pequeno delay para garantir que o DOM renderizou
-    setTimeout(updatePosition, 100);
-    window.addEventListener("resize", updatePosition);
-    return () => window.removeEventListener("resize", updatePosition);
-  }, [isTourOpen, activeStepData]);
+    const scheduleUpdate = () => {
+      if (rafId) window.cancelAnimationFrame(rafId);
+      rafId = window.requestAnimationFrame(updatePosition);
+    };
+
+    const resizeListener = () => scheduleUpdate();
+    const scrollListener = () => scheduleUpdate();
+
+    const timeoutId = window.setTimeout(updatePosition, 120);
+
+    window.addEventListener("resize", resizeListener);
+    window.addEventListener("scroll", scrollListener, { passive: true });
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      if (retryTimeoutId) window.clearTimeout(retryTimeoutId);
+      if (rafId) window.cancelAnimationFrame(rafId);
+      window.removeEventListener("resize", resizeListener);
+      window.removeEventListener("scroll", scrollListener);
+    };
+  }, [isTourOpen, activeStepData, nextStep]);
 
   if (!isTourOpen || !targetRect || !activeStepData) return null;
 
   // Cálculos para posicionar o balão (Popover)
   const popoverStyle: React.CSSProperties = {};
   const padding = 10; // Espaço entre o elemento e o destaque
-  
-  // Posição do balão baseada na preferência (simplificada)
-  if (activeStepData.position === "bottom" || !activeStepData.position) {
-     popoverStyle.top = targetRect.bottom + padding + 10;
-     popoverStyle.left = targetRect.left;
-  } else if (activeStepData.position === "top") {
-     popoverStyle.bottom = window.innerHeight - targetRect.top + padding + 10;
-     popoverStyle.left = targetRect.left;
-  } else if (activeStepData.position === "right") {
-     popoverStyle.top = targetRect.top;
-     popoverStyle.left = targetRect.right + padding + 10;
-  }
+  const estimatedHeight = 220; // Aproximação para evitar overflow
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
 
-  // Limita para não sair da tela na direita
-  const maxWidth = 320;
-  const isOffScreenRight = (targetRect.left + maxWidth) > window.innerWidth;
-  if (isOffScreenRight) {
-      popoverStyle.left = "auto";
-      popoverStyle.right = 20;
+  const clampHorizontal = (left: number) => {
+    const minLeft = 16;
+    const maxLeft = viewportWidth - 16 - 320; // 320 = largura máxima aproximada
+    if (left < minLeft) return minLeft;
+    if (left > maxLeft) return maxLeft;
+    return left;
+  };
+
+  if (activeStepData.position === "right") {
+    const desiredTop = Math.max(targetRect.top, 16);
+    popoverStyle.top = Math.min(desiredTop, viewportHeight - estimatedHeight - 16);
+    popoverStyle.left = clampHorizontal(targetRect.right + padding + 10);
+  } else if (activeStepData.position === "top") {
+    const desiredTop = targetRect.top - (estimatedHeight + padding + 10);
+    if (desiredTop <= 16) {
+      // Sem espaço acima, coloca embaixo
+      const fallbackTop = Math.min(targetRect.bottom + padding + 10, viewportHeight - estimatedHeight - 16);
+      popoverStyle.top = Math.max(fallbackTop, 16);
+    } else {
+      popoverStyle.top = desiredTop;
+    }
+    popoverStyle.left = clampHorizontal(targetRect.left);
+  } else {
+    // Padrão ou "bottom"
+    let desiredTop = targetRect.bottom + padding + 10;
+    if (desiredTop + estimatedHeight > viewportHeight - 16) {
+      const fallbackTop = targetRect.top - (estimatedHeight + padding + 10);
+      desiredTop = Math.max(fallbackTop, 16);
+    }
+    popoverStyle.top = Math.max(desiredTop, 16);
+    popoverStyle.left = clampHorizontal(targetRect.left);
   }
 
   return (

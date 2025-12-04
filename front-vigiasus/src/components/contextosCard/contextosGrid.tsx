@@ -15,6 +15,7 @@ interface FileGridProps {
     onToggleOculto?: (id: string) => void
     scroll?: boolean
     maxHeight?: string
+    containerId?: string
 }
 
 export function FileGrid({
@@ -25,10 +26,11 @@ export function FileGrid({
     isEditing,
     onToggleOculto,
     scroll = true,
-    maxHeight = '70vh'
+    maxHeight = '70vh',
+    containerId
 }: FileGridProps) {
     const items = [
-        ...(isEditing ? [<AddContextButton key="add-context" onClick={() => onAddContextClick?.()} />] : []),
+        ...(isEditing ? [<AddContextButton key="add-context" id="tour-gerencia-add" onClick={() => onAddContextClick?.()} />] : []),
         ...files.map(file => (
             <FileItem
                 key={file.id}
@@ -55,11 +57,15 @@ export function FileGrid({
     return (
         <div className={cn("w-full", className)}>
             {scroll ? (
-                <div className="overflow-y-auto pr-1" style={{ maxHeight }}>
+                <div
+                    className="overflow-y-auto pr-1"
+                    style={{ maxHeight }}
+                    id={containerId}
+                >
                     {grid}
                 </div>
             ) : (
-                grid
+                <div id={containerId}>{grid}</div>
             )}
         </div>
     )

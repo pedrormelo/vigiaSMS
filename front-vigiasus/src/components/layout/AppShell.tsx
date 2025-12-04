@@ -19,6 +19,21 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     setIsMounted(true);
   }, []);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const openHandler = () => setSidebarOpen(true);
+    const closeHandler = () => setSidebarOpen(false);
+
+    window.addEventListener("vigiasus:sidebar-open", openHandler as EventListener);
+    window.addEventListener("vigiasus:sidebar-close", closeHandler as EventListener);
+
+    return () => {
+      window.removeEventListener("vigiasus:sidebar-open", openHandler as EventListener);
+      window.removeEventListener("vigiasus:sidebar-close", closeHandler as EventListener);
+    };
+  }, []);
+
   // 3. Definimos quais rotas NÃO devem ter a Navbar/Sidebar
   // O "startsWith" ajuda com rotas como "/login/esqueci-senha"
   const isAuthPage = pathname === "/login" || pathname?.startsWith("/login/");

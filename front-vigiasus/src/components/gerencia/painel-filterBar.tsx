@@ -18,6 +18,7 @@ interface GerenciasFilterBarProps {
   selectedTypes: FileType[];
   onSelectedTypesChange: (type: FileType) => void;
   clearTypeFilter: () => void;
+  tourId?: string;
 }
 
 // ATUALIZADO: "excel" -> "planilha"
@@ -42,6 +43,7 @@ export default function GerenciasFilterBar({
   selectedTypes,
   onSelectedTypesChange,
   clearTypeFilter,
+  tourId,
 }: GerenciasFilterBarProps) {
 
   const filterableTypes = Object.keys(filterIconMap).filter(
@@ -49,7 +51,7 @@ export default function GerenciasFilterBar({
   ) as FileType[];
 
   return (
-    <div className="mb-6">
+    <div className="mb-6" id={tourId}>
       {/* (Linha 1 - Título e SearchBar - sem alteração) */}
       <div className="flex items-center mb-4">
         <h2 className="text-3xl font-extralight text-[#1745FF]">Painel de Contextos</h2>

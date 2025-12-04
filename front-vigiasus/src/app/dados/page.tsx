@@ -101,7 +101,7 @@ export default function Dashboard() {
         <SectionTitle>Dados Gerais</SectionTitle>
 
         {/* 1. Grade de Diretorias */}
-        <DiretoriasGrid diretorias={diretorias} />
+        <DiretoriasGrid diretorias={diretorias} tourId="tour-dados-diretorias" />
 
         {/* 2. Barra de Filtros */}
         <GerenciasFilterBar
@@ -111,10 +111,11 @@ export default function Dashboard() {
           onSelectDiretoria={handleSelectDiretoria}
           clearDiretoriaFilter={clearDiretoriaFilter}
           diretorias={diretorias}
+          tourId="tour-dados-filtros"
         />
 
         {/* 3. Carrossel de Gerências */}
-        <GerenciasCarousel gerencias={gerenciasFiltradas} />
+        <GerenciasCarousel gerencias={gerenciasFiltradas} tourId="tour-dados-gerencias" />
       </div>
     </div>
   );

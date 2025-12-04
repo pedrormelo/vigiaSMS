@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useTour } from "@/contexts/tourContext";
+import type { TourStep } from "@/contexts/tourContext";
 import {
   ChevronRight,
   Check,
@@ -91,6 +92,11 @@ export default function OnboardingModal() {
     }
   };
 
+const dispatchSidebarEvent = (action: "open" | "close") => {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent(`vigiasus:sidebar-${action}`));
+};
+
 const handleFinish = () => {
     if (typeof window !== "undefined") {
       localStorage.setItem("vigiasus:onboarding-completed", "true");
@@ -100,26 +106,60 @@ const handleFinish = () => {
     // [NOVO]: Inicia o Tour imediatamente após fechar o modal
     // Pequeno delay para o modal fechar visualmente
     setTimeout(() => {
-        startTour([
-            {
-                targetId: "tour-sidebar-btn",
-                title: "Menu Principal",
-                description: "Acesse todas as funcionalidades do sistema, como validação, dashboards e configurações, através deste menu lateral.",
-                position: "right"
-            },
-            {
-                targetId: "tour-notifications",
-                title: "Central de Notificações",
-                description: "Fique sabendo imediatamente quando um contexto for enviado para sua aprovação ou devolvido.",
-                position: "bottom"
-            },
-            {
-                targetId: "tour-metrics",
-                title: "Visão Geral",
-                description: "Acompanhe aqui os números consolidados de todo o sistema em tempo real.",
-                position: "top"
-            }
-        ]);
+    const navbarTourSteps: TourStep[] = [
+      {
+        targetId: "tour-sidebar-btn",
+        title: "Menu Principal",
+        description: "Acesse todas as funcionalidades do sistema, como validação, dashboards e configurações, através deste menu lateral.",
+        position: "right",
+        onEnter: () => dispatchSidebarEvent("close"),
+      },
+      {
+        targetId: "tour-notifications",
+        title: "Central de Notificações",
+        description: "Fique sabendo imediatamente quando um contexto for enviado para sua aprovação ou devolvido.",
+        position: "bottom"
+      },
+      {
+        targetId: "tour-metrics",
+        title: "Visão Geral",
+        description: "Acompanhe aqui os números consolidados de todo o sistema em tempo real.",
+        position: "top"
+      }
+    ];
+
+    const sidebarTourSteps: TourStep[] = [
+      {
+        targetId: "tour-sidebar-panel",
+        title: "Navegação Personalizada",
+        description: "O menu lateral exibe atalhos configurados para o seu perfil de acesso.",
+        position: "right",
+        onEnter: () => dispatchSidebarEvent("open"),
+      },
+      {
+        targetId: "tour-sidebar-links",
+        title: "Atalhos Importantes",
+        description: "Escolha uma área para acessar dashboards, dados ou a central de ajuda rapidamente.",
+        position: "right",
+        onEnter: () => dispatchSidebarEvent("open"),
+      }
+    ];
+
+    startTour(navbarTourSteps, () => {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("vigiasus:navbar-tour-completed", "true");
+      }
+
+      dispatchSidebarEvent("open");
+      setTimeout(() => {
+        startTour(sidebarTourSteps, () => {
+          dispatchSidebarEvent("close");
+          if (typeof window !== "undefined") {
+            localStorage.setItem("vigiasus:sidebar-tour-completed", "true");
+          }
+        });
+      }, 250);
+    });
     }, 500);
   };
 

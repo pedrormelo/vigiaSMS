@@ -154,6 +154,7 @@ const currentOptions = menuOptions[safeRole];
         animate={{ x: isOpen ? 0 : "-100%" }}
         transition={{ type: "spring", stiffness: 114, damping: 20 }}
         className="fixed top-0 left-0 h-full w-full min-w-2xs md:w-64 bg-white shadow-lg z-50 flex flex-col p-4"
+        id="tour-sidebar-panel"
       >
         {/* Botão fechar menu */}
         <button
@@ -186,7 +187,10 @@ const currentOptions = menuOptions[safeRole];
         </div>
 
         {/* Menu com scroll */}
-        <nav className="flex flex-col gap-2 w-full overflow-y-auto px-2 pr-1 scrollbar-thin scrollbar-thumb-blue-300 scrollbar-track-transparent">
+        <nav
+          className="flex flex-col gap-2 w-full overflow-y-auto px-2 pr-1 scrollbar-thin scrollbar-thumb-blue-300 scrollbar-track-transparent"
+          id="tour-sidebar-links"
+        >
           {currentOptions.map(({ label, icon: Icon, href }) => {
             const active = isActive(href);
             

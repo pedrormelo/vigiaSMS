@@ -16,9 +16,11 @@ interface Props {
     onUpdate?: (id: string, novo: StatusContexto) => void;
     // Nova prop opcional para personalizar a mensagem de vazio
     emptyState?: EmptyStateProps;
+    containerId?: string;
+    headerIdMap?: Partial<Record<string, string>>;
 }
 
-export default function ContextoTable({ data, columns, onRowClick, onUpdate, emptyState }: Props) {
+export default function ContextoTable({ data, columns, onRowClick, onUpdate, emptyState, containerId, headerIdMap }: Props) {
     // Configuração padrão (para a página de pendências)
     const defaultEmptyState = {
         title: "Tudo limpo por aqui!",
@@ -30,15 +32,25 @@ export default function ContextoTable({ data, columns, onRowClick, onUpdate, emp
     const Icon = activeEmptyState.icon || Inbox;
 
     return (
-        <div className="overflow-x-auto overflow-y-auto max-h-[500px] scrollbar-custom bg-white rounded-3xl border border-gray-300"> 
+        <div
+            className="overflow-x-auto overflow-y-auto max-h-[500px] scrollbar-custom bg-white rounded-3xl border border-gray-300"
+            id={containerId}
+        > 
             <table className="w-full text-left border-collapse">
                 <thead className="bg-blue-400 sticky top-0 z-10"> 
                     <tr>
-                        {columns.map((col) => (
-                            <th key={String(col.key)} className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
+                        {columns.map((col) => {
+                            const key = String(col.key);
+                            return (
+                                <th
+                                    key={key}
+                                    className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider"
+                                    id={headerIdMap?.[key]}
+                                >
                                 {col.header}
-                            </th>
-                        ))}
+                                </th>
+                            );
+                        })}
                     </tr>
                 </thead>
                 

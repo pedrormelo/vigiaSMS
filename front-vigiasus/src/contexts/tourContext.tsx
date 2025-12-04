@@ -8,6 +8,7 @@ export interface TourStep {
   title: string;
   description: string;
   position?: "top" | "bottom" | "left" | "right";
+  onEnter?: () => void;
 }
 
 interface TourContextType {

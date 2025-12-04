@@ -5,9 +5,10 @@ import type { Diretoria } from "@/services/organizacaoService";
 
 interface DiretoriasGridProps {
   diretorias: Diretoria[];
+  tourId?: string;
 }
 
-export default function DiretoriasGrid({ diretorias }: DiretoriasGridProps) {
+export default function DiretoriasGrid({ diretorias, tourId }: DiretoriasGridProps) {
   // Build cards from live diretorias, excluding the Secretaria pseudo-page if present
   const cards = (diretorias || [])
     .filter((d) => (d.slug || d.id) !== "secretaria")
@@ -24,7 +25,7 @@ export default function DiretoriasGrid({ diretorias }: DiretoriasGridProps) {
   ];
 
   return (
-    <div className="flex justify-center">
+    <div className="flex justify-center" id={tourId}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-x-16 mb-20 mx-auto">
         {withConselho.map((d, i) => (
           <DiretoriaCard key={i} label={d.label} colors={d.colors} href={d.href} />

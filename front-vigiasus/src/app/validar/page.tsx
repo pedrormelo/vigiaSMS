@@ -276,7 +276,12 @@ export default function ValidacaoContextos() {
             <RefreshCw className="animate-spin text-blue-600 w-8 h-8" />
           </div>
         ) : (
-          <ContextoTable data={data} columns={getColumns()} />
+          <ContextoTable
+            data={data}
+            columns={getColumns()}
+            containerId="tour-validar-table"
+            headerIdMap={{ acoes: "tour-validar-actions" }}
+          />
         )}
 
         <div className="flex justify-end mt-6">
