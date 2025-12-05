@@ -7,7 +7,8 @@ import NotificationList, { type ActiveFilter } from "@/components/notifications/
 import NotificationDetailView from "@/components/notifications/NotificationDetailView";
 import NotificationSettingsView from "./notificationSettingsView";
 import { Button } from "@/components/ui/button";
-import { Bell, Inbox, ArrowLeft, Loader2 } from "lucide-react";
+import { Bell, Inbox, ArrowLeft } from "lucide-react";
+import SpinnerCarregamento from "@/components/ui/spinner-carregamento";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -115,8 +116,10 @@ export default function NotificationsModal({
   );
   const LoadingState = () => (
     <div className="flex flex-col items-center justify-center h-full">
-      <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
-      <p className="mt-3 text-sm font-medium text-gray-700">Carregando notificações...</p>
+      <SpinnerCarregamento
+        mensagem="Carregando notificações..."
+        tamanho="grande"
+      />
     </div>
   );
   const ErrorState = () => (

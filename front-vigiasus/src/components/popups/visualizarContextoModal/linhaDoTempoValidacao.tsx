@@ -21,7 +21,8 @@ export interface ItemHistorico {
 interface LinhaDoTempoValidacaoProps {
     historico: ItemHistorico[];
     status: string;
-    canViewFullHistory: boolean; 
+    canViewFullHistory: boolean;
+    versionLabel?: string;
 }
 
 // --- HELPER: Avatar com Iniciais ---
@@ -113,7 +114,7 @@ const CardEvento = ({
 
 // --- COMPONENTE PRINCIPAL ---
 
-const LinhaDoTempoValidacao = ({ historico, status, canViewFullHistory }: LinhaDoTempoValidacaoProps) => {
+const LinhaDoTempoValidacao = ({ historico, status, canViewFullHistory, versionLabel }: LinhaDoTempoValidacaoProps) => {
     const statusAtual = String(status || "").trim();
 
     const etapasWorkflow = [
@@ -125,20 +126,46 @@ const LinhaDoTempoValidacao = ({ historico, status, canViewFullHistory }: LinhaD
 
     // 1. Determinar o Índice Atual
     let indiceEtapaAtual: number;
-    const statusUpper = statusAtual.toUpperCase().replace(" ", "_");
+    // ✅ IMPORTANTE: O status pode ser tanto enum quanto string, então normalizar apropriadamente
+    const statusUpper = statusAtual.toUpperCase().replace(/\s+/g, '_');
+    
+    console.log(`🔧 [Status] Status recebido: "${statusAtual}" -> Normalizado: "${statusUpper}"`);
+    
+    // Detectar se foi indeferido (tratamento especial)
+    const isIndeferido = statusUpper.includes('INDEFERIDO');
 
-    if (statusUpper.includes('AGUARDANDO_CORRECA') || statusUpper.includes('AGUARDANDO_CORREÇÃO')) {
+    // ✅ CORREÇÃO: Verificar se contém a palavra-chave, não o padrão exato
+    if (statusUpper.includes('CORRECA') || statusUpper.includes('CORREÇÃO')) {
         indiceEtapaAtual = 0; 
-    } else if (statusUpper.includes('AGUARDANDO_GERENTE')) {
+    } else if (statusUpper.includes('GERENTE')) {
+        // "AGUARDANDO_ANÁLISE_DO_GERENTE" contém "GERENTE"
         indiceEtapaAtual = 1;
-    } else if (statusUpper.includes('AGUARDANDO_DIRETOR')) {
+    } else if (statusUpper.includes('DIRETOR')) {
+        // "AGUARDANDO_ANÁLISE_DO_DIRETOR" contém "DIRETOR"
         indiceEtapaAtual = 2;
-    } else if (statusUpper.includes('PUBLICADO') || statusUpper.includes('DEFERIDO') || statusUpper.includes('INDEFERIDO')) {
+    } else if (statusUpper.includes('PUBLICADO') || statusUpper.includes('DEFERIDO')) {
         indiceEtapaAtual = 3;
+    } else if (isIndeferido) {
+        // Indeferido: a etapa "Finalizado" mostra o resultado (indeferido)
+        // Mas precisamos saber se passou pelo diretor ou apenas pelo gerente
+        const eventoIndeferido = (historico || []).find(h => String(h.statusNovo).toUpperCase().includes('INDEFERIDO'));
+        if (eventoIndeferido) {
+            // Verifica se passou pela análise do diretor antes de ser indeferido
+            const passouPeloDiretor = (historico || []).some(h => {
+                const antes = new Date(h.timestamp).getTime() < new Date(eventoIndeferido.timestamp).getTime();
+                const temDiretor = String(h.statusNovo).toUpperCase().includes('DIRETOR');
+                return antes && temDiretor;
+            });
+            // Etapa 3 (Finalizado) sempre, mas guardamos info se passou pelo diretor
+            indiceEtapaAtual = 3;
+        } else {
+            indiceEtapaAtual = 3; // fallback: vai para finalizado como indeferido
+        }
     } else {
         indiceEtapaAtual = 0; 
     }
 
+    // Contexto finalizado com sucesso (apenas PUBLICADO/DEFERIDO, não INDEFERIDO)
     const isContextoFinalizado = indiceEtapaAtual === 3;
 
     // 2. Lógica de Devolução
@@ -161,10 +188,12 @@ const LinhaDoTempoValidacao = ({ historico, status, canViewFullHistory }: LinhaD
 
         const eventosDaEtapa = sorted.filter(h => {
             const s = String(h.statusNovo).toUpperCase();
-            if (etapaIndex === 0) return s.includes('GERENTE') || s.includes('CRIADO');
-            if (etapaIndex === 1) return s.includes('DIRETOR') || (s.includes('CORRE') && indiceEtapaDevolvida === 1);
-            if (etapaIndex === 2) return s.includes('PUBLICADO') || s.includes('DEFERIDO') || s.includes('INDEFERIDO') || (s.includes('CORRE') && indiceEtapaDevolvida === 2);
-            if (etapaIndex === 3) return s.includes('PUBLICADO') || s.includes('DEFERIDO') || s.includes('INDEFERIDO');
+            if (etapaIndex === 0) return s.includes('GERENTE') || s.includes('CRIADO'); // Submissão
+            // ✅ IMPORTANTE: Etapa "Análise Gerente" (1) deve mostrar quando foi SUBMETIDO À GERÊNCIA
+            if (etapaIndex === 1) return s.includes('AGUARDANDO_GERENTE') || s.includes('GERENTE');
+            if (etapaIndex === 2) return s.includes('AGUARDANDO_DIRETOR') || s.includes('DIRETOR') || (s.includes('CORRE') && indiceEtapaDevolvida === 2);
+            // Etapa final: apenas PUBLICADO ou DEFERIDO (INDEFERIDO não é considerado conclusão com sucesso)
+            if (etapaIndex === 3) return s.includes('PUBLICADO') || s.includes('DEFERIDO');
             return false;
         });
 
@@ -201,23 +230,39 @@ const LinhaDoTempoValidacao = ({ historico, status, canViewFullHistory }: LinhaD
         <div className="space-y-8 pt-4">
             {/* A. Timeline Visual */}
             <div>
-                <h4 className="text-sm font-semibold text-gray-700 mb-4 px-3">Linha do Tempo da Versão</h4>
+                <h4 className="text-sm font-semibold text-gray-700 mb-4 px-3">
+                    Linha do Tempo da Versão {versionLabel || ''}
+                </h4>
                 <div className="flex items-start justify-between px-4">
                     {etapasWorkflow.map((etapa, index) => {
                         const evento = getUltimoEventoParaEtapa(index);
                         
-                        const isFinalizada = (indiceEtapaAtual === 3) && index <= indiceEtapaAtual;
-                        const isConcluida = !isFinalizada && index < indiceEtapaAtual && index !== indiceEtapaDevolvida;
-                        const isAtual = !isFinalizada && index === indiceEtapaAtual && index !== indiceEtapaDevolvida;
+                        // Se foi indeferido, a etapa "Finalizado" (3) fica vermelha
+                        const isIndeferida = isIndeferido && index === 3;
+                        
+                        // Etapa finalizada com sucesso (publicado)
+                        const isFinalizada = !isIndeferido && (indiceEtapaAtual === 3) && index <= indiceEtapaAtual;
+                        
+                        // Etapas concluídas/aprovadas: apenas as anteriores à Finalizado
+                        const isConcluida = index < 3 && index < indiceEtapaAtual && index !== indiceEtapaDevolvida;
+                        
+                        const isAtual = !isFinalizada && !isIndeferido && index === indiceEtapaAtual && index !== indiceEtapaDevolvida;
                         const isDevolvida = index === indiceEtapaDevolvida;
-                        const isPendente = index > indiceEtapaAtual && !isDevolvida && !isFinalizada;
+                        const isPendente = index > indiceEtapaAtual && !isDevolvida && !isFinalizada && !isIndeferida;
 
                         let corIcone = "text-gray-400"; 
                         let corTexto = "text-gray-500"; 
                         let corFundoIcone = "bg-gray-100";
                         let IconeStatus = etapa.icon;
 
-                        if (isConcluida || isFinalizada) {
+                        if (isIndeferida) {
+                            // Etapa "Finalizado" quando indeferido: vermelho
+                            corIcone = "text-red-600"; 
+                            corTexto = "text-red-700"; 
+                            corFundoIcone = "bg-red-100"; 
+                            IconeStatus = XCircle;
+                        } else if (isConcluida || isFinalizada) {
+                            // Etapas aprovadas (verde)
                             corIcone = "text-green-600"; 
                             corTexto = "text-green-700"; 
                             corFundoIcone = "bg-green-100"; 
@@ -243,7 +288,11 @@ const LinhaDoTempoValidacao = ({ historico, status, canViewFullHistory }: LinhaD
                         return (
                             <React.Fragment key={etapa.nome}>
                                 <div className="flex flex-col items-center text-center w-32 flex-shrink-0">
-                                    <div className={cn("h-10 w-10 rounded-xl border flex items-center justify-center mb-2 transition-colors", corFundoIcone, isConcluida || isFinalizada ? "border-green-200" : isAtual ? "border-blue-200" : isDevolvida ? "border-orange-200" : "border-gray-200")}>
+                                    <div className={cn("h-10 w-10 rounded-xl border flex items-center justify-center mb-2 transition-colors", corFundoIcone, 
+                                        isIndeferida ? "border-red-200" : 
+                                        (isConcluida || isFinalizada) ? "border-green-200" : 
+                                        isAtual ? "border-blue-200" : 
+                                        isDevolvida ? "border-orange-200" : "border-gray-200")}>
                                         <IconeStatus size={20} className={cn("transition-colors", corIcone)} />
                                     </div>
                                     
@@ -263,13 +312,18 @@ const LinhaDoTempoValidacao = ({ historico, status, canViewFullHistory }: LinhaD
                                         </div>
                                     )}
                                     
+                                    {isIndeferida && (<p className="text-[10px] font-bold text-red-600 mt-1">INDEFERIDO</p>)}
                                     {isDevolvida && (<p className="text-[10px] font-bold text-orange-600 mt-1">DEVOLVIDO</p>)}
                                 </div>
                                 
                                 {index < etapasWorkflow.length - 1 && (
                                     <div className={cn("flex-1 mt-[19px] h-0.5 transition-colors min-w-[10px]",
-                                        (isConcluida || isFinalizada || (isAtual && index < indiceEtapaAtual)) ? 'bg-green-300' : 
-                                        (isDevolvida && index < indiceEtapaDevolvida) ? 'bg-orange-300' : 'bg-gray-200'
+                                        // Verde: linha entre etapas aprovadas
+                                        (isConcluida || isFinalizada) && index < 3 ? 'bg-green-300' :
+                                        // Laranja: devolvida
+                                        (isDevolvida && index < indiceEtapaDevolvida) ? 'bg-orange-300' : 
+                                        // Cinza: resto (pendente ou após falha)
+                                        'bg-gray-200'
                                     )}></div>
                                 )}
                             </React.Fragment>

@@ -265,29 +265,35 @@ export async function criarVersao(contextoId: string, dados: Partial<CriarContex
 // --- SERVIÇOS DE AÇÃO (VALIDAÇÃO) ---
 
 export async function aprovarPeloGerente(versaoId: string): Promise<void> {
+    console.log(`📤 [Frontend] Aprovando versão ${versaoId} pelo Gerente`);
     const base = apiBase();
     const token = authService.getToken();
     const res = await fetch(`${base}/contextos/versoes/${versaoId}/gerente-aprovar`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
     });
     if (!res.ok) {
         const err = await res.json().catch(() => ({}));
+        console.error(`❌ [Frontend] Erro ao aprovar versão ${versaoId}:`, err);
         throw new Error(err.message || 'Falha ao aprovar contexto.');
     }
+    console.log(`✅ [Frontend] Versão ${versaoId} aprovada pelo Gerente com sucesso!`);
 }
 
 export async function publicarPeloDiretor(versaoId: string): Promise<void> {
+    console.log(`📤 [Frontend] Publicando versão ${versaoId}`);
     const base = apiBase();
     const token = authService.getToken();
     const res = await fetch(`${base}/contextos/versoes/${versaoId}/diretor-publicar`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
     });
     if (!res.ok) {
         const err = await res.json().catch(() => ({}));
+        console.error(`❌ [Frontend] Erro ao publicar versão ${versaoId}:`, err);
         throw new Error(err.message || 'Falha ao publicar contexto.');
     }
+    console.log(`✅ [Frontend] Versão ${versaoId} publicada com sucesso!`);
 }
 
 export async function indeferirContexto(versaoId: string, justificativa: string): Promise<void> {
@@ -354,7 +360,19 @@ export const getContextosPorGerencia = async (idGerencia: string): Promise<Conte
         if (!res.ok) return [];
 
         const body: (BackendVersao | BackendContexto)[] = await res.json();
-        return body.map(mapBackendToFrontend);
+        const mapped = body.map(mapBackendToFrontend);
+        
+        // Deduplica por ID do contexto (caso o backend retorne duplicatas)
+        const uniqueMap = new Map<string, Contexto>();
+        mapped.forEach(ctx => {
+            if (!uniqueMap.has(ctx.id)) {
+                uniqueMap.set(ctx.id, ctx);
+            } else {
+                console.warn(`⚠️ Contexto duplicado detectado: ${ctx.id} - ${ctx.title}`);
+            }
+        });
+        
+        return Array.from(uniqueMap.values());
     } catch (err) {
         console.error("Erro ao buscar contextos por gerência:", err);
         return [];
@@ -390,6 +408,17 @@ export const getContextoById = async (id: string): Promise<Contexto | null> => {
         });
         if (!res.ok) return null;
         const body: any = await res.json();
+
+        console.log(`📌 getContextoById response:`, {
+            temContexto: !!body.contexto,
+            temVersoes: Array.isArray(body.versoes),
+            quantidadeVersoes: body.versoes?.length,
+            versoesData: body.versoes?.map((v: any) => ({
+                versaoNumero: v.versaoNumero,
+                statusValidacao: v.statusValidacao,
+                id: v.id
+            }))
+        });
 
         let normalized: BackendContexto | BackendVersao;
         if (body && body.contexto && Array.isArray(body.versoes)) {
@@ -438,7 +467,22 @@ export async function getHistoricoContextos(
 
         const body = await res.json();
         const itensBackend = body.data || [];
+        
+        console.log('📋 [Histórico] Dados recebidos do backend:', itensBackend.map((item: any) => ({
+            versaoNumero: item.versaoNumero,
+            titulo: item.titulo,
+            statusValidacao: item.statusValidacao,
+            contextoId: item.contextoId
+        })));
+        
         const itensMapeados = itensBackend.map(mapBackendToFrontend);
+        
+        console.log('📋 [Histórico] Dados mapeados para frontend:', itensMapeados.map((item: any) => ({
+            id: item.id,
+            title: item.title,
+            status: item.status,
+            versoes: item.versoes?.map((v: any) => ({ id: v.id, status: v.status }))
+        })));
 
         return {
             data: itensMapeados,
@@ -483,19 +527,22 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
         versoesLista = ctx.versoes || [];
         historicoGeralLista = ctx.historico || [];
 
-        if (ctx.versaoAtiva) {
-            versaoRecente = ctx.versaoAtiva;
-        } else if (ctx.versoes && ctx.versoes.length) {
-            versaoRecente = ctx.versoes.reduce((acc, v) => {
-                return (!acc || (v.versaoNumero > acc.versaoNumero)) ? v : acc;
-            }, ctx.versoes[0] as BackendVersao);
-        } else {
-            versaoRecente = undefined;
-        }
+        // NOVA LÓGICA: Backend já envia a versão "capa" correta
+        // Se versaoAtiva existe, usa ela; senão pega a mais recente
+        const versaoAtivaBackend = ctx.versaoAtiva;
+        const versaoMaisRecente = (ctx.versoes || []).reduce((acc, v) => {
+            if (!acc) return v;
+            return (v.versaoNumero > acc.versaoNumero) ? v : acc;
+        }, ctx.versoes && ctx.versoes[0] ? ctx.versoes[0] as BackendVersao : undefined as any);
+
+        // Usa versaoAtiva do backend (já vem com lógica de seleção correta), senão a mais recente
+        versaoRecente = versaoAtivaBackend || versaoMaisRecente;
     } else {
-        // É uma Versão Isolada
+        // É uma Versão Isolada (do endpoint /buscar)
         const v = item as BackendVersao;
         const ctxPai = v.contexto;
+
+        console.log(`📌 Mapeando versão isolada: v${v.versaoNumero}, status=${v.statusValidacao}, contextoId=${v.contextoId}`);
 
         if (!ctxPai) {
             contextoId = "unknown";
@@ -511,9 +558,13 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
 
             gerenciaSlug = ctxPai.gerenciaSlug || ctxPai.gerencia?.slug;
             gerenciaNome = ctxPai.gerenciaNome || ctxPai.gerencia?.nome;
+            
+            // CORREÇÃO: Usar todas as versões do contexto (backend agora inclui contexto.contextoversao)
+            versoesLista = ctxPai.contextoversao || [v];
+            console.log(`  - Contexto.contextoversao disponível: ${ctxPai.contextoversao ? ctxPai.contextoversao.length : 'não'} versões`);
         }
+        // IMPORTANTE: versaoRecente é a versão ESPECÍFICA desta linha do histórico
         versaoRecente = v;
-        versoesLista = [v];
         historicoGeralLista = v.validacaohistorico || v.historico || [];
     }
 
@@ -542,6 +593,17 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
     const versoesFrontend: VersaoContexto[] = versoesLista.map(v => {
         const historicoVersaoRaw = v.historico || v.validacaohistorico || [];
 
+        console.log(`    🔍 Versão ${v.versaoNumero}: historico bruto =`, {
+            temHistorico: !!v.historico,
+            temValidacao: !!v.validacaohistorico,
+            quantidade: historicoVersaoRaw.length,
+            eventos: historicoVersaoRaw.slice(0, 2).map((h: any) => ({
+                statusNovo: h.statusNovo,
+                autorNome: h.autorNome,
+                timestamp: h.timestamp
+            }))
+        });
+
         const historicoVersaoFrontend: HistoricoItem[] = historicoVersaoRaw.map((h: any) => ({
             id: h.id,
             data: h.timestamp || h.data,
@@ -551,17 +613,86 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
             justificativa: h.justificativa || ""
         }));
 
+        console.log(`    ✅ Versão ${v.versaoNumero}: histórico MAPEADO =`, {
+            quantidade: historicoVersaoFrontend.length,
+            eventos: historicoVersaoFrontend.slice(0, 2).map(h => ({ 
+                acao: h.acao, 
+                autor: h.autor,
+                statusNovo: h.statusNovo,
+                data: h.data 
+            }))
+        });
+
+        const statusMapeado = mapStatus(v.statusValidacao);
+        console.log(`  📌 Versão ${v.versaoNumero}: statusValidacao="${v.statusValidacao}" -> mapeado="${statusMapeado}"`);
+
+        // Dados específicos da versão
+        const dadosVersaoRaw = v.versaoarquivo || v.versaodashboard || v.versaoindicador || {};
+        const payloadVersao = (dadosVersaoRaw && typeof (dadosVersaoRaw as any).payload === 'string')
+            ? safeJsonParse((dadosVersaoRaw as any).payload)
+            : (dadosVersaoRaw as any).payload;
+
+        const tipoBackendVersao = v.contexto?.tipo || tipoBackend;
+        const docTypeVersao = (v.versaoarquivo as any)?.docType;
+
+        let frontTypeVersao: Contexto['type'] = 'pdf';
+        if (tipoBackendVersao === 'DASHBOARD') frontTypeVersao = 'dashboard';
+        else if (tipoBackendVersao === 'INDICADOR') frontTypeVersao = 'indicador';
+        else if (tipoBackendVersao === 'ARQUIVO_LINK') {
+            if (docTypeVersao === 'LINK') frontTypeVersao = 'link';
+            else if (docTypeVersao === 'PDF') frontTypeVersao = 'pdf';
+            else if (docTypeVersao === 'EXCEL') frontTypeVersao = 'planilha';
+            else frontTypeVersao = 'doc';
+        } else {
+            frontTypeVersao = 'doc';
+        }
+
+        const rawChartTypeVersao = (v.versaodashboard as any)?.tipoGrafico
+            ?? (dadosVersaoRaw as any)?.tipoGrafico
+            ?? (typeof payloadVersao?.tipoGrafico === 'string' ? payloadVersao.tipoGrafico : undefined)
+            ?? (typeof payloadVersao?.type === 'string' ? payloadVersao.type : undefined);
+        const chartTypeVersao = normalizeGraphType(rawChartTypeVersao);
+
+        const rawUrlVersao = (v.versaoarquivo as any)?.url;
+        const absoluteUrlVersao = typeof rawUrlVersao === 'string' && /^https?:\/\//i.test(rawUrlVersao)
+            ? rawUrlVersao
+            : rawUrlVersao
+                ? `${apiBase()}${rawUrlVersao}`
+                : undefined;
+
         return {
             id: v.versaoNumero,
             dbId: v.id,
             nome: v.titulo,
             data: v.updatedAt,
             autor: v.solicitanteNome || v.user?.nome || v.solicitanteId || 'Sistema',
-            status: mapStatus(v.statusValidacao),
+            status: statusMapeado,
             estaOculta: v.isOculta ?? false,
-            historico: historicoVersaoFrontend
+            historico: historicoVersaoFrontend,
+            descricao: v.descricao,
+            url: absoluteUrlVersao,
+            payload: frontTypeVersao === 'dashboard' ? payloadVersao : (payloadVersao ?? dadosVersaoRaw),
+            type: frontTypeVersao,
+            docType: docTypeVersao,
+            chartType: chartTypeVersao,
         };
     });
+
+    // CORREÇÃO: Para linhas do histórico (versão isolada com múltiplas versões),
+    // movemos a versão específica desta linha para o começo do array
+    // Isso garante que row.versoes[0] seja sempre a versão desta linha
+    let versoesFrontendFinais = versoesFrontend;
+    if (versoesFrontend.length > 1 && versoesLista.length > 1 && versaoRecente) {
+        // Encontra o índice da versão que está sendo exibida (usando o dbId que é único)
+        const indexVersaoAtual = versoesFrontend.findIndex(v => v.dbId === versaoRecente.id);
+        console.log(`  - Reorganizando versões: buscando dbId="${versaoRecente.id}", encontrado índice=${indexVersaoAtual}`);
+        if (indexVersaoAtual > 0) {
+            versoesFrontendFinais = [...versoesFrontend];
+            const [versaoAtual] = versoesFrontendFinais.splice(indexVersaoAtual, 1);
+            versoesFrontendFinais.unshift(versaoAtual);
+            console.log(`  ✅ Versão reorganizada: v${versaoAtual.id} agora está em primeiro lugar`);
+        }
+    }
 
     const historicoFrontend: HistoricoItem[] = historicoGeralLista.map((h: any) => ({
         id: h.id,
@@ -598,7 +729,7 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
         payload: tipoBackend === 'DASHBOARD' ? (dadosEspecificos?.payload ?? undefined) : dadosEspecificos,
         url: absoluteUrl,
         estaOculto: estaOcultoBackend,
-        versoes: versoesFrontend,
+        versoes: versoesFrontendFinais,
         historico: historicoFrontend,
         solicitante: solicitantePrincipal,
         chartType,
@@ -607,13 +738,18 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
 
 function safeJsonParse(s: string) { try { return JSON.parse(s); } catch { return undefined; } }
 function mapStatus(status: string): StatusContexto {
-    switch (status) {
-        case 'PUBLICADO': return StatusContexto.Publicado;
-        case 'INDEFERIDO': return StatusContexto.Indeferido;
-        case 'AGUARDANDO_DIRETOR': return StatusContexto.AguardandoDiretor;
-        case 'AGUARDANDO_CORRECAO': return StatusContexto.AguardandoCorrecao;
-        case 'AGUARDANDO_GERENTE': default: return StatusContexto.AguardandoGerente;
-    }
+    const resultado = (() => {
+        switch (status) {
+            case 'PUBLICADO': return StatusContexto.Publicado;
+            case 'INDEFERIDO': return StatusContexto.Indeferido;
+            case 'AGUARDANDO_DIRETOR': return StatusContexto.AguardandoDiretor;
+            case 'AGUARDANDO_CORRECAO': return StatusContexto.AguardandoCorrecao;
+            case 'AGUARDANDO_GERENTE': 
+            default: return StatusContexto.AguardandoGerente;
+        }
+    })();
+    console.log(`  mapStatus("${status}") -> "${resultado}"`);
+    return resultado;
 }
 function mapHistoricoLabel(status: string, justificativa?: string): string {
     const labels: Record<string, string> = {

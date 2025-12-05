@@ -5,7 +5,8 @@ import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Menu, Loader2 } from 'lucide-react';
+import { Menu } from 'lucide-react';
+import SpinnerCarregamento from "@/components/ui/spinner-carregamento";
 import NotificationsModal from "@/components/notifications/notificationsModal";
 import { VisualizarContextoModal } from "@/components/popups/visualizarContextoModal";
 import { ModalAdicionarConteudo } from "@/components/popups/addContextoModal/index";
@@ -419,7 +420,16 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
         } : undefined}
       />
 
-      {isLoadingContexto && (<div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center"> <Loader2 className="h-10 w-10 animate-spin text-blue-600" /> </div>)}
+      {isLoadingContexto && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center">
+          <div className="bg-white rounded-2xl p-6">
+            <SpinnerCarregamento
+              mensagem="Carregando contexto..."
+              tamanho="medio"
+            />
+          </div>
+        </div>
+      )}
     </>
   );
 }

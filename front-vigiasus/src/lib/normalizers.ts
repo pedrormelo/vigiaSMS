@@ -41,6 +41,15 @@ export function normalizarContexto(raw: any): Contexto {
                 ? v.historico
                 : (v.validacaohistorico || (eAUltima ? historicoGlobal : []));
 
+        console.log(`    📌 [Normalizer] Versão ${v.id}: histórico`, {
+            temHistorico: Array.isArray(v.historico),
+            tamHistorico: v.historico?.length,
+            temValidacao: !!v.validacaohistorico,
+            tamValidacao: v.validacaohistorico?.length,
+            historicoBrutoLength: historicoBruto?.length,
+            historicoBruto: historicoBruto
+        });
+
         const historicoNormalizado = (historicoBruto || []).map((h: any) => ({
             id: h.id,
             timestamp: h.timestamp || h.data || new Date().toISOString(),
@@ -64,7 +73,8 @@ export function normalizarContexto(raw: any): Contexto {
             // Se o último evento tiver um status válido, usamos ele
             if (ultimoEvento && ultimoEvento.statusNovo) {
                 // Mapeia strings de ação para StatusContexto se necessário
-                statusCalculado = mapActionToStatus(ultimoEvento.statusNovo) || statusCalculado;
+                const statusMapeado = mapActionToStatus(ultimoEvento.statusNovo);
+                statusCalculado = statusMapeado || statusCalculado;
             }
         }
 
@@ -73,7 +83,7 @@ export function normalizarContexto(raw: any): Contexto {
             statusCalculado = eAUltima ? raw.status : StatusContexto.Publicado;
         }
 
-        return {
+        const versaoFinal = {
             ...v,
             id: v.id || i + 1,
             nome: v.nome || v.titulo || `Versão ${v.versaoNumero || i + 1}`,
@@ -83,6 +93,13 @@ export function normalizarContexto(raw: any): Contexto {
             status: statusCalculado, // Usa o status calculado pelo histórico
             historico: historicoNormalizado
         };
+
+        console.log(`    ✅ [Normalizer] Versão ${v.id} FINAL:`, {
+            historicoQtd: historicoNormalizado.length,
+            historico: historicoNormalizado
+        });
+
+        return versaoFinal;
     });
 
     // 5. Determina o status global
@@ -109,10 +126,12 @@ export function normalizarContexto(raw: any): Contexto {
 // Helper para converter ações do histórico em Status do enum
 function mapActionToStatus(action: string): StatusContexto | null {
     const upper = String(action).toUpperCase();
-    if (upper.includes('PUBLICADO') || upper.includes('DEFERIDO')) return StatusContexto.Publicado;
+    
     if (upper.includes('INDEFERIDO')) return StatusContexto.Indeferido;
+    if (upper.includes('PUBLICADO') || upper.includes('DEFERIDO')) return StatusContexto.Publicado;
     if (upper.includes('DIRETOR')) return StatusContexto.AguardandoDiretor;
     if (upper.includes('GERENTE')) return StatusContexto.AguardandoGerente;
     if (upper.includes('CORRECAO') || upper.includes('CORREÇÃO')) return StatusContexto.AguardandoCorrecao;
+    
     return null; // Retorna null para manter o status original se não reconhecer a ação
 }

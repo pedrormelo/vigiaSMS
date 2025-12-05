@@ -2,7 +2,7 @@
 "use client";
 
 import Image from 'next/image';
-import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { SearchX, UploadCloud } from 'lucide-react';
 
@@ -73,9 +73,10 @@ export default function GerenciaPage() {
             setGerenciaData(gerenciaEncontrada);
             const contextos = await getContextosPorGerencia(gerenciaEncontrada.id);
             setTodosOsContextos(contextos);
-        } catch (err: any) {
+        } catch (err) {
             console.error("Erro ao buscar dados:", err);
-            setError(err.message || "Não foi possível carregar os dados.");
+            const errorMessage = err instanceof Error ? err.message : "Não foi possível carregar os dados.";
+            setError(errorMessage);
         } finally {
             setIsLoading(false);
         }
@@ -209,7 +210,8 @@ export default function GerenciaPage() {
             let successMessage = 'Contexto enviado com sucesso! Aguardando aprovação.';
 
             if (isNovaVersao && dadosParaEditar?.id) {
-                const { tituloConceitual: _omit, ...rest } = payload;
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                const { tituloConceitual, ...rest } = payload; // tituloConceitual removed from versaoPayload
                 const versaoPayload: CriarContextoData = {
                     ...rest,
                     motivoNovaVersao: versionInfo?.type,
@@ -224,10 +226,11 @@ export default function GerenciaPage() {
 
             showSuccessToast(successMessage);
             fecharModalAdicionar();
-            carregarDados();
-        } catch (err: any) {
+            await carregarDados();
+        } catch (err) {
             console.error(isNovaVersao ? 'Erro ao criar nova versão:' : 'Erro ao criar contexto:', err);
-            showErrorToast(err?.message || (isNovaVersao ? 'Erro ao enviar nova versão.' : 'Erro ao enviar contexto.'));
+            const errorMessage = err instanceof Error ? err.message : (isNovaVersao ? 'Erro ao enviar nova versão.' : 'Erro ao enviar contexto.');
+            showErrorToast(errorMessage);
         }
     };
 
@@ -266,7 +269,10 @@ export default function GerenciaPage() {
         return todosOsContextos.filter(ctx => {
             if (ctx.type !== 'indicador') return false;
             const matchesSearch = ctx.title.toLowerCase().includes(debouncedSearchValue.toLowerCase());
-            const matchesStatus = canSeePending || ctx.status === StatusContexto.Publicado;
+            
+            // No modo visualização, apenas publicados; no modo edição, todos (inclusive indeferidos)
+            const matchesStatus = canSeePending ? true : ctx.status === StatusContexto.Publicado;
+            
             const matchesVisibility = (modo === 'edicao') || !ctx.estaOculto;
             return matchesStatus && matchesVisibility && matchesSearch;
         });
@@ -276,11 +282,15 @@ export default function GerenciaPage() {
         return todosOsContextos.filter(ctx => {
             if (ctx.type !== 'dashboard') return false;
             const matchesSearch = ctx.title.toLowerCase().includes(debouncedSearchValue.toLowerCase());
-            const matchesStatus = canSeePending || ctx.status === StatusContexto.Publicado;
+            
+            // Dashboards: apenas publicados são exibidos (mesmo no modo edição)
+            // Indeferidos não devem aparecer aqui para evitar confusão
+            const matchesStatus = ctx.status === StatusContexto.Publicado;
+            
             const matchesVisibility = (modo === 'edicao') || !ctx.estaOculto;
             return matchesStatus && matchesVisibility && matchesSearch;
         });
-    }, [todosOsContextos, debouncedSearchValue, modo, canSeePending]);
+    }, [todosOsContextos, debouncedSearchValue, modo]);
 
     const filteredFiles = useMemo(() => {
         const sevenDaysAgo = new Date();
@@ -292,7 +302,10 @@ export default function GerenciaPage() {
             const matchesSearch = file.title.toLowerCase().includes(debouncedSearchValue.toLowerCase());
             const matchesTab = activeTab === 'todas' || new Date(file.insertedDate) >= sevenDaysAgo;
             const matchesType = selectedTypes.length === 0 || selectedTypes.includes(file.type);
-            const matchesStatus = canSeePending || file.status === StatusContexto.Publicado;
+            
+            // No modo visualização, apenas publicados; no modo edição, todos (inclusive indeferidos)
+            const matchesStatus = canSeePending ? true : file.status === StatusContexto.Publicado;
+            
             const matchesVisibility = (modo === 'edicao') || !file.estaOculto;
 
             return matchesStatus && matchesVisibility && matchesSearch && matchesTab && matchesType;

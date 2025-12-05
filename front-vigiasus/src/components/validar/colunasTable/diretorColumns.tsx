@@ -45,10 +45,22 @@ export const diretorColumns: Column<Contexto>[] = [
     key: "status",
     header: "Status", // Renomeado de "Situação"
     render: (row) => {
-      // --- LÓGICA ATUALIZADA ---
+      // --- LÓGICA ATUALIZADA: Múltiplas versões ativas ---
       const config = statusConfig[row.status] || { text: row.status, className: "bg-gray-100 text-gray-800" };
-      const versaoNum = row.versoes ? row.versoes.length : 1;
-      const isNovaVersao = versaoNum > 1;
+      const versaoEspecifica = row.versoes?.find(v => v.status === row.status) || row.versoes?.[0];
+      const versaoNum = versaoEspecifica?.id || 1;
+      const totalVersoes = row.versoes ? row.versoes.length : 1;
+      const versoesPublicadas = row.versoes ? row.versoes.filter(v => v.status === 'PUBLICADO').length : 0;
+      const maiorVersao = row.versoes ? Math.max(...row.versoes.map(v => v.id)) : 1;
+      const isVersaoMaisRecente = versaoNum === maiorVersao;
+      
+      // Texto do badge: mostra quantidade de versões publicadas ou se é a mais recente
+      let versaoBadgeText = `v${versaoNum}`;
+      if (isVersaoMaisRecente && totalVersoes > 1) {
+        versaoBadgeText += versoesPublicadas > 1 ? ` (${versoesPublicadas} publicadas)` : ' - Mais Recente';
+      } else if (totalVersoes > 1) {
+        versaoBadgeText += ` de ${totalVersoes}`;
+      }
 
       return (
         <div className="flex flex-col gap-1.5 items-start">
@@ -56,15 +68,9 @@ export const diretorColumns: Column<Contexto>[] = [
             {config.text}
           </span>
           
-          {isNovaVersao ? (
-            <span className="px-2 py-0.5 text-[10px] font-bold text-blue-800 bg-blue-100 rounded-full border border-blue-200">
-              v{versaoNum} - Nova Versão
-            </span>
-          ) : (
-            <span className="px-2 py-0.5 text-[10px] font-medium text-gray-600 bg-gray-100 rounded-full border border-gray-200">
-              v1 - Nova Submissão
-            </span>
-          )}
+          <span className={`px-2 py-0.5 text-[10px] font-medium ${isVersaoMaisRecente && versoesPublicadas > 1 ? 'text-green-800 bg-green-100 border-green-200' : 'text-gray-600 bg-gray-100 border-gray-200'} rounded-full border`}>
+            {versaoBadgeText}
+          </span>
         </div>
       );
       // --- FIM DA ATUALIZAÇÃO ---

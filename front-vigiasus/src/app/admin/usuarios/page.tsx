@@ -4,6 +4,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { getUsuarios, excluirUsuario, type Usuario } from "@/services/usuarioService";
 import { Button } from "@/components/ui/button";
+import SpinnerCarregamento from "@/components/ui/spinner-carregamento";
 import { Plus, Search, Pencil, Trash2, ShieldCheck } from "lucide-react";
 import UserModal from "@/components/admin/userModal";
 import { showSuccessToast, showErrorToast } from "@/components/ui/Toasts";
@@ -207,8 +208,11 @@ export default function AdminUsuariosPage() {
                     )}
                     
                     {isLoading && (
-                        <div className="p-12 text-center text-gray-500">
-                            Carregando...
+                        <div className="p-12">
+                            <SpinnerCarregamento
+                                mensagem="Carregando usuários..."
+                                tamanho="medio"
+                            />
                         </div>
                     )}
                 </div>

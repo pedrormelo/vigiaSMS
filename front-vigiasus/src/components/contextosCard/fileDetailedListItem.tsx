@@ -148,10 +148,10 @@ export function FileDetailedListItem({
                             </span>
                             <span className="text-gray-400">•</span>
                             <span>{config.label}</span>
-                            {versoesPublicadas.length > 0 && (
+                            {versoes && versoes.length > 0 && (
                                 <>
                                     <span className="text-gray-400">•</span>
-                                    <span>{versoesPublicadas.length + 1} {versoesPublicadas.length === 0 ? 'versão' : 'versões'}</span>
+                                    <span>{versoes.length} {versoes.length === 1 ? 'versão' : 'versões'}</span>
                                 </>
                             )}
                         </div>

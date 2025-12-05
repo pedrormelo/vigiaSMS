@@ -20,11 +20,18 @@ export const useValidarContextos = () => {
    * a cada renderização, otimizando a performance.
    */
   const carregarContextos = useCallback(async () => {
+    console.log('🔄 [Frontend] Carregando contextos pendentes...');
     setIsLoading(true);
     setError(null);
     try {
       // CORREÇÃO: Chamando a função de pendentes
       const contextos = await getContextosPendentes();
+      console.log(`✅ [Frontend] ${contextos.length} contextos pendentes carregados:`, contextos.map(c => ({ 
+        id: c.id, 
+        title: c.title, 
+        status: c.status, 
+        versoes: c.versoes?.map(v => ({ id: v.id, status: v.status })) 
+      })));
       setData(contextos);
     } catch (err) {
       setError("Não foi possível carregar os contextos. Tente novamente mais tarde.");

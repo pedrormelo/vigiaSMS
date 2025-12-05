@@ -13,6 +13,7 @@ import OnboardingWrapper from '@/components/onboarding/onboardingWrapper';
 import AppTour from '@/components/tour/appTour';
 import { TourProvider } from '@/contexts/tourContext';
 import TourManager from '@/components/tour/tourManager';
+import IndicadorNavegacao from '@/components/ui/indicador-navegacao';
 
 const montserrat = Montserrat({
   subsets: ['latin'],
@@ -35,6 +36,7 @@ export default function RootLayout({
           {/* Envolvemos com o TourProvider */}
           <TourProvider>
             <SessionTimeoutProvider>
+              <IndicadorNavegacao />
               <AppShell>
                 {children}
               </AppShell>

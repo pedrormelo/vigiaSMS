@@ -43,7 +43,6 @@ export function FileGrid({
 
         const fileItems = files.map(file => {
             const commonProps = {
-                key: file.id,
                 id: file.id,
                 title: file.title,
                 type: file.type,
@@ -58,12 +57,12 @@ export function FileGrid({
 
             switch (viewMode) {
                 case 'list':
-                    return <FileListItem {...commonProps} />;
+                    return <FileListItem key={file.id} {...commonProps} />;
                 case 'detailed':
-                    return <FileDetailedListItem {...commonProps} descricao={file.descricao} />;
+                    return <FileDetailedListItem key={file.id} {...commonProps} descricao={file.descricao} />;
                 case 'grid':
                 default:
-                    return <FileItem {...commonProps} />;
+                    return <FileItem key={file.id} {...commonProps} />;
             }
         });
 

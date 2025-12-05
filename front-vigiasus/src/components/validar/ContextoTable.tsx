@@ -67,21 +67,27 @@ export default function ContextoTable({ data, columns, onRowClick, onUpdate, emp
                             </td>
                         </tr>
                     ) : (
-                        data.map((row) => (
-                            <tr 
-                                key={row.id} 
-                                className={`hover:bg-gray-50 transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}
-                                onClick={() => onRowClick && onRowClick(row)}
-                            >
-                                {columns.map((col) => (
-                                    <td key={String(col.key)} className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 align-middle">
-                                        {col.render
-                                            ? col.render(row, onUpdate)
-                                            : (row[col.key as keyof Contexto] as React.ReactNode)}
-                                    </td>
-                                ))}
-                            </tr>
-                        ))
+                        data.map((row, index) => {
+                            // Key composta: usa ID + versão (ou index como fallback) para evitar duplicação quando o mesmo contexto aparece com versões diferentes
+                            const versaoId = row.versoes?.[0]?.dbId || row.versoes?.[0]?.id || index;
+                            const uniqueKey = `${row.id}-${versaoId}`;
+                            
+                            return (
+                                <tr 
+                                    key={uniqueKey} 
+                                    className={`hover:bg-gray-50 transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}
+                                    onClick={() => onRowClick && onRowClick(row)}
+                                >
+                                    {columns.map((col) => (
+                                        <td key={String(col.key)} className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 align-middle">
+                                            {col.render
+                                                ? col.render(row, onUpdate)
+                                                : (row[col.key as keyof Contexto] as React.ReactNode)}
+                                        </td>
+                                    ))}
+                                </tr>
+                            );
+                        })
                     )}
                 </tbody>
             </table>

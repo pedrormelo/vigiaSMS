@@ -3,10 +3,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Eye, Loader2, SearchX } from "lucide-react";
+import { ArrowLeft, Eye, SearchX, Loader2 } from "lucide-react";
 
 // Componentes de UI
 import { Button } from "@/components/ui/button";
+import SpinnerCarregamento from "@/components/ui/spinner-carregamento";
 import { SearchBar } from "@/components/ui/search-bar";
 import DateInputFilter from "@/components/validar/dateInputFilter";
 import Paginacao from "@/components/ui/paginacao";
@@ -54,6 +55,18 @@ export default function HistoricoPage() {
 
     // --- LÓGICA DE ABERTURA INTELIGENTE ---
     const handleRowClick = async (row: Contexto) => {
+        console.log(`🔍 [Clique] Versão clicada:`, { 
+            id: row.id, 
+            title: row.title, 
+            status: row.status,
+            dbIdVersao0: row.versoes?.[0]?.dbId,
+            versaoNumero0: row.versoes?.[0]?.id,
+            todasVersoes: row.versoes?.map(v => ({ id: v.id, status: v.status }))
+        });
+        
+        // IMPORTANTE: Salvamos o dbId da versão específica que foi clicada
+        const versaoClicadaDbId = row.versoes?.[0]?.dbId;
+        
         // 1. Abre imediatamente com os dados parciais da tabela
         setSelectedContexto(row);
         setIsModalOpen(true);
@@ -63,6 +76,16 @@ export default function HistoricoPage() {
             // 2. Busca os dados completos no backend
             const fullData = await getContextoById(row.id);
             if (fullData) {
+                // CORREÇÃO: Mantém a versão específica que foi clicada no modal
+                // Se foi clicada uma versão específica do histórico, reorganiza para mostrar ela primeiro
+                if (versaoClicadaDbId && fullData.versoes && fullData.versoes.length > 1) {
+                    const indexVersaoClicada = fullData.versoes.findIndex(v => v.dbId === versaoClicadaDbId);
+                    if (indexVersaoClicada > 0) {
+                        // Move a versão clicada para o começo do array
+                        const [versaoClicada] = fullData.versoes.splice(indexVersaoClicada, 1);
+                        fullData.versoes.unshift(versaoClicada);
+                    }
+                }
                 setSelectedContexto(fullData);
             }
         } catch (error) {
@@ -138,9 +161,11 @@ export default function HistoricoPage() {
 
                 {/* Conteúdo da Tabela */}
                 {isLoading ? (
-                    <div className="flex flex-col items-center justify-center py-12 text-gray-400">
-                        <Loader2 className="w-10 h-10 animate-spin mb-2 text-blue-600" />
-                        <p>A carregar histórico...</p>
+                    <div className="py-12">
+                        <SpinnerCarregamento
+                            mensagem="A carregar histórico..."
+                            tamanho="medio"
+                        />
                     </div>
                 ) : error ? (
                     <div className="text-center py-12 bg-red-50 rounded-xl border border-red-100">

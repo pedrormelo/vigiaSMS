@@ -57,6 +57,10 @@ const AbaVersoes = ({
         .filter(() => true)
         .sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
 
+    // 🎯 Encontrar a versão mais recente PUBLICADA
+    const versaoMaisRecente = listaVersoes.find(v => v.status === StatusContexto.Publicado);
+    const versaoMaisRecenteId = versaoMaisRecente?.id;
+
     const totalVisiveis = listaVersoes.filter(v => !getEstaOculta(v)).length;
     const isSingleVersionTotal = listaVersoes.length === 1;
 
@@ -121,10 +125,14 @@ const AbaVersoes = ({
 
                                         <div className="flex-1 min-w-0 cursor-pointer" onClick={() => handleToggleExpand(versao.id)}>
                                             <div className="flex items-center gap-2 mb-1">
+                                                <span className="text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full">
+                                                    v{versao.id}
+                                                </span>
                                                 <span className="font-semibold text-gray-800 text-sm">
                                                     {versao.nome}
                                                 </span>
-                                                {versao.status === StatusContexto.Publicado && (
+                                                {/* ✅ Mostrar "Atual" apenas para a versão mais recente publicada */}
+                                                {versao.id === versaoMaisRecenteId && (
                                                     <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 bg-green-50 text-green-700 border-green-200">
                                                         Atual
                                                     </Badge>
@@ -186,7 +194,8 @@ const AbaVersoes = ({
                                                 historico={versao.historico || []} 
                                                 status={versao.status || StatusContexto.AguardandoGerente} 
                                                 // [CORREÇÃO] Passa a propriedade para a Linha do Tempo
-                                                canViewFullHistory={canViewFullHistory} 
+                                                canViewFullHistory={canViewFullHistory}
+                                                versionLabel={`v${versao.id}`}
                                             />
                                         </div>
                                     )}

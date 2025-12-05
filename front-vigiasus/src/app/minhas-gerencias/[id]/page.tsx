@@ -3,8 +3,9 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Info, LayoutDashboard, Loader2, AlertCircle } from "lucide-react";
+import { Info, LayoutDashboard, AlertCircle } from "lucide-react";
 import GerenciaCard from "@/components/dados-gerais/gerenciaCard";
+import SpinnerCarregamento from "@/components/ui/spinner-carregamento";
 import { 
     getDiretoriaById, 
     getDiretoriaBySlug, 
@@ -73,10 +74,11 @@ export default function MinhasGerenciasPage() {
 
   if (isLoading) {
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-            <Loader2 className="w-10 h-10 text-blue-600 animate-spin mb-4" />
-            <p className="text-gray-500">Carregando...</p>
-        </div>
+        <SpinnerCarregamento
+            mensagem="Carregando..."
+            tamanho="grande"
+            centralizarTela={true}
+        />
     );
   }
 

@@ -696,7 +696,6 @@ exports.createVersao = async (req, res) => {
                 else if (mime.includes('sheet') || mime.includes('excel') || mime.includes('csv')) docType = 'EXCEL';
                 else if (mime.includes('word') || mime.includes('document')) docType = 'DOC';
                 else docType = 'PDF';
-
             } else if (!finalUrl && ultimaVersao) {
                  // Se não enviou nada novo, tenta copiar da versão anterior
                  const prev = await prisma.versaoarquivo.findUnique({ 
@@ -950,16 +949,27 @@ exports.diretorPublicar = async (req, res) => {
     try {
         await prisma.$transaction(async (tx) => {
             const current = await tx.contextoversao.findUnique({ where: { id: versaoId } });
-            if (current) {
-                await tx.contextoversao.updateMany({
-                    where: { contextoId: current.contextoId, isAtiva: true },
-                    data: { isAtiva: false }
-                });
+            console.log(`🔄 PUBLICANDO versão ${versaoId} (status atual: ${current?.statusValidacao}) do contexto ${current?.contextoId}`);
+            
+            // VALIDAÇÃO: Apenas pode publicar se estiver AGUARDANDO_DIRETOR
+            if (!current) {
+                throw new Error('Versão não encontrada');
             }
-            await tx.contextoversao.update({
+            
+            if (current.statusValidacao !== 'AGUARDANDO_DIRETOR') {
+                console.log(`❌ Tentativa de publicar versão com status inválido: ${current.statusValidacao}`);
+                throw new Error(`Não é possível publicar. Status atual: ${current.statusValidacao}. A versão precisa estar "Aguardando Diretor".`);
+            }
+            
+            // CORREÇÃO: Não desativamos versões antigas para permitir acompanhamento histórico/mensal
+            console.log(`  ℹ️ Mantendo versões anteriores ativas para comparação histórica`);
+            
+            const updated = await tx.contextoversao.update({
                 where: { id: versaoId },
                 data: { statusValidacao: 'PUBLICADO', isAtiva: true, updatedAt: new Date() }
             });
+            
+            console.log(`  ✅ Versão ${versaoId} agora: statusValidacao=${updated.statusValidacao}, isAtiva=${updated.isAtiva}`);
             await tx.validacaohistorico.create({
                 data: {
                     id: crypto.randomUUID(),
@@ -985,9 +995,11 @@ exports.diretorPublicar = async (req, res) => {
             // -----------------------------------
         });
         
+        console.log(`✅ Publicação concluída com sucesso para versão ${versaoId}`);
         return res.json({ message: 'Publicado com sucesso' });
     } catch (err) {
-        return res.status(500).json({ message: 'Erro ao publicar' });
+        console.error(`❌ ERRO ao publicar versão ${versaoId}:`, err);
+        return res.status(500).json({ message: 'Erro ao publicar', error: err.message });
     }
 };
 
@@ -1099,7 +1111,7 @@ exports.getDetalhes = async (req, res) => {
             return res.status(404).json({ message: 'Contexto não encontrado.' });
         }
 
-        // Buscar Todas as Versões com dados do Autor
+        // Buscar Todas as Versões com dados do Autor E histórico de validação
         const versoes = await prisma.contextoversao.findMany({
             where: { contextoId },
             include: {
@@ -1108,11 +1120,19 @@ exports.getDetalhes = async (req, res) => {
                 versaoindicador: true,
                 user: {
                     select: { nome: true, email: true }
+                },
+                // ✅ IMPORTANTE: Incluir histórico de validação para cada versão
+                validacaohistorico: {
+                    include: {
+                        user: { select: { nome: true, email: true } }
+                    },
+                    orderBy: [{ timestamp: 'asc' }] // Ordem cronológica
                 }
             },
             orderBy: [{ versaoNumero: 'desc' }],
         });
 
+        // Mapear histórico geral (se necessário para compatibilidade)
         const ids = versoes.map(v => v.id);
         const historico = ids.length ? await prisma.validacaohistorico.findMany({
             where: { versaoId: { in: ids } },
@@ -1121,6 +1141,21 @@ exports.getDetalhes = async (req, res) => {
                 user: { select: { nome: true } } // Opcional: Nome de quem aprovou/rejeitou no histórico
             }
         }) : [];
+        
+        console.log(`📌 [Backend] getDetalhes - Histórico por versão:`, versoes.map(v => ({
+            versaoNumero: v.versaoNumero,
+            historico: v.validacaohistorico?.map(h => ({ 
+                statusNovo: h.statusNovo, 
+                autorNome: h.user?.nome || 'Sistema',
+                timestamp: h.timestamp 
+            }))
+        })));
+
+        console.log(`📌 [Backend] getDetalhes response - Versões:`, versoes.map(v => ({
+            versaoNumero: v.versaoNumero,
+            statusValidacao: v.statusValidacao,
+            id: v.id
+        })));
 
         if (typeof mapContextoDetalhe === 'function') {
             return res.json(mapContextoDetalhe(contexto, versoes, historico));
@@ -1163,8 +1198,28 @@ exports.buscar = async (req, res) => {
                 include: { 
                     contexto: {
                         include: { 
-                            gerencia: { select: { slug: true, nome: true } } 
+                            gerencia: { select: { slug: true, nome: true } },
+                            // CORREÇÃO: Incluir todas as versões do contexto para badges/dropdown funcionarem
+                            contextoversao: {
+                                orderBy: { versaoNumero: 'desc' },
+                                include: {
+                                    versaoarquivo: true,
+                                    versaodashboard: true,
+                                    versaoindicador: true,
+                                    user: { select: { nome: true } }
+                                }
+                            }
                         }
+                    },
+                    versaoarquivo: true,
+                    versaodashboard: true,
+                    versaoindicador: true,
+                    // ✅ IMPORTANTE: Incluir histórico de validação para cada versão
+                    validacaohistorico: {
+                        include: {
+                            user: { select: { nome: true, email: true } }
+                        },
+                        orderBy: [{ timestamp: 'asc' }]
                     },
                     // Inclusão do usuário para trazer o nome
                     user: { select: { nome: true } }
@@ -1174,6 +1229,14 @@ exports.buscar = async (req, res) => {
                 take: sizeNum,
             }),
         ]);
+
+        console.log('📋 [Backend] Buscar - Retornando versões:', rows.map(r => ({
+            versaoNumero: r.versaoNumero,
+            titulo: r.titulo,
+            statusValidacao: r.statusValidacao,
+            contextoId: r.contextoId,
+            contextoTitulo: r.contexto?.tituloConceitual
+        })));
 
         return res.json({ 
             data: rows, 
@@ -1192,18 +1255,25 @@ exports.getContextosDaGerencia = async (req, res) => {
     const { gerenciaId } = req.params;
     const user = req.user;
     
+    // Visitantes não autenticados não devem acessar a listagem
+    if (!user) {
+        return res.status(401).json({ message: 'Usuário não autenticado.' });
+    }
+
     // Define se o usuário pode ver itens ocultos/pendentes
-    const isInterno = user && (user.role === 'GERENTE' || user.role === 'DIRETOR' || (user.role === 'MEMBRO' && user.gerenciaId === gerenciaId));
+    // Apenas GERENTE da gerência específica e MEMBROS da gerência podem ver versões pendentes
+    const isInterno = user && ((user.role === 'GERENTE' && user.gerenciaId === gerenciaId) || (user.role === 'MEMBRO' && user.gerenciaId === gerenciaId));
     try {
         const contextos = await prisma.contexto.findMany({
             where: {
                 gerenciaDonaId: gerenciaId,
                 deletedAt: null, // Ignora lixeira
-                // Se não for interno, só traz contextos que tenham pelo menos uma versão publicada e ativa
+                // Se não for interno, só traz contextos que tenham pelo menos uma versão publicada
+                // [FIX] Removido 'isAtiva: true' para permitir que contextos com versões publicadas antigas apareçam
                 ...( !isInterno ? {
                     isOculto: false,
                     contextoversao: {
-                        some: { statusValidacao: 'PUBLICADO', isAtiva: true }
+                        some: { statusValidacao: 'PUBLICADO' }
                     }
                 } : {})
             },
@@ -1228,20 +1298,33 @@ exports.getContextosDaGerencia = async (req, res) => {
             // Se for interno (Gestor), vê a versão mais recente absoluta (mesmo que seja rascunho/pendente)
             // Se for público, vê a versão mais recente que esteja PUBLICADA
             
+            console.log(`📦 Contexto: ${ctx.tituloConceitual}, Total de versões: ${ctx.contextoversao.length}`);
+            ctx.contextoversao.forEach(v => {
+                console.log(`  - v${v.versaoNumero}: Status=${v.statusValidacao}, isAtiva=${v.isAtiva}`);
+            });
+            
             let versaoAtiva = null;
             
+            // NOVA LÓGICA: Com múltiplas versões ativas, mostramos a mais recente
+            // Prioridade: 
+            // 1. Para INTERNOS: versão mais recente (independente do status, para ver pendentes)
+            // 2. Para EXTERNOS: versão PUBLICADA mais recente
+            
             if (isInterno) {
-                // Pega a topo da pilha (ex: v2 pendente)
-                versaoAtiva = ctx.contextoversao[0];
+                // Internos veem a versão mais recente (pendente ou publicada)
+                versaoAtiva = ctx.contextoversao[0]; // Já vem ordenado por versaoNumero desc
             } else {
-                // Pega a primeira que for PUBLICADA e ATIVA
-                versaoAtiva = ctx.contextoversao.find(v => v.statusValidacao === 'PUBLICADO' && v.isAtiva);
+                // Externos veem apenas a versão PUBLICADA mais recente
+                const versoesPublicadas = ctx.contextoversao.filter(v => v.statusValidacao === 'PUBLICADO');
+                versaoAtiva = versoesPublicadas.length > 0 ? versoesPublicadas[0] : null;
             }
+
+            console.log(`  ✅ Versão escolhida para ${isInterno ? 'INTERNO' : 'EXTERNO'}: v${versaoAtiva?.versaoNumero} (${versaoAtiva?.statusValidacao})`);
 
             // Se não houver versão visível para este perfil, ignora o contexto (ou retorna null para filtrar depois)
             if (!versaoAtiva) return null;
 
-            return mapContextoWithVersao(ctx, versaoAtiva, ctx.contextoversao);
+            return mapContextoWithVersaoDetalhada(ctx, versaoAtiva, ctx.contextoversao, isInterno);
         }).filter(Boolean); // Remove os nulos
 
         return res.json(output);
@@ -1305,7 +1388,7 @@ exports.getUltimaAtualizacao = async (_req, res) => {
 };
 
 // Função auxiliar de mapeamento (atualize ou adicione se não existir)
-function mapContextoWithVersao(ctx, versaoPrincipal, todasVersoes) {
+function mapContextoWithVersaoDetalhada(ctx, versaoPrincipal, todasVersoes, isInterno) {
     let parsedPayload = null;
     if (versaoPrincipal.versaodashboard?.payload) {
         try {
@@ -1314,6 +1397,9 @@ function mapContextoWithVersao(ctx, versaoPrincipal, todasVersoes) {
             parsedPayload = null;
         }
     }
+
+    // Para usuários externos, filtra apenas versões PUBLICADAS
+    const versoesVisiveis = isInterno ? todasVersoes : todasVersoes.filter(v => v.statusValidacao === 'PUBLICADO');
 
     return {
         id: ctx.id,
@@ -1332,6 +1418,6 @@ function mapContextoWithVersao(ctx, versaoPrincipal, todasVersoes) {
         url: versaoPrincipal.versaoarquivo?.url,
         docType: versaoPrincipal.versaoarquivo?.docType,
         payload: parsedPayload,
-        versoes: todasVersoes,
+        versoes: versoesVisiveis,
     };
 }

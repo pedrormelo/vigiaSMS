@@ -40,6 +40,12 @@ export interface Versao {
   estaOculta?: boolean;
   status?: StatusContexto;
   historico?: HistoricoEvento[];
+  descricao?: string;
+  url?: string;
+  payload?: any;
+  type?: FileType;
+  docType?: string;
+  chartType?: TipoGrafico;
 }
 // Alias para compatibilidade com o service
 export type VersaoContexto = Versao;

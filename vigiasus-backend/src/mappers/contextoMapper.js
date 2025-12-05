@@ -31,6 +31,8 @@ function mapVersao(prismaVersao) {
         titulo: prismaVersao.titulo,
         descricao: prismaVersao.descricao || null,
         
+        // ✅ IMPORTANTE: Enviar statusValidacao (o enum raw do Prisma)
+        statusValidacao: prismaVersao.statusValidacao,
         status: prismaVersao.statusValidacao,
         statusLabel: StatusLabels[prismaVersao.statusValidacao] || prismaVersao.statusValidacao,
         
@@ -42,7 +44,8 @@ function mapVersao(prismaVersao) {
         
         solicitanteNome: prismaVersao.user ? prismaVersao.user.nome : null,
         
-        // [CORREÇÃO CRÍTICA] Inclui o histórico dentro da versão
+        // ✅ [CORREÇÃO] Inclui o histórico de validação dentro da versão
+        // Cada versão tem seu próprio histórico de quem aprovou/rejeitou em cada etapa
         historico: historicoFormatado,
 
         // Dados específicos

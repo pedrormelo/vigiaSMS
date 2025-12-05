@@ -143,17 +143,42 @@ export function VisualizarContextoModal({
             if (dados.versoes && dados.versoes.length > 0) {
                 dados.versoes = dados.versoes.map(v => {
                     const historicoOriginal = v.historico || [];
+                    // Filtra eventos: mantém transições de etapa (para timeline) mas remove justificativas privadas
                     const historicoFiltrado = historicoOriginal.filter(h => {
                         const s = String(h.statusNovo).toUpperCase();
-                        return s.includes('CRIADO') || s.includes('PUBLICADO') || s.includes('INDEFERIDO');
+                        // Mantém eventos de transição de etapa (necessários para a timeline)
+                        return s.includes('CRIADO') || 
+                               s.includes('PUBLICADO') || 
+                               s.includes('AGUARDANDO_GERENTE') || 
+                               s.includes('AGUARDANDO_DIRETOR') ||
+                               s.includes('INDEFERIDO');
+                        // Remove apenas eventos com justificativas privadas (CORREÇÃO, etc)
+                    }).map(h => {
+                        // Remove justificativas de eventos privados (exceto indeferido que é público)
+                        const s = String(h.statusNovo).toUpperCase();
+                        if (s.includes('CORRECAO') || s.includes('CORREÇÃO')) {
+                            return { ...h, justificativa: '' };
+                        }
+                        return h;
                     });
                     return { ...v, historico: historicoFiltrado };
                 });
             }
             if (dados.historico && dados.historico.length > 0) {
+                // Mesma lógica para histórico global
                 dados.historico = dados.historico.filter(h => {
                     const s = String(h.statusNovo).toUpperCase();
-                    return s.includes('PUBLICADO') || s.includes('INDEFERIDO') || s.includes('CRIADO');
+                    return s.includes('CRIADO') || 
+                           s.includes('PUBLICADO') || 
+                           s.includes('AGUARDANDO_GERENTE') || 
+                           s.includes('AGUARDANDO_DIRETOR') ||
+                           s.includes('INDEFERIDO');
+                }).map(h => {
+                    const s = String(h.statusNovo).toUpperCase();
+                    if (s.includes('CORRECAO') || s.includes('CORREÇÃO')) {
+                        return { ...h, justificativa: '' };
+                    }
+                    return h;
                 });
             }
         }

@@ -12,6 +12,7 @@ import { VisualizarContextoModal } from "@/components/popups/visualizarContextoM
 import { Button } from "@/components/ui/button";
 import { ModalAdicionarConteudo } from "@/components/popups/addContextoModal/index";
 import ExcluirContextoModal from "@/components/popups/excluirContextoModal";
+import SpinnerCarregamento from "@/components/ui/spinner-carregamento";
 
 // Definições e Tipos
 import { membroColumns } from "@/components/validar/colunasTable/membroColumns";
@@ -272,8 +273,11 @@ export default function ValidacaoContextos() {
             <Button onClick={carregarContextos} variant="outline" className="mt-2 ml-2 h-8">Tentar Novamente</Button>
           </div>
         ) : isLoading ? (
-          <div className="flex justify-center py-12">
-            <RefreshCw className="animate-spin text-blue-600 w-8 h-8" />
+          <div className="py-12">
+            <SpinnerCarregamento
+              mensagem="Carregando solicitações..."
+              tamanho="medio"
+            />
           </div>
         ) : (
           <ContextoTable

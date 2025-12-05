@@ -101,22 +101,23 @@ const AbaDetalhes = ({
 
     const [versaoSelecionadaId, setVersaoSelecionadaId] = useState<number | null>(null);
 
-    // 5. [FIX v4] useEffect atualizado para selecionar a versão correta no carregamento
+    // 5. [FIX v5] useEffect atualizado para SEMPRE priorizar versão PUBLICADA quando disponível
     useEffect(() => {
         if (isValidationView && versaoEmJulgamento) {
             // 1. Prioridade: Modo Validação foca na versão em julgamento
             setVersaoSelecionadaId(versaoEmJulgamento.id);
         
-        } else if (isEditing && versaoMaisRecenteGeral) { 
-            // 2. Modo Edição: Foca na versão mais recente de *todas* (publicada ou não)
-            setVersaoSelecionadaId(versaoMaisRecenteGeral.id);
-
         } else if (versaoMaisRecentePublicadaVisivel) { 
-            // 3. Modo Visualização: Foca na mais recente PUBLICADA e VISÍVEL
+            // 2. SEMPRE prioriza mostrar a versão PUBLICADA mais recente (se existir)
+            // Isso garante que ao abrir o modal, o usuário vê primeiro o que está publicado
             setVersaoSelecionadaId(versaoMaisRecentePublicadaVisivel.id);
+
+        } else if (isEditing && versaoMaisRecenteGeral) { 
+            // 3. Modo Edição SEM versão publicada: Mostra a mais recente (pendente)
+            setVersaoSelecionadaId(versaoMaisRecenteGeral.id);
         
         } else if (versaoMaisRecenteGeral) {
-            // 4. Fallback (ex: Modo Visualização, mas só tem versões pendentes ou ocultas)
+            // 4. Fallback geral
             setVersaoSelecionadaId(versaoMaisRecenteGeral.id);
         } else {
             setVersaoSelecionadaId(null);
@@ -125,14 +126,30 @@ const AbaDetalhes = ({
 
 
     const versaoSelecionada = versoesDisponiveis.find(v => v.id === versaoSelecionadaId);
+
+    const dadosParaExibir = useMemo(() => {
+        if (!versaoSelecionada) return dados;
+        return {
+            ...dados,
+            title: versaoSelecionada.nome || dados.title,
+            description: versaoSelecionada.descricao ?? dados.description,
+            url: versaoSelecionada.url ?? dados.url,
+            payload: versaoSelecionada.payload ?? dados.payload,
+            type: (versaoSelecionada.type as FileType) || dados.type,
+            chartType: versaoSelecionada.chartType ?? dados.chartType,
+            insertedDate: versaoSelecionada.data || dados.insertedDate,
+        };
+    }, [dados, versaoSelecionada]);
     
-    // 6. [FIX v4] A lista do Dropdown SÓ deve conter versões publicadas e visíveis (no modo visualização)
-    const listaDropdown = isEditing ? versoesDisponiveis : versoesPublicadasEVisiveis;
+    // 6. [FIX v6] Dropdown deve mostrar TODAS as versões publicadas (independente de oculto)
+    // para que o usuário possa alternar entre elas
+    const listaDropdown = isEditing ? versoesDisponiveis : versoesPublicadas;
 
     const podeComentar = !isEditing && !isFromHistory;
-    const isPublishedGeral = dados.status === StatusContexto.Publicado; // Status GERAL do contexto
+    const statusAtual = versaoSelecionada?.status || dados.status;
+    const isPublishedGeral = statusAtual === StatusContexto.Publicado; // Status da versão em exibição
     const canToggleHide = isPublishedGeral; // Switch de Ocultar *Contexto*
-    const tipoLabel = dados.type === 'indicador' ? 'Indicador' : 'Contexto';
+    const tipoLabel = dadosParaExibir.type === 'indicador' ? 'Indicador' : 'Contexto';
 
     // --- [INÍCIO DA MODIFICAÇÃO v4] ---
     const renderBanner = () => {
@@ -246,7 +263,7 @@ const AbaDetalhes = ({
                             >
                                 {listaDropdown.sort((a, b) => b.id - a.id).map(versao => (
                                     <option key={versao.id} value={versao.id}>
-                                        {versao.nome} {versao.estaOculta ? '(Oculta)' : ''}
+                                        v{versao.id} - {versao.nome} {versao.estaOculta ? '(Oculta)' : ''}
                                     </option>
                                 ))}
                             </select>
@@ -268,16 +285,16 @@ const AbaDetalhes = ({
                 <div className="bg-gray-50 rounded-2xl border border-gray-200 p-4 space-y-4">
                     <div className="flex items-center justify-between gap-4">
                         <div className="flex items-center gap-4 flex-1 min-w-0">
-                            <IconeDocumento type={dados.type as FileType} />
+                            <IconeDocumento type={dadosParaExibir.type as FileType} />
                             <div className="min-w-0">
-                                <p className="font-semibold text-gray-800 text-base leading-tight truncate" title={dados.title}>{dados.title}</p>
-                                <p className="text-sm text-gray-500">{new Date(dados.insertedDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                                <p className="font-semibold text-gray-800 text-base leading-tight truncate" title={dadosParaExibir.title}>{dadosParaExibir.title}</p>
+                                <p className="text-sm text-gray-500">{new Date(dadosParaExibir.insertedDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
                             </div>
                         </div>
 
                         <div className="flex-shrink-0 flex items-center gap-2">
                             
-                            {!['indicador', 'link'].includes(dados.type) && (
+                            {!['indicador', 'link'].includes(dadosParaExibir.type) && (
                                 <Button 
                                     onClick={aoFazerDownload} 
                                     variant="default" 
@@ -372,10 +389,10 @@ const AbaDetalhes = ({
                 {/* --- FIM DA SEÇÃO DE COMENTÁRIO --- */}
 
                 {/* Descrição */}
-                {dados.description && (
+                {dadosParaExibir.description && (
                     <div className="bg-blue-50/50 border border-blue-200 rounded-2xl p-4 space-y-3">
                         <div className="flex items-center gap-2"><Info className="w-5 h-5 text-blue-600" /><h3 className="text-base font-semibold text-blue-800">Descrição</h3></div>
-                        <p className="text-gray-700 text-sm leading-relaxed pl-1">{dados.description}</p>
+                        <p className="text-gray-700 text-sm leading-relaxed pl-1">{dadosParaExibir.description}</p>
                     </div>
                 )}
 
@@ -396,7 +413,7 @@ const AbaDetalhes = ({
                             <FileIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
                             <div>
                                 <p className="font-medium text-gray-800">Tipo</p>
-                                <p className="text-gray-600 uppercase">{dados.type}</p>
+                                <p className="text-gray-600 uppercase">{dadosParaExibir.type}</p>
                             </div>
                         </div>
 
@@ -414,12 +431,12 @@ const AbaDetalhes = ({
             {/* Coluna da Direita: Visualizador */}
             <div className="h-full min-h-[280px]">
                 <VisualizadorDeConteudo
-                    tipo={dados.type}
-                    url={dados.url}
-                    titulo={dados.title}
-                    payload={dados.payload}
-                    descricao={dados.description}
-                    chartType={dados.chartType}
+                    tipo={dadosParaExibir.type}
+                    url={dadosParaExibir.url}
+                    titulo={dadosParaExibir.title}
+                    payload={dadosParaExibir.payload}
+                    descricao={dadosParaExibir.description}
+                    chartType={dadosParaExibir.chartType}
                     aoAlternarTelaCheia={aoAlternarTelaCheia}
                     emTelaCheia={emTelaCheia}
                     zoomLevel={zoomLevel}

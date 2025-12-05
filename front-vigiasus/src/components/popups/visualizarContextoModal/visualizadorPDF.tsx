@@ -22,7 +22,15 @@ export const VisualizadorPdf: React.FC<VisualizadorPdfProps> = ({ url, emTelaChe
 
     // MELHORIA: Configura o worker dentro de um useEffect para garantir que só rode no cliente
     useEffect(() => {
-        pdfjs.GlobalWorkerOptions.workerSrc = `/pdf.worker.min.mjs`;
+        try {
+            if (typeof window !== 'undefined') {
+                // Usa caminho absoluto para evitar falha de resolução em ambientes com basePath
+                const workerUrl = `${window.location.origin}/pdf.worker.min.mjs`;
+                pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+            }
+        } catch (err) {
+            console.error('Erro ao configurar worker do PDF:', err);
+        }
     }, []);
 
     function aoCarregarDocumento({ numPages }: { numPages: number }) {
@@ -60,10 +68,20 @@ export const VisualizadorPdf: React.FC<VisualizadorPdfProps> = ({ url, emTelaChe
         </div>
     );
 
+    // Se não houver URL, evitamos inicializar o Document (origem do erro sendWithPromise)
+    if (!url) {
+        return (
+            <div className="w-full h-full bg-gray-50 rounded-2xl border border-gray-200 flex items-center justify-center p-6 text-gray-600 text-sm">
+                Nenhum arquivo PDF disponível para esta versão.
+            </div>
+        );
+    }
+
     return (
         <div className="w-full h-full bg-gray-100 rounded-2xl flex flex-col relative group z-0">
             <div className="flex-1 overflow-auto flex justify-center p-4 relative z-0">
                 <Document
+                    key={url}
                     file={url}
                     onLoadSuccess={aoCarregarDocumento}
                     onLoadError={aoFalharCarregamento}
