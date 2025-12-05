@@ -6,6 +6,9 @@ import { SearchBar } from "../ui/search-bar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from '@/components/ui/button';
 import { fileTypeConfig, FileType } from '@/components/contextosCard/contextoCard';
+
+import { ViewToggle, ViewMode } from "@/components/contextosCard/viewToggle";
+
 import { cn } from '@/lib/utils';
 
 type Tab = "recente" | "todas";
@@ -19,6 +22,8 @@ interface GerenciasFilterBarProps {
   onSelectedTypesChange: (type: FileType) => void;
   clearTypeFilter: () => void;
   tourId?: string;
+  viewMode: ViewMode;
+  onViewModeChange: (mode: ViewMode) => void;
 }
 
 // ATUALIZADO: "excel" -> "planilha"
@@ -44,6 +49,8 @@ export default function GerenciasFilterBar({
   onSelectedTypesChange,
   clearTypeFilter,
   tourId,
+  viewMode,
+  onViewModeChange,
 }: GerenciasFilterBarProps) {
 
   const filterableTypes = Object.keys(filterIconMap).filter(
@@ -123,10 +130,13 @@ export default function GerenciasFilterBar({
             </div>
           </PopoverContent>
         </Popover>
-
+        
         {/* Botões de abas */}
         <button onClick={() => onTabChange("recente")} className={cn("px-6 py-2 cursor-pointer rounded-full font-medium transition shadow-sm", activeTab === "recente" ? "bg-blue-600 text-white" : "bg-white text-gray-500 hover:bg-gray-50")}>Recentes</button>
         <button onClick={() => onTabChange("todas")} className={cn("px-6 py-2 cursor-pointer rounded-full font-medium transition shadow-sm", activeTab === "todas" ? "bg-blue-600 text-white" : "bg-white text-gray-500 hover:bg-gray-50")}>Todas</button>
+
+        <ViewToggle value={viewMode} onValueChange={onViewModeChange} />
+
       </div>
     </div>
   );

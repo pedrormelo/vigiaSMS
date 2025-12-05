@@ -23,12 +23,12 @@ export function ViewToggle({ value, onValueChange, className }: ViewToggleProps)
             type="single" 
             value={value} 
             onValueChange={(val: string) => val && onValueChange(val as ViewMode)}
-            className={cn("bg-white rounded-lg shadow-sm border border-gray-200", className)}
+            className={cn("bg-white text-gray-500 rounded-xl shadow-xs border border-gray-200", className)}
         >
             <ToggleGroupItem 
                 value="grid" 
                 aria-label="Visualização em Grade"
-                className="data-[state=on]:bg-blue-100 data-[state=on]:text-blue-700"
+                className="data-[state=on]:bg-blue-100/40 data-[state=on]:text-blue-600"
             >
                 <LayoutGrid className="h-4 w-4" />
                 <span className="ml-2 hidden sm:inline">Grade</span>
@@ -36,7 +36,7 @@ export function ViewToggle({ value, onValueChange, className }: ViewToggleProps)
             <ToggleGroupItem 
                 value="list" 
                 aria-label="Visualização em Lista"
-                className="data-[state=on]:bg-blue-100 data-[state=on]:text-blue-700"
+                className="data-[state=on]:bg-blue-100/40 data-[state=on]:text-blue-600"
             >
                 <List className="h-4 w-4" />
                 <span className="ml-2 hidden sm:inline">Lista</span>
@@ -44,7 +44,7 @@ export function ViewToggle({ value, onValueChange, className }: ViewToggleProps)
             <ToggleGroupItem 
                 value="detailed" 
                 aria-label="Visualização Detalhada"
-                className="data-[state=on]:bg-blue-100 data-[state=on]:text-blue-700"
+                className="data-[state=on]:bg-blue-100/40 data-[state=on]:text-blue-700"
             >
                 <ListTree className="h-4 w-4" />
                 <span className="ml-2 hidden sm:inline">Detalhada</span>

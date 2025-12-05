@@ -6,7 +6,7 @@ import { DashboardPreview, type GraphData } from "@/components/dashboard/dasboar
 import type { LayoutType } from "@/components/dashboard/selecionarLayout"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, ArrowRight } from "lucide-react"
+import { ArrowLeft, ArrowRight, Eye, EyeOff, RotateCcw } from "lucide-react"
 
 // --- INÍCIO DAS ALTERAÇÕES ---
 import type { Contexto } from "@/components/validar/typesDados"; // Importa o tipo Contexto
@@ -20,35 +20,57 @@ interface GerenciaDashboardPreviewProps {
     gerencia: string
     className?: string
     disabled?: boolean
+    canEdit?: boolean
+    hiddenGraphIds?: string[]
+    onHideGraph?: (contextoId: string) => void
+    onRestoreGraph?: (contextoId: string) => void
+    onRestoreAllGraphs?: () => void
 }
 
-export function GerenciaDashboardPreview({ graphs, gerencia, className, disabled = false }: GerenciaDashboardPreviewProps) {
+export function GerenciaDashboardPreview({
+    graphs,
+    gerencia,
+    className,
+    disabled = false,
+    canEdit = false,
+    hiddenGraphIds = [],
+    onHideGraph,
+    onRestoreGraph,
+    onRestoreAllGraphs
+}: GerenciaDashboardPreviewProps) {
     
     // --- INÍCIO DA ALTERAÇÃO ---
     // Mapeia o formato Contexto[] para GraphData[]
-    const filteredAsGraphData = useMemo(() => {
+    const allGraphsAsData = useMemo(() => {
         return graphs
-            .filter(ctx => ctx.gerencia === gerencia) // Filtra pela gerência ID (g6, g7, etc.)
+            .filter(ctx => ctx.gerencia === gerencia)
             .map((ctx): GraphData => {
-                // Mapeia o formato Contexto -> GraphData
                 const payload = (ctx.payload as ConjuntoDeDadosGrafico) || { colunas: [], linhas: [] };
                 return {
                     id: ctx.id,
                     title: ctx.title,
                     type: normalizeGraphType(ctx.chartType),
-                    gerencia: ctx.gerencia || 'N/A', 
+                    gerencia: ctx.gerencia || 'N/A',
                     insertedDate: ctx.insertedDate,
-                    isHighlighted: ctx.estaOculto, 
-                    // Constrói o array 'data' que o ChartPreview espera [colunas, ...linhas]
-                    data: [
-                        payload.colunas,
-                        ...payload.linhas
-                    ], 
+                    isHighlighted: ctx.estaOculto,
+                    data: [payload.colunas, ...(payload.linhas || [])],
                     colors: payload.cores,
                     status: ctx.status
                 };
             });
     }, [graphs, gerencia]);
+
+    const hiddenSet = useMemo(() => new Set(hiddenGraphIds), [hiddenGraphIds]);
+
+    const visibleGraphs = useMemo(
+        () => allGraphsAsData.filter(graph => !hiddenSet.has(graph.id)),
+        [allGraphsAsData, hiddenSet]
+    );
+
+    const hiddenGraphs = useMemo(
+        () => allGraphsAsData.filter(graph => hiddenSet.has(graph.id)),
+        [allGraphsAsData, hiddenSet]
+    );
     // --- FIM DA ALTERAÇÃO ---
 
 
@@ -56,15 +78,15 @@ export function GerenciaDashboardPreview({ graphs, gerencia, className, disabled
     const [page, setPage] = useState(0)
 
     const pages = useMemo(() => {
-        if (filteredAsGraphData.length === 0) return []
+        if (visibleGraphs.length === 0) return []
         const chunked: GraphData[][] = []
-        for (let i = 0; i < filteredAsGraphData.length; i += 3) {
-            chunked.push(filteredAsGraphData.slice(i, i + 3))
+        for (let i = 0; i < visibleGraphs.length; i += 3) {
+            chunked.push(visibleGraphs.slice(i, i + 3))
         }
         return chunked
-    }, [filteredAsGraphData])
+    }, [visibleGraphs])
 
-    const totalPages = Math.max(1, pages.length)
+    const totalPages = pages.length
 
     useEffect(() => {
         setPage(p => (p >= totalPages ? Math.max(0, totalPages - 1) : p))
@@ -78,7 +100,9 @@ export function GerenciaDashboardPreview({ graphs, gerencia, className, disabled
 
 
     // Usa filteredAsGraphData para a verificação de vazio
-    if (filteredAsGraphData.length === 0) {
+    const hasVisibleGraphs = visibleGraphs.length > 0
+
+    if (!hasVisibleGraphs && hiddenGraphs.length === 0) {
         return (
             <div className="bg-gray-50 rounded-2xl p-10 border-2 border-dashed border-gray-200 text-center text-gray-500">
                 Nenhum gráfico cadastrado para esta gerência.
@@ -88,19 +112,40 @@ export function GerenciaDashboardPreview({ graphs, gerencia, className, disabled
 
     return (
         <div className={cn("relative", className)}>
-            <DashboardPreview
-                key={`${gerencia}-asymmetric-${page}`}
-                layout={layout}
-                graphs={pageGraphs}
-                onGraphSelect={() => {}}
-                onGraphRemove={() => {}}
-                onHighlightToggle={() => {}}
-                editMode={false}
-                renderVersion={renderVersion}
-                disabled={disabled}
-            />
+            {hasVisibleGraphs ? (
+                <DashboardPreview
+                    key={`${gerencia}-asymmetric-${page}`}
+                    layout={layout}
+                    graphs={pageGraphs}
+                    onGraphSelect={() => {}}
+                    onGraphRemove={(id) => onHideGraph?.(id)}
+                    onHighlightToggle={() => {}}
+                    editMode={canEdit}
+                    renderVersion={renderVersion}
+                    disabled={disabled}
+                    removeButtonTitle="Ocultar deste painel"
+                    removeButtonIcon={<EyeOff className="h-5 w-5" />}
+                    showHighlightToggle={false}
+                />
+            ) : (
+                <div className="bg-gray-50 rounded-2xl p-10 border-2 border-dashed border-gray-200 text-center text-gray-500">
+                    Todos os gráficos desta gerência estão ocultos neste painel.
+                    {canEdit && onRestoreAllGraphs && (
+                        <div className="mt-4 flex justify-center">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={onRestoreAllGraphs}
+                                className="rounded-full border-blue-300 text-blue-700 hover:bg-blue-100"
+                            >
+                                <RotateCcw className="h-4 w-4 mr-2" /> Reexibir todos
+                            </Button>
+                        </div>
+                    )}
+                </div>
+            )}
 
-            {totalPages > 1 && (
+            {hasVisibleGraphs && totalPages > 1 && (
                 <div className="mt-6 flex items-center justify-between gap-3">
                     <Button
                         size="icon"
@@ -135,6 +180,37 @@ export function GerenciaDashboardPreview({ graphs, gerencia, className, disabled
                     >
                         <ArrowRight className="h-4 w-4 text-gray-500" />
                     </Button>
+                </div>
+            )}
+
+            {canEdit && hiddenGraphs.length > 0 && (
+                <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900 flex flex-col gap-3">
+                    <div className="flex items-center justify-between gap-4">
+                        <span className="font-semibold">Gráficos ocultos ({hiddenGraphs.length})</span>
+                        {onRestoreAllGraphs && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={onRestoreAllGraphs}
+                                className="h-8 rounded-full text-blue-700 hover:bg-blue-100"
+                            >
+                                <RotateCcw className="h-4 w-4 mr-2" /> Reexibir todos
+                            </Button>
+                        )}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        {hiddenGraphs.map(graph => (
+                            <Button
+                                key={graph.id}
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => onRestoreGraph?.(graph.id)}
+                                className="rounded-full border border-blue-200 bg-white text-blue-700 hover:bg-blue-100"
+                            >
+                                <Eye className="h-4 w-4 mr-1" /> {graph.title}
+                            </Button>
+                        ))}
+                    </div>
                 </div>
             )}
         </div>

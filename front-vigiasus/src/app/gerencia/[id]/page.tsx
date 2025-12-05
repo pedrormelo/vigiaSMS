@@ -34,6 +34,7 @@ import { getContextosPorGerencia, criarContexto, criarVersao, CriarContextoData 
 import { getGerenciaBySlug, Gerencia } from "@/services/organizacaoService";
 import { mapTipoGraficoParaBackend, normalizarNumero } from "@/lib/gerenciaUtils";
 import IndicadoresSection from "@/components/gerencia/sections/IndicadoresSection";
+import { getDiretoriaDashboardKpis, getDiretoriaDashboardLayout } from "@/services/dashboardService";
 
 export default function GerenciaPage() {
     const params = useParams();
@@ -61,22 +62,113 @@ export default function GerenciaPage() {
     const [error, setError] = useState<string | null>(null);
     const [todosOsContextos, setTodosOsContextos] = useState<Contexto[]>([]);
     const [viewMode, setViewMode] = useState<ViewMode>('grid');
+    const [dashboardsOcultosGerencia, setDashboardsOcultosGerencia] = useState<string[]>([]);
+    const [contextosBloqueadosOcultar, setContextosBloqueadosOcultar] = useState<Record<string, string>>({});
 
     // [REMOVIDO] Estados do modal de ocultar (não são mais necessários aqui)
+
+    const dashboardsHiddenStorageKey = gerenciaData?.id
+        ? `vigiasus:gerencia-dashboard-hidden:${gerenciaData.id}`
+        : null;
+
+    useEffect(() => {
+        if (!dashboardsHiddenStorageKey) {
+            setDashboardsOcultosGerencia([]);
+            return;
+        }
+
+        try {
+            const saved = typeof window !== 'undefined' ? window.localStorage.getItem(dashboardsHiddenStorageKey) : null;
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (Array.isArray(parsed)) {
+                    setDashboardsOcultosGerencia(parsed.filter((id: unknown): id is string => typeof id === 'string'));
+                } else {
+                    setDashboardsOcultosGerencia([]);
+                }
+            } else {
+                setDashboardsOcultosGerencia([]);
+            }
+        } catch (error) {
+            console.warn('Não foi possível carregar preferências locais de dashboards ocultos:', error);
+            setDashboardsOcultosGerencia([]);
+        }
+    }, [dashboardsHiddenStorageKey]);
+
+    useEffect(() => {
+        if (!dashboardsHiddenStorageKey) return;
+        try {
+            if (typeof window !== 'undefined') {
+                window.localStorage.setItem(dashboardsHiddenStorageKey, JSON.stringify(dashboardsOcultosGerencia));
+            }
+        } catch (error) {
+            console.warn('Não foi possível salvar preferências locais de dashboards ocultos:', error);
+        }
+    }, [dashboardsOcultosGerencia, dashboardsHiddenStorageKey]);
+
+    useEffect(() => {
+        if (dashboardsOcultosGerencia.length === 0) return;
+        setDashboardsOcultosGerencia(prev => {
+            const validIds = new Set(todosOsContextos.map(ctx => ctx.id));
+            const filtered = prev.filter(id => validIds.has(id));
+            return filtered.length === prev.length ? prev : filtered;
+        });
+    }, [todosOsContextos]);
 
     const carregarDados = useCallback(async () => {
         if (!slug) return;
         try {
             setError(null);
+            setIsLoading(true);
             const gerenciaEncontrada = await getGerenciaBySlug(slug);
             if (!gerenciaEncontrada) throw new Error("Gerência não encontrada.");
             setGerenciaData(gerenciaEncontrada);
-            const contextos = await getContextosPorGerencia(gerenciaEncontrada.id);
+
+            const [contextos, layout, kpis] = await Promise.all([
+                getContextosPorGerencia(gerenciaEncontrada.id),
+                gerenciaEncontrada.diretoriaId
+                    ? getDiretoriaDashboardLayout(gerenciaEncontrada.diretoriaId).catch(() => null)
+                    : Promise.resolve(null),
+                gerenciaEncontrada.diretoriaId
+                    ? getDiretoriaDashboardKpis(gerenciaEncontrada.diretoriaId).catch(() => [])
+                    : Promise.resolve([])
+            ]);
+
+            const versoesEmUso = new Set<string>();
+            layout?.items?.forEach(item => {
+                if (item?.contextoVersaoId) {
+                    versoesEmUso.add(item.contextoVersaoId);
+                }
+            });
+            kpis?.forEach(item => {
+                if (item?.contextoVersaoId) {
+                    versoesEmUso.add(item.contextoVersaoId);
+                }
+            });
+
+            if (versoesEmUso.size > 0) {
+                const reasonBase = gerenciaEncontrada.diretoria?.nome
+                    ? `Este conteúdo está em uso no dashboard da diretoria ${gerenciaEncontrada.diretoria.nome}.`
+                    : 'Este conteúdo está em uso em um dashboard de diretoria.';
+                const bloqueados: Record<string, string> = {};
+                contextos.forEach(ctx => {
+                    const versoes = ctx.versoes || [];
+                    const emUso = versoes.some(v => v.dbId && versoesEmUso.has(v.dbId));
+                    if (emUso) {
+                        bloqueados[ctx.id] = reasonBase;
+                    }
+                });
+                setContextosBloqueadosOcultar(bloqueados);
+            } else {
+                setContextosBloqueadosOcultar({});
+            }
+
             setTodosOsContextos(contextos);
         } catch (err) {
             console.error("Erro ao buscar dados:", err);
             const errorMessage = err instanceof Error ? err.message : "Não foi possível carregar os dados.";
             setError(errorMessage);
+            setContextosBloqueadosOcultar({});
         } finally {
             setIsLoading(false);
         }
@@ -358,6 +450,9 @@ export default function GerenciaPage() {
                 ctx.id === contextoId ? { ...ctx, estaOculto: !ctx.estaOculto } : ctx
             )
         );
+        setFicheiroSelecionado(prev =>
+            prev && prev.id === contextoId ? { ...prev, estaOculto: !prev.estaOculto } : prev
+        );
         // Opcional: Se quiser garantir sincronia absoluta com o servidor, descomente a linha abaixo:
         // carregarDados();
     };
@@ -375,6 +470,18 @@ export default function GerenciaPage() {
             return ctx;
         }));
     };
+
+    const ocultarGraficoNoPainel = useCallback((contextoId: string) => {
+        setDashboardsOcultosGerencia(prev => prev.includes(contextoId) ? prev : [...prev, contextoId]);
+    }, []);
+
+    const reexibirGraficoNoPainel = useCallback((contextoId: string) => {
+        setDashboardsOcultosGerencia(prev => prev.filter(id => id !== contextoId));
+    }, []);
+
+    const reexibirTodosGraficosNoPainel = useCallback(() => {
+        setDashboardsOcultosGerencia([]);
+    }, []);
 
     const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); if (modo === 'edicao') { setIsDragging(true); } }, [modo]);
     const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); if (e.relatedTarget && (e.currentTarget as Node).contains(e.relatedTarget as Node)) { return; } setIsDragging(false); }, []);
@@ -432,9 +539,11 @@ export default function GerenciaPage() {
                             onSelectedTypesChange={handleSelectedTypesChange}
                             clearTypeFilter={() => setSelectedTypes([])}
                             tourId="tour-gerencia-filter"
+                            viewMode={viewMode}
+                            onViewModeChange={setViewMode}
                         />
                     </div>
-                    <ViewToggle value={viewMode} onValueChange={setViewMode} />
+                    {/* <ViewToggle value={viewMode} onValueChange={setViewMode} /> */}
                 </div>
 
                 <div className="border-2 border-none border-gray-300 rounded-4xl bg-[#FDFDFD] min-h-[300px] flex items-center justify-center" id="tour-gerencia-grid">
@@ -446,6 +555,7 @@ export default function GerenciaPage() {
                             onAddContextClick={() => abrirModal('contexto')}
                             onToggleOculto={lidarComAlternarVisibilidadeContexto}
                             viewMode={viewMode}
+                            ocultarBloqueadoMap={contextosBloqueadosOcultar}
                         />
                     ) : (
                         <div className="flex flex-col items-center justify-center text-center p-6">
@@ -482,7 +592,8 @@ export default function GerenciaPage() {
                 isEditing={modo === 'edicao'}
                 aoAlternarVisibilidadeVersao={lidarComAlternarVisibilidadeVersao}
                 aoAlternarVisibilidadeIndicador={lidarComAlternarVisibilidadeContexto}
-                usuarioGerenciaId={user?.gerenciaId}
+                    usuarioGerenciaId={user?.gerenciaId}
+                    ocultarBloqueadoMap={contextosBloqueadosOcultar}
             />
 
             {/* [REMOVIDO] O modal OcultarContextoModal não é renderizado aqui para evitar duplicação */}
@@ -525,6 +636,11 @@ export default function GerenciaPage() {
                         graphs={filteredDashboards}
                         gerencia={gerenciaData.id}
                         disabled={user?.role === 'membro' && modo !== 'edicao'}
+                        canEdit={modo === 'edicao'}
+                        hiddenGraphIds={dashboardsOcultosGerencia}
+                        onHideGraph={ocultarGraficoNoPainel}
+                        onRestoreGraph={reexibirGraficoNoPainel}
+                        onRestoreAllGraphs={reexibirTodosGraficosNoPainel}
                     />
                 </div>
 

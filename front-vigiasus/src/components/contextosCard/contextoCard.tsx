@@ -6,7 +6,8 @@ import {
     FileText, FileSpreadsheet, FileSearch, Link, Calendar, ChartNetwork, Gauge, Presentation,
     Clock,
     MoreVertical,
-    Eye, EyeOff
+    Eye, EyeOff,
+    LayoutDashboard
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
@@ -38,6 +39,8 @@ interface FileItemProps {
     isEditing?: boolean;
     estaOculto?: boolean;
     onToggleOculto?: (id: string) => void;
+    isOcultarBloqueado?: boolean;
+    ocultarBloqueadoMotivo?: string;
 }
 
 // Config permanece a mesma...
@@ -101,7 +104,9 @@ export function FileItem({
     onClick,
     isEditing = false,
     estaOculto = false,
-    onToggleOculto
+    onToggleOculto,
+    isOcultarBloqueado = false,
+    ocultarBloqueadoMotivo
 }: FileItemProps) {
     const config = fileTypeConfig[type]
     const IconComponent = (config as any).icon
@@ -112,7 +117,14 @@ export function FileItem({
     const isDisabled = !isPublished || estaOculto;
     const cardColor = config.color;
     const textColor = "text-white";
-    const canToggleHide = estaOculto ? true : isPublished;
+    const isBloqueadoParaOcultar = !estaOculto && isOcultarBloqueado;
+    const canToggleHide = estaOculto ? true : (isPublished && !isBloqueadoParaOcultar);
+    const toggleTooltip = (() => {
+        if (estaOculto) return "Tornar visível este contexto";
+        if (!isPublished) return "Apenas contextos publicados podem ser ocultados";
+        if (isOcultarBloqueado) return ocultarBloqueadoMotivo || "Este conteúdo está em uso em um dashboard de diretoria.";
+        return "Ocultar Contexto";
+    })();
 
     // --- HANDLER PRINCIPAL (CHAMADA AO BACKEND) ---
     const handleConfirmToggleOculto = async () => {
@@ -143,6 +155,10 @@ export function FileItem({
             // Se está oculto, queremos exibir -> EXECUTAR IMEDIATAMENTE
             handleConfirmToggleOculto();
         } else {
+            if (isOcultarBloqueado) {
+                showErrorToast(ocultarBloqueadoMotivo || "Este conteúdo está em uso em um dashboard de diretoria e não pode ser ocultado.");
+                return;
+            }
             // Se está visível, queremos ocultar -> ABRE MODAL DE CONFIRMAÇÃO
             setIsOcultarModalOpen(true);
         }
@@ -201,6 +217,12 @@ export function FileItem({
                             Oculto
                         </Badge>
                     )}
+                    {isOcultarBloqueado && (
+                        <Badge className="bg-blue-700/90 text-white border-none py-1 px-2" title={ocultarBloqueadoMotivo || "Em uso no dashboard da diretoria"}>
+                            <LayoutDashboard className="w-3.5 h-3.5 mr-1" />
+                            Em uso
+                        </Badge>
+                    )}
                 </div>
 
                 {/* --- Menu Dropdown --- */}
@@ -225,9 +247,7 @@ export function FileItem({
                                 <DropdownMenuItem
                                     disabled={!canToggleHide}
                                     className="cursor-pointer font-medium"
-                                    title={!canToggleHide ? "Apenas contextos publicados podem ser ocultados" : (estaOculto ? "Tornar Visível" : "Ocultar Contexto")}
-                                    
-                                    // [CORREÇÃO 2]: onSelect para prevenir a dupla ação
+                                    title={toggleTooltip}
                                     onSelect={(e) => {
                                         e.preventDefault(); 
                                         e.stopPropagation(); // Garante que o evento não propague

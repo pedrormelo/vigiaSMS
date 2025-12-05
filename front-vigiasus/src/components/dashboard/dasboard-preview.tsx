@@ -7,7 +7,7 @@ import type { LayoutType } from "./selecionarLayout"
 import { cn } from "@/lib/utils"
 
 import { Trash } from "lucide-react"
-import { useMemo, useState } from "react"
+import { useMemo, useState, type ReactNode } from "react"
 import { VisualizarContextoModal } from "@/components/popups/visualizarContextoModal"
 import type { DetalhesContexto, ConjuntoDeDadosGrafico, TipoGrafico } from "@/components/popups/addContextoModal/types"
 import type { FileType } from "@/components/contextosCard/contextoCard"
@@ -39,6 +39,9 @@ interface DashboardPreviewProps {
     editMode?: boolean
     renderVersion?: number
     disabled?: boolean
+    removeButtonTitle?: string
+    removeButtonIcon?: ReactNode
+    showHighlightToggle?: boolean
 }
 
 export function DashboardPreview({
@@ -50,6 +53,9 @@ export function DashboardPreview({
     editMode = false,
     renderVersion,
     disabled = false,
+    removeButtonTitle = "Remover gráfico",
+    removeButtonIcon,
+    showHighlightToggle = true,
 }: DashboardPreviewProps) {
     const [modalAberto, setModalAberto] = useState(false)
     const [detalhesSelecionados, setDetalhesSelecionados] = useState<DetalhesContexto | null>(null)
@@ -152,28 +158,30 @@ export function DashboardPreview({
                                     )}
                                     {editMode && (
                                         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2 items-center">
-                                            <div className="flex items-center gap-1">
-                                                <p className="text-xs text-gray-500 font-medium pr-2">Marcar como <span className="font-bold">Destaque</span></p>
-                                                <button
-                                                    onClick={() => onHighlightToggle(graph.id, !graph.isHighlighted)}
-                                                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                                                        graph.isHighlighted ? 'bg-blue-500' : 'bg-gray-300'
-                                                    }`}
-                                                    title={graph.isHighlighted ? "Remover destaque" : "Marcar como destaque"}
-                                                >
-                                                    <span
-                                                        className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform duration-200 ${
-                                                            graph.isHighlighted ? 'translate-x-5' : 'translate-x-1'
+                                            {showHighlightToggle && (
+                                                <div className="flex items-center gap-1">
+                                                    <p className="text-xs text-gray-500 font-medium pr-2">Marcar como <span className="font-bold">Destaque</span></p>
+                                                    <button
+                                                        onClick={() => onHighlightToggle(graph.id, !graph.isHighlighted)}
+                                                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                                                            graph.isHighlighted ? 'bg-blue-500' : 'bg-gray-300'
                                                         }`}
-                                                    />
-                                                </button>
-                                            </div>
+                                                        title={graph.isHighlighted ? "Remover destaque" : "Marcar como destaque"}
+                                                    >
+                                                        <span
+                                                            className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform duration-200 ${
+                                                                graph.isHighlighted ? 'translate-x-5' : 'translate-x-1'
+                                                            }`}
+                                                        />
+                                                    </button>
+                                                </div>
+                                            )}
                                             <button
                                                 onClick={() => onGraphRemove(graph.id)}
                                                 className="p-2 text-gray-400 rounded-2xl hover:bg-red-50 hover:text-red-600 transition-colors duration-200"
-                                                title="Remover gráfico"
+                                                title={removeButtonTitle}
                                             >
-                                                <Trash className="h-5 w-5" />
+                                                {removeButtonIcon ?? <Trash className="h-5 w-5" />}
                                             </button>
                                         </div>
                                     )}

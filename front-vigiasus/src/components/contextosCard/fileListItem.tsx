@@ -2,7 +2,7 @@
 "use client"
 
 import React, { useState } from 'react';
-import { Calendar, MoreVertical, Eye, EyeOff, Clock } from "lucide-react"
+import { Calendar, MoreVertical, Eye, EyeOff, Clock, LayoutDashboard } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
 import { StatusContexto, Versao } from "@/components/validar/typesDados" 
@@ -32,6 +32,8 @@ interface FileListItemProps {
     isEditing?: boolean;
     estaOculto?: boolean;
     onToggleOculto?: (id: string) => void;
+    isOcultarBloqueado?: boolean;
+    ocultarBloqueadoMotivo?: string;
 }
 
 export function FileListItem({
@@ -45,7 +47,9 @@ export function FileListItem({
     onClick,
     isEditing = false,
     estaOculto = false,
-    onToggleOculto
+    onToggleOculto,
+    isOcultarBloqueado = false,
+    ocultarBloqueadoMotivo
 }: FileListItemProps) {
     const config = fileTypeConfig[type]
     const IconComponent = (config as any).icon
@@ -53,8 +57,15 @@ export function FileListItem({
     const [isOcultarModalOpen, setIsOcultarModalOpen] = useState(false);
 
     const isPublished = status === StatusContexto.Publicado;
+    const isBloqueadoParaOcultar = !estaOculto && isOcultarBloqueado;
     const isDisabled = !isPublished || estaOculto;
-    const canToggleHide = estaOculto ? true : isPublished;
+    const canToggleHide = estaOculto ? true : (isPublished && !isBloqueadoParaOcultar);
+    const toggleTooltip = (() => {
+        if (estaOculto) return "Tornar visível este contexto";
+        if (!isPublished) return "Apenas contextos publicados podem ser ocultados";
+        if (isOcultarBloqueado) return ocultarBloqueadoMotivo || "Este conteúdo está em uso em um dashboard de diretoria.";
+        return "Ocultar Contexto";
+    })();
 
     const handleConfirmToggleOculto = async () => {
         if (!onToggleOculto) return;
@@ -76,6 +87,10 @@ export function FileListItem({
         if (estaOculto) {
             handleConfirmToggleOculto();
         } else {
+            if (isOcultarBloqueado) {
+                showErrorToast(ocultarBloqueadoMotivo || "Este conteúdo está em uso em um dashboard de diretoria e não pode ser ocultado.");
+                return;
+            }
             setIsOcultarModalOpen(true);
         }
     }
@@ -153,6 +168,12 @@ export function FileListItem({
                             Oculto
                         </Badge>
                     )}
+                    {isOcultarBloqueado && (
+                        <Badge className="bg-blue-700/90 text-white border-none py-1 px-2" title={ocultarBloqueadoMotivo || "Em uso no dashboard da diretoria"}>
+                            <LayoutDashboard className="w-3.5 h-3.5 mr-1" />
+                            Em uso
+                        </Badge>
+                    )}
                 </div>
 
                 {/* Menu Dropdown */}
@@ -172,7 +193,7 @@ export function FileListItem({
                                 <DropdownMenuItem
                                     disabled={!canToggleHide}
                                     className="cursor-pointer font-medium"
-                                    title={!canToggleHide ? "Apenas contextos publicados podem ser ocultados" : (estaOculto ? "Tornar Visível" : "Ocultar Contexto")}
+                                    title={toggleTooltip}
                                     onSelect={(e) => {
                                         e.preventDefault(); 
                                         e.stopPropagation();

@@ -34,6 +34,7 @@ interface AbaDetalhesProps {
     isValidationView?: boolean;
     podeAgir?: boolean;
     versaoEmJulgamento?: Versao | null;
+    motivoBloqueioOcultar?: string;
 }
 
 const AbaDetalhes = ({
@@ -41,7 +42,8 @@ const AbaDetalhes = ({
     aoAlternarVisibilidadeContexto,
     isValidationView = false,
     podeAgir = false,
-    versaoEmJulgamento = null
+    versaoEmJulgamento = null,
+    motivoBloqueioOcultar
 }: AbaDetalhesProps) => {
 
     // --- ESTADOS INTERNOS ---
@@ -148,8 +150,14 @@ const AbaDetalhes = ({
     const podeComentar = !isEditing && !isFromHistory;
     const statusAtual = versaoSelecionada?.status || dados.status;
     const isPublishedGeral = statusAtual === StatusContexto.Publicado; // Status da versão em exibição
-    const canToggleHide = isPublishedGeral; // Switch de Ocultar *Contexto*
     const tipoLabel = dadosParaExibir.type === 'indicador' ? 'Indicador' : 'Contexto';
+    const estaOcultoContexto = dados.estaOculto ?? false;
+    const canToggleHide = estaOcultoContexto ? true : (isPublishedGeral && !motivoBloqueioOcultar);
+    const toggleTooltip = estaOcultoContexto
+        ? `Desocultar ${tipoLabel}`
+        : (!isPublishedGeral
+            ? `Apenas ${tipoLabel}s com status 'Publicado' podem ter a visibilidade alterada.`
+            : (motivoBloqueioOcultar || `Ocultar ${tipoLabel}`));
 
     // --- [INÍCIO DA MODIFICAÇÃO v4] ---
     const renderBanner = () => {
@@ -342,21 +350,17 @@ const AbaDetalhes = ({
                                 htmlFor="ocultar-contexto"
                                 className={cn(
                                     "text-sm font-medium text-gray-700",
-                                    !canToggleHide && "text-gray-400" 
+                                    (!canToggleHide && !estaOcultoContexto) && "text-gray-400" 
                                 )}
                             >
                                 Ocultar {tipoLabel}
                             </label>
                             <Switch
                                 id="ocultar-contexto"
-                                checked={dados.estaOculto || false}
+                                checked={estaOcultoContexto}
                                 onCheckedChange={() => aoAlternarVisibilidadeContexto(dados.id)}
                                 disabled={!canToggleHide} 
-                                title={
-                                    !canToggleHide
-                                        ? `Apenas ${tipoLabel}s com status 'Publicado' podem ter a visibilidade alterada.`
-                                        : (dados.estaOculto ? `Desocultar ${tipoLabel}` : `Ocultar ${tipoLabel}`)
-                                }
+                                title={toggleTooltip}
                             />
                         </div>
                     )}

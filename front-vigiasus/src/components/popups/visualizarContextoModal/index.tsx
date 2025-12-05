@@ -40,6 +40,7 @@ interface VisualizarContextoModalProps {
     onIndeferir?: (versaoId: string, comentario: string) => void | Promise<void>;
     onCorrigir?: (versaoId: string, justificativa: string) => void | Promise<void>;
     usuarioGerenciaId?: string;
+    ocultarBloqueadoMap?: Record<string, string>;
 }
 
 type TipoAba = 'detalhes' | 'versoes';
@@ -67,7 +68,8 @@ export function VisualizarContextoModal({
     onDeferir,
     onIndeferir,
     onCorrigir,
-    usuarioGerenciaId: gerenciaIdProp
+    usuarioGerenciaId: gerenciaIdProp,
+    ocultarBloqueadoMap
 }: VisualizarContextoModalProps) {
 
     // [CORREÇÃO DE TIPAGEM]: O hook retorna o objeto do usuário diretamente
@@ -186,6 +188,8 @@ export function VisualizarContextoModal({
         return dados;
     }, [dadosLocais, canViewApprovalHistory]);
 
+    const motivoBloqueioOcultar = normalizedData?.id ? ocultarBloqueadoMap?.[normalizedData.id] : undefined;
+
     // --- Handlers de Toggle ---
     const handleToggleVersao = async (versaoId: number) => {
         if (!normalizedData || !aoAlternarVisibilidadeVersao) return;
@@ -202,11 +206,20 @@ export function VisualizarContextoModal({
 
     const handleToggleContexto = async (contextoId: string) => {
         if (!normalizedData || !aoAlternarVisibilidadeIndicador) return;
+        const estaOcultoAgora = normalizedData.estaOculto ?? false;
+        const motivoBloqueio = ocultarBloqueadoMap?.[contextoId];
+        if (!estaOcultoAgora && motivoBloqueio) {
+            showErrorToast(motivoBloqueio);
+            return;
+        }
         try {
             await toggleVisibilityContexto(contextoId);
             if (aoAlternarVisibilidadeIndicador) {
                 aoAlternarVisibilidadeIndicador(contextoId);
             }
+            setDadosLocais(prev =>
+                prev && prev.id === contextoId ? { ...prev, estaOculto: !estaOcultoAgora } : prev
+            );
             showSuccessToast("Visibilidade do contexto atualizada.");
         } catch (e: any) {
             showErrorToast(e.message || "Erro ao atualizar visibilidade do contexto.");
@@ -388,6 +401,7 @@ export function VisualizarContextoModal({
                                     zoomLevel={zoomLevel}
                                     isFromHistory={isFromHistory}
                                     aoAlternarVisibilidadeContexto={handleToggleContexto}
+                                    motivoBloqueioOcultar={motivoBloqueioOcultar}
                                     isValidationView={isValidation || !!podeAgir}
                                     podeAgir={!!podeAgir}
                                     versaoEmJulgamento={versaoEmJulgamento}

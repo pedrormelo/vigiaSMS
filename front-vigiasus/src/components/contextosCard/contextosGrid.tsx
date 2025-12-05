@@ -21,6 +21,7 @@ interface FileGridProps {
     maxHeight?: string
     containerId?: string
     viewMode?: ViewMode
+    ocultarBloqueadoMap?: Record<string, string>
 }
 
 export function FileGrid({
@@ -33,7 +34,8 @@ export function FileGrid({
     scroll = true,
     maxHeight = '70vh',
     containerId,
-    viewMode = 'grid'
+    viewMode = 'grid',
+    ocultarBloqueadoMap
 }: FileGridProps) {
     // Renderiza os itens baseado no modo de visualização
     const renderItems = () => {
@@ -42,6 +44,7 @@ export function FileGrid({
         ) : null;
 
         const fileItems = files.map(file => {
+            const motivoBloqueio = ocultarBloqueadoMap?.[file.id];
             const commonProps = {
                 id: file.id,
                 title: file.title,
@@ -52,14 +55,16 @@ export function FileGrid({
                 estaOculto: file.estaOculto,
                 isEditing,
                 onClick: () => onFileClick?.(file),
-                onToggleOculto
+                onToggleOculto,
+                isOcultarBloqueado: Boolean(motivoBloqueio),
+                ocultarBloqueadoMotivo: motivoBloqueio
             };
 
             switch (viewMode) {
                 case 'list':
                     return <FileListItem key={file.id} {...commonProps} />;
                 case 'detailed':
-                    return <FileDetailedListItem key={file.id} {...commonProps} descricao={file.descricao} />;
+                    return <FileDetailedListItem key={file.id} {...commonProps} descricao={file.description} />;
                 case 'grid':
                 default:
                     return <FileItem key={file.id} {...commonProps} />;
