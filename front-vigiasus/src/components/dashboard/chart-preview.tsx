@@ -236,7 +236,7 @@ export function ChartPreview({ type, title, data, colors, isHighlighted, editMod
     return (
         <div
             className={cn(
-                "relative bg-white rounded-2xl border p-4 h-full flex flex-col transition-all duration-200 overflow-hidden", // Adicionado overflow-hidden
+                "relative bg-white rounded-lg md:rounded-2xl border p-2 md:p-4 h-full flex flex-col transition-all duration-200 overflow-hidden", // Adicionado overflow-hidden
                 isHighlighted && editMode
                     ? "border-blue-100 border-2 border-dashed ring-3 ring-blue-400 ring-offset-1 shadow-lg shadow-blue-400/35"
                     : "border-gray-200 shadow-md",

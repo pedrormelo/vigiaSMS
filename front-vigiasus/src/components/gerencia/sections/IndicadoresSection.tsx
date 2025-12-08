@@ -33,13 +33,13 @@ export default function IndicadoresSection({ indicadores, modo, onAddIndicator, 
     }, [indicadores, modo, onAddIndicator, onClickIndicator]);
 
     if (items.length === 0) {
-        return <div className="text-sm text-center text-gray-500 py-4">(Nenhum indicador publicado)</div>;
+        return <div className="text-xs md:text-sm text-center text-gray-500 py-4">(Nenhum indicador publicado)</div>;
     }
 
     const useCarousel = items.length > 4 && modo === 'visualizacao';
 
     return (
-        <div className="mb-16">
+        <div className="mb-8 md:mb-16">
             {useCarousel ? (
                 <Carousel
                     plugins={[autoplayPlugin.current]}
@@ -48,16 +48,16 @@ export default function IndicadoresSection({ indicadores, modo, onAddIndicator, 
                     onMouseEnter={() => autoplayPlugin.current?.stop?.()}
                     onMouseLeave={() => autoplayPlugin.current?.play?.()}
                 >
-                    <CarouselContent className="-ml-4">
+                    <CarouselContent className="-ml-2 md:-ml-4">
                         {items.map((item, index) => (
-                            <CarouselItem key={index} className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
+                            <CarouselItem key={index} className="pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                                 <div className="p-1 h-full">{item}</div>
                             </CarouselItem>
                         ))}
                     </CarouselContent>
                 </Carousel>
             ) : (
-                <div className="flex justify-center items-center gap-4 flex-wrap">
+                <div className="flex justify-center items-center gap-2 md:gap-4 flex-wrap">
                     {items}
                 </div>
             )}

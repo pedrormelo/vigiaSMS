@@ -105,25 +105,25 @@ export default function SessionTimeoutProvider({
         {/* onOpenChange vazio e sem botão de fechar padrão 
             força o usuário a clicar no botão de login 
         */}
-        <DialogContent className="sm:max-w-[400px] bg-white border-red-100 shadow-2xl [&>button]:hidden">
-          <DialogHeader className="flex flex-col items-center text-center gap-4 pt-4">
-            <div className="h-16 w-16 bg-red-50 rounded-full flex items-center justify-center">
-                <Timer className="w-8 h-8 text-red-500" />
+        <DialogContent className="max-w-xs sm:max-w-[400px] bg-white border-red-100 shadow-2xl [&>button]:hidden mx-auto">
+          <DialogHeader className="flex flex-col items-center text-center gap-3 sm:gap-4 pt-3 sm:pt-4">
+            <div className="h-14 w-14 sm:h-16 sm:w-16 bg-red-50 rounded-full flex items-center justify-center">
+                <Timer className="w-7 h-7 sm:w-8 sm:h-8 text-red-500" />
             </div>
-            <DialogTitle className="text-xl text-gray-800">
+            <DialogTitle className="text-lg sm:text-xl text-gray-800">
               Sessão Expirada
             </DialogTitle>
-            <DialogDescription className="text-center text-gray-600">
+            <DialogDescription className="text-center text-sm sm:text-base text-gray-600">
               Por medidas de segurança, sua sessão foi encerrada devido a 15 minutos de inatividade.
             </DialogDescription>
           </DialogHeader>
 
-          <DialogFooter className="sm:justify-center mt-4 pb-2">
+          <DialogFooter className="sm:justify-center mt-3 sm:mt-4 pb-2">
             <Button 
                 onClick={handleLogout}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-6 text-md font-medium flex items-center gap-2 justify-center"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-5 sm:py-6 text-sm sm:text-base font-medium flex items-center gap-2 justify-center"
             >
-                <LogOut className="w-5 h-5" />
+                <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
                 Fazer Login Novamente
             </Button>
           </DialogFooter>

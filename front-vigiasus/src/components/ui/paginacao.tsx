@@ -16,18 +16,18 @@ export default function Paginacao({ currentPage, totalPages, onPageChange }: Pro
   }
 
   return (
-    <div className="flex items-center justify-center text-gray-600 gap-4 mt-6">
+    <div className="flex items-center justify-center text-gray-600 gap-2 sm:gap-3 md:gap-4">
       <Button
         variant="outline"
         size="icon"
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="rounded-full"
+        className="rounded-full h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10"
       >
-        <ChevronLeft className="h-4 w-4" />
+        <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
       </Button>
 
-      <span className="text-sm font-medium text-gray-600">
+      <span className="text-xs sm:text-sm font-medium text-gray-600 whitespace-nowrap">
         Página {currentPage} de {totalPages}
       </span>
 
@@ -36,9 +36,9 @@ export default function Paginacao({ currentPage, totalPages, onPageChange }: Pro
         size="icon"
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="rounded-full"
+        className="rounded-full h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10"
       >
-        <ChevronRight className="h-4 w-4" />
+        <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
       </Button>
     </div>
   );

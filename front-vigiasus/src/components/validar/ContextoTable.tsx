@@ -33,10 +33,10 @@ export default function ContextoTable({ data, columns, onRowClick, onUpdate, emp
 
     return (
         <div
-            className="overflow-x-auto overflow-y-auto max-h-[500px] scrollbar-custom bg-white rounded-3xl border border-gray-300"
+            className="overflow-x-auto overflow-y-auto max-h-[400px] sm:max-h-[450px] md:max-h-[500px] scrollbar-custom bg-white rounded-2xl sm:rounded-3xl border border-gray-300"
             id={containerId}
         > 
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse min-w-[600px]">
                 <thead className="bg-blue-400 sticky top-0 z-10"> 
                     <tr>
                         {columns.map((col) => {
@@ -44,7 +44,7 @@ export default function ContextoTable({ data, columns, onRowClick, onUpdate, emp
                             return (
                                 <th
                                     key={key}
-                                    className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider"
+                                    className="px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 text-left text-[10px] sm:text-xs font-semibold text-white uppercase tracking-wider"
                                     id={headerIdMap?.[key]}
                                 >
                                 {col.header}
@@ -58,11 +58,11 @@ export default function ContextoTable({ data, columns, onRowClick, onUpdate, emp
                     {data.length === 0 ? (
                         /* Estado Vazio Dinâmico */
                         <tr>
-                            <td colSpan={columns.length} className="py-16 text-center">
-                                <div className="flex flex-col items-center justify-center text-gray-400">
-                                    <Icon className="w-12 h-12 mb-2 opacity-50" />
-                                    <p className="text-lg font-medium text-gray-600">{activeEmptyState.title}</p>
-                                    <p className="text-sm">{activeEmptyState.description}</p>
+                            <td colSpan={columns.length} className="py-10 sm:py-12 md:py-16 text-center">
+                                <div className="flex flex-col items-center justify-center text-gray-400 px-4">
+                                    <Icon className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 mb-2 opacity-50" />
+                                    <p className="text-sm sm:text-base md:text-lg font-medium text-gray-600">{activeEmptyState.title}</p>
+                                    <p className="text-xs sm:text-sm">{activeEmptyState.description}</p>
                                 </div>
                             </td>
                         </tr>
@@ -79,7 +79,7 @@ export default function ContextoTable({ data, columns, onRowClick, onUpdate, emp
                                     onClick={() => onRowClick && onRowClick(row)}
                                 >
                                     {columns.map((col) => (
-                                        <td key={String(col.key)} className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 align-middle">
+                                        <td key={String(col.key)} className="px-3 sm:px-4 md:px-6 py-3 sm:py-3.5 md:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-800 align-middle">
                                             {col.render
                                                 ? col.render(row, onUpdate)
                                                 : (row[col.key as keyof Contexto] as React.ReactNode)}

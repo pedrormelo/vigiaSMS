@@ -273,7 +273,7 @@ export default function DashboardView() {
         <div className="min-h-screen bg-[#FDFDFD] flex flex-col">
             {/* Header */}
             <div
-                className="relative p-10 text-white shadow-md"
+                className="relative p-4 md:p-10 text-white shadow-md"
                 style={
                     diretoria.bannerImage
                         ? {
@@ -289,18 +289,60 @@ export default function DashboardView() {
                 }
                 id="tour-dashboard-hero"
             >
-                <div className="flex justify-between items-center">
-                    <div className="min-h-[150px]">
-                        <h1 className="text-4xl font-regular">{diretoria.nome}</h1>
-                        <p className="text-5xl mt-2 font-bold opacity-100">DASHBOARD</p>
+                <div className="flex flex-col gap-3 sm:gap-0">
+                    {/* Títulos */}
+                    <div className="flex-1 pr-20 sm:pr-0">
+                        <h1 className="text-2xl sm:text-3xl md:text-4xl font-regular">{diretoria.nome}</h1>
+                        <p className="text-3xl sm:text-4xl md:text-5xl mt-1 sm:mt-2 font-bold opacity-100">DASHBOARD</p>
                     </div>
 
-                    {/* Botões do canto direito */}
-                    <div className="flex flex-col items-center gap-3">
+                    {/* Botões - Mobile flex */}
+                    <div className="flex sm:hidden flex-row justify-between items-center gap-3">
+                        {id !== "secretaria" && canEdit && (
+                            <button
+                                onClick={() => router.push(`/dashboard/${id}/editar-layout`)}
+                                className="flex items-center justify-center w-10 h-10 cursor-pointer rounded-[0.6rem] bg-white text-gray-600 hover:bg-white/80 transition-all duration-200 shadow-sm">
+                                <Pen size={20} />
+                            </button>
+                        )}
+
+                        {/* Espaçador para empurrar o Info para a direita */}
+                        <div className="flex-1"></div>
+
                         <InfoPopover
                             trigger={
                                 <button
-                                    className="flex items-center justify-center mb-9 w-8 h-8 cursor-pointer bg-[#ffffff] text-[#1745FF] rounded-full border-none hover:bg-white/80 transition-all duration-200 shadow-sm"
+                                    className="flex items-center justify-center w-7 h-7 cursor-pointer bg-[#ffffff] text-[#1745FF] rounded-full border-none hover:bg-white/80 transition-all duration-200 shadow-sm"
+                                    aria-label="Sobre esta página"
+                                >
+                                    <Info size={16} />
+                                </button>
+                            }
+                            heading="Sobre"
+                            title={diretoria.nome}
+                            description={(diretoriaApi?.sobre || diretoria?.sobre) ?? "Esta página apresenta informações e gráficos relevantes desta diretoria."}
+                            side="left"
+                            align="center"
+                            sideOffset={12}
+                            alignOffset={0}
+                            showTail={false}
+                        />
+                    </div>
+
+                    {/* Desktop/Tablet - Positioned Absolute */}
+                    <div className="hidden sm:flex absolute bottom-6 md:bottom-8 right-6 md:right-8 gap-4">
+                        {id !== "secretaria" && canEdit && (
+                            <button
+                                onClick={() => router.push(`/dashboard/${id}/editar-layout`)}
+                                className="flex items-center justify-center w-11 h-11 cursor-pointer rounded-[0.6rem] bg-white text-gray-600 hover:bg-white/80 transition-all duration-200 shadow-sm">
+                                <Pen size={24} />
+                            </button>
+                        )}
+
+                        <InfoPopover
+                            trigger={
+                                <button
+                                    className="flex items-center justify-center w-8 h-8 cursor-pointer bg-[#ffffff] text-[#1745FF] rounded-full border-none hover:bg-white/80 transition-all duration-200 shadow-sm"
                                     aria-label="Sobre esta página"
                                 >
                                     <Info size={20} />
@@ -315,36 +357,28 @@ export default function DashboardView() {
                             alignOffset={0}
                             showTail={false}
                         />
-                        {id !== "secretaria" && canEdit && (
-                            <button
-                                onClick={() => router.push(`/dashboard/${id}/editar-layout`)}
-                                className="flex items-center justify-center w-11 h-11 cursor-pointer rounded-[0.6rem] bg-white text-gray-600 hover:bg-white/80 transition-all duration-200 shadow-sm">
-                                <Pen size={25} />
-                            </button>
-                        )}
                     </div>
-
                 </div>
             </div>
 
-            <div className="p-8 mx-auto">
-                <h2 className="text-3xl font-semibold text-blue-700">Visão Geral</h2>
+            <div className="p-4 md:p-8 mx-auto w-full">
+                <h2 className="text-2xl md:text-3xl font-semibold text-blue-700">Visão Geral</h2>
             </div>
 
             {/* Dashboard Charts - Secretaria uses a special preview showing only highlighted graphs */}
-            <div className="flex justify-center items-center w-full pt-2 mb-10" id="tour-dashboard-graphs">
-                <div className="max-w-[90%] w-full">
+            <div className="flex justify-center items-center w-full pt-2 mb-10 px-4 md:px-0" id="tour-dashboard-graphs">
+                <div className="max-w-full md:max-w-[90%] w-full">
                     {loadingGraphs && (
-                        <div className="text-center py-16 text-gray-500">Carregando gráficos...</div>
+                        <div className="text-center py-8 md:py-16 text-gray-500 text-sm md:text-base">Carregando gráficos...</div>
                     )}
                     {!loadingGraphs && errorGraphs && (
-                        <div className="text-center py-16 text-red-500">{errorGraphs}</div>
+                        <div className="text-center py-8 md:py-16 text-red-500 text-sm md:text-base">{errorGraphs}</div>
                     )}
                     {!loadingGraphs && !errorGraphs && (
                         id === 'secretaria' ? (
                             <>
                                 <SecretariaDashboardPreview graphs={graphs} />
-                                <div className="mt-10" id="tour-dashboard-metrics">
+                                <div className="mt-8 md:mt-10" id="tour-dashboard-metrics">
                                     {metricsError && !loadingMetrics ? (
                                         <div className="text-center text-red-500 py-10">{metricsError}</div>
                                     ) : (
@@ -367,17 +401,17 @@ export default function DashboardView() {
                                     editMode={false}
                                 />
                             ) : (
-                                <div className="w-full flex flex-col items-center justify-center py-20 bg-white border border-dashed border-gray-300 rounded-2xl">
-                                    <p className="text-lg text-gray-600">Nenhum gráfico configurado para esta diretoria.</p>
+                                <div className="w-full flex flex-col items-center justify-center py-12 md:py-20 bg-white border border-dashed border-gray-300 rounded-2xl px-4">
+                                    <p className="text-base md:text-lg text-gray-600 text-center">Nenhum gráfico configurado para esta diretoria.</p>
                                     {canEdit ? (
                                         <button
                                             onClick={() => router.push(`/dashboard/${id}/editar-layout`)}
-                                            className="mt-6 px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+                                            className="mt-4 md:mt-6 px-4 md:px-5 py-2 md:py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors text-sm md:text-base"
                                         >
                                             Configurar layout
                                         </button>
                                     ) : (
-                                        <p className="mt-4 text-sm text-gray-500">Entre em contato com o diretor para configurar o layout.</p>
+                                        <p className="mt-3 md:mt-4 text-xs md:text-sm text-gray-500 text-center">Entre em contato com o diretor para configurar o layout.</p>
                                     )}
                                 </div>
                             )
@@ -387,27 +421,27 @@ export default function DashboardView() {
             </div>
 
             {id !== 'secretaria' && (
-                <div className="flex flex-col items-center gap-6 mb-22 z-10 relative w-full px-8" id="tour-dashboard-metrics">
+                <div className="flex flex-col items-center gap-4 md:gap-6 mb-22 z-10 relative w-full px-4 md:px-8" id="tour-dashboard-metrics">
                     {loadingMetrics && (
-                        <div className="text-center text-gray-500">Carregando métricas...</div>
+                        <div className="text-center text-gray-500 text-sm md:text-base">Carregando métricas...</div>
                     )}
                     {!loadingMetrics && metricsError && (
-                        <div className="text-center text-red-500">{metricsError}</div>
+                        <div className="text-center text-red-500 text-sm md:text-base">{metricsError}</div>
                     )}
                     {!loadingMetrics && !metricsError && (
                         directorMetricCards.length > 0 ? (
-                            <div className="flex flex-wrap gap-6 justify-center w-full max-w-[1200px]">
+                            <div className="flex flex-wrap gap-3 md:gap-6 justify-center w-full max-w-[1200px]">
                                 {directorMetricCards.map(card => (
                                     <div
                                         key={card.id}
-                                        className="bg-white rounded-3xl shadow-md px-7 py-6 min-w-[260px] max-w-[320px] flex flex-col gap-3 border border-gray-100"
+                                        className="bg-white rounded-2xl md:rounded-3xl shadow-md px-4 md:px-7 py-4 md:py-6 min-w-[240px] md:min-w-[260px] max-w-[280px] md:max-w-[320px] flex flex-col gap-2 md:gap-3 border border-gray-100"
                                         style={{ borderLeft: `4px solid ${card.borderColor}` }}
                                     >
-                                        <h3 className="text-lg font-bold text-slate-700">{card.title}</h3>
-                                        <div className="text-3xl font-extrabold text-slate-900 break-words">{card.value}</div>
-                                        <div className="text-sm text-gray-500 break-words">{card.subtitle}</div>
+                                        <h3 className="text-base md:text-lg font-bold text-slate-700 line-clamp-2">{card.title}</h3>
+                                        <div className="text-2xl md:text-3xl font-extrabold text-slate-900 break-words">{card.value}</div>
+                                        <div className="text-xs md:text-sm text-gray-500 break-words line-clamp-2">{card.subtitle}</div>
                                         {card.change && (
-                                            <div className={`text-xs font-medium mt-2 ${card.changeType === "positive" ? "text-green-600" : card.changeType === "negative" ? "text-red-600" : "text-gray-600"}`}>
+                                            <div className={`text-xs font-medium mt-1 md:mt-2 ${card.changeType === "positive" ? "text-green-600" : card.changeType === "negative" ? "text-red-600" : "text-gray-600"}`}>
                                                 {card.changeType === "positive" && <span>▲ </span>}
                                                 {card.changeType === "negative" && <span>▼ </span>}
                                                 {card.changeType === "neutral" && <span className="font-bold">— </span>}
@@ -418,7 +452,7 @@ export default function DashboardView() {
                                 ))}
                             </div>
                         ) : (
-                            <div className="text-center text-gray-500 w-full">Nenhum indicador disponível para esta diretoria.</div>
+                            <div className="text-center text-gray-500 w-full text-sm md:text-base">Nenhum indicador disponível para esta diretoria.</div>
                         )
                     )}
                 </div>

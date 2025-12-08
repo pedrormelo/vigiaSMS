@@ -46,7 +46,7 @@ export default function Hero({
     : "Usuário";
 
   return ( 
-    <section className="relative overflow-hidden bg-gradient-to-r from-[#1745FF] to-cyan-600 text-white pt-16 pb-24 px-6">
+    <section className="relative overflow-hidden bg-gradient-to-r from-[#1745FF] to-cyan-600 text-white pt-8 md:pt-16 pb-12 md:pb-24 px-4 md:px-6">
 
       {/* Container de fundo com brilhos e pontos */}
       <div className="absolute inset-0 z-0 bg-dot-pattern bg-dots-size">
@@ -58,24 +58,24 @@ export default function Hero({
       <div className="relative z-10 max-w-6xl mx-auto">
         
         {/* Conteúdo superior */}
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-6 md:gap-12">
           <div className="flex-1 lg:max-w-2xl">
-            <h2 className="text-lg font-medium text-blue-100">👋 Olá, {userName} ({roleLabel}), seja bem-vinda(o) ao:</h2>
-            <h1 className="text-5xl font-bold mt-2">                            <span className="font-semibold">Sige</span>
+            <h2 className="text-sm md:text-lg font-medium text-blue-100">👋 Olá, {userName} ({roleLabel}), seja bem-vinda(o) ao:</h2>
+            <h1 className="text-4xl md:text-5xl font-bold mt-2">                            <span className="font-semibold">Sige</span>
                             <span className="font-light">Saúde</span></h1>
-            <p className="mt-4 text-lg text-blue-100">
+            <p className="mt-3 md:mt-4 text-base md:text-lg text-blue-100">
               Plataforma digital da Secretaria de Saúde de Jaboatão dos Guararapes que 
               centraliza dados, relatórios e informações estratégicas para apoiar 
               a gestão da saúde pública.
             </p>
-            <div className="mt-8 flex flex-wrap gap-4">
-              <Link href="/dados">
-              <Button className="bg-yellow-400 hover:bg-yellow-500 text-blue-600 rounded-2xl px-8 py-6 font-semibold">
+            <div className="mt-6 md:mt-8 flex flex-col sm:flex-row gap-3 md:gap-4">
+              <Link href="/dados" className="w-full sm:w-auto">
+              <Button className="bg-yellow-400 hover:bg-yellow-500 text-blue-600 rounded-2xl px-4 md:px-8 py-4 md:py-6 font-semibold text-sm md:text-base w-full">
                 Acesse os Dados Gerais
               </Button>
               </Link>
-              <Link href={targetHref}>
-                <Button className="bg-white hover:bg-gray-100 text-blue-700 rounded-2xl px-8 py-6 font-semibold">
+              <Link href={targetHref} className="w-full sm:w-auto">
+                <Button className="bg-white hover:bg-gray-100 text-blue-700 rounded-2xl px-4 md:px-8 py-4 md:py-6 font-semibold text-sm md:text-base w-full">
                   Acesse o Painel de Gráficos
                 </Button>
               </Link>
@@ -83,7 +83,7 @@ export default function Hero({
           </div>
         </div>
 
-        {/* Decoração Flutuante */}
+        {/* Decoração Flutuante - Apenas Desktop */}
         <div className="absolute top-0 right-0 w-1/2 h-full hidden lg:block">
           <div className="absolute top-1/4 right-1/3 text-cyan-200/50">
             <Plus size={48} className="rotate-12" />
@@ -102,7 +102,7 @@ export default function Hero({
           </div>
         </div>
         
-        <div className="mt-20">
+        <div className="mt-12 md:mt-20">
           <Metrics />
         </div>
       </div>

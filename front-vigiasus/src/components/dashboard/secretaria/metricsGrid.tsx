@@ -33,12 +33,12 @@ export function MetricsGrid({ items, title = "Métricas das Diretorias", classNa
 
     return (
         <section className={cn("w-full", className)}>
-            {title && <h2 className="mb-6 text-2xl font-bold text-slate-900">{title}</h2>}
+            {title && <h2 className="mb-4 md:mb-6 text-xl md:text-2xl font-bold text-slate-900">{title}</h2>}
 
-            <div className={cn("grid gap-6", gridCols)}>
+            <div className={cn("grid gap-3 md:gap-6", gridCols)}>
                 {loading
                     ? Array.from({ length: skeletonCount }).map((_, i) => (
-                        <div key={i} className="h-40 rounded-2xl bg-slate-100 animate-pulse" />
+                        <div key={i} className="h-32 md:h-40 rounded-2xl bg-slate-100 animate-pulse" />
                     ))
                     : items.length > 0
                         ? items.map((m, idx) => (
@@ -53,7 +53,7 @@ export function MetricsGrid({ items, title = "Métricas das Diretorias", classNa
                             />
                         ))
                         : (
-                            <div className="col-span-full rounded-2xl border border-dashed border-gray-300 p-10 text-center text-gray-500">
+                            <div className="col-span-full rounded-lg md:rounded-2xl border border-dashed border-gray-300 p-6 md:p-10 text-center text-gray-500 text-sm md:text-base">
                                 Nenhuma métrica disponível.
                             </div>
                         )}

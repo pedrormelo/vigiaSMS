@@ -180,7 +180,7 @@ export function FileItem({
         
         combinedEditingBadge = (
             <Badge 
-                className={cn("font-bold", configStatus.className)} 
+                className={cn("font-bold text-[10px] md:text-xs py-0.5 md:py-1 px-1 md:px-1.5", configStatus.className)} 
                 title={`${versaoTextoCompleto}. Status: ${statusTexto}`} 
             >
                 {versaoTextoAbreviado} ({statusTexto})
@@ -194,7 +194,7 @@ export function FileItem({
         <>
             <div
                 className={cn(
-                    "rounded-4xl p-6 cursor-pointer transition-all duration-200 shadow-md flex flex-col justify-between max-h-[200px] max-w-[245px] relative overflow-hidden",
+                    "rounded-xl md:rounded-3xl p-2.5 md:p-4 cursor-pointer transition-all duration-200 shadow-md flex flex-col justify-between min-h-[150px] md:min-h-[190px] relative overflow-hidden",
                     cardColor,
                     isDisabled && "opacity-70 grayscale-[80%] hover:opacity-100 hover:grayscale-0",
                     className,
@@ -203,7 +203,7 @@ export function FileItem({
                 title={isPublished ? title : `${title} (Status: ${status})`}
             >
                 {/* ... Badges ... */}
-                <div className="absolute top-3 left-3 z-10 flex flex-col items-start gap-1.5">
+                <div className="absolute top-1.5 md:top-2 left-1.5 md:left-2 z-10 flex flex-col items-start gap-0.5 md:gap-1">
                     
                     {combinedEditingBadge ? (
                         combinedEditingBadge
@@ -212,14 +212,14 @@ export function FileItem({
                     ) : null}
                     
                     {estaOculto && (
-                        <Badge className="bg-gray-700/80 text-white border-none py-1 px-2" title="Este contexto está oculto">
-                            <EyeOff className="w-3.5 h-3.5 mr-1" />
+                        <Badge className="bg-gray-700/80 text-white border-none py-0.5 md:py-1 px-1 md:px-1.5 text-[10px] md:text-xs" title="Este contexto está oculto">
+                            <EyeOff className="w-2.5 md:w-3.5 h-2.5 md:h-3.5 mr-0.5 md:mr-1" />
                             Oculto
                         </Badge>
                     )}
                     {isOcultarBloqueado && (
-                        <Badge className="bg-blue-700/90 text-white border-none py-1 px-2" title={ocultarBloqueadoMotivo || "Em uso no dashboard da diretoria"}>
-                            <LayoutDashboard className="w-3.5 h-3.5 mr-1" />
+                        <Badge className="bg-blue-700/90 text-white border-none py-0.5 md:py-1 px-1 md:px-1.5 text-[10px] md:text-xs" title={ocultarBloqueadoMotivo || "Em uso no dashboard da diretoria"}>
+                            <LayoutDashboard className="w-2.5 md:w-3.5 h-2.5 md:h-3.5 mr-0.5 md:mr-1" />
                             Em uso
                         </Badge>
                     )}
@@ -227,15 +227,15 @@ export function FileItem({
 
                 {/* --- Menu Dropdown --- */}
                 {isEditing && (
-                    <div className="absolute top-2 right-2 z-20">
+                    <div className="absolute top-1 md:top-1.5 right-1 md:right-1.5 z-20">
                         <DropdownMenu>
                             <DropdownMenuTrigger
                                 asChild
                                 // [CORREÇÃO 1]: Impede que o clique do Trigger abra o Modal de Visualização do Card
                                 onClick={(e) => e.stopPropagation()} 
                             >
-                                <button className="p-1.5 rounded-full text-white/90 hover:bg-white/25 transition-colors">
-                                    <MoreVertical className="w-5 h-5" />
+                                <button className="p-1 rounded-full text-white/90 hover:bg-white/25 transition-colors">
+                                    <MoreVertical className="w-3.5 md:w-4 h-3.5 md:h-4" />
                                 </button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent
@@ -269,26 +269,30 @@ export function FileItem({
 
                 {/* ... Restante do JSX do Card ... */}
                 {!isPublished && (
-                    <Clock className="absolute -right-2 -bottom-2 w-20 h-20 text-black/10 z-0" strokeWidth={1.5} />
+                    <Clock className="absolute -right-1 md:-right-2 -bottom-0.5 md:-bottom-1 w-12 md:w-16 h-12 md:h-16 text-black/10 z-0" strokeWidth={1.5} />
                 )}
                 <div className={cn(
-                    "flex justify-center mb-4 z-10",
-                    (!isPublished || estaOculto) && "mt-6" 
+                    "flex justify-center items-center z-10 py-2 md:py-3"
                 )}>
                     {(config as any).svg ? (
-                        <Image src={(config as any).svg} alt={config.label} width={40} height={40} />
+                        <Image src={(config as any).svg} alt={config.label} width={64} height={64} className="w-12 md:w-14 h-12 md:h-14" />
                     ) : IconComponent ? (
-                        <IconComponent className="h-10 w-10 text-white" />
+                        <IconComponent className="h-12 md:h-14 w-12 md:w-14 text-white" />
                     ) : null}
                 </div>
-                <div className="text-center mb-4 z-10">
-                    <h3 className={cn("font-medium text-lg leading-tight truncate px-2", textColor)} title={title}>{title}</h3>
+                <div className="text-center z-10 px-1.5">
+                    <h3 className={cn("font-semibold text-[10px] md:text-sm leading-tight truncate line-clamp-2", textColor)} title={title}>{title}</h3>
                 </div>
-                <div className={cn("flex items-center justify-center gap-2 z-10", "text-white/90")}>
-                    <Calendar className="h-4 w-4" />
-                    <time dateTime={insertedDate} className="text-sm">
-                        {new Date(insertedDate).toLocaleDateString("pt-BR")}
-                    </time>
+                <div className="flex flex-col gap-0.5 md:gap-1 z-10">
+                    <div className={cn("flex items-center justify-center text-white/90")}>
+                        <span className={cn("text-[12px] md:text-[14px] font-bold uppercase tracking-tight px-2.5 md:px-3 py-1 md:py-1.5 rounded-full bg-white/20")}>{config.label}</span>
+                    </div>
+                    <div className={cn("flex items-center justify-center gap-0.5 md:gap-1 z-10", "text-white/80")}>
+                        <Calendar className="h-2.5 md:h-3.5 w-2.5 md:w-3.5" />
+                        <time dateTime={insertedDate} className="text-[7px] md:text-[9px]">
+                            {new Date(insertedDate).toLocaleDateString("pt-BR")}
+                        </time>
+                    </div>
                 </div>
             </div>
 

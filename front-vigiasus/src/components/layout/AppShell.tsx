@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"; // 1. Importação necessária pa
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import Sidebar from "@/components/navbar/Sidebar";
 import Navbar from "@/components/navbar/navbar";
+import BottomNavigation from "@/components/navbar/BottomNavigation";
 import { useState, useEffect } from "react";
 import Footer from "@/components/footer/footer"; 
 
@@ -48,18 +49,23 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     <div>
       {/* Só renderiza a Sidebar se estiver montado no cliente */}
       {isMounted && (
-        <Sidebar
-          role={currentUser?.role} // Adicionei '?' caso currentUser seja null
-          isOpen={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-        />
+        <div className="hidden md:block">
+          <Sidebar
+            role={currentUser?.role} // Adicionei '?' caso currentUser seja null
+            isOpen={sidebarOpen}
+            onClose={() => setSidebarOpen(false)}
+          />
+        </div>
       )}
 
-      <div className="main-content">
+      <div className="main-content pb-[60px] md:pb-0">
         <Navbar onOpenSidebar={() => setSidebarOpen(true)} />
           {children}
         <Footer />
       </div>
+
+      {/* Bottom Navigation - renderiza condicionalmente apenas em páginas autenticadas */}
+      {isMounted && <BottomNavigation />}
     </div>
   );
 }

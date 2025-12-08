@@ -546,7 +546,7 @@ export default function GerenciaPage() {
                     {/* <ViewToggle value={viewMode} onValueChange={setViewMode} /> */}
                 </div>
 
-                <div className="border-2 border-none border-gray-300 rounded-4xl bg-[#FDFDFD] min-h-[300px] flex items-center justify-center" id="tour-gerencia-grid">
+                <div className="border-2 border-none border-gray-300 rounded-2xl md:rounded-4xl bg-[#FDFDFD] min-h-[300px] flex items-center justify-center" id="tour-gerencia-grid">
                     {filteredFiles.length > 0 || (modo === 'edicao') ? (
                         <FileGrid
                             files={filteredFiles}
@@ -558,9 +558,9 @@ export default function GerenciaPage() {
                             ocultarBloqueadoMap={contextosBloqueadosOcultar}
                         />
                     ) : (
-                        <div className="flex flex-col items-center justify-center text-center p-6">
-                            <SearchX className="w-16 h-16 text-gray-400 mb-4" />
-                            <h3 className="text-xl font-semibold text-gray-700">Nenhum Contexto Encontrado</h3>
+                        <div className="flex flex-col items-center justify-center text-center p-4 md:p-6">
+                            <SearchX className="w-12 md:w-16 h-12 md:h-16 text-gray-400 mb-4" />
+                            <h3 className="text-base md:text-xl font-semibold text-gray-700">Nenhum Contexto Encontrado</h3>
                         </div>
                     )}
                 </div>
@@ -598,16 +598,16 @@ export default function GerenciaPage() {
 
             {/* [REMOVIDO] O modal OcultarContextoModal não é renderizado aqui para evitar duplicação */}
 
-            <div className="relative p-8 mb-6 text-white shadow-lg"
+            <div className="relative p-4 md:p-8 mb-6 text-white shadow-lg"
                 style={{
                     background: diretoria?.bannerImage
                         ? `url(${diretoria.bannerImage}) center/cover`
                         : `linear-gradient(to right, ${diretoria?.corFrom || '#ccc'}, ${diretoria?.corTo || '#999'})`
                 }}>
-                <h2 className="text-3xl font-regular mt-1">{diretoria?.nome || "Diretoria"}</h2>
+                <h2 className="text-lg md:text-3xl font-regular mt-1">{diretoria?.nome || "Diretoria"}</h2>
             </div>
 
-            <div className="container mx-auto p-6">
+            <div className="container mx-auto p-4 md:p-6">
 
                 {(stalenessVariant === 'stale' || stalenessVariant === 'error') && !isLoading && (
                     <div className="mb-6">
@@ -620,15 +620,15 @@ export default function GerenciaPage() {
                     </div>
                 )}
 
-                <div className="flex justify-between items-center mb-4">
-                    <div className="flex items-center gap-4">
-                        <h1 className="text-6xl font-bold text-blue-700">{gerenciaData.sigla}</h1>
-                        <h2 className="text-4xl ml-2.5 text-blue-600 uppercase">{gerenciaData.nome}</h2>
+                <div className="flex flex-col gap-2 md:gap-4 mb-4">
+                    <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-4">
+                        <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-blue-700">{gerenciaData.sigla}</h1>
+                        <h2 className="text-lg md:text-2xl lg:text-4xl text-blue-600 uppercase">{gerenciaData.nome}</h2>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-1 mb-7">
-                    <h1 className="text-3xl mr-2 text-blue-600">Dashboard</h1>
+                <div className="flex flex-row items-center gap-2 md:gap-4 mb-7 flex-wrap">
+                    <h1 className="text-lg md:text-3xl text-blue-600">Dashboard</h1>
                     {modo === 'edicao' && <AddDashboardButton onClick={() => abrirModal('dashboard')} />}
                 </div>
                 <div className="mb-10">
@@ -646,20 +646,20 @@ export default function GerenciaPage() {
 
                 {renderContent()}
 
-                <div className="mt-32 mb-16">
-                    <div className="flex flex-col lg:flex-row items-start gap-8">
+                <div className="mt-12 sm:mt-16 md:mt-32 mb-6 sm:mb-8 md:mb-16">
+                    <div className="flex flex-col lg:flex-row items-start gap-4 md:gap-8">
                         <div className="flex-1">
-                            <div className="flex gap-4 items-center mb-4">
-                                <h1 className="text-6xl font-extrabold text-blue-700">{gerenciaData.sigla}</h1>
-                                <h3 className="text-4xl font-regular text-blue-600">{gerenciaData.nome}</h3>
+                            <div className="flex flex-col gap-2 md:gap-4 items-start mb-4">
+                                <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-extrabold text-blue-700">{gerenciaData.sigla}</h1>
+                                <h3 className="text-base sm:text-lg md:text-2xl lg:text-4xl font-regular text-blue-600">{gerenciaData.nome}</h3>
                             </div>
-                            <span className="text-2xl font-medium ml-2 text-blue-600">SOBRE</span>
-                            <div className="mb-8 mt-3 max-w-full lg:max-w-[90%]">
-                                <p className="text-md ml-2 text-blue-600">{gerenciaData.descricao ?? "Sem descrição disponível."}</p>
+                            <span className="text-base sm:text-lg md:text-2xl font-medium ml-0 md:ml-2 text-blue-600 block mb-2 sm:mb-3 md:mb-0">SOBRE</span>
+                            <div className="mb-6 sm:mb-8 mt-2 md:mt-3 max-w-full lg:max-w-[90%]">
+                                <p className="text-xs sm:text-sm md:text-base ml-0 md:ml-2 text-blue-600">{gerenciaData.descricao ?? "Sem descrição disponível."}</p>
                             </div>
                         </div>
-                        <div className="flex-shrink-0 relative w-full lg:w-[300px] h-[240px] lg:h-[340px] rounded-2xl bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200 shadow-md">
-                            {gerenciaData.image ? <Image src={gerenciaData.image} alt={gerenciaData.nome} fill className="object-cover" /> : <span className="text-gray-400 text-lg">Sem imagem</span>}
+                        <div className="flex-shrink-0 relative w-full sm:w-72 md:w-96 lg:w-[300px] h-[180px] sm:h-[240px] md:h-[320px] lg:h-[340px] rounded-lg md:rounded-2xl bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200 shadow-md">
+                            {gerenciaData.image ? <Image src={gerenciaData.image} alt={gerenciaData.nome} fill className="object-cover" /> : <span className="text-xs sm:text-sm md:text-base lg:text-lg text-gray-400">Sem imagem</span>}
                         </div>
                     </div>
                 </div>

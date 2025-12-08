@@ -29,12 +29,12 @@ export default function DateInputFilter({ onDateChange }: Props) {
   return (
     <div className="relative group w-full max-w-70 h-26">
       
-      <label className="block text-sm font-semibold text-gray-700 mb-2">
+      <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">
         Filtrar por Período
       </label>
 
       <div className={cn(
-          "flex items-center gap-2 h-12 px-3", // Reduzido de px-4 para px-3
+          "flex items-center gap-1.5 sm:gap-2 h-10 sm:h-12 px-2 sm:px-3",
           "rounded-full transition-all duration-300",
           "bg-white/90 backdrop-blur-md shadow-md border-2",
           hasFilter 
@@ -44,7 +44,7 @@ export default function DateInputFilter({ onDateChange }: Props) {
       )}>
         
         <CalendarIcon className={cn(
-          "h-5 w-5 flex-shrink-0 transition-colors duration-200",
+          "h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 transition-colors duration-200",
           hasFilter ? "text-blue-500" : "text-gray-400"
         )} />
         
@@ -53,7 +53,7 @@ export default function DateInputFilter({ onDateChange }: Props) {
             date={startDate}
             setDate={setStartDate}
             disabled={endDate ? { after: endDate } : undefined} 
-            className="border-none shadow-none h-full w-full bg-transparent hover:bg-gray-50/50 rounded-md px-1" // Reduzido padding interno
+            className="border-none shadow-none h-full w-full bg-transparent hover:bg-gray-50/50 rounded-md px-0.5 sm:px-1 text-xs sm:text-sm"
             popoverContentProps={{ className: "z-[100]" }}
             placeholder="Data Início"
             hideIcon
@@ -61,7 +61,7 @@ export default function DateInputFilter({ onDateChange }: Props) {
         </div>
 
         <ArrowRight className={cn(
-          "h-4 w-4 flex-shrink-0 transition-all duration-200",
+          "h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0 transition-all duration-200",
           hasFilter ? "text-blue-500 scale-110" : "text-gray-400"
         )} />
         
@@ -70,14 +70,14 @@ export default function DateInputFilter({ onDateChange }: Props) {
             date={endDate}
             setDate={setEndDate}
             disabled={startDate ? { before: startDate } : undefined}
-            className="border-none shadow-none h-full w-full bg-transparent hover:bg-gray-50/50 rounded-md px-1" // Reduzido padding interno
+            className="border-none shadow-none h-full w-full bg-transparent hover:bg-gray-50/50 rounded-md px-0.5 sm:px-1 text-xs sm:text-sm"
             popoverContentProps={{ className: "z-[100]" }}
             placeholder="Data Fim"
             hideIcon
           />
         </div>
         
-        <div className="w-8 h-8 flex-shrink-0">
+        <div className="w-6 h-6 sm:w-8 sm:h-8 flex-shrink-0">
           {hasFilter && (
             <Button 
               onClick={handleClear} 
@@ -85,7 +85,7 @@ export default function DateInputFilter({ onDateChange }: Props) {
               size="icon" 
               className="rounded-full h-full w-full text-gray-500 hover:text-red-600 hover:bg-red-50 transition-all duration-200"
             >
-              <X className="h-4 w-4"/>
+              <X className="h-3 w-3 sm:h-4 sm:w-4"/>
             </Button>
           )}
         </div>

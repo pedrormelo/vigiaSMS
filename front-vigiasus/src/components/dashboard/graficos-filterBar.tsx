@@ -34,13 +34,13 @@ export function AvailableGraphsPanel({ graphs, onGraphSelect }: AvailableGraphsP
   });
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col gap-3 md:gap-4">
         <div>
-          <h2 className="text-2xl font-light text-blue-700">Gráficos disponíveis</h2>
-          <p className="text-sm text-slate-500">Selecione dashboards publicados para preencher os slots do layout.</p>
+          <h2 className="text-lg md:text-2xl font-light text-blue-700">Gráficos disponíveis</h2>
+          <p className="text-xs md:text-sm text-slate-500">Selecione dashboards publicados para preencher os slots do layout.</p>
         </div>
-        <div className="min-w-[260px] md:w-80">
+        <div className="w-full md:max-w-80">
           <SearchBar
             value={searchQuery}
             onChange={setSearchQuery}
@@ -79,7 +79,7 @@ export function AvailableGraphsPanel({ graphs, onGraphSelect }: AvailableGraphsP
         </Button>
       </div> */}
 
-      <div className="grid max-h-[460px] gap-5 overflow-y-auto pr-1 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid max-h-[60vh] gap-3 md:gap-5 overflow-y-auto pr-1 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
         {filteredGraphs.map((graph) => (
           <GraphCard
             key={graph.id}

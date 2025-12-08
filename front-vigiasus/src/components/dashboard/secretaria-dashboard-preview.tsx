@@ -135,23 +135,23 @@ export function SecretariaDashboardPreview({ graphs, className }: SecretariaDash
 
     if (highlighted.length === 0) {
         return (
-            <div className={cn("bg-gray-50 rounded-2xl p-6 border-2 border-dashed border-gray-200", className)}>
-                <div className="text-center text-gray-500 py-16">Nenhum gráfico destacado pelas diretorias.</div>
+            <div className={cn("bg-gray-50 rounded-lg md:rounded-2xl p-3 md:p-6 border-2 border-dashed border-gray-200", className)}>
+                <div className="text-center text-gray-500 py-8 md:py-16 text-sm md:text-base">Nenhum gráfico destacado pelas diretorias.</div>
             </div>
         )
     }
 
     return (
-        <div className={cn("bg-gray-50/25 rounded-2xl p-6 border border-gray-200 shadow-sm", className)}>
+        <div className={cn("bg-gray-50/25 rounded-lg md:rounded-2xl p-3 md:p-6 border border-gray-200 shadow-sm", className)}>
             <div className="mb-2">
-                <h3 className={cn("text-5xl font-bold")} style={titleStyle}>
+                <h3 className={cn("text-3xl md:text-5xl font-bold")} style={titleStyle}>
                     {current?.nome}
                 </h3>
             </div>
 
             {/* Diretoria label */}
-            <div className="mb-6">
-                <h1 className="text-3xl font-regular text-gray-500">Contextos em Destaque</h1>
+            <div className="mb-4 md:mb-6">
+                <h1 className="text-xl md:text-3xl font-regular text-gray-500">Contextos em Destaque</h1>
             </div>
 
             {pageGraphs.length > 0 ? (
@@ -165,29 +165,29 @@ export function SecretariaDashboardPreview({ graphs, className }: SecretariaDash
                     renderVersion={renderVersion}
                 />
             ) : (
-                <div className="bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 p-10 text-center">
-                    <p className="text-gray-500 text-lg">Nenhum gráfico destacado por essa diretoria.</p>
+                <div className="bg-gray-50 rounded-lg md:rounded-2xl border-2 border-dashed border-gray-200 p-6 md:p-10 text-center">
+                    <p className="text-gray-500 text-sm md:text-lg">Nenhum gráfico destacado por essa diretoria.</p>
                 </div>
             )}
 
             {totalPages > 1 && (
-                <div className="mt-6 flex items-center justify-between gap-3">
+                <div className="mt-4 md:mt-6 flex items-center justify-between gap-2 md:gap-3">
                     <Button
                         size="icon"
-                        className="px-3 py-1.5 text-sm rounded-full border bg-white  border-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:border-gray-400"
+                        className="px-2 md:px-3 py-1 md:py-1.5 text-xs md:text-sm rounded-full border bg-white  border-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:border-gray-400"
                         onClick={prev}
                         disabled={page === 1}
                     >
-                        <ArrowLeft className="h-4 w-4 text-gray-500" />
+                        <ArrowLeft className="h-3 w-3 md:h-4 md:w-4 text-gray-500" />
                     </Button>
-                    <span className="text-lg text-gray-600">Diretoria {page} de {totalPages}</span>
+                    <span className="text-sm md:text-lg text-gray-600">Diretoria {page} de {totalPages}</span>
                     <Button
                         size="icon"
-                        className="px-3 py-1.5 text-sm rounded-full border bg-white border-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                        className="px-2 md:px-3 py-1 md:py-1.5 text-xs md:text-sm rounded-full border bg-white border-gray-500 hover:bg-gray-50 disabled:opacity-50"
                         onClick={next}
                         disabled={page === totalPages}
                     >
-                        <ArrowRight className="h-4 w-4 text-gray-500" />
+                        <ArrowRight className="h-3 w-3 md:h-4 md:w-4 text-gray-500" />
                     </Button>
                 </div>
             )}

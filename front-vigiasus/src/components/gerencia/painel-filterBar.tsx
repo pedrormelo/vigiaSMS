@@ -58,17 +58,17 @@ export default function GerenciasFilterBar({
   ) as FileType[];
 
   return (
-    <div className="mb-6" id={tourId}>
-      {/* (Linha 1 - Título e SearchBar - sem alteração) */}
-      <div className="flex items-center mb-4">
-        <h2 className="text-3xl font-extralight text-[#1745FF]">Painel de Contextos</h2>
-        <div className="flex-1 relative ml-6 max-w-[75%]">
+    <div className="mb-4 md:mb-6" id={tourId}>
+      {/* (Linha 1 - Título e SearchBar - versão responsiva) */}
+      <div className="flex flex-col gap-3 md:gap-4 mb-4">
+        <h2 className="text-xl md:text-3xl font-extralight text-[#1745FF]">Painel de Contextos</h2>
+        <div className="w-full">
           <SearchBar value={searchValue} onChange={onSearchChange} placeholder="Pesquise pelo nome do Contexto..." />
         </div>
       </div>
 
-      {/* (Linha 2 - Filtros e Tabs - sem alteração na lógica, apenas no render) */}
-      <div className="flex items-center gap-3">
+      {/* (Linha 2 - Filtros, Tabs e ViewToggle - tudo lado a lado) */}
+      <div className="flex flex-wrap items-center gap-2 md:gap-3">
         {/* Popover */}
         <Popover>
           <PopoverTrigger asChild>
@@ -132,8 +132,8 @@ export default function GerenciasFilterBar({
         </Popover>
         
         {/* Botões de abas */}
-        <button onClick={() => onTabChange("recente")} className={cn("px-6 py-2 cursor-pointer rounded-full font-medium transition shadow-sm", activeTab === "recente" ? "bg-blue-600 text-white" : "bg-white text-gray-500 hover:bg-gray-50")}>Recentes</button>
-        <button onClick={() => onTabChange("todas")} className={cn("px-6 py-2 cursor-pointer rounded-full font-medium transition shadow-sm", activeTab === "todas" ? "bg-blue-600 text-white" : "bg-white text-gray-500 hover:bg-gray-50")}>Todas</button>
+        <button onClick={() => onTabChange("recente")} className={cn("px-4 md:px-6 py-2 cursor-pointer rounded-full font-medium transition shadow-sm text-sm md:text-base", activeTab === "recente" ? "bg-blue-600 text-white" : "bg-white text-gray-500 hover:bg-gray-50")}>Recentes</button>
+        <button onClick={() => onTabChange("todas")} className={cn("px-4 md:px-6 py-2 cursor-pointer rounded-full font-medium transition shadow-sm text-sm md:text-base", activeTab === "todas" ? "bg-blue-600 text-white" : "bg-white text-gray-500 hover:bg-gray-50")}>Todas</button>
 
         <ViewToggle value={viewMode} onValueChange={onViewModeChange} />
 

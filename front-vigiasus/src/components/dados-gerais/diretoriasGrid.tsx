@@ -26,7 +26,7 @@ export default function DiretoriasGrid({ diretorias, tourId }: DiretoriasGridPro
 
   return (
     <div className="flex justify-center" id={tourId}>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-x-16 mb-20 mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 md:gap-x-16 mb-12 md:mb-20 mx-auto w-full md:w-auto">
         {withConselho.map((d, i) => (
           <DiretoriaCard key={i} label={d.label} colors={d.colors} href={d.href} />
         ))}

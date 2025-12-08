@@ -42,20 +42,20 @@ export function DiretoriaMetricCard({
 }: DiretoriaMetricCardProps) {
     return (
         <div
-            className={cn("relative overflow-hidden rounded-2xl p-6 text-white shadow-lg", colorVariants[color], className)}
+            className={cn("relative overflow-hidden rounded-lg md:rounded-2xl p-3 md:p-6 text-white shadow-lg", colorVariants[color], className)}
         >
             {/* Header with icon and title */}
-            <div className="mb-4 flex items-center gap-2">
-                <Icon className="h-5 w-5" />
-                <h3 className="text-sm font-medium">{title}</h3>
+            <div className="mb-2 md:mb-4 flex items-center gap-2">
+                <Icon className="h-4 w-4 md:h-5 md:w-5" />
+                <h3 className="text-xs md:text-sm font-medium line-clamp-2">{title}</h3>
             </div>
 
             {/* Main metric value */}
-            <div className="mb-4 text-5xl font-bold leading-none">{value}</div>
+            <div className="mb-2 md:mb-4 text-3xl md:text-5xl font-bold leading-none truncate">{value}</div>
 
             {/* Progress bar (if progress is provided) */}
             {progress !== undefined && (
-                <div className="mb-3 h-1.5 w-full overflow-hidden rounded-full bg-white/30">
+                <div className="mb-2 md:mb-3 h-1 md:h-1.5 w-full overflow-hidden rounded-full bg-white/30">
                     <div
                         className={cn("h-full rounded-full", progressColorVariants[color])}
                         style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
@@ -64,7 +64,7 @@ export function DiretoriaMetricCard({
             )}
 
             {/* Goal label (if goal is provided) */}
-            {goal !== undefined && <div className="text-sm font-medium opacity-90">Meta {goal}</div>}
+            {goal !== undefined && <div className="text-xs md:text-sm font-medium opacity-90">Meta {goal}</div>}
         </div>
     )
 }

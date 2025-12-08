@@ -110,7 +110,7 @@ export function FileDetailedListItem({
         
         combinedEditingBadge = (
             <Badge 
-                className={cn("font-bold text-xs", configStatus.className)} 
+                className={cn("font-bold text-[10px] md:text-xs py-0.5 md:py-1 px-1 md:px-1.5", configStatus.className)} 
                 title={`${versaoTextoCompleto}. Status: ${statusTexto}`} 
             >
                 {versaoTextoAbreviado} ({statusTexto})
@@ -181,14 +181,14 @@ export function FileDetailedListItem({
                         ) : null}
                         
                         {estaOculto && (
-                            <Badge className="bg-gray-700/80 text-white border-none py-1 px-2" title="Este contexto está oculto">
-                                <EyeOff className="w-3.5 h-3.5 mr-1" />
+                            <Badge className="bg-gray-700/80 text-white border-none py-0.5 md:py-1 px-1 md:px-1.5 text-[10px] md:text-xs" title="Este contexto está oculto">
+                                <EyeOff className="w-2.5 md:w-3.5 h-2.5 md:h-3.5 mr-0.5 md:mr-1" />
                                 Oculto
                             </Badge>
                         )}
                         {isOcultarBloqueado && (
-                            <Badge className="bg-blue-700/90 text-white border-none py-1 px-2" title={ocultarBloqueadoMotivo || "Em uso no dashboard da diretoria"}>
-                                <LayoutDashboard className="w-3.5 h-3.5 mr-1" />
+                            <Badge className="bg-blue-700/90 text-white border-none py-0.5 md:py-1 px-1 md:px-1.5 text-[10px] md:text-xs" title={ocultarBloqueadoMotivo || "Em uso no dashboard da diretoria"}>
+                                <LayoutDashboard className="w-2.5 md:w-3.5 h-2.5 md:h-3.5 mr-0.5 md:mr-1" />
                                 Em uso
                             </Badge>
                         )}

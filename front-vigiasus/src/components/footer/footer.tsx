@@ -3,50 +3,47 @@ import Image from "next/image";
 export default function Footer() {
     return (
         <footer className="bg-white border-t border-blue-600">
-            <div className="container mx-auto grid grid-cols-3 items-center py-4 px-4">
-                {/* Esquerda */}
-                <div className="flex justify-start">
-                    <Image
-                        src="/logos/artefato-prefeitura1.png"
-                        alt="Símbolos Jaboatão"
-                        width={120}
-                        height={40}
-                        className="h-10 w-auto"
-                    />
-                </div>
+            {/* Desktop: 3 colunas | Mobile: 2 colunas (GTI e Prefeitura) */}
+            <div className="container mx-auto py-3 md:py-4 px-3 md:px-4">
+                {/* Mobile: Grid 2 colunas centralizado | Desktop: Grid 3 colunas */}
+                <div className="grid grid-cols-2 md:grid-cols-3 items-center gap-2 md:gap-0 justify-items-center md:justify-items-auto">
+                    {/* Esquerda - Oculto em mobile */}
+                    <div className="hidden md:flex justify-start">
+                        <Image
+                            src="/logos/artefato-prefeitura1.png"
+                            alt="Símbolos Jaboatão"
+                            width={120}
+                            height={40}
+                            className="h-8 md:h-10 w-auto"
+                        />
+                    </div>
 
-                {/* Centro */}
-                <div className="flex justify-center">
-                    <Image
-                        src="/logos/logo-jaboatao.png"
-                        alt="Prefeitura de Jaboatão"
-                        width={180}
-                        height={50}
-                        className="h-12 w-auto"
-                    />
-                </div>
+                    {/* Centro - Logo Prefeitura */}
+                    <div className="flex justify-center">
+                        <Image
+                            src="/logos/logo-jaboatao.png"
+                            alt="Prefeitura de Jaboatão"
+                            width={180}
+                            height={50}
+                            className="h-8 md:h-10 lg:h-12 w-auto"
+                        />
+                    </div>
 
-                {/* Direita */}
-                <div className="flex justify-end items-center gap-2">
-                    <Image
-                        src="/logos/logo-gti.png"
-                        alt="GTI"
-                        width={50}
-                        height={40}
-                        className="h-10 w-auto"
-                    />
-                    {/* <Image
-                        src="/logos/qrcode.png"
-                        alt="QR Code"
-                        width={40}
-                        height={40}
-                        className="h-10 w-10"
-                    /> */}
+                    {/* Direita - Logo GTI */}
+                    <div className="flex justify-center md:justify-end items-center gap-2">
+                        <Image
+                            src="/logos/logo-gti.png"
+                            alt="GTI"
+                            width={50}
+                            height={40}
+                            className="h-8 md:h-10 w-auto"
+                        />
+                    </div>
                 </div>
             </div>
 
             {/* Texto institucional */}
-            <div className="border-t border-blue-600 py-3 px-4 text-center text-xs md:text-sm text-gray-700">
+            <div className="border-t border-blue-600 py-2 md:py-3 px-3 md:px-4 text-center text-xs md:text-sm text-gray-700">
                 <p>
                     <span className="font-bold text-blue-700">SIGE</span>
                     <span className="text-blue-700">

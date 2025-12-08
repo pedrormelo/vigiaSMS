@@ -96,8 +96,8 @@ export default function Dashboard() {
 
   // --- RENDERIZAÇÃO DA PÁGINA ---
   return (
-    <div className="min-h-screen bg-[#FDFDFD] p-6">
-      <div className="w-full mx-auto px-12">
+    <div className="min-h-screen bg-[#FDFDFD] p-4 md:p-6">
+      <div className="w-full mx-auto px-4 md:px-12">
         <SectionTitle>Dados Gerais</SectionTitle>
 
         {/* 1. Grade de Diretorias */}

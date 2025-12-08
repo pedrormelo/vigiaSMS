@@ -58,7 +58,7 @@ export default function Contato() {
 
   return (
     // A seção principal com fundo azul e posicionamento relativo para a onda
-    <section className="relative bg-gradient-to-r from-[#1745FF] to-cyan-600 pt-32 pb-20 px-6 font-sans">
+    <section className="relative bg-gradient-to-r from-[#1745FF] to-cyan-600 pt-16 md:pt-32 pb-12 md:pb-20 px-4 md:px-6 font-sans">
 
       {/* Elemento SVG que cria a forma de onda no topo */}
       <div className="absolute top-0 left-0 w-full overflow-hidden leading-none">
@@ -79,7 +79,7 @@ export default function Contato() {
       <div className="max-w-2xl mx-auto text-white">
 
         {/* Título */}
-        <h2 className="text-4xl font-bold text-center mb-12">
+        <h2 className="text-3xl md:text-4xl font-bold text-center mb-8 md:mb-12">
           Contato
         </h2>
 
@@ -88,7 +88,7 @@ export default function Contato() {
           <div
             role="status"
             aria-live="polite"
-            className="mb-6 rounded-2xl bg-white/10 text-white border border-emerald-300/60 px-4 py-3"
+            className="mb-4 md:mb-6 rounded-2xl bg-white/10 text-white border border-emerald-300/60 px-3 md:px-4 py-2 md:py-3 text-sm md:text-base"
           >
             {successMsg}
           </div>
@@ -97,18 +97,18 @@ export default function Contato() {
           <div
             role="alert"
             aria-live="assertive"
-            className="mb-6 rounded-2xl bg-white/10 text-white border border-red-300/70 px-4 py-3"
+            className="mb-4 md:mb-6 rounded-2xl bg-white/10 text-white border border-red-300/70 px-3 md:px-4 py-2 md:py-3 text-sm md:text-base"
           >
             {errorMsg}
           </div>
         )}
 
         {/* Formulário */}
-        <form className="space-y-6" onSubmit={onSubmit} noValidate>
+        <form className="space-y-4 md:space-y-6" onSubmit={onSubmit} noValidate>
           {/* Campo Nome */}
           <div className="space-y-2">
             <div className="pb-1.2">
-              <label htmlFor="nome" className="font-medium text">
+              <label htmlFor="nome" className="font-medium text-sm md:text-base">
                 Seu nome: *
               </label>
             </div>
@@ -116,7 +116,7 @@ export default function Contato() {
               id="nome"
               type="text"
               placeholder="Ex: João"
-              className={`w-full p-4 rounded-2xl bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 ${
+              className={`w-full p-3 md:p-4 rounded-2xl bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 text-sm md:text-base ${
                 fieldErrors.name ? "ring-2 ring-red-400" : ""
               }`}
               value={name}
@@ -126,7 +126,7 @@ export default function Contato() {
               required
             />
             {fieldErrors.name && (
-              <p id="nome-error" className="text-red-100 text-sm">
+              <p id="nome-error" className="text-red-100 text-xs md:text-sm">
                 {fieldErrors.name}
               </p>
             )}
@@ -135,7 +135,7 @@ export default function Contato() {
           {/* Campo E-mail */}
           <div className="space-y-2">
             <div className="pb-1.2">
-              <label htmlFor="email" className="font-medium">
+              <label htmlFor="email" className="font-medium text-sm md:text-base">
                 Endereço de E-mail: *
               </label>
             </div>
@@ -143,7 +143,7 @@ export default function Contato() {
               id="email"
               type="email"
               placeholder="exemplo@gmail.com"
-              className={`w-full p-4 rounded-2xl bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 ${
+              className={`w-full p-3 md:p-4 rounded-2xl bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 text-sm md:text-base ${
                 fieldErrors.email ? "ring-2 ring-red-400" : ""
               }`}
               value={email}
@@ -153,7 +153,7 @@ export default function Contato() {
               required
             />
             {fieldErrors.email && (
-              <p id="email-error" className="text-red-100 text-sm">
+              <p id="email-error" className="text-red-100 text-xs md:text-sm">
                 {fieldErrors.email}
               </p>
             )}
@@ -163,14 +163,14 @@ export default function Contato() {
           <div className="space-y-2">
             <div className="pb-1.2">
 
-              <label htmlFor="mensagem" className="font-medium">
+              <label htmlFor="mensagem" className="font-medium text-sm md:text-base">
                 Sua Mensagem: *
               </label>
             </div>
             <textarea
               id="mensagem"
               placeholder="Escreva aqui a sua dúvida, sugestão ou reclamação para a nossa equipe entrar em contato."
-              className={`w-full p-4 rounded-2xl bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 min-h-[150px] resize-none ${
+              className={`w-full p-3 md:p-4 rounded-2xl bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 min-h-[120px] md:min-h-[150px] resize-none text-sm md:text-base ${
                 fieldErrors.message ? "ring-2 ring-red-400" : ""
               }`}
               value={message}
@@ -180,7 +180,7 @@ export default function Contato() {
               required
             ></textarea>
             {fieldErrors.message && (
-              <p id="mensagem-error" className="text-red-100 text-sm">
+              <p id="mensagem-error" className="text-red-100 text-xs md:text-sm">
                 {fieldErrors.message}
               </p>
             )}
@@ -190,7 +190,7 @@ export default function Contato() {
           <Button
             type="submit"
             disabled={submitting || !canSubmit}
-            className="w-full bg-yellow-400 hover:bg-yellow-500 disabled:opacity-60 disabled:cursor-not-allowed text-blue-600 rounded-2xl py-5 text-lg font-bold shadow-lg transition-transform transform hover:scale-105"
+            className="w-full bg-yellow-400 hover:bg-yellow-500 disabled:opacity-60 disabled:cursor-not-allowed text-blue-600 rounded-2xl py-3 md:py-5 text-sm md:text-lg font-bold shadow-lg transition-transform transform hover:scale-105"
           >
             {submitting ? "Enviando…" : "Enviar mensagem"}
           </Button>

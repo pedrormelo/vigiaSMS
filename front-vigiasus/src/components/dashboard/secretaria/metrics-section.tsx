@@ -48,7 +48,7 @@ export function SecretariaMetricsSection({
 
             {showSecondary && (
                 <MetricsGrid
-                    className="mt-12"
+                    className="mt-8 md:mt-12"
                     title={secondaryTitle}
                     items={secondary}
                     loading={loading}

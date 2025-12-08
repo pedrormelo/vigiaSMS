@@ -9,6 +9,7 @@ interface GlobalLoadingProps {
 
 /**
  * Componente de loading global para tela cheia
+ * Responsivo para mobile, tablet e desktop
  * Agora usa o SpinnerCarregamento padronizado
  */
 export default function GlobalLoading({
@@ -16,7 +17,7 @@ export default function GlobalLoading({
   subMessage,
 }: GlobalLoadingProps) {
   return (
-    <div className="min-h-screen w-full">
+    <div className="min-h-screen w-full bg-white">
       <SpinnerCarregamento
         mensagem={message}
         subMensagem={subMessage}

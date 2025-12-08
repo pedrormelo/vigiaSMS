@@ -24,7 +24,7 @@ export default function NotificationItem({
   const renderIcon = () => {
     // 1. Se for notificação de sistema puro (configurações), mantém o ícone de engrenagem
     if (type === 'sistema') {
-      return <Settings className="w-5 h-5 text-blue-600" />;
+      return <Settings className="w-4 h-4 text-blue-600" />;
     }
 
     // 2. Se tivermos um tipo de arquivo relacionado (PDF, Dashboard, etc.), USAREMOS ELE.
@@ -40,7 +40,7 @@ export default function NotificationItem({
 
     // 3. Se não tiver arquivo relacionado e for comentário, usa o balão de fala
     if (type === 'comentario') {
-      return <MessageSquare className="w-5 h-5 text-gray-600" />;
+      return <MessageSquare className="w-4 h-4 text-gray-600" />;
     }
 
     // 4. Fallback genérico (usa doc se não soubermos o que é)
@@ -58,7 +58,7 @@ export default function NotificationItem({
     <button
       onClick={onClick}
       className={cn(
-        "flex items-start cursor-pointer gap-3 p-3 rounded-xl text-left transition-all w-full relative",
+        "flex items-start cursor-pointer gap-1.5 md:gap-3 p-1.5 md:p-3 rounded-xl text-left transition-all w-full relative",
         "border border-transparent",
         isActive
           ? "bg-blue-500 border-blue-500 text-white shadow-sm"
@@ -68,15 +68,15 @@ export default function NotificationItem({
     >
       {!isRead && (
         <span
-          className="absolute top-3 left-6 block h-2.5 w-2.5 rounded-full bg-blue-500 ring-2 ring-white"
+          className="absolute top-1.5 md:top-3 left-4 md:left-6 block h-1.5 md:h-2.5 w-1.5 md:w-2.5 rounded-full bg-blue-500 ring-2 ring-white"
           aria-label="Não lida"
         />
       )}
 
       <div className={cn(
-        "w-11 h-11 flex-shrink-0 flex items-center justify-center rounded-md mt-0.5",
+        "w-8 md:w-11 h-8 md:h-11 flex-shrink-0 flex items-center justify-center rounded-md mt-0.5",
         isActive ? "bg-white" : "bg-gray-100/60",
-        !isRead ? "ml-4" : ""
+        !isRead ? "ml-2.5 md:ml-4" : ""
       )}>
           {renderIcon()}  
       </div>
@@ -84,7 +84,7 @@ export default function NotificationItem({
       <div className="flex-1 min-w-0">
         <h3
           className={cn(
-            "font-semibold text-sm leading-snug line-clamp-1",
+            "font-semibold text-xs md:text-sm leading-tight line-clamp-1",
             isActive ? "text-white" : "text-blue-700",
             !isRead && "font-semibold"
           )}
@@ -94,7 +94,7 @@ export default function NotificationItem({
         </h3>
         <p
           className={cn(
-            "text-xs leading-snug mt-1 line-clamp-1",
+            "text-[10px] md:text-xs leading-tight mt-0.5 line-clamp-1",
             isActive ? "text-white" : statusColor
           )}
           title={description}

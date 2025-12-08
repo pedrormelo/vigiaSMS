@@ -104,7 +104,7 @@ export function GerenciaDashboardPreview({
 
     if (!hasVisibleGraphs && hiddenGraphs.length === 0) {
         return (
-            <div className="bg-gray-50 rounded-2xl p-10 border-2 border-dashed border-gray-200 text-center text-gray-500">
+            <div className="bg-gray-50 rounded-lg md:rounded-2xl p-6 md:p-10 border-2 border-dashed border-gray-200 text-center text-gray-500 text-sm md:text-base">
                 Nenhum gráfico cadastrado para esta gerência.
             </div>
         )
@@ -128,7 +128,7 @@ export function GerenciaDashboardPreview({
                     showHighlightToggle={false}
                 />
             ) : (
-                <div className="bg-gray-50 rounded-2xl p-10 border-2 border-dashed border-gray-200 text-center text-gray-500">
+                <div className="bg-gray-50 rounded-lg md:rounded-2xl p-6 md:p-10 border-2 border-dashed border-gray-200 text-center text-gray-500 text-sm md:text-base">
                     Todos os gráficos desta gerência estão ocultos neste painel.
                     {canEdit && onRestoreAllGraphs && (
                         <div className="mt-4 flex justify-center">
@@ -136,9 +136,9 @@ export function GerenciaDashboardPreview({
                                 variant="outline"
                                 size="sm"
                                 onClick={onRestoreAllGraphs}
-                                className="rounded-full border-blue-300 text-blue-700 hover:bg-blue-100"
+                                className="rounded-full border-blue-300 text-blue-700 hover:bg-blue-100 text-xs md:text-sm"
                             >
-                                <RotateCcw className="h-4 w-4 mr-2" /> Reexibir todos
+                                <RotateCcw className="h-3 md:h-4 w-3 md:w-4 mr-2" /> Reexibir todos
                             </Button>
                         </div>
                     )}
@@ -146,25 +146,25 @@ export function GerenciaDashboardPreview({
             )}
 
             {hasVisibleGraphs && totalPages > 1 && (
-                <div className="mt-6 flex items-center justify-between gap-3">
+                <div className="mt-4 md:mt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
                     <Button
                         size="icon"
-                        className="px-3 py-1.5 text-sm rounded-full border bg-white border-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:border-gray-400"
+                        className="px-2 md:px-3 py-1 md:py-1.5 text-xs md:text-sm rounded-full border bg-white border-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:border-gray-400 h-8 md:h-10 w-8 md:w-10"
                         onClick={() => setPage((p) => Math.max(0, p - 1))}
                         disabled={page === 0}
                         aria-label="Página anterior"
                     >
-                        <ArrowLeft className="h-4 w-4 text-gray-500" />
+                        <ArrowLeft className="h-3 md:h-4 w-3 md:w-4 text-gray-500" />
                     </Button>
 
-                    <div className="flex gap-2">
+                    <div className="flex gap-1 md:gap-2">
                         {Array.from({ length: totalPages }).map((_, i) => (
                             <button
                                 key={i}
                                 aria-label={`Ir para página ${i + 1}`}
                                 className={cn(
-                                    "w-2.5 h-2.5 rounded-full transition-colors",
-                                    i === page ? "bg-[#2651FF]" : "bg-blue-300 hover:bg-blue-400"
+                                    "rounded-full transition-colors",
+                                    i === page ? "bg-[#2651FF] w-3 h-3 md:w-2.5 md:h-2.5" : "bg-blue-300 hover:bg-blue-400 w-2 h-2 md:w-2.5 md:h-2.5"
                                 )}
                                 onClick={() => setPage(i)}
                             />
@@ -173,41 +173,41 @@ export function GerenciaDashboardPreview({
 
                     <Button
                         size="icon"
-                        className="px-3 py-1.5 text-sm rounded-full border bg-white border-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                        className="px-2 md:px-3 py-1 md:py-1.5 text-xs md:text-sm rounded-full border bg-white border-gray-500 hover:bg-gray-50 disabled:opacity-50 h-8 md:h-10 w-8 md:w-10"
                         onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
                         disabled={page === totalPages - 1}
                         aria-label="Próxima página"
                     >
-                        <ArrowRight className="h-4 w-4 text-gray-500" />
+                        <ArrowRight className="h-3 md:h-4 w-3 md:w-4 text-gray-500" />
                     </Button>
                 </div>
             )}
 
             {canEdit && hiddenGraphs.length > 0 && (
-                <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900 flex flex-col gap-3">
-                    <div className="flex items-center justify-between gap-4">
+                <div className="mt-3 md:mt-4 rounded-lg md:rounded-xl border border-blue-200 bg-blue-50 px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm text-blue-900 flex flex-col gap-2 md:gap-3">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4">
                         <span className="font-semibold">Gráficos ocultos ({hiddenGraphs.length})</span>
                         {onRestoreAllGraphs && (
                             <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={onRestoreAllGraphs}
-                                className="h-8 rounded-full text-blue-700 hover:bg-blue-100"
+                                className="h-7 md:h-8 rounded-full text-blue-700 hover:bg-blue-100 text-xs md:text-sm"
                             >
-                                <RotateCcw className="h-4 w-4 mr-2" /> Reexibir todos
+                                <RotateCcw className="h-3 md:h-4 w-3 md:w-4 mr-1 md:mr-2" /> Reexibir todos
                             </Button>
                         )}
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-1 md:gap-2">
                         {hiddenGraphs.map(graph => (
                             <Button
                                 key={graph.id}
                                 variant="secondary"
                                 size="sm"
                                 onClick={() => onRestoreGraph?.(graph.id)}
-                                className="rounded-full border border-blue-200 bg-white text-blue-700 hover:bg-blue-100"
+                                className="rounded-full border border-blue-200 bg-white text-blue-700 hover:bg-blue-100 text-xs md:text-sm h-8 md:h-auto py-1 md:py-2 px-2 md:px-3"
                             >
-                                <Eye className="h-4 w-4 mr-1" /> {graph.title}
+                                <Eye className="h-3 md:h-4 w-3 md:w-4 mr-1" /> {graph.title}
                             </Button>
                         ))}
                     </div>

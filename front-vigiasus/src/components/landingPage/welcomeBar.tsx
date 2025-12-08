@@ -40,13 +40,13 @@ export default function WelcomeBar({ nivelAcesso = "Usuário", nomeUser = "Visit
   return (
     <div 
       className={`
-        bg-[#68D0A1] text-white text-center text-sm overflow-hidden
+        bg-[#68D0A1] text-white text-center text-xs md:text-sm overflow-hidden
         transition-all duration-700 ease-in-out
-        ${isVisible ? 'max-h-20 py-2 px-6 opacity-100' : 'max-h-0 py-0 px-6 opacity-50'}
+        ${isVisible ? 'max-h-20 py-1.5 md:py-2 px-3 md:px-6 opacity-100' : 'max-h-0 py-0 px-3 md:px-6 opacity-50'}
       `}
     >
-      <div className="max-w-7xl mx-auto flex items-center justify-center gap-2">
-        <User size={16} />
+      <div className="max-w-7xl mx-auto flex items-center justify-center gap-1.5 md:gap-2">
+        <User size={14} className="hidden sm:inline" />
         <p>
           <span className="font-semibold">Bem-vindo</span> ({nivelAcesso}) {nomeUser}!
         </p>

@@ -59,12 +59,12 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-blue-500 to-cyan-500 flex items-center justify-center p-6">
-            <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+        <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-blue-500 to-cyan-500 flex items-center justify-center p-3 sm:p-6">
+            <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 md:gap-10 items-center">
                 {/* Brand (left side) */}
-                <div className="flex flex-col items-center md:items-start text-center md:text-left gap-4">
+                <div className="flex flex-col items-center md:items-start text-center md:text-left gap-3 sm:gap-4">
                     <div>
-                        <h1 className="text-3xl md:text-6xl text-white leading-tight">
+                        <h1 className="text-2xl sm:text-3xl md:text-6xl text-white leading-tight">
                             <span className="font-semibold">Sige</span>
                             <span className="font-light">Saúde</span>
                         </h1>
@@ -73,7 +73,7 @@ export default function LoginPage() {
                             Sistema Integrado de Gestão Estratégica em Saúde do Jaboatão dos Guararapes
                         </p> */}
 
-                        <p className="text-white/95 text-lg font-medium md:text-xl mt-2 max-w-md text-center">
+                        <p className="text-white/95 text-base sm:text-lg font-medium md:text-xl mt-1 sm:mt-2 max-w-md text-center">
                             O olhar digital da <b>saúde pública.</b>
                         </p>
                     </div>
@@ -91,12 +91,12 @@ export default function LoginPage() {
                     </div>
 
                     {/* Card */}
-                    <div className="relative z-10 rounded-3xl bg-white backdrop-blur-sm border border-white/40 shadow-lg p-6 md:p-8">
-                        <form onSubmit={onSubmit} className="space-y-4">
+                    <div className="relative z-10 rounded-2xl sm:rounded-3xl bg-white backdrop-blur-sm border border-white/40 shadow-lg p-4 sm:p-6 md:p-8">
+                        <form onSubmit={onSubmit} className="space-y-3 sm:space-y-4">
                             <div>
-                                <h1 className="text-2xl mb-2 font-bold text-blue-600">Entrar</h1>
-                                <p className="text-sm mb-4 font-medium text-gray-600">Use suas credenciais do SIGE para entrar</p>
-                                <label htmlFor="cpf" className="block text-sm font-medium text-gray-700 mb-1">CPF</label>
+                                <h1 className="text-xl sm:text-2xl mb-1 sm:mb-2 font-bold text-blue-600">Entrar</h1>
+                                <p className="text-xs sm:text-sm mb-3 sm:mb-4 font-medium text-gray-600">Use suas credenciais do SIGE para entrar</p>
+                                <label htmlFor="cpf" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">CPF</label>
                                 <Input
                                     id="cpf"
                                     type="text"
@@ -115,45 +115,45 @@ export default function LoginPage() {
                                     }}
                                     pattern="\d{3}\.\d{3}\.\d{3}-\d{2}"
                                     maxLength={14} // 000.000.000-00
-                                    className={`rounded-2xl border ${cpfError ? 'border-red-500 ring-red-300' : 'border-gray-400/80 focus:ring-blue-400 focus:border-blue-300'} focus:ring-3 ring-offset-1`}
+                                    className={`rounded-lg sm:rounded-2xl border text-sm ${cpfError ? 'border-red-500 ring-red-300' : 'border-gray-400/80 focus:ring-blue-400 focus:border-blue-300'} focus:ring-2 sm:focus:ring-3 ring-offset-1`}
                                     autoComplete="off"
                                 />
                                 {cpfError && <p className="mt-1 text-xs text-red-600 font-medium">{cpfError}</p>}
                             </div>
                             <div>
-                                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+                                <label htmlFor="password" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Senha</label>
                                 <Input
                                     id="password"
                                     type="password"
                                     placeholder="••••••••"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="rounded-2xl border border-gray-400/80 focus:ring-blue-400 focus:border-blue-300 focus:ring-3 ring-offset-1"
+                                    className="rounded-lg sm:rounded-2xl border border-gray-400/80 focus:ring-blue-400 focus:border-blue-300 focus:ring-2 sm:focus:ring-3 ring-offset-1 text-sm"
                                     autoComplete="current-password"
                                 />
                             </div>
 
-                            <div className="flex items-center justify-between pt-2">
-                                <label className="inline-flex items-center gap-2 text-sm text-gray-600">
+                            <div className="flex items-center justify-between pt-1 sm:pt-2">
+                                <label className="inline-flex items-center gap-2 text-xs sm:text-sm text-gray-600">
                                     <input
                                         type="checkbox"
                                         checked={remember}
                                         onChange={(e) => setRemember(e.target.checked)}
-                                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                        className="h-3 sm:h-4 w-3 sm:w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                                     />
                                     Lembrar de mim
                                 </label>
-                                <button type="button" className="text-sm text-blue-600 hover:underline">
+                                <button type="button" className="text-xs sm:text-sm text-blue-600 hover:underline">
                                     Esqueci minha senha
                                 </button>
                             </div>
 
-                            <Button type="submit" className="w-full hover:bg-gradient-to-b from-white to-gray-200/20 hover:delay-5000" disabled={loading}>
+                            <Button type="submit" className="w-full text-sm sm:text-base hover:bg-gradient-to-b from-white to-gray-200/20 hover:delay-5000 py-2 sm:py-2.5" disabled={loading}>
                                 {loading ? "Entrando..." : "Entrar"}
                             </Button>
 
                             {/* Demo creds hint */}
-                            <div className="text-[11px] text-gray-500 mt-2">
+                            <div className="text-[10px] sm:text-[11px] text-gray-500 mt-2">
                                 Use seu CPF e sua senha.
                             </div>
                         </form>

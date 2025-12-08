@@ -350,7 +350,7 @@ export default function DashboardBuilder() {
         <div className="min-h-screen bg-[#FDFDFD]">
             {/* Header com gradiente dinâmico via 'style' */}
             <div
-                className="relative p-10 text-white shadow-md"
+                className="relative p-4 md:p-10 text-white shadow-md"
                 style={
                     diretoria.bannerImage
                         ? {
@@ -363,21 +363,21 @@ export default function DashboardBuilder() {
                         }
                 }
             >
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-start sm:items-center flex-col sm:flex-row gap-4">
                     {/* Títulos */}
                     <div className="text-white">
-                        <h1 className="text-4xl font-regular">
+                        <h1 className="text-2xl sm:text-3xl md:text-4xl font-regular">
                             {diretoria.nome}
                         </h1>
-                        <p className="text-5xl mt-2 font-bold opacity-100">Painel de Dashboards</p>
+                        <p className="text-3xl sm:text-4xl md:text-5xl mt-1 sm:mt-2 font-bold opacity-100">Painel de Dashboards</p>
                     </div>
                 </div>
             </div>
 
             {/* Seletor de Dashboard */}
-            <div className="max-w-[90%] pt-6 mx-auto space-y-6">
-                <div className="flex items-center justify-between">
-                    <h1 className="text-3xl font-regular text-blue-600">Escolha o layout da dashboard</h1>
+            <div className="max-w-full md:max-w-[90%] pt-4 md:pt-6 px-4 md:px-0 mx-auto space-y-4 md:space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 md:gap-0">
+                    <h1 className="text-xl md:text-3xl font-regular text-blue-600">Escolha o layout da dashboard</h1>
                     <LayoutSelector selectedLayout={selectedLayout} onLayoutChange={handleLayoutChange} />
                 </div>
 
@@ -390,14 +390,14 @@ export default function DashboardBuilder() {
                     editMode={true}
                 />
 
-                <section className="rounded-3xl border border-dashed border-blue-200 bg-white/70 p-6 shadow-sm">
-                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                <section className="rounded-2xl md:rounded-3xl border border-dashed border-blue-200 bg-white/70 p-4 md:p-6 shadow-sm">
+                    <div className="flex flex-col gap-4 md:gap-4">
                         <div className="space-y-1">
-                            <h2 className="text-2xl font-light text-blue-700">Indicadores (KPIs) do painel</h2>
-                            <p className="text-sm text-slate-500">Selecione até {MAX_KPIS} indicadores publicados para destacar rapidamente os resultados da diretoria.</p>
+                            <h2 className="text-lg md:text-2xl font-light text-blue-700">Indicadores (KPIs) do painel</h2>
+                            <p className="text-xs md:text-sm text-slate-500">Selecione até {MAX_KPIS} indicadores publicados para destacar rapidamente os resultados da diretoria.</p>
                             <p className="text-xs text-slate-400">Apenas um KPI pode ser marcado para aparecer na visão da Secretaria.</p>
                         </div>
-                        <div className="flex flex-col items-end gap-2 text-right">
+                        <div className="flex flex-col sm:flex-row sm:items-center items-start gap-2 sm:justify-end text-right">
                             <span className="text-xs font-medium text-slate-500">Selecionados: {selectedKpis.length}/{MAX_KPIS}</span>
                             <Button
                                 type="button"
@@ -412,24 +412,24 @@ export default function DashboardBuilder() {
                     </div>
 
                     {loadingKpis ? (
-                        <div className="py-10 text-center text-slate-500">Carregando indicadores...</div>
+                        <div className="py-6 md:py-10 text-center text-slate-500 text-sm md:text-base">Carregando indicadores...</div>
                     ) : selectedKpis.length > 0 ? (
-                        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                        <div className="mt-4 md:mt-6 grid gap-3 md:gap-4 md:grid-cols-2 xl:grid-cols-3">
                             {selectedKpis.map((item) => (
                                 <div
                                     key={item.contextoVersaoId}
-                                    className={`relative rounded-2xl border p-5 shadow-sm transition-colors duration-200 ${
+                                    className={`relative rounded-lg md:rounded-2xl border p-3 md:p-5 shadow-sm transition-colors duration-200 ${
                                         item.isHighlighted
                                             ? "border-amber-400 bg-amber-50/60"
                                             : "border-slate-200 bg-white"
                                     }`}
                                 >
-                                    <div className="flex items-start justify-between gap-3">
-                                        <div className="space-y-1">
-                                            <p className="text-xs font-semibold uppercase tracking-wide text-blue-500">
+                                    <div className="flex items-start justify-between gap-2 mb-2 md:mb-3">
+                                        <div className="space-y-0.5 md:space-y-1 flex-1">
+                                            <p className="text-xs md:text-xs font-semibold uppercase tracking-wide text-blue-500">
                                                 {item.metric.gerenciaNome || "Indicador"}
                                             </p>
-                                            <h3 className="text-base font-semibold leading-tight text-slate-800 line-clamp-2">
+                                            <h3 className="text-sm md:text-base font-semibold leading-tight text-slate-800 line-clamp-2">
                                                 {item.metric.title}
                                             </h3>
                                             {item.metric.descricao && (
@@ -441,16 +441,16 @@ export default function DashboardBuilder() {
                                         <button
                                             type="button"
                                             onClick={() => handleKpiRemove(item.contextoVersaoId)}
-                                            className="rounded-full p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+                                            className="rounded-full p-1 md:p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-600 flex-shrink-0"
                                             title="Remover indicador"
                                         >
-                                            <Trash className="h-4 w-4" />
+                                            <Trash className="h-3 w-3 md:h-4 md:w-4" />
                                         </button>
                                     </div>
 
-                                    <div className="mt-4 flex items-center justify-between gap-4">
-                                        <div className="space-y-1">
-                                            <div className="text-2xl font-bold text-slate-900">
+                                    <div className="mt-2 md:mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 md:gap-4">
+                                        <div className="space-y-0.5 md:space-y-1">
+                                            <div className="text-xl md:text-2xl font-bold text-slate-900">
                                                 {formatKpiValue(item.metric)}
                                             </div>
                                             {item.metric.valorAlvoTexto && (
@@ -462,19 +462,19 @@ export default function DashboardBuilder() {
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="flex flex-col items-end gap-2 text-xs text-slate-500">
-                                            <span className="font-medium text-slate-600">Destacar na Secretaria</span>
+                                        <div className="flex flex-col items-start sm:items-end gap-1.5 md:gap-2 text-xs text-slate-500">
+                                            <span className="font-medium text-slate-600 text-xs md:text-sm">Destacar na Secretaria</span>
                                             <button
                                                 type="button"
                                                 onClick={() => handleKpiHighlightToggle(item.contextoVersaoId)}
-                                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
+                                                className={`relative inline-flex h-5 md:h-6 w-9 md:w-11 items-center rounded-full transition-colors duration-200 ${
                                                     item.isHighlighted ? "bg-amber-500" : "bg-slate-300"
                                                 }`}
                                                 title={item.isHighlighted ? "Remover destaque" : "Definir como destaque"}
                                             >
                                                 <span
-                                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
-                                                        item.isHighlighted ? "translate-x-5" : "translate-x-1"
+                                                    className={`inline-block h-3 md:h-4 w-3 md:w-4 transform rounded-full bg-white transition-transform duration-200 ${
+                                                        item.isHighlighted ? "translate-x-4 md:translate-x-5" : "translate-x-0.5 md:translate-x-1"
                                                     }`}
                                                 />
                                             </button>
@@ -482,7 +482,7 @@ export default function DashboardBuilder() {
                                     </div>
 
                                     {item.isHighlighted && (
-                                        <div className="absolute right-4 top-4 flex items-center gap-1 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700 shadow-sm">
+                                        <div className="absolute right-2 md:right-4 top-2 md:top-4 flex items-center gap-1 rounded-full bg-amber-100 px-2 md:px-3 py-0.5 md:py-1 text-xs font-semibold text-amber-700 shadow-sm">
                                             <Star className="h-3 w-3 text-amber-600" fill="currentColor" strokeWidth={2} />
                                             Destaque
                                         </div>
@@ -491,17 +491,17 @@ export default function DashboardBuilder() {
                             ))}
                         </div>
                     ) : (
-                        <div className="mt-6 flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white/60 p-10 text-center text-slate-500">
-                            <p className="text-sm">Nenhum KPI selecionado ainda.</p>
-                            <p className="text-xs">Use o botão "Adicionar KPI" para escolher os indicadores que serão exibidos.</p>
+                        <div className="mt-4 md:mt-6 flex flex-col items-center justify-center rounded-lg md:rounded-2xl border border-dashed border-slate-200 bg-white/60 p-6 md:p-10 text-center text-slate-500">
+                            <p className="text-xs md:text-sm">Nenhum KPI selecionado ainda.</p>
+                            <p className="text-xs text-slate-400">Use o botão &quot;Adicionar KPI&quot; para escolher os indicadores que serão exibidos.</p>
                         </div>
                     )}
                 </section>
 
-                <div className="flex justify-end pb-30">
+                <div className="flex justify-end pb-30 px-4 md:px-0">
                     <Button
                         onClick={handleSaveDashboard}
-                        className="bg-blue-500 hover:bg-blue-600 text-white p-6 rounded-3xl text-md font-medium"
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-4 md:px-6 py-3 md:py-6 rounded-2xl md:rounded-3xl text-sm md:text-md font-medium"
                     >
                         <LayoutDashboard className="mr-2" />
                         SALVAR DASHBOARD

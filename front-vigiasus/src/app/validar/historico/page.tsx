@@ -107,13 +107,13 @@ export default function HistoricoPage() {
                 return {
                     ...col,
                     render: (row: Contexto) => (
-                        <div className="flex items-center gap-4 text-gray-500">
+                        <div className="flex items-center gap-2 sm:gap-3 text-gray-500">
                             <button
                                 onClick={(e) => { e.stopPropagation(); handleRowClick(row); }}
-                                className="hover:text-blue-600 transition-colors"
+                                className="hover:text-blue-600 transition-colors p-1 sm:p-1.5"
                                 title="Ver Detalhes"
                             >
-                                <Eye size={16} />
+                                <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
                             </button>
                         </div>
                     )
@@ -125,27 +125,27 @@ export default function HistoricoPage() {
 
     return (
         // Layout Simétrico com a página de Validação
-        <div className="p-8 bg-white min-h-screen">
+        <div className="p-4 sm:p-6 md:p-8 bg-white min-h-screen">
 
             {/* Cabeçalho */}
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6 md:mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold text-[#1745FF]">Histórico de Contextos</h1>
-                    <p className="text-gray-500 mt-1 text-sm">Registro completo de todas as movimentações.</p>
+                    <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#1745FF]">Histórico de Contextos</h1>
+                    <p className="text-gray-500 mt-1 text-xs sm:text-sm">Registro completo de todas as movimentações.</p>
                 </div>
                 <Link href="/validar">
-                    <Button className="bg-white rounded-full border border-gray-300 shadow-sm text-gray-700 hover:bg-gray-50">
-                        <ArrowLeft className="mr-2 h-4 w-4" />
+                    <Button className="bg-white rounded-full border border-gray-300 shadow-sm text-gray-700 hover:bg-gray-50 text-xs sm:text-sm h-8 sm:h-9 md:h-10 px-3 sm:px-4">
+                        <ArrowLeft className="mr-1.5 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                         Voltar
                     </Button>
                 </Link>
             </div>
 
             {/* Container Branco Arredondado (Igual ao da Validação) */}
-            <div className="bg-gray-100/25 rounded-[2rem] p-6 shadow-sm">
+            <div className="bg-gray-100/25 rounded-2xl sm:rounded-3xl md:rounded-[2rem] p-4 sm:p-5 md:p-6 shadow-sm">
 
                 {/* Barra de Filtros */}
-                <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6" id="tour-historico-filtros">
+                <div className="flex flex-col md:flex-row md:items-center gap-3 sm:gap-4 mb-4 sm:mb-5 md:mb-6" id="tour-historico-filtros">
                     <div className="flex-1" id="tour-historico-search">
                         <SearchBar
                             value={searchQuery}
@@ -161,16 +161,16 @@ export default function HistoricoPage() {
 
                 {/* Conteúdo da Tabela */}
                 {isLoading ? (
-                    <div className="py-12">
+                    <div className="py-8 sm:py-10 md:py-12">
                         <SpinnerCarregamento
                             mensagem="A carregar histórico..."
                             tamanho="medio"
                         />
                     </div>
                 ) : error ? (
-                    <div className="text-center py-12 bg-red-50 rounded-xl border border-red-100">
-                        <p className="text-red-500 mb-2">{error}</p>
-                        <Button variant="outline" onClick={() => window.location.reload()}>
+                    <div className="text-center py-8 sm:py-10 md:py-12 bg-red-50 rounded-xl border border-red-100 px-4">
+                        <p className="text-red-500 mb-2 text-xs sm:text-sm md:text-base">{error}</p>
+                        <Button variant="outline" onClick={() => window.location.reload()} className="text-xs sm:text-sm h-8 sm:h-9">
                             Tentar Novamente
                         </Button>
                     </div>
@@ -192,8 +192,8 @@ export default function HistoricoPage() {
 
                         {/* Rodapé com Total e Paginação */}
                         {data.length > 0 && (
-                            <div className="flex flex-col md:flex-row justify-between items-center mt-6 pt-4 border-t border-gray-200" id="tour-historico-paginacao">
-                                <div className="text-sm text-gray-500 mb-4 md:mb-0">
+                            <div className="flex flex-col md:flex-row justify-between items-center mt-4 sm:mt-5 md:mt-6 pt-3 sm:pt-4 border-t border-gray-200 gap-3" id="tour-historico-paginacao">
+                                <div className="text-xs sm:text-sm text-gray-500">
                                     Total de {totalItems} registro(s)
                                 </div>
 
@@ -225,9 +225,9 @@ export default function HistoricoPage() {
 
             {/* Loader flutuante para feedback (opcional, mas recomendado) */}
             {isFetchingDetails && (
-                <div className="fixed bottom-6 right-6 bg-white px-4 py-3 rounded-full shadow-xl border border-blue-100 flex items-center gap-3 z-[60] animate-in slide-in-from-bottom-2">
-                    <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
-                    <span className="text-sm font-medium text-gray-700">A carregar arquivo completo...</span>
+                <div className="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 bg-white px-3 sm:px-4 py-2 sm:py-3 rounded-full shadow-xl border border-blue-100 flex items-center gap-2 sm:gap-3 z-[60] animate-in slide-in-from-bottom-2">
+                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin text-blue-600" />
+                    <span className="text-xs sm:text-sm font-medium text-gray-700">A carregar arquivo completo...</span>
                 </div>
             )}
         </div>

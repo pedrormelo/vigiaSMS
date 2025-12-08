@@ -102,7 +102,7 @@ export default function MinhasGerenciasPage() {
       {/* Header alinhado ao dashboard de diretoria */}
       <div
         id="tour-minhas-hero"
-        className="relative p-10 text-white shadow-md"
+        className="relative p-4 sm:p-6 md:p-8 lg:p-10 text-white shadow-md"
         style={
           bannerImage
             ? {
@@ -115,23 +115,68 @@ export default function MinhasGerenciasPage() {
               }
         }
       >
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col gap-3 sm:gap-0">
           {/* Títulos */}
-          <div className="min-h-[150px]">
-            <h1 className="text-4xl font-regular">
+          <div className="flex-1 pr-20 sm:pr-0">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-regular">
               {diretoria.nome}
             </h1>
-            <p className="text-5xl mt-2 font-bold opacity-100">MINHAS GERÊNCIAS</p>
+            <p className="text-3xl sm:text-4xl md:text-5xl mt-1 sm:mt-2 font-bold opacity-100">MINHAS GERÊNCIAS</p>
           </div>
 
-          {/* Botões do canto direito */}
-          <div className="flex flex-col items-center gap-3">
+          {/* Botões - Mobile flex */}
+          <div className="flex sm:hidden flex-row justify-between items-center gap-3">
+            {/* Botão de Dashboard com Redirecionamento */}
+            <button 
+                id="tour-minhas-dashboard"
+                onClick={() => router.push(`/dashboard/${diretoria.slug || diretoria.id}`)}
+                className="flex items-center justify-center w-10 h-10 cursor-pointer rounded-[0.6rem] bg-white text-gray-600 hover:bg-white/80 transition-all duration-200 shadow-sm"
+                title="Ir para Dashboard da Diretoria"
+            >
+              <LayoutDashboard size={20} />
+            </button>
+
+            {/* Espaçador para empurrar o Info para a direita */}
+            <div className="flex-1"></div>
 
             <InfoPopover
               trigger={
                 <button
                   id="tour-minhas-sobre"
-                  className="flex items-center justify-center mb-9 w-8 h-8 cursor-pointer bg-[#ffffff] text-[#1745FF] rounded-full border-none hover:bg-white/80 transition-all duration-200 shadow-sm"
+                  className="flex items-center justify-center w-7 h-7 cursor-pointer bg-[#ffffff] text-[#1745FF] rounded-full border-none hover:bg-white/80 transition-all duration-200 shadow-sm"
+                  aria-label="Sobre esta diretoria"
+                >
+                  <Info size={16} />
+                </button>
+              }
+              heading="Sobre"
+              title={diretoria.nome}
+              description={sobreDiretoria}
+              side="left"
+              align="center"
+              sideOffset={12}
+              alignOffset={0}
+              showTail={false}
+            />
+          </div>
+
+          {/* Desktop/Tablet - Positioned Absolute */}
+          <div className="hidden sm:flex absolute bottom-6 md:bottom-8 right-6 md:right-8 gap-4">
+            {/* Botão de Dashboard com Redirecionamento */}
+            <button 
+                id="tour-minhas-dashboard"
+                onClick={() => router.push(`/dashboard/${diretoria.slug || diretoria.id}`)}
+                className="flex items-center justify-center w-11 h-11 cursor-pointer rounded-[0.6rem] bg-white text-gray-600 hover:bg-white/80 transition-all duration-200 shadow-sm"
+                title="Ir para Dashboard da Diretoria"
+            >
+              <LayoutDashboard size={24} />
+            </button>
+
+            <InfoPopover
+              trigger={
+                <button
+                  id="tour-minhas-sobre"
+                  className="flex items-center justify-center w-8 h-8 cursor-pointer bg-[#ffffff] text-[#1745FF] rounded-full border-none hover:bg-white/80 transition-all duration-200 shadow-sm"
                   aria-label="Sobre esta diretoria"
                 >
                   <Info size={20} />
@@ -146,22 +191,12 @@ export default function MinhasGerenciasPage() {
               alignOffset={0}
               showTail={false}
             />
-
-            {/* Botão de Dashboard com Redirecionamento */}
-            <button 
-                id="tour-minhas-dashboard"
-                onClick={() => router.push(`/dashboard/${diretoria.slug || diretoria.id}`)}
-                className="flex items-center justify-center w-11 h-11 cursor-pointer rounded-[0.6rem] bg-white text-gray-600 hover:bg-white/80 transition-all duration-200 shadow-sm"
-                title="Ir para Dashboard da Diretoria"
-            >
-              <LayoutDashboard size={25} />
-            </button>
           </div>
         </div>
       </div>
 
       {/* Grid de Gerências */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 p-8" id="tour-minhas-grid">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-6 p-4 sm:p-6 md:p-8" id="tour-minhas-grid">
         {gerencias.map((g) => (
           // Envolvemos o card numa div clicável para navegação
           <div 
@@ -178,7 +213,7 @@ export default function MinhasGerenciasPage() {
         ))}
 
         {gerencias.length === 0 && (
-            <div className="col-span-full text-center py-10 text-gray-400">
+            <div className="col-span-full text-center py-6 sm:py-8 md:py-10 text-gray-400 text-sm sm:text-base">
                 Nenhuma gerência encontrada.
             </div>
         )}

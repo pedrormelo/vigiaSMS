@@ -218,22 +218,22 @@ export default function ValidacaoContextos() {
               (row.status === StatusContexto.AguardandoGerente);
 
             return (
-              <div className="flex items-center gap-3 text-gray-500">
+              <div className="flex items-center gap-2 sm:gap-3 text-gray-500">
                 <button
                   onClick={() => handleViewClick(row)}
-                  className="hover:text-blue-600 transition-colors p-1"
+                  className="hover:text-blue-600 transition-colors p-1 sm:p-1.5"
                   title="Visualizar Detalhes e Histórico"
                 >
-                  <Eye size={18} />
+                  <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
 
                 {perfil === 'membro' && precisaCorrecao && (
                   <button
                     onClick={(e) => { e.stopPropagation(); handleAbrirCorrecao(row); }}
-                    className="hover:text-amber-600 text-amber-500 transition-colors p-1"
+                    className="hover:text-amber-600 text-amber-500 transition-colors p-1 sm:p-1.5"
                     title="Enviar Correção / Nova Versão"
                   >
-                    <FilePenLine size={18} />
+                    <FilePenLine className="w-4 h-4 sm:w-5 sm:h-5" />
                   </button>
                 )}
 
@@ -243,10 +243,10 @@ export default function ValidacaoContextos() {
                       e.stopPropagation();
                       handleAbrirExclusao(row);
                     }}
-                    className="hover:text-red-600 transition-colors p-1"
+                    className="hover:text-red-600 transition-colors p-1 sm:p-1.5"
                     title="Cancelar e Excluir Solicitação"
                   >
-                    <Trash size={18} />
+                    <Trash className="w-4 h-4 sm:w-5 sm:h-5" />
                   </button>
                 )}
               </div>
@@ -261,19 +261,19 @@ export default function ValidacaoContextos() {
   const pageTitle = perfil === "membro" ? "Requisição de Contextos" : "Validar Contextos";
 
   return (
-    <div className="p-8 bg-white h-screen overflow-auto">
-      <h1 className="text-3xl font-bold text-[#1745FF] mb-8">{pageTitle}</h1>
+    <div className="p-4 sm:p-6 md:p-8 bg-white h-screen overflow-auto">
+      <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#1745FF] mb-4 sm:mb-6 md:mb-8">{pageTitle}</h1>
 
-      <div className="bg-gray-100/25 rounded-[2rem] p-6 shadow-sm">
-        <h1 className="text-2xl font-regular text-[#1745FF] mb-4">Solicitações em Aberto</h1>
+      <div className="bg-gray-100/25 rounded-2xl sm:rounded-3xl md:rounded-[2rem] p-4 sm:p-5 md:p-6 shadow-sm">
+        <h1 className="text-lg sm:text-xl md:text-2xl font-regular text-[#1745FF] mb-3 sm:mb-4">Solicitações em Aberto</h1>
 
         {error ? (
-          <div className="p-4 text-red-500 bg-red-50 rounded-lg border border-red-100 text-center">
+          <div className="p-3 sm:p-4 text-xs sm:text-sm md:text-base text-red-500 bg-red-50 rounded-lg border border-red-100 text-center">
             {error}
-            <Button onClick={carregarContextos} variant="outline" className="mt-2 ml-2 h-8">Tentar Novamente</Button>
+            <Button onClick={carregarContextos} variant="outline" className="mt-2 ml-2 h-7 sm:h-8 text-xs sm:text-sm">Tentar Novamente</Button>
           </div>
         ) : isLoading ? (
-          <div className="py-12">
+          <div className="py-8 sm:py-10 md:py-12">
             <SpinnerCarregamento
               mensagem="Carregando solicitações..."
               tamanho="medio"
@@ -288,11 +288,11 @@ export default function ValidacaoContextos() {
           />
         )}
 
-        <div className="flex justify-end mt-6">
+        <div className="flex justify-end mt-4 sm:mt-5 md:mt-6">
           <Link href="/validar/historico">
-            <Button className="bg-white border border-gray-300 rounded-full shadow-sm">
+            <Button className="bg-white border border-gray-300 rounded-full shadow-sm text-xs sm:text-sm h-8 sm:h-9 md:h-10 px-3 sm:px-4">
               Histórico
-              <RefreshCw className="ml-2 h-4 w-4" />
+              <RefreshCw className="ml-1.5 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
           </Link>
         </div>

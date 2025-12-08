@@ -93,13 +93,13 @@ export function DashboardPreview({
     const getLayoutClasses = () => {
         switch (layout) {
             case "asymmetric":
-                return "grid grid-cols-2 grid-rows-2 gap-4 h-[32rem]"
+                return "grid grid-cols-1 md:grid-cols-2 md:grid-rows-2 gap-2 md:gap-4 h-auto md:h-[32rem]"
             case "grid":
-                return "grid grid-cols-2 grid-rows-2 gap-4 h-[32rem]"
+                return "grid grid-cols-1 md:grid-cols-2 md:grid-rows-2 gap-2 md:gap-4 h-auto md:h-[32rem]"
             case "sideBySide":
-                return "grid grid-cols-2 gap-4 h-[32rem]"
+                return "grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4 h-auto md:h-[32rem]"
             default:
-                return "grid grid-cols-2 grid-rows-2 gap-4 h-[32rem]"
+                return "grid grid-cols-1 md:grid-cols-2 md:grid-rows-2 gap-2 md:gap-4 h-auto md:h-[32rem]"
         }
     }
 
@@ -135,7 +135,7 @@ export function DashboardPreview({
     }
 
     return (
-        <div className="bg-gray-50 rounded-2xl p-6 border-2 border-dashed border-gray-200">
+        <div className="bg-gray-50 rounded-xl md:rounded-2xl p-3 md:p-6 border-2 border-dashed border-gray-200">
             <div className={getLayoutClasses()}>
                 {displayGraphs.map((graph, index) => {
                     return (
