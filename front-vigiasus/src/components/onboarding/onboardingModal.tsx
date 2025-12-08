@@ -3,18 +3,17 @@
 
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { useTour } from "@/contexts/tourContext";
 import type { TourStep } from "@/contexts/tourContext";
 import {
   ChevronRight,
+  ChevronLeft,
   Check,
   LayoutDashboard,
   FileText,
   ShieldCheck,
   BarChart3,
-  ArrowRight,
-  X
+  ArrowLeft
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -217,7 +216,7 @@ const handleFinish = () => {
                 className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
                 title="Pular tutorial"
              >
-                <X size={20} />
+                <ArrowLeft size={20} strokeWidth={2.5} />
              </button>
           </div>
 
@@ -272,29 +271,37 @@ const handleFinish = () => {
 
             <div className="flex gap-3">
                {currentStep > 0 && (
-                   <Button 
-                     variant="ghost" 
+                   <button 
                      onClick={handlePrev}
-                     className="text-slate-500 hover:text-slate-800"
+                     className="flex items-center justify-center gap-2 px-6 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 transition-all duration-200 font-medium"
+                     title="Voltar"
                    >
-                     Voltar
-                   </Button>
+                     <ChevronLeft size={18} strokeWidth={2.5} />
+                     <span>Voltar</span>
+                   </button>
                )}
                
-               <Button 
+               <button 
                  onClick={handleNext}
                  className={cn(
-                    "rounded-xl px-6 shadow-lg hover:scale-105 transition-all duration-200",
-                    steps[currentStep].color.replace('text-', 'bg-'), // Usa a cor do passo para o botão
-                    "hover:opacity-90 text-white"
+                    "flex items-center justify-center gap-2 px-6 h-10 rounded-full shadow-lg hover:shadow-xl transition-all duration-200",
+                    "font-medium text-white",
+                    steps[currentStep].color.replace('text-', 'bg-'),
+                    "hover:opacity-90"
                  )}
                >
                  {currentStep === steps.length - 1 ? (
-                    <span className="flex items-center gap-2">Começar <Check size={18} /></span>
+                    <>
+                      <span>Começar</span>
+                      <Check size={18} strokeWidth={2.5} />
+                    </>
                  ) : (
-                    <span className="flex items-center gap-2">Próximo <ArrowRight size={18} /></span>
+                    <>
+                      <span>Próximo</span>
+                      <ChevronRight size={18} strokeWidth={2.5} />
+                    </>
                  )}
-               </Button>
+               </button>
             </div>
           </div>
         </div>

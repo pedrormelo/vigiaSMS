@@ -145,8 +145,8 @@ export default function HistoricoPage() {
             <div className="bg-gray-100/25 rounded-[2rem] p-6 shadow-sm">
 
                 {/* Barra de Filtros */}
-                <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
-                    <div className="flex-1">
+                <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6" id="tour-historico-filtros">
+                    <div className="flex-1" id="tour-historico-search">
                         <SearchBar
                             value={searchQuery}
                             onChange={setSearchQuery}
@@ -154,7 +154,7 @@ export default function HistoricoPage() {
                             className="w-full"
                         />
                     </div>
-                    <div className="w-full md:w-auto">
+                    <div className="w-full md:w-auto" id="tour-historico-daterange">
                         <DateInputFilter onDateChange={setDateRange} />
                     </div>
                 </div>
@@ -177,20 +177,22 @@ export default function HistoricoPage() {
                 ) : (
                     <>
                         {/* Tabela com Estado Vazio Customizado */}
-                        <ContextoTable
-                            data={data}
-                            columns={getColumns()}
-                            onRowClick={handleRowClick} // Usa o novo handler
-                            emptyState={{
-                                title: "Nenhum registro encontrado",
-                                description: "Tente ajustar os filtros de busca ou data.",
-                                icon: SearchX
-                            }}
-                        />
+                        <div id="tour-historico-table">
+                            <ContextoTable
+                                data={data}
+                                columns={getColumns()}
+                                onRowClick={handleRowClick} // Usa o novo handler
+                                emptyState={{
+                                    title: "Nenhum registro encontrado",
+                                    description: "Tente ajustar os filtros de busca ou data.",
+                                    icon: SearchX
+                                }}
+                            />
+                        </div>
 
                         {/* Rodapé com Total e Paginação */}
                         {data.length > 0 && (
-                            <div className="flex flex-col md:flex-row justify-between items-center mt-6 pt-4 border-t border-gray-200">
+                            <div className="flex flex-col md:flex-row justify-between items-center mt-6 pt-4 border-t border-gray-200" id="tour-historico-paginacao">
                                 <div className="text-sm text-gray-500 mb-4 md:mb-0">
                                     Total de {totalItems} registro(s)
                                 </div>

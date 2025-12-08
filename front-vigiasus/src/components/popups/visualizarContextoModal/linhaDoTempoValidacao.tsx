@@ -114,6 +114,14 @@ const CardEvento = ({
 
 // --- COMPONENTE PRINCIPAL ---
 
+// Remove prefixos de cargo (Membro, Gerente, Diretor, etc.) e deixa só o nome
+const limparCargoDoNome = (nome: string) => {
+    if (!nome) return "";
+    const regexCargo = /^(membro|gerente|diretor|admin|coordenador|coord\.?|tecnico|técnico)\s+/i;
+    const semCargo = nome.trim().replace(regexCargo, "").trim();
+    return semCargo || nome.trim();
+};
+
 const LinhaDoTempoValidacao = ({ historico, status, canViewFullHistory, versionLabel }: LinhaDoTempoValidacaoProps) => {
     const statusAtual = String(status || "").trim();
 
@@ -188,11 +196,13 @@ const LinhaDoTempoValidacao = ({ historico, status, canViewFullHistory, versionL
 
         const eventosDaEtapa = sorted.filter(h => {
             const s = String(h.statusNovo).toUpperCase();
-            if (etapaIndex === 0) return s.includes('GERENTE') || s.includes('CRIADO'); // Submissão
-            // ✅ IMPORTANTE: Etapa "Análise Gerente" (1) deve mostrar quando foi SUBMETIDO À GERÊNCIA
-            if (etapaIndex === 1) return s.includes('AGUARDANDO_GERENTE') || s.includes('GERENTE');
-            if (etapaIndex === 2) return s.includes('AGUARDANDO_DIRETOR') || s.includes('DIRETOR') || (s.includes('CORRE') && indiceEtapaDevolvida === 2);
-            // Etapa final: apenas PUBLICADO ou DEFERIDO (INDEFERIDO não é considerado conclusão com sucesso)
+            // Submissão: criação ou envio para gerente (não mistura com aprovações do gerente)
+            if (etapaIndex === 0) return s.includes('CRIADO') || s.includes('SUBMET') || s.includes('AGUARDANDO_GERENTE');
+            // Análise Gerente: momento em que o gerente encaminha ao diretor
+            if (etapaIndex === 1) return s.includes('AGUARDANDO_DIRETOR');
+            // Análise Diretor: preferir decisão final (publicado/deferido/indeferido); se ainda pendente no diretor, usa o envio; devolução do diretor mantém linha
+            if (etapaIndex === 2) return s.includes('PUBLICADO') || s.includes('DEFERIDO') || s.includes('INDEFERIDO') || s.includes('AGUARDANDO_DIRETOR') || (s.includes('CORRE') && indiceEtapaDevolvida === 2);
+            // Finalizado: publicado ou deferido (sucesso); indeferido é tratado visualmente antes
             if (etapaIndex === 3) return s.includes('PUBLICADO') || s.includes('DEFERIDO');
             return false;
         });
@@ -218,7 +228,7 @@ const LinhaDoTempoValidacao = ({ historico, status, canViewFullHistory, versionL
                 
                 return {
                     id: h.id,
-                    author: h.autorNome || "Gestor",
+                    author: limparCargoDoNome(h.autorNome || "Gestor"),
                     text: h.justificativa || "",
                     dateFormatted: `${eventDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} • ${eventDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`,
                     type: type
@@ -281,8 +291,9 @@ const LinhaDoTempoValidacao = ({ historico, status, canViewFullHistory, versionL
 
                         const formatarNome = (n: string) => {
                             if (!n) return "";
-                            const p = n.split(' ');
-                            return p.length > 1 ? `${p[0]} ${p[p.length-1][0]}.` : p[0];
+                            const limpo = limparCargoDoNome(n);
+                            const p = limpo.split(' ').filter(Boolean);
+                            return p.length > 1 ? `${p[0]} ${p[p.length - 1]}` : p[0];
                         };
 
                         return (

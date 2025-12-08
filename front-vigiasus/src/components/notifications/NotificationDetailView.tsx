@@ -13,6 +13,7 @@ import { showSuccessToast, showErrorToast } from "@/components/ui/Toasts";
 import * as notifService from "@/services/notificationsService"; 
 import type { Participante } from "@/services/notificationsService"; 
 import { authService } from "@/services/authService";
+import { getContextoById } from "@/services/contextoService";
 
 interface Props { notification: Notification | null; isRead: boolean; onOpenContexto: (n: Notification) => void; }
 
@@ -41,6 +42,32 @@ const ChatNotificationDetails: React.FC<Props> = ({ notification, onOpenContexto
   const [chatBg, setChatBg] = useState<string>(() => { try { const e = localStorage.getItem('notifications.chatBg'); return e || 'gradient'; } catch { return 'gradient'; } });
   
   const [canValidate, setCanValidate] = useState(false);
+  const [latestStatus, setLatestStatus] = useState<string | undefined>(notification?.contextStatus);
+
+  // Atualiza o status em tempo real consultando o contexto na API (garante que o botão verde suma após validação)
+  useEffect(() => {
+    let active = true;
+    async function fetchLatestStatus() {
+      if (!notification?.contextoId) return;
+      try {
+        const ctx = await getContextoById(notification.contextoId);
+        if (active && ctx?.status) {
+          // status vem já normalizado (StatusContexto), convertemos para enum backend string aproximada
+          const s = String(ctx.status).toUpperCase();
+          if (s.includes('DIRETOR')) setLatestStatus('AGUARDANDO_DIRETOR');
+          else if (s.includes('GERENTE')) setLatestStatus('AGUARDANDO_GERENTE');
+          else if (s.includes('CORRE')) setLatestStatus('AGUARDANDO_CORRECAO');
+          else if (s.includes('PUBLIC')) setLatestStatus('PUBLICADO');
+          else if (s.includes('INDEF')) setLatestStatus('INDEFERIDO');
+          else setLatestStatus(ctx.status as any);
+        }
+      } catch (err) {
+        console.error('Falha ao obter status do contexto da notificação', err);
+      }
+    }
+    fetchLatestStatus();
+    return () => { active = false; };
+  }, [notification?.contextoId]);
 
   useEffect(() => {
     let active = true;
@@ -53,7 +80,7 @@ const ChatNotificationDetails: React.FC<Props> = ({ notification, onOpenContexto
            ]);
 
            const user = authService.getUser();
-           const status = notification.contextStatus || '';
+           const status = latestStatus || notification.contextStatus || '';
            const gId = notification.contextGerenciaId;
            const dId = notification.contextDiretoriaId;
           
@@ -79,7 +106,7 @@ const ChatNotificationDetails: React.FC<Props> = ({ notification, onOpenContexto
     }
     loadData();
     return () => { active = false; };
-  }, [notification]);
+  }, [notification, latestStatus]);
 
   useEffect(() => { const l = (e: StorageEvent) => { if (e.key === 'notifications.chatBg' && e.newValue) setChatBg(e.newValue); }; window.addEventListener('storage', l); return () => window.removeEventListener('storage', l); }, []);
   
@@ -92,7 +119,7 @@ const ChatNotificationDetails: React.FC<Props> = ({ notification, onOpenContexto
   const iconType = (relatedFileType || type) as FileType;
   const canView = !!contextoId;
   const quickReplies = ["Ciente.", "Obrigado(a).", "Recebido.", "Entendido."];
-  const statusBadge = getStatusBadge(description || title, contextStatus);
+  const statusBadge = getStatusBadge(description || title, latestStatus || contextStatus);
 
   const handleOpenClick = () => {
       // Passa a flag isValidationAction para o Modal saber que é uma validação

@@ -154,4 +154,68 @@ export const APP_TOURS: TourConfig[] = [
       },
     ],
   },
+
+  // --- 7. Histórico de Contextos ---
+  {
+    key: "tour-historico",
+    routeMatch: (path) => path === "/validar/historico",
+    steps: [
+      {
+        targetId: "tour-historico-search",
+        title: "Busque rápido",
+        description: "Filtre por título, autor ou ID para achar qualquer contexto histórico.",
+        position: "bottom",
+      },
+      {
+        targetId: "tour-historico-daterange",
+        title: "Filtro por data",
+        description: "Limite o período para enxergar apenas os registros relevantes.",
+        position: "left",
+      },
+      {
+        targetId: "tour-historico-table",
+        title: "Registros e versões",
+        description: "Clique em uma linha para abrir os detalhes completos daquele contexto.",
+        position: "top",
+      },
+      {
+        targetId: "tour-historico-paginacao",
+        title: "Totais e navegação",
+        description: "Veja quantos registros existem e avance pelas páginas do histórico.",
+        position: "top",
+      },
+    ],
+  },
+
+  // --- 8. Minhas Gerências ---
+  {
+    key: "tour-minhas-gerencias",
+    routeMatch: (path) => /^\/minhas-gerencias\/[^/]+$/.test(path),
+    steps: [
+      {
+        targetId: "tour-minhas-hero",
+        title: "Diretoria e acesso",
+        description: "Veja a diretoria selecionada e o atalho para abrir seu dashboard completo.",
+        position: "bottom",
+      },
+      {
+        targetId: "tour-minhas-sobre",
+        title: "Sobre a diretoria",
+        description: "Clique aqui para ler o resumo desta diretoria e entender seu contexto.",
+        position: "left",
+      },
+      {
+        targetId: "tour-minhas-dashboard",
+        title: "Ir para o dashboard",
+        description: "Abra o painel completo da diretoria para ver gráficos e indicadores.",
+        position: "left",
+      },
+      {
+        targetId: "tour-minhas-grid",
+        title: "Gerências disponíveis",
+        description: "Escolha uma gerência para entrar no detalhe ou validar conteúdos específicos.",
+        position: "top",
+      },
+    ],
+  },
 ];

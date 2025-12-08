@@ -101,6 +101,7 @@ export default function MinhasGerenciasPage() {
     <div className="bg-gray-50 min-h-screen">
       {/* Header alinhado ao dashboard de diretoria */}
       <div
+        id="tour-minhas-hero"
         className="relative p-10 text-white shadow-md"
         style={
           bannerImage
@@ -129,6 +130,7 @@ export default function MinhasGerenciasPage() {
             <InfoPopover
               trigger={
                 <button
+                  id="tour-minhas-sobre"
                   className="flex items-center justify-center mb-9 w-8 h-8 cursor-pointer bg-[#ffffff] text-[#1745FF] rounded-full border-none hover:bg-white/80 transition-all duration-200 shadow-sm"
                   aria-label="Sobre esta diretoria"
                 >
@@ -147,6 +149,7 @@ export default function MinhasGerenciasPage() {
 
             {/* Botão de Dashboard com Redirecionamento */}
             <button 
+                id="tour-minhas-dashboard"
                 onClick={() => router.push(`/dashboard/${diretoria.slug || diretoria.id}`)}
                 className="flex items-center justify-center w-11 h-11 cursor-pointer rounded-[0.6rem] bg-white text-gray-600 hover:bg-white/80 transition-all duration-200 shadow-sm"
                 title="Ir para Dashboard da Diretoria"
@@ -158,7 +161,7 @@ export default function MinhasGerenciasPage() {
       </div>
 
       {/* Grid de Gerências */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 p-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 p-8" id="tour-minhas-grid">
         {gerencias.map((g) => (
           // Envolvemos o card numa div clicável para navegação
           <div 
