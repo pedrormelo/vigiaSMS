@@ -263,32 +263,48 @@ exports.toggleVisibilityContexto = async (req, res) => {
 
 exports.toggleVisibilityVersao = async (req, res) => {
     const { contextoId, versaoId } = req.params;
-    const idVersao = versaoId; // Mantenha como string, Prisma lida com o UUID
+
+    console.log(`🔄 [toggleVisibilityVersao] Iniciando toggle para versao=${versaoId}, contexto=${contextoId}`);
 
     try {
-        const versao = await prisma.contextoversao.findFirst({
-            where: { 
-                id: idVersao,
-                contextoId: contextoId 
-            },
-            select: { isOculta: true } // CORRIGIDO: de 'estaOculta' para 'isOculta'
+        // Usar findUnique diretamente com o ID (mais performático e confiável)
+        const versao = await prisma.contextoversao.findUnique({
+            where: { id: versaoId },
+            select: { id: true, contextoId: true, isOculta: true }
         });
 
         if (!versao) {
+            console.log(`❌ Versão não encontrada: ${versaoId}`);
             return res.status(404).json({ message: 'Versão do contexto não encontrada.' });
         }
 
-        const novoEstado = !versao.isOculta; // CORRIGIDO: de 'estaOculta' para 'isOculta'
+        // Validar que a versão pertence ao contexto correto
+        if (versao.contextoId !== contextoId) {
+            console.log(`❌ Versão ${versaoId} não pertence ao contexto ${contextoId}`);
+            return res.status(403).json({ message: 'Acesso negado. Versão não pertence a este contexto.' });
+        }
 
-        await prisma.contextoversao.update({
-            where: { id: idVersao },
-            data: { isOculta: novoEstado, updatedAt: new Date() } // CORRIGIDO: de 'estaOculta' para 'isOculta'
+        console.log(`📌 Estado ANTES: isOculta=${versao.isOculta}`);
+        const novoEstado = !versao.isOculta;
+
+        const versaoAtualizada = await prisma.contextoversao.update({
+            where: { id: versaoId },
+            data: { isOculta: novoEstado, updatedAt: new Date() }
         });
 
-        return res.status(204).send();
+        console.log(`✅ Estado DEPOIS: isOculta=${versaoAtualizada.isOculta}`);
+
+        return res.status(200).json({ 
+            success: true,
+            versao: {
+                id: versaoAtualizada.id,
+                isOculta: versaoAtualizada.isOculta,
+                estaOculta: versaoAtualizada.isOculta
+            }
+        });
 
     } catch (error) {
-        console.error("Erro ao alternar visibilidade da versão:", error);
+        console.error("❌ Erro ao alternar visibilidade da versão:", error);
         return res.status(500).json({ message: 'Erro interno ao processar visibilidade da versão.' });
     }
 };
@@ -1086,6 +1102,8 @@ exports.solicitarCorrecao = async (req, res) => {
 // GET /contextos/detalhes/:contextoId
 exports.getDetalhes = async (req, res) => {
     const { contextoId } = req.params;
+    const user = req.user; // Usuário autenticado
+    
     try {
         // 1. Buscar Contexto com dados da Gerência e Diretoria (SLUGS)
         const contexto = await prisma.contexto.findUnique({ 
@@ -1095,6 +1113,7 @@ exports.getDetalhes = async (req, res) => {
                     select: {
                         slug: true,
                         nome: true,
+                        id: true,
                         diretoria: {
                             select: {
                                 slug: true,
@@ -1112,7 +1131,7 @@ exports.getDetalhes = async (req, res) => {
         }
 
         // Buscar Todas as Versões com dados do Autor E histórico de validação
-        const versoes = await prisma.contextoversao.findMany({
+        let versoes = await prisma.contextoversao.findMany({
             where: { contextoId },
             include: {
                 versaoarquivo: true,
@@ -1131,6 +1150,21 @@ exports.getDetalhes = async (req, res) => {
             },
             orderBy: [{ versaoNumero: 'desc' }],
         });
+
+        // 🔒 CRITICAL FIX: Filtrar versões ocultas para não-editores
+        // Apenas mostrar versões ocultas se:
+        // 1. O usuário é MEMBRO e é o gerente da gerência dona do contexto
+        // 2. O usuário é DIRETOR
+        // 3. O usuário é SECRETARIA
+        const podeVerOcultas = user && (
+            user.role === 'MEMBRO' && user.gerenciaId === contexto.gerenciaDonaId ||
+            user.role === 'DIRETOR' ||
+            user.role === 'SECRETARIA'
+        );
+
+        if (!podeVerOcultas && user) {
+            versoes = versoes.filter(v => !v.isOculta);
+        }
 
         // Mapear histórico geral (se necessário para compatibilidade)
         const ids = versoes.map(v => v.id);
@@ -1154,7 +1188,8 @@ exports.getDetalhes = async (req, res) => {
         console.log(`📌 [Backend] getDetalhes response - Versões:`, versoes.map(v => ({
             versaoNumero: v.versaoNumero,
             statusValidacao: v.statusValidacao,
-            id: v.id
+            id: v.id,
+            isOculta: v.isOculta
         })));
 
         if (typeof mapContextoDetalhe === 'function') {

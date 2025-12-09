@@ -1,86 +1,23 @@
 // src/components/tour/AppTour.tsx
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useTour } from "@/contexts/tourContext";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, X } from "lucide-react";
 
 // ====== CONSTANTES ======
-const SCROLL_LOCK_CLASS = "tour-scroll-locked";
 const MAX_ELEMENT_SEARCH_ATTEMPTS = 12;
 const ELEMENT_SEARCH_RETRY_DELAY_MS = 150;
 const INITIAL_POSITION_UPDATE_DELAY_MS = 120;
 const POPOVER_PADDING_PX = 10;
-const ESTIMATED_POPOVER_HEIGHT_PX = 200; // Reduzido para mobile
-const VIEWPORT_EDGE_MARGIN_PX = 16;
-
-// ====== HELPERS ======
-/**
- * Previne o comportamento padrão de scroll
- */
-const preventScroll = (e: Event) => {
-  e.preventDefault();
-};
-
-/**
- * Aplica bloqueio de scroll ao documento
- */
-const lockScroll = () => {
-  if (typeof document === "undefined") return;
-  document.body.classList.add(SCROLL_LOCK_CLASS);
-  document.body.style.overflow = "hidden";
-  document.documentElement.style.overflow = "hidden";
-  
-  // Bloqueia scroll via wheel e touchmove
-  document.addEventListener("wheel", preventScroll, { passive: false });
-  document.addEventListener("touchmove", preventScroll, { passive: false });
-};
-
-/**
- * Remove bloqueio de scroll ao documento
- */
-const unlockScroll = () => {
-  if (typeof document === "undefined") return;
-  document.body.classList.remove(SCROLL_LOCK_CLASS);
-  document.body.style.overflow = "";
-  document.documentElement.style.overflow = "";
-  
-  // Remove listeners de prevenção de scroll
-  document.removeEventListener("wheel", preventScroll);
-  document.removeEventListener("touchmove", preventScroll);
-};
+const ESTIMATED_POPOVER_HEIGHT_PX = 240;
+const VIEWPORT_EDGE_MARGIN_PX = 20;
+const SCROLL_REVEAL_MARGIN_PX = 40;
 
 export default function AppTour() {
   const { isTourOpen, activeStepData, nextStep, stopTour, currentStep, totalSteps } = useTour();
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
-  const scrollLockRef = useRef(false);
-
-  // ====== GERENCIAMENTO DE LOCK DE SCROLL ======
-  /**
-   * Efeito para controlar bloqueio/desbloqueio de scroll
-   */
-  useEffect(() => {
-    if (isTourOpen) {
-      if (!scrollLockRef.current) {
-        lockScroll();
-        scrollLockRef.current = true;
-      }
-    } else {
-      if (scrollLockRef.current) {
-        unlockScroll();
-        scrollLockRef.current = false;
-      }
-    }
-
-    // Cleanup: garante que o scroll é liberado se o componente desmontar
-    return () => {
-      if (scrollLockRef.current) {
-        unlockScroll();
-        scrollLockRef.current = false;
-      }
-    };
-  }, [isTourOpen]);
 
   // ====== ATUALIZAÇÃO DE POSIÇÃO DO ELEMENTO DESTAQUE ======
   /**
@@ -113,39 +50,52 @@ export default function AppTour() {
           return;
         }
 
-        // Scroll suave mas com fallback para auto em mobile
         const isMobile = window.innerWidth < 640;
-        element.scrollIntoView({ 
-          behavior: isMobile ? "auto" : "smooth", 
-          block: "nearest", 
-          inline: "nearest" 
-        });
+        const scrollBehavior: ScrollBehavior = isMobile ? "auto" : "smooth";
 
         const rect = element.getBoundingClientRect();
         const hasSize = rect.width > 1 && rect.height > 1;
         const isOffscreen = rect.right < 0 || rect.left > window.innerWidth || rect.bottom < 0 || rect.top > window.innerHeight;
 
         if (!hasSize || isOffscreen) {
-        if (attempts >= MAX_ELEMENT_SEARCH_ATTEMPTS) {
-          nextStep();
+          if (attempts >= MAX_ELEMENT_SEARCH_ATTEMPTS) {
+            nextStep();
+            return;
+          }
+          attempts += 1;
+          retryTimeoutId = window.setTimeout(() => {
+            rafId = window.requestAnimationFrame(updatePosition);
+          }, ELEMENT_SEARCH_RETRY_DELAY_MS);
           return;
         }
-        attempts += 1;
-        retryTimeoutId = window.setTimeout(() => {
-          rafId = window.requestAnimationFrame(updatePosition);
-        }, ELEMENT_SEARCH_RETRY_DELAY_MS);
-        return;
-      }
-      const fullyVisible = rect.top >= 0 && rect.bottom <= window.innerHeight;
 
-      if (!fullyVisible) {
-        element.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
-        rafId = window.requestAnimationFrame(() => {
-          setTargetRect(element.getBoundingClientRect());
-        });
-      } else {
-        setTargetRect(rect);
-      }
+        // Em mobile, usa margens menores para melhor visualização na tela pequena
+        const topMargin = isMobile ? 40 : 80;
+        const bottomMargin = isMobile ? 120 : ESTIMATED_POPOVER_HEIGHT_PX + 100;
+        const fullyVisible = rect.top >= topMargin && rect.bottom <= window.innerHeight - bottomMargin;
+
+        if (!fullyVisible) {
+          // Scroll mais agressivo em mobile para centralizar bem
+          const elementCenter = rect.top + window.scrollY + rect.height / 2;
+          const mobileScrollMargin = isMobile ? 30 : SCROLL_REVEAL_MARGIN_PX;
+          const desiredScrollY = Math.max(
+            elementCenter - (window.innerHeight / 2) - mobileScrollMargin,
+            0
+          );
+
+          window.scrollTo({ top: desiredScrollY, behavior: scrollBehavior });
+
+          // Aguarda o scroll completar antes de atualizar o rect
+          const scrollDelay = isMobile ? 100 : 400;
+          setTimeout(() => {
+            rafId = window.requestAnimationFrame(() => {
+              const newRect = element.getBoundingClientRect();
+              setTargetRect(newRect);
+            });
+          }, scrollDelay);
+        } else {
+          setTargetRect(rect);
+        }
       } catch (error) {
         console.error("Erro ao atualizar posição do tour:", error);
         nextStep();
@@ -179,27 +129,29 @@ export default function AppTour() {
   // ====== CÁLCULO DE POSICIONAMENTO DO POPOVER ======
   /**
    * Calcula a melhor posição para o popover baseado no espaço disponível
+   * Prioriza posicionamento que maximize visibilidade
    */
   try {
     const popoverStyle: React.CSSProperties = {};
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
     const isMobile = viewportWidth < 640; // Breakpoint sm
-    const popoverWidth = isMobile ? viewportWidth * 0.85 : 320; // 85% em mobile, 320px em desktop
+    const popoverWidth = isMobile ? Math.min(viewportWidth * 0.92, 360) : 380; // Mais agressivo em mobile
 
     const clampHorizontal = (left: number) => {
-      const minLeft = VIEWPORT_EDGE_MARGIN_PX;
-      const maxLeft = viewportWidth - VIEWPORT_EDGE_MARGIN_PX - popoverWidth;
+      const minLeft = isMobile ? 8 : VIEWPORT_EDGE_MARGIN_PX;
+      const maxLeft = viewportWidth - (isMobile ? 8 : VIEWPORT_EDGE_MARGIN_PX) - popoverWidth;
       if (left < minLeft) return minLeft;
       if (left > maxLeft) return maxLeft;
       return left;
     };
 
-    // Calcula o centro horizontal para melhor posicionamento em mobile
+    // Centraliza horizontalmente em mobile com margem mínima
     const centerPopover = () => {
       return (viewportWidth - popoverWidth) / 2;
     };
 
+    // Estratégia de posicionamento com prioridade em visibilidade
     if (activeStepData.position === "right") {
       const desiredTop = Math.max(targetRect.top, VIEWPORT_EDGE_MARGIN_PX);
       popoverStyle.top = Math.min(desiredTop, viewportHeight - ESTIMATED_POPOVER_HEIGHT_PX - VIEWPORT_EDGE_MARGIN_PX);
@@ -215,12 +167,14 @@ export default function AppTour() {
       }
       popoverStyle.left = isMobile ? centerPopover() : clampHorizontal(targetRect.left);
     } else {
-      // Padrão ou "bottom" - prioritário em mobile
-      let desiredTop = targetRect.bottom + POPOVER_PADDING_PX + 20; // Aumenta margin em mobile
+      // Padrão ou "bottom" - estratégia principal
+      let desiredTop = isMobile 
+        ? targetRect.bottom + POPOVER_PADDING_PX + 16  // Menos margin em mobile para economizar espaço
+        : targetRect.bottom + POPOVER_PADDING_PX + 20;
       
-      // Se não houver espaço embaixo, tenta acima
-      if (desiredTop + ESTIMATED_POPOVER_HEIGHT_PX > viewportHeight - VIEWPORT_EDGE_MARGIN_PX) {
-        const fallbackTop = targetRect.top - (ESTIMATED_POPOVER_HEIGHT_PX + POPOVER_PADDING_PX + 20);
+      // Se não houver espaço embaixo, tenta acima (mais agressivo em mobile)
+      if (desiredTop + ESTIMATED_POPOVER_HEIGHT_PX > viewportHeight - (isMobile ? 10 : VIEWPORT_EDGE_MARGIN_PX)) {
+        const fallbackTop = targetRect.top - (ESTIMATED_POPOVER_HEIGHT_PX + POPOVER_PADDING_PX + 16);
         desiredTop = Math.max(fallbackTop, VIEWPORT_EDGE_MARGIN_PX);
       }
       
@@ -244,36 +198,36 @@ export default function AppTour() {
 
       {/* O Balão de Texto (Tooltip) - Responsivo */}
       <div
-        className="absolute pointer-events-auto bg-white p-3 sm:p-4 md:p-5 rounded-xl sm:rounded-2xl shadow-lg sm:shadow-2xl animate-in fade-in zoom-in-95 duration-300 w-10/12 max-w-xs sm:max-w-sm md:max-w-md"
+        className="absolute pointer-events-auto bg-white p-4 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl md:rounded-3xl shadow-xl sm:shadow-2xl md:shadow-[0_20px_40px_rgba(0,0,0,0.15)] animate-in fade-in zoom-in-95 duration-300 w-11/12 sm:w-10/12 max-w-xs sm:max-w-sm md:max-w-md border border-gray-100"
         style={popoverStyle}
         role="dialog"
         aria-label="Dica do tour"
       >
-        <div className="flex justify-between items-start mb-2">
-            <span className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-1.5 sm:px-2 py-0.5 rounded-full">
+        <div className="flex justify-between items-start mb-3 sm:mb-4">
+            <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full flex-shrink-0">
                 Dica {currentStep + 1} de {totalSteps}
             </span>
             <button
               onClick={stopTour}
-              className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0 ml-2"
+              className="text-gray-300 hover:text-gray-600 transition-colors flex-shrink-0 ml-2 p-1 hover:bg-gray-50 rounded-lg"
               aria-label="Fechar tour"
             >
-                <X size={14} className="sm:w-4 sm:h-4 md:w-5 md:h-5" />
+                <X size={16} className="sm:w-5 sm:h-5 md:w-6 md:h-6" />
             </button>
         </div>
 
-        <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-2">{activeStepData.title}</h3>
-        <p className="text-xs sm:text-sm text-gray-600 leading-relaxed mb-3 sm:mb-4">{activeStepData.description}</p>
+        <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-2 sm:mb-3 leading-tight">{activeStepData.title}</h3>
+        <p className="text-xs sm:text-sm md:text-base text-gray-600 leading-relaxed mb-4 sm:mb-5">{activeStepData.description}</p>
 
         <div className="flex justify-end">
             <Button 
                 onClick={nextStep} 
                 size="sm" 
-                className="rounded-lg sm:rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-colors text-xs sm:text-sm"
+                className="rounded-lg sm:rounded-xl md:rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md hover:shadow-lg transition-all text-xs sm:text-sm md:text-base font-semibold px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 md:py-2.5"
                 aria-label={currentStep === totalSteps - 1 ? "Concluir tour" : "Próxima dica"}
             >
                 {currentStep === totalSteps - 1 ? "Concluir" : "Próximo"} 
-                <ChevronRight size={14} className="sm:w-4 sm:h-4 md:w-5 md:h-5 ml-1" />
+                <ChevronRight size={14} className="sm:w-4 sm:h-4 md:w-5 md:h-5 ml-1.5 sm:ml-2" />
             </Button>
         </div>
       </div>

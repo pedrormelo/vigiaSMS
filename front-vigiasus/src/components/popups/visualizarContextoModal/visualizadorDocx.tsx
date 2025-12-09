@@ -63,27 +63,27 @@ export const VisualizadorDocx: React.FC<VisualizadorDocxProps> = ({ url, emTelaC
     }, [url]);
 
     return (
-        <div className="w-full h-full bg-gray-50 rounded-2xl flex flex-col relative group border border-gray-200 overflow-hidden">
+        <div className="w-full h-full bg-gray-50 rounded-lg sm:rounded-2xl flex flex-col relative group border border-gray-200 overflow-hidden">
             <EstilosDocx />
             
-            <div className="flex-1 overflow-auto scrollbar-custom p-4 flex justify-center">
+            <div className="flex-1 overflow-auto scrollbar-custom p-1.5 sm:p-2 md:p-4 flex justify-center">
                 {loading && (
-                    <div className="flex flex-col items-center justify-center h-full text-gray-500 gap-2">
-                        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-                        <span className="text-sm">Processando documento...</span>
+                    <div className="flex flex-col items-center justify-center h-full text-gray-500 gap-1.5 sm:gap-2">
+                        <Loader2 className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 animate-spin text-blue-500" />
+                        <span className="text-xs sm:text-sm">Processando documento...</span>
                     </div>
                 )}
                 
                 {error && (
-                    <div className="flex flex-col items-center justify-center h-full text-red-600 p-4 text-center">
-                        <FileWarning className="w-10 h-10 mb-3 opacity-50" />
-                        <p className="font-medium text-sm">{error}</p>
+                    <div className="flex flex-col items-center justify-center h-full text-red-600 p-3 sm:p-4 text-center">
+                        <FileWarning className="w-8 h-8 sm:w-10 sm:h-10 mb-2 sm:mb-3 opacity-50" />
+                        <p className="font-medium text-xs sm:text-sm">{error}</p>
                     </div>
                 )}
                 
                 <div 
                     style={{ transform: `scale(${zoomLevel})` }} 
-                    className={`docx-viewer-container w-full max-w-[800px] transition-opacity duration-300 ${loading || error ? 'opacity-0 absolute' : 'opacity-100'}`}
+                    className={`docx-viewer-container w-full max-w-xs sm:max-w-sm md:max-w-2xl lg:max-w-4xl transition-opacity duration-300 ${loading || error ? 'opacity-0 absolute' : 'opacity-100'}`}
                 >
                     <div ref={viewerRef} />
                 </div>
@@ -92,10 +92,10 @@ export const VisualizadorDocx: React.FC<VisualizadorDocxProps> = ({ url, emTelaC
             {!emTelaCheia && aoAlternarTelaCheia && !loading && !error && (
                 <button
                     onClick={aoAlternarTelaCheia}
-                    className="absolute top-2 right-2 p-2 bg-white/70 backdrop-blur-sm border border-gray-200 rounded-full text-gray-600 hover:bg-white hover:text-gray-900 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all shadow-sm"
+                    className="absolute bottom-12 sm:top-2 right-2 sm:right-3 p-1.5 sm:p-2 bg-white/70 backdrop-blur-sm border border-gray-200 rounded-full text-gray-600 hover:bg-white hover:text-gray-900 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all shadow-sm h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center"
                     title="Expandir"
                 >
-                    <Expand className="w-4 h-4" />
+                    <Expand className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
             )}
         </div>

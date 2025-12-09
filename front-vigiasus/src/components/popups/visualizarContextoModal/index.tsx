@@ -24,6 +24,15 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 type PartialContexto = Partial<Contexto> & { id: string;[key: string]: any };
 
+type ConteudoVisualizacao = {
+    type: Contexto['type'];
+    url?: Contexto['url'];
+    payload?: Contexto['payload'];
+    title?: Contexto['title'];
+    description?: Contexto['description'];
+    chartType?: Contexto['chartType'];
+};
+
 interface VisualizarContextoModalProps {
     estaAberto: boolean;
     aoFechar: () => void;
@@ -32,7 +41,7 @@ interface VisualizarContextoModalProps {
     perfil?: 'diretor' | 'gerente' | 'membro' | string;
     aoCriarNovaVersao?: (dados: Contexto) => void;
     isEditing?: boolean;
-    aoAlternarVisibilidadeVersao?: (contextoId: string, versaoId: number) => void;
+    aoAlternarVisibilidadeVersao?: (contextoId: string, versaoId: string) => void;
     aoAlternarVisibilidadeIndicador?: (contextoId: string) => void;
     isFromHistory?: boolean;
     isValidation?: boolean;
@@ -47,10 +56,10 @@ type TipoAba = 'detalhes' | 'versoes';
 
 const BotaoAba = ({ id, label, Icon, abaAtiva, setAbaAtiva }: { id: TipoAba; label: string; Icon: React.ElementType<LucideProps>; abaAtiva: TipoAba; setAbaAtiva: (aba: TipoAba) => void; }) => (
     <button onClick={() => setAbaAtiva(id)} className={cn(
-        "flex-1 py-3 px-4 rounded-xl font-semibold transition-all flex justify-center items-center text-sm gap-2",
+        "flex-1 py-2 px-2 sm:py-3 sm:px-4 rounded-lg sm:rounded-xl font-semibold transition-all flex justify-center items-center text-xs sm:text-sm gap-1 sm:gap-2",
         abaAtiva === id ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:bg-gray-200/50"
     )}>
-        <Icon className="w-4 h-4" /> {label}
+        <Icon className="w-3 h-3 sm:w-4 sm:h-4" /> <span className="hidden sm:inline">{label}</span><span className="sm:hidden text-[10px] font-medium">{label.substring(0, 4)}</span>
     </button>
 );
 
@@ -83,6 +92,7 @@ export function VisualizarContextoModal({
     const [abaAtiva, setAbaAtiva] = useState<TipoAba>('detalhes');
     const [emTelaCheia, setEmTelaCheia] = useState(false);
     const [zoomLevel, setZoomLevel] = useState(1);
+    const [conteudoParaVisualizar, setConteudoParaVisualizar] = useState<ConteudoVisualizacao | null>(null);
 
     const [correcaoOpen, setCorrecaoOpen] = useState(false);
     const [deferirOpen, setDeferirOpen] = useState(false);
@@ -141,6 +151,11 @@ export function VisualizarContextoModal({
             return null;
         }
 
+        // 🔒 Filtrar versões ocultas para não-editores (CRITICAL FIX)
+        if (!isEditing && dados.versoes) {
+            dados.versoes = dados.versoes.filter(v => !((v as any).estaOculta ?? (v as any).isOculta ?? false));
+        }
+
         if (!canViewApprovalHistory) {
             if (dados.versoes && dados.versoes.length > 0) {
                 dados.versoes = dados.versoes.map(v => {
@@ -186,19 +201,40 @@ export function VisualizarContextoModal({
         }
 
         return dados;
-    }, [dadosLocais, canViewApprovalHistory]);
+    }, [dadosLocais, canViewApprovalHistory, isEditing]);
 
     const motivoBloqueioOcultar = normalizedData?.id ? ocultarBloqueadoMap?.[normalizedData.id] : undefined;
 
     // --- Handlers de Toggle ---
-    const handleToggleVersao = async (versaoId: number) => {
+    const handleToggleVersao = async (versaoId: string) => {
         if (!normalizedData || !aoAlternarVisibilidadeVersao) return;
         try {
-            await toggleVisibilityVersao(normalizedData.id, versaoId);
+            const response = await toggleVisibilityVersao(normalizedData.id, versaoId);
+            
+            // Atualiza o estado local com o estado CONFIRMADO do backend
+            setDadosLocais(prev => {
+                if (!prev || !prev.versoes) return prev;
+                return {
+                    ...prev,
+                    versoes: prev.versoes.map(v => {
+                        const vDbId = (v as any).dbId || String((v as any).id);
+                        if (vDbId === versaoId) {
+                            // Usa o novo estado retornado pelo backend
+                            return { 
+                                ...v, 
+                                estaOculta: response.isOculta, 
+                                isOculta: response.isOculta 
+                            };
+                        }
+                        return v;
+                    })
+                };
+            });
+            
             if (aoAlternarVisibilidadeVersao) {
                 aoAlternarVisibilidadeVersao(normalizedData.id, versaoId);
             }
-            showSuccessToast(`Visibilidade da versão ${versaoId} atualizada.`);
+            showSuccessToast(`Visibilidade da versão atualizada.`);
         } catch (e: any) {
             showErrorToast(e.message || "Erro ao atualizar visibilidade da versão.");
         }
@@ -226,7 +262,16 @@ export function VisualizarContextoModal({
         }
     };
 
-    const alternarTelaCheia = () => { setEmTelaCheia(!emTelaCheia); setZoomLevel(1); };
+    const alternarTelaCheia = (conteudo?: ConteudoVisualizacao | null) => {
+        if (!emTelaCheia) {
+            setConteudoParaVisualizar(conteudo ?? conteudoParaVisualizar);
+            setEmTelaCheia(true);
+            setZoomLevel(1);
+            return;
+        }
+        setEmTelaCheia(false);
+        setZoomLevel(1);
+    };
 
     useEffect(() => {
         if (estaAberto) {
@@ -235,8 +280,22 @@ export function VisualizarContextoModal({
             setZoomLevel(1);
             setCorrecaoOpen(false);
             setDeferirOpen(false);
+            setConteudoParaVisualizar(null);
         }
     }, [estaAberto]);
+
+    useEffect(() => {
+        if (normalizedData) {
+            setConteudoParaVisualizar({
+                type: normalizedData.type,
+                url: normalizedData.url,
+                payload: normalizedData.payload,
+                title: normalizedData.title,
+                description: normalizedData.description,
+                chartType: normalizedData.chartType,
+            });
+        }
+    }, [normalizedData]);
 
     const lidarComDownload = () => {
         if (!normalizedData?.url) return;
@@ -345,13 +404,13 @@ export function VisualizarContextoModal({
     // [PROTEÇÃO CONTRA CRASH]: Garante que normalizedData existe antes de renderizar
     if (!normalizedData) return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
-            <div className="bg-white rounded-[40px] w-full max-w-6xl h-[90vh] flex flex-col shadow-2xl overflow-hidden">
-                <div className="bg-gradient-to-r from-[#0037C1] to-[#00BDFF] px-8 py-4 flex items-center justify-between rounded-t-[40px] flex-shrink-0">
-                    <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-8 h-8 flex items-center justify-center flex-shrink-0"><FileText className="w-6 h-6 text-white" /></div>
-                        <h2 className="text-2xl font-semibold text-white truncate">A carregar...</h2>
+            <div className="bg-white rounded-2xl sm:rounded-3xl md:rounded-[40px] w-full max-w-full sm:max-w-2xl md:max-w-4xl lg:max-w-6xl h-[95vh] sm:h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+                <div className="bg-gradient-to-r from-[#0037C1] to-[#00BDFF] px-4 sm:px-6 md:px-8 py-3 sm:py-4 flex items-center justify-between rounded-t-2xl sm:rounded-t-3xl md:rounded-t-[40px] flex-shrink-0">
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                        <div className="w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center flex-shrink-0"><FileText className="w-5 h-5 sm:w-6 sm:h-6 text-white" /></div>
+                        <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-white truncate">A carregar...</h2>
                     </div>
-                    <Button size="icon" variant="ghost" onClick={aoFechar} className="bg-white/15 text-white hover:bg-white/30 rounded-2xl"> <ArrowLeft className="w-6 h-6" /> </Button>
+                    <Button size="icon" variant="ghost" onClick={aoFechar} className="bg-white/15 text-white hover:bg-white/30 rounded-xl sm:rounded-2xl flex-shrink-0"> <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6" /> </Button>
                 </div>
                 <div className="flex-1 flex items-center justify-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -361,31 +420,39 @@ export function VisualizarContextoModal({
     );
 
     const AcaoBotoesNode = renderAcaoBotoes();
+    const conteudoParaTelaCheia: ConteudoVisualizacao | null = conteudoParaVisualizar ?? (normalizedData ? {
+        type: normalizedData.type,
+        url: normalizedData.url,
+        payload: normalizedData.payload,
+        title: normalizedData.title,
+        description: normalizedData.description,
+        chartType: normalizedData.chartType,
+    } : null);
 
     return (
         <>
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
-                <div className="bg-white rounded-[40px] w-full max-w-6xl h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+                <div className="bg-white rounded-2xl sm:rounded-3xl md:rounded-[40px] w-full max-w-full sm:max-w-2xl md:max-w-4xl lg:max-w-6xl h-[95vh] sm:h-[90vh] flex flex-col shadow-2xl overflow-hidden">
                     {/* Header */}
-                    <div className="bg-gradient-to-r from-[#0037C1] to-[#00BDFF] px-8 py-4 flex items-center justify-between rounded-t-[40px] flex-shrink-0">
-                        <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-8 h-8 flex items-center justify-center flex-shrink-0"><FileText className="w-6 h-6 text-white" /></div>
+                    <div className="bg-gradient-to-r from-[#0037C1] to-[#00BDFF] px-4 sm:px-6 md:px-8 py-3 sm:py-4 flex items-center justify-between rounded-t-2xl sm:rounded-t-3xl md:rounded-t-[40px] flex-shrink-0">
+                        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                            <div className="w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center flex-shrink-0"><FileText className="w-5 h-5 sm:w-6 sm:h-6 text-white" /></div>
                             {/* Uso de optional chaining para segurança extra */}
-                            <h2 className="text-2xl font-semibold text-white truncate">{normalizedData?.title}</h2>
+                            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-white truncate">{normalizedData?.title}</h2>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                             {isLoadingDetails && (
-                                <div className="bg-white/20 px-3 py-1 rounded-full text-xs text-white animate-pulse">
+                                <div className="bg-white/20 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs text-white animate-pulse">
                                     Atualizando...
                                 </div>
                             )}
-                            <Button size="icon" variant="ghost" onClick={aoFechar} className="bg-white/15 text-white hover:bg-white/30 rounded-2xl"> <ArrowLeft className="w-6 h-6" /> </Button>
+                            <Button size="icon" variant="ghost" onClick={aoFechar} className="bg-white/15 text-white hover:bg-white/30 rounded-xl sm:rounded-2xl flex-shrink-0"> <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6" /> </Button>
                         </div>
                     </div>
 
                     {/* Corpo */}
-                    <div className="flex-1 px-6 sm:px-8 pt-6 pb-4 flex flex-col min-h-0 overflow-hidden">
-                        <div className="flex space-x-1.5 bg-gray-100 rounded-2xl p-1.5 flex-shrink-0 mb-6">
+                    <div className="flex-1 px-3 sm:px-4 md:px-6 lg:px-8 pt-4 sm:pt-6 pb-3 sm:pb-4 flex flex-col min-h-0 overflow-hidden">
+                        <div className="flex space-x-1 sm:space-x-1.5 bg-gray-100 rounded-lg sm:rounded-2xl p-1 sm:p-1.5 flex-shrink-0 mb-4 sm:mb-6">
                             <BotaoAba id="detalhes" label="Detalhes" Icon={Info} abaAtiva={abaAtiva} setAbaAtiva={setAbaAtiva} />
                             <BotaoAba id="versoes" label="Versões e Histórico" Icon={History} abaAtiva={abaAtiva} setAbaAtiva={setAbaAtiva} />
                         </div>
@@ -395,7 +462,7 @@ export function VisualizarContextoModal({
                                 <AbaDetalhes
                                     dados={normalizedData}
                                     aoFazerDownload={lidarComDownload}
-                                    aoAlternarTelaCheia={alternarTelaCheia}
+                                    aoAlternarTelaCheia={(conteudo) => alternarTelaCheia(conteudo as ConteudoVisualizacao)}
                                     isEditing={isEditing}
                                     emTelaCheia={emTelaCheia}
                                     zoomLevel={zoomLevel}
@@ -423,7 +490,7 @@ export function VisualizarContextoModal({
 
                     {/* Rodapé */}
                     {AcaoBotoesNode && (
-                        <div className="px-6 py-3 bg-gray-50 flex justify-end items-center gap-4 flex-shrink-0 border-t border-gray-200 rounded-b-[40px]">
+                        <div className="px-3 sm:px-4 md:px-6 py-2 sm:py-3 bg-gray-50 flex flex-col sm:flex-row sm:justify-end sm:items-center gap-2 sm:gap-4 flex-shrink-0 border-t border-gray-200 rounded-b-2xl sm:rounded-b-3xl md:rounded-b-[40px]">
                             {AcaoBotoesNode}
                         </div>
                     )}
@@ -452,10 +519,10 @@ export function VisualizarContextoModal({
                 contextoNome={normalizedData?.title || ''}
             />
 
-            {emTelaCheia && normalizedData && (
+            {emTelaCheia && conteudoParaTelaCheia && (
                 <div className="fixed inset-0 bg-white z-[60] flex flex-col animate-fade-in">
                     <div className="absolute top-4 right-4 z-[70] flex items-center gap-2 p-2 bg-white/50 backdrop-blur-sm rounded-full shadow-lg border border-gray-200">
-                        {(normalizedData.type === 'pdf' || normalizedData.type === 'doc') && (
+                        {(conteudoParaTelaCheia.type === 'pdf' || conteudoParaTelaCheia.type === 'doc') && (
                             <>
                                 <Button onClick={() => setZoomLevel(prev => Math.max(0.2, prev - 0.2))} variant="ghost" size="icon" className="rounded-full w-8 h-8"><ZoomOut className="w-5 h-5" /></Button>
                                 <Button onClick={() => setZoomLevel(1)} variant="ghost" size="icon" className="rounded-full w-8 h-8"><RotateCcw className="w-5 h-5" /></Button>
@@ -465,7 +532,16 @@ export function VisualizarContextoModal({
                         <Button onClick={alternarTelaCheia} variant="ghost" size="icon" className="rounded-full w-8 h-8"><X className="w-5 h-5" /></Button>
                     </div>
                     <div className="flex-1 min-h-0 w-full h-full overflow-hidden">
-                        <VisualizadorDeConteudo tipo={normalizedData.type} titulo={normalizedData.title} payload={normalizedData.payload} descricao={normalizedData.description} url={normalizedData.url} chartType={normalizedData.chartType} emTelaCheia={true} zoomLevel={zoomLevel} />
+                        <VisualizadorDeConteudo
+                            tipo={conteudoParaTelaCheia.type}
+                            titulo={conteudoParaTelaCheia.title}
+                            payload={conteudoParaTelaCheia.payload}
+                            descricao={conteudoParaTelaCheia.description}
+                            url={conteudoParaTelaCheia.url}
+                            chartType={conteudoParaTelaCheia.chartType}
+                            emTelaCheia={true}
+                            zoomLevel={zoomLevel}
+                        />
                     </div>
                 </div>
             )}

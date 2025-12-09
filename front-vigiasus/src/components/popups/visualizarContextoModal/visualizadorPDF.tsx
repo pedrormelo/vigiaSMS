@@ -55,31 +55,31 @@ export const VisualizadorPdf: React.FC<VisualizadorPdfProps> = ({ url, emTelaChe
 
     const Loader = () => (
         <div className="flex flex-col items-center justify-center h-full text-gray-500">
-            <FileText className="w-12 h-12 mb-4 animate-pulse" />
-            <p>Carregando pré-visualização...</p>
+            <FileText className="w-10 h-10 sm:w-12 sm:h-12 mb-2 sm:mb-4 animate-pulse" />
+            <p className="text-xs sm:text-sm">Carregando pré-visualização...</p>
         </div>
     );
 
     const ErrorDisplay = () => (
-        <div className="flex flex-col items-center justify-center h-full text-red-700 bg-red-50 p-4 rounded-lg">
-            <AlertTriangle className="w-12 h-12 mb-4" />
-            <p className="font-bold">Ocorreu um Erro</p>
-            <p className="text-sm text-center mt-2">{pdfError}</p>
+        <div className="flex flex-col items-center justify-center h-full text-red-700 bg-red-50 p-3 sm:p-4 rounded-lg sm:rounded-xl">
+            <AlertTriangle className="w-10 h-10 sm:w-12 sm:h-12 mb-2 sm:mb-4" />
+            <p className="font-bold text-sm sm:text-base">Ocorreu um Erro</p>
+            <p className="text-xs sm:text-sm text-center mt-1.5 sm:mt-2">{pdfError}</p>
         </div>
     );
 
     // Se não houver URL, evitamos inicializar o Document (origem do erro sendWithPromise)
     if (!url) {
         return (
-            <div className="w-full h-full bg-gray-50 rounded-2xl border border-gray-200 flex items-center justify-center p-6 text-gray-600 text-sm">
+            <div className="w-full h-full bg-gray-50 rounded-lg sm:rounded-2xl border border-gray-200 flex items-center justify-center p-3 sm:p-6 text-gray-600 text-xs sm:text-sm">
                 Nenhum arquivo PDF disponível para esta versão.
             </div>
         );
     }
 
     return (
-        <div className="w-full h-full bg-gray-100 rounded-2xl flex flex-col relative group z-0">
-            <div className="flex-1 overflow-auto flex justify-center p-4 relative z-0">
+        <div className="w-full h-full bg-gray-100 rounded-lg sm:rounded-2xl flex flex-col relative group z-0">
+            <div className="flex-1 overflow-auto flex justify-center p-1 sm:p-2 relative z-0">
                 <Document
                     key={url}
                     file={url}
@@ -99,15 +99,15 @@ export const VisualizadorPdf: React.FC<VisualizadorPdfProps> = ({ url, emTelaChe
             </div>
             
             {!carregando && numPaginas && !pdfError && (
-                <div className="flex-shrink-0 flex items-center justify-center gap-4 p-2 bg-gray-200/50 backdrop-blur-sm rounded-b-2xl border-t relative z-10">
-                    <button onClick={paginaAnterior} disabled={paginaAtual <= 1} className="p-2 rounded-full hover:bg-gray-300 disabled:opacity-50">
-                        <ChevronLeft className="w-5 h-5" />
+                <div className="flex-shrink-0 flex items-center justify-center gap-2 sm:gap-4 p-1.5 sm:p-2 bg-gray-200/50 backdrop-blur-sm rounded-b-lg sm:rounded-b-2xl border-t relative z-10">
+                    <button onClick={paginaAnterior} disabled={paginaAtual <= 1} className="p-1.5 sm:p-2 rounded-full hover:bg-gray-300 disabled:opacity-50 h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 flex items-center justify-center">
+                        <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
-                    <p className="text-sm font-medium">
+                    <p className="text-xs sm:text-sm font-medium">
                         Página {paginaAtual} de {numPaginas}
                     </p>
-                    <button onClick={proximaPagina} disabled={paginaAtual >= numPaginas} className="p-2 rounded-full hover:bg-gray-300 disabled:opacity-50">
-                        <ChevronRight className="w-5 h-5" />
+                    <button onClick={proximaPagina} disabled={paginaAtual >= numPaginas} className="p-1.5 sm:p-2 rounded-full hover:bg-gray-300 disabled:opacity-50 h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 flex items-center justify-center">
+                        <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
                 </div>
             )}
@@ -115,10 +115,10 @@ export const VisualizadorPdf: React.FC<VisualizadorPdfProps> = ({ url, emTelaChe
             {!emTelaCheia && aoAlternarTelaCheia && !carregando && !pdfError && (
                 <button
                     onClick={aoAlternarTelaCheia}
-                    className="absolute top-2 right-2 p-2 bg-white/70 backdrop-blur-sm border border-gray-200 rounded-full text-gray-700 hover:bg-white hover:text-gray-900 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all z-20 pointer-events-auto shadow-sm"
+                    className="absolute bottom-14 sm:top-2 right-2 sm:right-3 p-1.5 sm:p-2 bg-white/70 backdrop-blur-sm border border-gray-200 rounded-full text-gray-700 hover:bg-white hover:text-gray-900 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all z-20 pointer-events-auto shadow-sm h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center"
                     title="Ver em tela cheia"
                 >
-                    <Expand className="w-4 h-4" />
+                    <Expand className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
             )}
         </div>

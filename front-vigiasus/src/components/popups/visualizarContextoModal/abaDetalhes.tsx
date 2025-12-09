@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
     Download, Info, MessageCircle, ChevronDown, User,
-    FileType as FileIcon, Building, Send
+    FileType as FileIcon, Building, Send, Eye
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -25,7 +25,7 @@ import { statusConfig } from '@/components/validar/colunasTable/statusConfig';
 interface AbaDetalhesProps {
     dados: DetalhesContexto;
     aoFazerDownload: () => void;
-    aoAlternarTelaCheia: () => void;
+    aoAlternarTelaCheia: (conteudo: Partial<DetalhesContexto>) => void;
     isEditing?: boolean;
     emTelaCheia: boolean;
     zoomLevel: number;
@@ -143,9 +143,10 @@ const AbaDetalhes = ({
         };
     }, [dados, versaoSelecionada]);
     
-    // 6. [FIX v6] Dropdown deve mostrar TODAS as versões publicadas (independente de oculto)
-    // para que o usuário possa alternar entre elas
-    const listaDropdown = isEditing ? versoesDisponiveis : versoesPublicadas;
+    // 6. [FIX v6] Dropdown deve mostrar versões apropriadas:
+    // - Em modo edição: TODAS as versões (publicadas e não publicadas)
+    // - Em modo visualização: APENAS versões publicadas E visíveis (ocultar ocultas de usuários normais)
+    const listaDropdown = isEditing ? versoesDisponiveis : versoesPublicadasEVisiveis;
 
     const podeComentar = !isEditing && !isFromHistory;
     const statusAtual = versaoSelecionada?.status || dados.status;
@@ -235,9 +236,9 @@ const AbaDetalhes = ({
     // --- [FIM DA MODIFICAÇÃO v4] ---
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full animate-fade-in p-1">
+        <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 h-full animate-fade-in p-1">
             {/* Coluna da Esquerda: Informações */}
-            <div className="space-y-6 overflow-y-auto pr-4 h-full pb-4 scrollbar-custom">
+            <div className="space-y-3 sm:space-y-6 overflow-y-auto pr-2 sm:pr-4 h-full pb-3 sm:pb-4 scrollbar-custom">
 
                 {/* --- [MODIFICAÇÃO] Renderiza o banner da v4 --- */}
                 {renderBanner()}
@@ -290,27 +291,27 @@ const AbaDetalhes = ({
 
 
                 {/* Card do Arquivo/Contexto (com Switch de Ocultar) */}
-                <div className="bg-gray-50 rounded-2xl border border-gray-200 p-4 space-y-4">
-                    <div className="flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-4 flex-1 min-w-0">
+                <div className="bg-gray-50 rounded-lg sm:rounded-2xl border border-gray-200 p-3 sm:p-4 space-y-3 sm:space-y-4">
+                    <div className="flex items-center justify-between gap-2 sm:gap-4">
+                        <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
                             <IconeDocumento type={dadosParaExibir.type as FileType} />
                             <div className="min-w-0">
-                                <p className="font-semibold text-gray-800 text-base leading-tight truncate" title={dadosParaExibir.title}>{dadosParaExibir.title}</p>
-                                <p className="text-sm text-gray-500">{new Date(dadosParaExibir.insertedDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                                <p className="font-semibold text-gray-800 text-sm sm:text-base leading-tight truncate" title={dadosParaExibir.title}>{dadosParaExibir.title}</p>
+                                <p className="text-xs sm:text-sm text-gray-500">{new Date(dadosParaExibir.insertedDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
                             </div>
                         </div>
 
-                        <div className="flex-shrink-0 flex items-center gap-2">
+                        <div className="flex-shrink-0 flex items-center gap-1 sm:gap-2">
                             
                             {!['indicador', 'link'].includes(dadosParaExibir.type) && (
                                 <Button 
                                     onClick={aoFazerDownload} 
                                     variant="default" 
                                     size="sm" 
-                                    className="rounded-2xl bg-blue-600 hover:bg-blue-700 text-white flex-shrink-0 px-3 py-4.5 text-sm font-semibold" 
+                                    className="rounded-lg sm:rounded-2xl bg-blue-600 hover:bg-blue-700 text-white flex-shrink-0 px-2 sm:px-3 py-2 sm:py-2 h-8 sm:h-9 text-xs sm:text-sm font-semibold" 
                                     title="Baixar arquivo original"
                                 >
-                                    <Download className="w-4 h-4" />
+                                    <Download className="w-3 h-3 sm:w-4 sm:h-4" />
                                     <span className="hidden sm:inline">Baixar</span>
                                 </Button>
                             )}
@@ -323,14 +324,14 @@ const AbaDetalhes = ({
                                     aria-controls="comentario-panel"
                                     aria-expanded={mostrarInputComentario}
                                     className={cn(
-                                        "relative flex items-center gap-2 px-3 py-2 font-semibold rounded-2xl transition-all text-sm",
+                                        "relative flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 font-semibold rounded-lg sm:rounded-2xl transition-all text-xs sm:text-sm h-8 sm:h-9",
                                         mostrarInputComentario
                                             ? "bg-white text-blue-700 border border-blue-300 shadow-sm ring-2 ring-blue-300"
                                             : "bg-blue-600 text-white hover:bg-blue-700"
                                     )}
                                     title={mostrarInputComentario ? "Fechar comentários" : "Comentar"}
                                 >
-                                    <MessageCircle className='w-4 h-4' />
+                                    <MessageCircle className='w-3 h-3 sm:w-4 sm:h-4' />
                                     <span className="hidden sm:inline">{mostrarInputComentario ? 'Comentando' : 'Comentar'}</span>
                                     {mostrarInputComentario && (
                                         <span
@@ -369,8 +370,8 @@ const AbaDetalhes = ({
                 {/* --- SEÇÃO DE COMENTÁRIO --- */}
                 {mostrarInputComentario && (
                     <div className="animate-fade-in" id="comentario-panel">
-                        <div className="bg-gray-50 rounded-2xl border border-gray-200 p-4 space-y-3 shadow-inner">
-                            <label className="text-sm font-semibold text-gray-700" htmlFor="novo-comentario-input">
+                        <div className="bg-gray-50 rounded-lg sm:rounded-2xl border border-gray-200 p-3 sm:p-4 space-y-2 sm:space-y-3 shadow-inner">
+                            <label className="text-xs sm:text-sm font-semibold text-gray-700" htmlFor="novo-comentario-input">
                                 Adicionar Novo Comentário
                             </label>
                             <textarea
@@ -379,12 +380,12 @@ const AbaDetalhes = ({
                                 onChange={(e) => setNovoComentario(e.target.value)}
                                 rows={3}
                                 placeholder="Escreva um comentário..."
-                                className="w-full mt-2 resize-none rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:ring-3 focus:ring-blue-400 ring-offset-2"
+                                className="w-full mt-1 sm:mt-2 resize-none rounded-lg sm:rounded-xl border border-gray-300 bg-white px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm outline-none focus:ring-3 focus:ring-blue-400 ring-offset-2"
                             />
-                            <div className="flex justify-end gap-2">
-                                <Button variant="ghost" size="sm" onClick={() => setMostrarInputComentario(false)} className="px-3 py-2 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100">Cancelar</Button>
-                                <Button variant="default" size="sm" onClick={handleEnviarComentario} disabled={!novoComentario.trim()} className="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
-                                    <Send className="w-4 h-4 mr-1.5" /> Enviar
+                            <div className="flex flex-col sm:flex-row justify-end gap-1.5 sm:gap-2">
+                                <Button variant="ghost" size="sm" onClick={() => setMostrarInputComentario(false)} className="px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium text-gray-600 hover:bg-gray-100 h-8 sm:h-9">Cancelar</Button>
+                                <Button variant="default" size="sm" onClick={handleEnviarComentario} disabled={!novoComentario.trim()} className="px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed h-8 sm:h-9">
+                                    <Send className="w-3 h-3 sm:w-4 sm:h-4 mr-1" /> <span className="hidden sm:inline">Enviar</span><span className="sm:hidden">OK</span>
                                 </Button>
                             </div>
                         </div>
@@ -394,22 +395,22 @@ const AbaDetalhes = ({
 
                 {/* Descrição */}
                 {dadosParaExibir.description && (
-                    <div className="bg-blue-50/50 border border-blue-200 rounded-2xl p-4 space-y-3">
-                        <div className="flex items-center gap-2"><Info className="w-5 h-5 text-blue-600" /><h3 className="text-base font-semibold text-blue-800">Descrição</h3></div>
-                        <p className="text-gray-700 text-sm leading-relaxed pl-1">{dadosParaExibir.description}</p>
+                    <div className="bg-blue-50/50 border border-blue-200 rounded-lg sm:rounded-2xl p-3 sm:p-4 space-y-2 sm:space-y-3">
+                        <div className="flex items-center gap-2"><Info className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" /><h3 className="text-sm sm:text-base font-semibold text-blue-800">Descrição</h3></div>
+                        <p className="text-gray-700 text-xs sm:text-sm leading-relaxed pl-1">{dadosParaExibir.description}</p>
                     </div>
                 )}
 
                 {/* DETALHES ADICIONAIS */}
-                <div className="border-t border-gray-200 pt-6">
-                    <h3 className="text-base font-semibold text-gray-700 mb-4">Detalhes Adicionais</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                <div className="border-t border-gray-200 pt-3 sm:pt-6">
+                    <h3 className="text-sm sm:text-base font-semibold text-gray-700 mb-2 sm:mb-4">Detalhes Adicionais</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
 
-                        <div className="flex items-center gap-3 p-3 rounded-lg">
-                            <User className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                        <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg">
+                            <User className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0" />
                             <div>
                                 <p className="font-medium text-gray-800">Enviado por</p>
-                                <p className="text-gray-600 truncate" title={dados.solicitante}>{dados.solicitante || 'N/A'}</p>
+                                <p className="text-gray-600 truncate text-xs sm:text-sm" title={dados.solicitante}>{dados.solicitante || 'N/A'}</p>
                             </div>
                         </div>
 
@@ -432,8 +433,8 @@ const AbaDetalhes = ({
                 </div>
             </div>
 
-            {/* Coluna da Direita: Visualizador */}
-            <div className="h-full min-h-[280px]">
+            {/* Coluna da Direita: Visualizador (desktop/tablet). Em mobile exibimos só o CTA. */}
+            <div className="h-full min-h-[200px] sm:min-h-[280px] hidden sm:block">
                 <VisualizadorDeConteudo
                     tipo={dadosParaExibir.type}
                     url={dadosParaExibir.url}
@@ -441,10 +442,22 @@ const AbaDetalhes = ({
                     payload={dadosParaExibir.payload}
                     descricao={dadosParaExibir.description}
                     chartType={dadosParaExibir.chartType}
-                    aoAlternarTelaCheia={aoAlternarTelaCheia}
+                    aoAlternarTelaCheia={() => aoAlternarTelaCheia(dadosParaExibir)}
                     emTelaCheia={emTelaCheia}
                     zoomLevel={zoomLevel}
                 />
+            </div>
+
+            {/* Mobile: botão abre visualização em tela cheia, mantendo layout limpo. */}
+            <div className="sm:hidden">
+                <Button
+                    onClick={() => aoAlternarTelaCheia(dadosParaExibir)}
+                    className="w-full h-10 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold flex items-center justify-center gap-2 text-sm"
+                    title="Abrir visualização em tela cheia"
+                >
+                    <Eye className="w-4 h-4" />
+                    Visualizar documento
+                </Button>
             </div>
         </div>
     );

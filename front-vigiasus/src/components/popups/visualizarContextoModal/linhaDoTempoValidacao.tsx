@@ -35,8 +35,8 @@ const AvatarInicial = ({ nome, corBg, corTexto }: { nome: string, corBg: string,
         .toUpperCase();
 
     return (
-        <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-sm border-2 border-white", corBg, corTexto)}>
-            {iniciais || <User size={14} />}
+        <div className={cn("w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold shadow-sm border-2 border-white", corBg, corTexto)}>
+            {iniciais || <User size={12} className="sm:w-3.5 sm:h-3.5" />}
         </div>
     );
 };
@@ -75,35 +75,35 @@ const CardEvento = ({
     };
 
     return (
-        <div className={cn("group flex gap-4 items-start w-full animate-in slide-in-from-bottom-2 duration-500")}>
-            <div className="flex flex-col items-center gap-2 pt-1">
-                <div className={cn("w-8 h-8 rounded-xl flex items-center justify-center shadow-sm border border-white/50", styles.iconBg)}>
-                    <styles.Icon size={16} strokeWidth={2.5} />
+        <div className={cn("group flex gap-2 sm:gap-4 items-start w-full animate-in slide-in-from-bottom-2 duration-500")}>
+            <div className="flex flex-col items-center gap-1 sm:gap-2 pt-0.5 sm:pt-1 flex-shrink-0">
+                <div className={cn("w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl flex items-center justify-center shadow-sm border border-white/50", styles.iconBg)}>
+                    <styles.Icon size={14} strokeWidth={2.5} className="sm:w-4 sm:h-4" />
                 </div>
             </div>
-            <div className={cn("flex-1 rounded-2xl border p-4 shadow-sm relative", styles.bg, styles.border)}>
-                <div className="flex justify-between items-start mb-3">
-                    <div className="flex items-center gap-2">
+            <div className={cn("flex-1 rounded-lg sm:rounded-2xl border p-2 sm:p-4 shadow-sm relative", styles.bg, styles.border)}>
+                <div className="flex justify-between items-start mb-1 sm:mb-3 gap-2">
+                    <div className="flex items-center gap-1 sm:gap-2 min-w-0">
                         <AvatarInicial 
                             nome={autor} 
                             corBg={isCorrecao ? "bg-amber-200" : "bg-red-200"} 
                             corTexto={isCorrecao ? "text-amber-800" : "text-red-800"} 
                         />
-                        <div>
-                            <h4 className={cn("text-sm font-bold leading-tight", styles.titleColor)}>
+                        <div className="min-w-0">
+                            <h4 className={cn("text-xs sm:text-sm font-bold leading-tight", styles.titleColor)}>
                                 {styles.label}
                             </h4>
-                            <p className="text-xs text-gray-500 font-medium">por {autor}</p>
+                            <p className="text-[10px] sm:text-xs text-gray-500 font-medium truncate" title={autor}>por {autor}</p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-1 text-[10px] font-medium text-gray-400 bg-white/60 px-2 py-1 rounded-full border border-gray-100">
-                        <Calendar size={10} />
+                    <div className="flex items-center gap-0.5 sm:gap-1 text-[8px] sm:text-[10px] font-medium text-gray-400 bg-white/60 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full border border-gray-100 flex-shrink-0">
+                        <Calendar size={10} className="sm:w-3 sm:h-3" />
                         {data}
                     </div>
                 </div>
                 <div className="relative">
-                    <div className={cn("absolute top-0 bottom-0 left-0 w-1 rounded-full", styles.quoteBorder)}></div>
-                    <p className={cn("pl-3 text-sm leading-relaxed font-medium italic", styles.textColor)}>
+                    <div className={cn("absolute top-0 bottom-0 left-0 w-0.5 sm:w-1 rounded-full", styles.quoteBorder)}></div>
+                    <p className={cn("pl-2 sm:pl-3 text-xs sm:text-sm leading-relaxed font-medium italic", styles.textColor)}>
                         "{texto}"
                     </p>
                 </div>
@@ -237,13 +237,13 @@ const LinhaDoTempoValidacao = ({ historico, status, canViewFullHistory, versionL
     }, [historico]); 
 
     return (
-        <div className="space-y-8 pt-4">
+        <div className="space-y-4 sm:space-y-8 pt-2 sm:pt-4">
             {/* A. Timeline Visual */}
             <div>
-                <h4 className="text-sm font-semibold text-gray-700 mb-4 px-3">
+                <h4 className="text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-4 px-2 sm:px-3">
                     Linha do Tempo da Versão {versionLabel || ''}
                 </h4>
-                <div className="flex items-start justify-between px-4">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-0 px-2 sm:px-4">
                     {etapasWorkflow.map((etapa, index) => {
                         const evento = getUltimoEventoParaEtapa(index);
                         
@@ -298,21 +298,37 @@ const LinhaDoTempoValidacao = ({ historico, status, canViewFullHistory, versionL
 
                         return (
                             <React.Fragment key={etapa.nome}>
-                                <div className="flex flex-col items-center text-center w-32 flex-shrink-0">
-                                    <div className={cn("h-10 w-10 rounded-xl border flex items-center justify-center mb-2 transition-colors", corFundoIcone, 
+                                <div className="flex flex-col sm:flex-col items-start sm:items-center text-left sm:text-center w-full sm:w-32 flex-shrink-0 gap-1 sm:gap-0">
+                                    <div className={cn("h-9 w-9 sm:h-10 sm:w-10 rounded-xl border flex items-center justify-center mb-1 sm:mb-2 transition-colors", corFundoIcone, 
                                         isIndeferida ? "border-red-200" : 
                                         (isConcluida || isFinalizada) ? "border-green-200" : 
                                         isAtual ? "border-blue-200" : 
                                         isDevolvida ? "border-orange-200" : "border-gray-200")}>
-                                        <IconeStatus size={20} className={cn("transition-colors", corIcone)} />
+                                        <IconeStatus size={18} className={cn("transition-colors", corIcone)} />
                                     </div>
                                     
-                                    <p className={cn("text-xs font-semibold transition-colors", corTexto)}>{etapa.nome}</p>
+                                    <div className="flex flex-col sm:flex-col items-start sm:items-center w-full">
+                                        <p className={cn("text-[11px] sm:text-xs font-semibold transition-colors leading-tight", corTexto)}>{etapa.nome}</p>
+                                        
+                                        {/* Mobile: nome do responsável e data/hora */}
+                                        {evento && !isPendente && (
+                                            <div className="block sm:hidden mt-0.5">
+                                                <p className="text-[10px] text-gray-500 leading-tight">
+                                                    {new Date(evento.timestamp).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                                                    <span className="mx-1">·</span>
+                                                    {new Date(evento.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                                </p>
+                                                <p className="text-[10px] text-gray-500 font-medium truncate" title={evento.autorNome}>
+                                                    por {index === 3 ? "Sistema" : formatarNome(evento.autorNome || "")}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
                                     
-                                    {/* Dados Abaixo do Ícone */}
+                                    {/* Dados Abaixo do Ícone (apenas desktop/tablet) */}
                                     {evento && !isPendente && (
-                                        <div className="animate-in fade-in slide-in-from-top-1">
-                                            <p className="mt-1 text-[10px] text-gray-500 leading-tight">
+                                        <div className="hidden sm:block animate-in fade-in slide-in-from-top-1">
+                                            <p className="mt-0.5 sm:mt-1 text-[10px] text-gray-500 leading-tight">
                                                 {new Date(evento.timestamp).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
                                                 <span className="mx-1">·</span>
                                                 {new Date(evento.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
@@ -328,14 +344,21 @@ const LinhaDoTempoValidacao = ({ historico, status, canViewFullHistory, versionL
                                 </div>
                                 
                                 {index < etapasWorkflow.length - 1 && (
-                                    <div className={cn("flex-1 mt-[19px] h-0.5 transition-colors min-w-[10px]",
-                                        // Verde: linha entre etapas aprovadas
-                                        (isConcluida || isFinalizada) && index < 3 ? 'bg-green-300' :
-                                        // Laranja: devolvida
-                                        (isDevolvida && index < indiceEtapaDevolvida) ? 'bg-orange-300' : 
-                                        // Cinza: resto (pendente ou após falha)
-                                        'bg-gray-200'
-                                    )}></div>
+                                    <>
+                                        <div className={cn("hidden sm:block flex-1 mt-[19px] h-0.5 transition-colors min-w-[10px]",
+                                            // Verde: linha entre etapas aprovadas
+                                            (isConcluida || isFinalizada) && index < 3 ? 'bg-green-300' :
+                                            // Laranja: devolvida
+                                            (isDevolvida && index < indiceEtapaDevolvida) ? 'bg-orange-300' : 
+                                            // Cinza: resto (pendente ou após falha)
+                                            'bg-gray-200'
+                                        )}></div>
+                                        <div className={cn("block sm:hidden h-6 w-0.5 ml-4 rounded-full",
+                                            (isConcluida || isFinalizada) && index < 3 ? 'bg-green-300' :
+                                            (isDevolvida && index < indiceEtapaDevolvida) ? 'bg-orange-300' :
+                                            'bg-gray-200'
+                                        )}></div>
+                                    </>
                                 )}
                             </React.Fragment>
                         );
@@ -345,14 +368,15 @@ const LinhaDoTempoValidacao = ({ historico, status, canViewFullHistory, versionL
             
             {/* B. Lista de Solicitações (Cards Bonitos) */}
             {eventosParaExibir.length > 0 ? (
-                <div className="mt-4 px-3">
-                    <div className="flex items-center justify-between mb-4">
-                        <h4 className="text-xs font-bold text-gray-500 flex items-center gap-2 uppercase tracking-wide">
-                             Pendências
+                <div className="mt-2 sm:mt-4 px-2 sm:px-3">
+                    <div className="flex items-center justify-between mb-2 sm:mb-4">
+                        <h4 className="text-[10px] sm:text-xs font-bold text-gray-500 flex items-center gap-1 sm:gap-2 uppercase tracking-wide">
+                            <span className="inline-block w-3 h-3 sm:w-4 sm:h-4 bg-gray-300 rounded-full"></span>
+                            Observações
                         </h4>
                     </div>
                     
-                    <div className="space-y-4">
+                    <div className="space-y-2 sm:space-y-4">
                         {eventosParaExibir.map((evento) => (
                             <CardEvento
                                 key={evento.id}
@@ -371,7 +395,7 @@ const LinhaDoTempoValidacao = ({ historico, status, canViewFullHistory, versionL
                    2. E o contexto NÃO estiver finalizado/publicado (porque se está publicado, é óbvio que não há pendências)
                 */
                 (canViewFullHistory && !isContextoFinalizado) && (
-                    <div className="mt-4 px-4 py-6 bg-gray-50 border border-dashed border-gray-200 rounded-xl text-center mx-3">
+                    <div className="mt-2 sm:mt-4 px-2 sm:px-4 py-3 sm:py-6 bg-gray-50 border border-dashed border-gray-200 rounded-lg sm:rounded-xl text-center mx-2 sm:mx-3">
                         <p className="text-xs text-gray-400">Nenhuma pendência registrada.</p>
                     </div>
                 )

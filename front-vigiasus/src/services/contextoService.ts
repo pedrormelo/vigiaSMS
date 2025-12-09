@@ -153,7 +153,7 @@ export async function toggleVisibilityContexto(contextoId: string): Promise<void
     }
 }
 
-export async function toggleVisibilityVersao(contextoId: string, versaoId: number): Promise<void> {
+export async function toggleVisibilityVersao(contextoId: string, versaoId: string): Promise<{isOculta: boolean; estaOculta: boolean}> {
     const base = apiBase();
     const token = authService.getToken();
     const res = await fetch(`${base}/contextos/${contextoId}/versoes/${versaoId}/alternar-visibilidade`, {
@@ -164,6 +164,8 @@ export async function toggleVisibilityVersao(contextoId: string, versaoId: numbe
         const err = await res.json().catch(() => ({}));
         throw new Error(err.message || 'Falha ao alternar visibilidade da versão.');
     }
+    const data = await res.json();
+    return data.versao || { isOculta: false, estaOculta: false };
 }
 
 // --- SERVIÇOS DE EXCLUSÃO (NOVO) ---

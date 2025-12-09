@@ -32,7 +32,7 @@ interface AbaVersoesProps {
     perfil: 'diretor' | 'gerente' | 'membro' | string;
     isEditing?: boolean;
     isValidationView?: boolean;
-    aoAlternarVisibilidadeVersao?: (versaoId: number) => void;
+    aoAlternarVisibilidadeVersao?: (versaoId: string) => void;
     // [CORREÇÃO]: Adicionando a prop faltante na interface
     canViewFullHistory: boolean;
 }
@@ -54,7 +54,8 @@ const AbaVersoes = ({
     };
 
     const listaVersoes = (dados.versoes || [])
-        .filter(() => true)
+        // 🔒 Filtrar versões ocultas para não-editores (CRITICAL FIX)
+        .filter(v => isEditing || !getEstaOculta(v))
         .sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
 
     // 🎯 Encontrar a versão mais recente PUBLICADA
@@ -82,7 +83,7 @@ const AbaVersoes = ({
 
             {/* Lista de Versões */}
             {listaVersoes.length > 0 ? (
-                <div className="space-y-3 overflow-y-auto pr-2 pb-4 scrollbar-thin scrollbar-thumb-gray-200">
+                <div className="space-y-2 sm:space-y-3 overflow-y-auto pr-1 sm:pr-2 pb-3 sm:pb-4 scrollbar-thin scrollbar-thumb-gray-200">
                     <TooltipProvider>
                         {listaVersoes.map((versaoBase, index) => {
                             const versao = versaoBase as VersaoComHistorico;
@@ -111,37 +112,37 @@ const AbaVersoes = ({
                                 <div 
                                     key={uniqueKey} 
                                     className={cn(
-                                        "border rounded-xl transition-all duration-200 overflow-hidden",
+                                        "border rounded-lg sm:rounded-xl transition-all duration-200 overflow-hidden",
                                         isExpandida ? "bg-blue-50/30 border-blue-200 shadow-sm" : "bg-white border-gray-200 hover:border-blue-200"
                                     )}
                                 >
-                                    <div className="p-3 flex items-center gap-3">
+                                    <div className="p-2 sm:p-3 flex items-center gap-2 sm:gap-3">
                                         <button 
                                             onClick={() => handleToggleExpand(versao.id)}
-                                            className="p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-blue-600 transition-colors"
+                                            className="p-0.5 sm:p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-blue-600 transition-colors flex-shrink-0"
                                         >
-                                            <ChevronRight className={cn("w-5 h-5 transition-transform duration-200", isExpandida && "rotate-90")} />
+                                            <ChevronRight className={cn("w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-200", isExpandida && "rotate-90")} />
                                         </button>
 
                                         <div className="flex-1 min-w-0 cursor-pointer" onClick={() => handleToggleExpand(versao.id)}>
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <span className="text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full">
+                                            <div className="flex items-center gap-1 sm:gap-2 mb-0.5 sm:mb-1 flex-wrap">
+                                                <span className="text-[10px] sm:text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-100 px-1.5 sm:px-2 py-0.5 rounded-full">
                                                     v{versao.id}
                                                 </span>
-                                                <span className="font-semibold text-gray-800 text-sm">
+                                                <span className="font-semibold text-gray-800 text-xs sm:text-sm truncate">
                                                     {versao.nome}
                                                 </span>
                                                 {/* ✅ Mostrar "Atual" apenas para a versão mais recente publicada */}
                                                 {versao.id === versaoMaisRecenteId && (
-                                                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 bg-green-50 text-green-700 border-green-200">
+                                                    <Badge variant="outline" className="text-[8px] sm:text-[10px] px-1 sm:px-1.5 py-0 h-4 sm:h-5 bg-green-50 text-green-700 border-green-200">
                                                         Atual
                                                     </Badge>
                                                 )}
                                             </div>
-                                            <div className="flex items-center gap-2 text-xs text-gray-500">
+                                            <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs text-gray-500">
                                                 <span>{new Date(versao.data).toLocaleDateString('pt-BR')}</span>
                                                 <span>•</span>
-                                                <span className="truncate max-w-[120px]" title={versao.autor}>{versao.autor}</span>
+                                                <span className="truncate max-w-[80px] sm:max-w-[120px]" title={versao.autor}>{versao.autor}</span>
                                             </div>
                                         </div>
 
@@ -164,7 +165,8 @@ const AbaVersoes = ({
                                                             checked={checkedState}
                                                             onCheckedChange={() => {
                                                                 if (!isSwitchDisabled && aoAlternarVisibilidadeVersao) {
-                                                                    aoAlternarVisibilidadeVersao(versao.id);
+                                                                    const versaoDbId = versao.dbId || String(versao.id);
+                                                                    aoAlternarVisibilidadeVersao(versaoDbId);
                                                                 }
                                                             }}
                                                             disabled={isSwitchDisabled}
@@ -189,7 +191,7 @@ const AbaVersoes = ({
                                     </div>
                                     
                                     {isExpandida && (
-                                        <div className="p-4 border-t border-gray-200 bg-white">
+                                        <div className="p-2 sm:p-4 border-t border-gray-200 bg-white">
                                             <LinhaDoTempoValidacao 
                                                 historico={versao.historico || []} 
                                                 status={versao.status || StatusContexto.AguardandoGerente} 

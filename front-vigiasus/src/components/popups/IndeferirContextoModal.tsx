@@ -86,27 +86,27 @@ export default function IndeferirContextoModal({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:rounded-2xl bg-white/80 border border-gray-300 shadow-2xl backdrop-blur-md">
+            <DialogContent className="rounded-lg sm:rounded-2xl bg-white/80 border border-gray-300 shadow-2xl backdrop-blur-md w-11/12 max-w-sm sm:max-w-md md:max-w-lg">
                 <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
-                        <Icon className={cn("h-5 w-5", iconColor)} /> 
-                        <span className="text-lg text-gray-700 font-semibold">{title}</span>
+                    <DialogTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
+                        <Icon className={cn("h-4 w-4 sm:h-5 sm:w-5", iconColor)} /> 
+                        <span className="text-base sm:text-lg text-gray-700 font-semibold">{title}</span>
                     </DialogTitle>
                     <DialogDescription>
-                        <span className="text-gray-700 block mb-1">
+                        <span className="text-gray-700 block mb-1 text-xs sm:text-sm">
                             {description}
                         </span>
-                        <span className="text-gray-700 text-sm">Informe o motivo/justificativa no campo abaixo.</span>
+                        <span className="text-gray-700 text-xs sm:text-sm">Informe o motivo/justificativa no campo abaixo.</span>
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="mt-4">
+                <div className="mt-3 sm:mt-4">
                     <label htmlFor="comentario-indeferir" className="sr-only">
                         Motivo/justificativa
                     </label>
                     <textarea
                         id="comentario-indeferir"
-                        className="w-full border shadow-inner border-gray-300 rounded-2xl py-2 px-4 text-sm focus:ring-1 focus:ring-blue-500 focus:outline-none resize-none leading-tight bg-white min-h-24"
+                        className="w-full border shadow-inner border-gray-300 rounded-lg sm:rounded-2xl py-1.5 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm focus:ring-1 focus:ring-blue-500 focus:outline-none resize-none leading-tight bg-white min-h-20 sm:min-h-24"
                         placeholder="Descreva o motivo..."
                         value={comentario}
                         onChange={(e) => setComentario(e.target.value)}
@@ -118,11 +118,11 @@ export default function IndeferirContextoModal({
                     )}
                 </div>
 
-                <DialogFooter className="mt-6">
+                <DialogFooter className="mt-4 sm:mt-6 flex flex-col sm:flex-row gap-2 sm:gap-3">
                     <Button
                         type="button"
                         variant="outline"
-                        className="rounded-2xl border border-gray-300 hover:bg-gray-100"
+                        className="rounded-lg sm:rounded-2xl border border-gray-300 hover:bg-gray-100 h-9 sm:h-10 text-xs sm:text-sm"
                         onClick={onCancel}
                         disabled={isSubmitting}
                     >
@@ -130,7 +130,7 @@ export default function IndeferirContextoModal({
                     </Button>
                     <Button
                         type="button"
-                        className={cn("cursor-pointer rounded-2xl transition-colors", buttonClass)}
+                        className={cn("cursor-pointer rounded-lg sm:rounded-2xl transition-colors h-9 sm:h-10 text-xs sm:text-sm flex items-center gap-1 sm:gap-1.5", buttonClass)}
                         disabled={!canConfirm}
                         onClick={handleConfirmClick}
                     >

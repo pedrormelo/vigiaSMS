@@ -26,6 +26,7 @@ function mapVersao(prismaVersao) {
 
     return {
         id: prismaVersao.id,
+        dbId: prismaVersao.id, // 🔒 Adicionar dbId para frontend identificar UUID
         versaoNumero: prismaVersao.versaoNumero, // Mantém para compatibilidade
         numero: prismaVersao.versaoNumero,       // Frontend pode usar este
         titulo: prismaVersao.titulo,
@@ -38,6 +39,8 @@ function mapVersao(prismaVersao) {
         
         ativo: prismaVersao.isAtiva,
         destacado: prismaVersao.isDestacado,
+        estaOculta: prismaVersao.isOculta, // 🔒 Incluir isOculta com alias estaOculta
+        isOculta: prismaVersao.isOculta,   // 🔒 Incluir isOculta original também
         solicitanteId: prismaVersao.solicitanteId,
         updatedAt: prismaVersao.updatedAt,
         createdAt: prismaVersao.createdAt,

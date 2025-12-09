@@ -97,25 +97,25 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
 
     return (
         <>
-            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,_1fr)_minmax(0,_1.5fr)_minmax(0,_1fr)] gap-6 min-h-full animate-fade-in pb-4">
+            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,_1fr)_minmax(0,_1.5fr)_minmax(0,_1fr)] gap-4 sm:gap-6 min-h-full animate-fade-in pb-2 sm:pb-4 overscroll-contain">
                 {/* Coluna Esquerda */}
-                <div className="flex flex-col space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-x-6 gap-y-2 items-end">
+                <div className="flex flex-col space-y-4 sm:space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-x-6 gap-y-3 sm:gap-y-2 items-end">
                         <div>
-                            <label className="block text-lg font-medium text-gray-700 mb-2">
+                            <label className="block text-base sm:text-lg font-medium text-gray-700 mb-2">
                                 Título do Gráfico
                             </label>
                             <input
                                 type="text" value={tituloGrafico} onChange={(e) => setTituloGrafico(e.target.value)}
                                 placeholder="Ex.: Atendimentos por Complexidade"
-                                className="w-full px-4 py-3 border border-gray-200 rounded-2xl bg-gray-50/25 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                className="w-full h-11 sm:h-auto px-4 py-3 border border-gray-200 rounded-2xl bg-gray-50/25 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
                                 disabled={isNewVersionMode}
                             />
                         </div>
                         {isNewVersionMode && (
                             <div>
-                                <label className="block text-lg font-medium text-gray-700 mb-2">Versão</label>
-                                <div className="flex items-center justify-center w-full h-[50px] px-4 py-3 border border-gray-200 rounded-2xl bg-gray-100 text-gray-500 font-semibold">
+                                <label className="block text-base sm:text-lg font-medium text-gray-700 mb-2">Versão</label>
+                                <div className="flex items-center justify-center w-full h-11 sm:h-[50px] px-4 py-3 border border-gray-200 rounded-2xl bg-gray-100 text-gray-500 font-semibold">
                                     {selectedVersion || "Calculando..."}
                                 </div>
                             </div>
@@ -134,7 +134,7 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                     {!isNewVersionMode && (
                         <div>
                             <div className="flex justify-between items-center mb-2">
-                                <label htmlFor="dashboard-detalhes" className="block text-lg font-medium text-gray-700">
+                                <label htmlFor="dashboard-detalhes" className="block text-base sm:text-lg font-medium text-gray-700">
                                     Detalhes do Gráfico
                                 </label>
                                 <span className={cn(
@@ -150,7 +150,7 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                                 placeholder="Descreva o contexto, período, fonte dos dados, etc. (mín. 15 caracteres)"
                                 rows={4}
                                 className={cn(
-                                    "w-full px-4 py-3 border bg-gray-50/25 border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none",
+                                    "w-full px-4 py-3 border bg-gray-50/25 border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none min-h-[110px]",
                                     showDetalhesWarning ?
                                         "border-red-300 focus:ring-red-500" :
                                         (isDetalhesValido ?
@@ -171,13 +171,13 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
 
 
                     <div>
-                        <label className="block text-lg font-medium text-gray-700 mb-2">Tema de Cores</label>
+                        <label className="block text-base sm:text-lg font-medium text-gray-700 mb-2">Tema de Cores</label>
                         <div className="space-y-2">
                             <div className="flex items-center gap-2 flex-wrap p-2 rounded-2xl">
                                 {Object.entries(coresPredefinidas).map(([nome, corHex]) => (
                                     <button
                                         key={nome} title={`Tema ${nome}`} onClick={() => handleColorClick(corHex)}
-                                        className={`w-8 h-8 rounded-full transition-transform hover:scale-110 ${corTemaAtiva === corHex ? 'ring-2 ring-offset-2 ring-gray-300' : ''}`}
+                                        className={`w-11 h-11 sm:w-8 sm:h-8 rounded-full transition-transform hover:scale-110 ${corTemaAtiva === corHex ? 'ring-2 ring-offset-2 ring-gray-300' : ''}`}
                                         style={{ backgroundColor: corHex }} disabled={false}
                                     ></button>
                                 ))}
@@ -194,13 +194,13 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                     {/* (Selector movido para Séries de Dados na coluna central) */}
 
                     {isNewVersionMode && (
-                        <div className="space-y-4 rounded-2xl border border-blue-200 bg-blue-50/50 p-4">
-                            <h3 className="text-lg font-semibold text-blue-800">Detalhes da Nova Versão</h3>
+                        <div className="space-y-3 sm:space-y-4 rounded-2xl border border-blue-200 bg-blue-50/50 p-3 sm:p-4">
+                            <h3 className="text-base sm:text-lg font-semibold text-blue-800">Detalhes da Nova Versão</h3>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">Motivo da Alteração</label>
                                 <select
                                     value={tipoVersao} onChange={(e) => setTipoVersao(e.target.value as TipoVersao)}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-2xl bg-white focus:ring-2 focus:ring-blue-500"
+                                    className="w-full h-11 sm:h-auto px-4 py-3 border border-gray-300 rounded-2xl bg-white focus:ring-2 focus:ring-blue-500"
                                 >
                                     <option value={TipoVersao.CORRECAO}>Correção de Informação Incorreta</option>
                                     <option value={TipoVersao.ATUALIZACAO_MENSAL}>Atualização Mensal</option>
@@ -212,7 +212,7 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                                     value={descricaoVersao} onChange={(e) => setDescricaoVersao(e.target.value)}
                                     placeholder="Ex: Atualização dos dados para o mês de Setembro."
                                     rows={3}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-2xl bg-white focus:ring-2 focus:ring-blue-500 resize-none"
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-2xl bg-white focus:ring-2 focus:ring-blue-500 resize-none min-h-[88px]"
                                 />
                             </div>
                         </div>
@@ -220,15 +220,15 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                 </div>
 
                 {/* Coluna Central */}
-                <div className="flex flex-col space-y-6 border-x-0 lg:border-x border-gray-200 px-0 lg:px-6">
+                <div className="flex flex-col space-y-4 sm:space-y-6 border-x-0 lg:border-x border-gray-200 px-0 lg:px-6">
                     <SeletorTipoGrafico tipoSelecionado={tipoGrafico} aoMudarTipo={aoMudarTipo} />
-                    <div className="pt-4">
-                        <label className="block text-lg font-medium text-gray-700 mb-2">
+                    <div className="pt-2 sm:pt-4">
+                        <label className="block text-base sm:text-lg font-medium text-gray-700 mb-2">
                             {isNewVersionMode ? "Novos Dados do Gráfico" : "Fonte dos Dados"}
                         </label>
                         <div className="flex space-x-2 mb-4 bg-gray-100 rounded-2xl p-1">
-                            <button onClick={() => setAbaFonteDeDados("manual")} className={`flex-1 text-sm py-2 px-4 rounded-2xl font-semibold transition-all flex justify-center items-center gap-2 ${abaFonteDeDados === "manual" ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:bg-gray-200"}`}><Database className="w-4 h-4" /> Dados Manuais</button>
-                            <button onClick={() => setAbaFonteDeDados("upload")} className={`flex-1 text-sm py-2 px-4 rounded-2xl font-semibold transition-all flex justify-center items-center gap-2 ${abaFonteDeDados === "upload" ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:bg-gray-200"}`}><Upload className="w-4 h-4" /> Upload de Arquivo</button>
+                            <button onClick={() => setAbaFonteDeDados("manual")} className={`flex-1 h-11 sm:h-auto text-xs sm:text-sm py-2 px-3 sm:px-4 rounded-2xl font-semibold transition-all flex justify-center items-center gap-2 ${abaFonteDeDados === "manual" ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:bg-gray-200"}`}><Database className="w-4 h-4" /> Dados Manuais</button>
+                            <button onClick={() => setAbaFonteDeDados("upload")} className={`flex-1 h-11 sm:h-auto text-xs sm:text-sm py-2 px-3 sm:px-4 rounded-2xl font-semibold transition-all flex justify-center items-center gap-2 ${abaFonteDeDados === "upload" ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:bg-gray-200"}`}><Upload className="w-4 h-4" /> Upload de Arquivo</button>
                         </div>
                         {abaFonteDeDados === 'manual' ? (
                             <SecaoDadosManuais
@@ -251,8 +251,8 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
 
                 {/* Coluna Direita */}
                 <div className="flex flex-col space-y-2 h-full">
-                    <label className="block text-lg font-medium text-gray-700 flex-shrink-0">Pré-visualização</label>
-                    <div className="flex-1 min-h-[280px] h-full">
+                    <label className="block text-base sm:text-lg font-medium text-gray-700 flex-shrink-0">Pré-visualização</label>
+                    <div className="flex-1 min-h-[220px] sm:min-h-[280px] h-full overflow-auto overscroll-contain">
                         <PrevisualizacaoGrafico
                             tipoGrafico={tipoGrafico}
                             conjuntoDeDados={conjuntoDeDados}
@@ -266,12 +266,12 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
 
             {/* Modal Tela Cheia */}
             {graficoEmTelaCheia && (
-                <div className="fixed inset-0 bg-white z-[60] p-4 lg:p-8 flex flex-col animate-fade-in">
-                    <div className="flex justify-between items-center mb-4 flex-shrink-0">
-                        <h2 className="text-2xl font-semibold text-gray-800">{tituloGrafico || "Gráfico em Tela Cheia"}</h2>
-                        <button onClick={alternarTelaCheia} className="p-3 bg-gray-100 rounded-full text-gray-700 hover:bg-gray-200 transition-colors" title="Fechar tela cheia"><Minimize className="w-6 h-6" /></button>
+                <div className="fixed inset-0 bg-white z-[60] p-3 sm:p-4 lg:p-8 flex flex-col animate-fade-in overscroll-contain">
+                    <div className="flex justify-between items-center mb-3 sm:mb-4 flex-shrink-0">
+                        <h2 className="text-lg sm:text-2xl font-semibold text-gray-800">{tituloGrafico || "Gráfico em Tela Cheia"}</h2>
+                        <button onClick={alternarTelaCheia} className="w-11 h-11 sm:w-auto sm:h-auto p-3 bg-gray-100 rounded-full text-gray-700 hover:bg-gray-200 transition-colors flex items-center justify-center flex-shrink-0" title="Fechar tela cheia"><Minimize className="w-5 h-5 sm:w-6 sm:h-6" /></button>
                     </div>
-                    <div className="flex-1 min-h-0 w-full h-full">
+                    <div className="flex-1 min-h-0 w-full h-full overflow-auto overscroll-contain">
                         <PrevisualizacaoGrafico
                             tipoGrafico={tipoGrafico}
                             conjuntoDeDados={conjuntoDeDados}

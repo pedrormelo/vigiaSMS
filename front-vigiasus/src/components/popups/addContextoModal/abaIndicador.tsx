@@ -153,16 +153,16 @@ export const AbaIndicador: React.FC<AbaIndicadorProps> = (props) => {
         pink: '#EC4899',
     };
 
-    const estiloInput = "w-full px-4 py-3 border border-gray-200 rounded-2xl bg-gray-50/25 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none disabled:bg-gray-100 disabled:cursor-not-allowed";
+    const estiloInput = "w-full h-11 sm:h-auto px-4 py-3 border border-gray-200 rounded-2xl bg-gray-50/25 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none disabled:bg-gray-100 disabled:cursor-not-allowed";
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,_1fr)_minmax(0,_1.5fr)_minmax(0,_1fr)] gap-6 h-full animate-fade-in pb-4">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.5fr_1fr] gap-4 sm:gap-6 h-full animate-fade-in pb-2 sm:pb-4 overscroll-contain">
 
             {/* Coluna 1: Título e Descrição */}
-            <div className="flex flex-col space-y-6 pt-1">
-                <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-x-6 gap-y-2 items-end">
+            <div className="flex flex-col space-y-4 sm:space-y-6 pt-1">
+                <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-x-6 gap-y-3 sm:gap-y-2 items-end">
                     <div>
-                        <label className="block text-lg font-medium text-gray-700 mb-2">
+                        <label className="block text-base sm:text-lg font-medium text-gray-700 mb-2">
                             Título do Indicador
                             {isNewVersionMode && (
                                 <span className="ml-2 text-xs font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-md align-middle">
@@ -174,8 +174,8 @@ export const AbaIndicador: React.FC<AbaIndicadorProps> = (props) => {
                     </div>
                     {isNewVersionMode && (
                         <div>
-                            <label className="block text-lg font-medium text-gray-700 mb-2">Versão</label>
-                            <div className="flex items-center justify-center w-full h-[50px] px-4 py-3 border border-transparent rounded-2xl bg-gray-100 text-gray-500 font-semibold">
+                            <label className="block text-base sm:text-lg font-medium text-gray-700 mb-2">Versão</label>
+                            <div className="flex items-center justify-center w-full h-11 sm:h-[50px] px-4 py-3 border border-transparent rounded-2xl bg-gray-100 text-gray-500 font-semibold">
                                 {selectedVersion || "Calculando..."}
                             </div>
                         </div>
@@ -185,7 +185,7 @@ export const AbaIndicador: React.FC<AbaIndicadorProps> = (props) => {
                 {!isNewVersionMode && (
                     <div>
                         <div className="flex justify-between items-center mb-2">
-                            <label htmlFor="indicador-descricao" className="block text-lg font-medium text-gray-700">
+                            <label htmlFor="indicador-descricao" className="block text-base sm:text-lg font-medium text-gray-700">
                                 Descrição
                             </label>
                             <span className={cn(
@@ -204,7 +204,7 @@ export const AbaIndicador: React.FC<AbaIndicadorProps> = (props) => {
                             rows={3}
                             className={cn(
                                 estiloInput, 
-                                "resize-none", 
+                                "resize-none min-h-[88px]", 
                                 showDetalhesWarning ? 
                                 "border-red-300 focus:ring-red-500" : 
                                 (isDetalhesValido ? 
@@ -222,14 +222,14 @@ export const AbaIndicador: React.FC<AbaIndicadorProps> = (props) => {
 
 
                 {isNewVersionMode && (
-                    <div className="space-y-4 rounded-2xl border border-blue-200 bg-blue-50/50 p-4">
-                        <h3 className="text-lg font-semibold text-blue-800">Detalhes da Nova Versão</h3>
+                    <div className="space-y-3 sm:space-y-4 rounded-2xl border border-blue-200 bg-blue-50/50 p-3 sm:p-4">
+                        <h3 className="text-base sm:text-lg font-semibold text-blue-800">Detalhes da Nova Versão</h3>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Motivo da Alteração</label>
                             <select
                                 value={tipoVersao}
                                 onChange={(e) => setTipoVersao(e.target.value as TipoVersao)}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500"
+                                className="w-full h-11 sm:h-auto px-4 py-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500"
                             >
                                 <option value={TipoVersao.CORRECAO}>Correção de Informação Incorreta</option>
                                 <option value={TipoVersao.ATUALIZACAO_MENSAL}>Atualização Mensal</option>
@@ -242,7 +242,7 @@ export const AbaIndicador: React.FC<AbaIndicadorProps> = (props) => {
                                 onChange={(e) => setDescricaoVersao(e.target.value)}
                                 placeholder="Ex: O valor foi atualizado com base no novo censo."
                                 rows={3}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 resize-none"
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 resize-none min-h-[88px]"
                             />
                         </div>
                     </div>
@@ -250,34 +250,48 @@ export const AbaIndicador: React.FC<AbaIndicadorProps> = (props) => {
             </div>
 
             {/* Coluna 2: Valores e Customização */}
-            <div className="flex flex-col space-y-6 border-x-0 lg:border-x border-gray-200 px-0 lg:px-6 overflow-y-auto pr-4 pb-4">
-                <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col space-y-4 sm:space-y-6 border-x-0 lg:border-x border-gray-200 px-0 lg:px-6 min-w-0">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
                     <div>
-                        <label className="block text-lg font-medium text-gray-700 mb-2">Valor Atual</label>
-                        <input type="text" value={valorAtualIndicador} onChange={(e) => setValorAtualIndicador(e.target.value)} className={estiloInput} placeholder="Ex: 68 milhões" />
+                        <label className="block text-sm sm:text-lg font-medium text-gray-700 mb-2">Valor Atual</label>
+                        <input 
+                            type="text" 
+                            inputMode="decimal"
+                            value={valorAtualIndicador} 
+                            onChange={(e) => setValorAtualIndicador(e.target.value)} 
+                            className={estiloInput} 
+                            placeholder="Ex: 68 milhões" 
+                        />
                     </div>
                     <div>
-                        <label className="block text-lg font-medium text-gray-700 mb-2">Unidade</label>
+                        <label className="block text-sm sm:text-lg font-medium text-gray-700 mb-2">Unidade</label>
                         <select value={unidadeIndicador} onChange={(e) => setUnidadeIndicador(e.target.value)} className={estiloInput}>
                             {unidades.map(u => <option key={u} value={u}>{u}</option>)}
                         </select>
                     </div>
                 </div>
                 <div>
-                    <label className="block text-lg font-medium text-gray-700 mb-2">Valor Alvo (Meta)</label>
-                    <input type="text" value={valorAlvoIndicador} onChange={(e) => setValorAlvoIndicador(e.target.value)} className={estiloInput} placeholder="Opcional" />
+                    <label className="block text-base sm:text-lg font-medium text-gray-700 mb-2">Valor Alvo (Meta)</label>
+                    <input 
+                        type="text" 
+                        inputMode="decimal"
+                        value={valorAlvoIndicador} 
+                        onChange={(e) => setValorAlvoIndicador(e.target.value)} 
+                        className={estiloInput} 
+                        placeholder="Opcional" 
+                    />
                 </div>
                 <div>
                     {/* --- INÍCIO DA MODIFICAÇÃO (Placeholder) --- */}
-                    <label className="block text-lg font-medium text-gray-700 mb-2">Texto Comparativo</label>
+                    <label className="block text-base sm:text-lg font-medium text-gray-700 mb-2">Texto Comparativo</label>
                     {/* 3. O PLACEHOLDER SUGERE O SINAL DE IGUAL (=) */}
                     <input type="text" value={textoComparativoIndicador} onChange={(e) => setTextoComparativoIndicador(e.target.value)} placeholder="Use '+', '-' ou '=' no início" className={estiloInput} />
                     {/* --- FIM DA MODIFICAÇÃO --- */}
                 </div>
                 <div>
-                    <label className="block text-lg font-medium text-gray-700 mb-2">Ícone e Cor</label>
-                    <div className="flex items-center gap-6">
-                        <div className="flex-1">
+                    <label className="block text-base sm:text-lg font-medium text-gray-700 mb-2">Ícone e Cor</label>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
+                        <div className="flex-1 w-full">
                             <label className="block text-sm font-medium text-gray-500 mb-2">Ícone</label>
                             <div className="grid grid-cols-4 gap-2 p-2 rounded-lg">
                                 {(Object.keys(iconMap) as NomeIcone[]).map(nomeIcone => {
@@ -286,7 +300,7 @@ export const AbaIndicador: React.FC<AbaIndicadorProps> = (props) => {
                                         <button
                                             key={nomeIcone}
                                             onClick={() => setIconeIndicador(nomeIcone)}
-                                            className={`flex items-center justify-center p-2 rounded-2xl transition-colors ${iconeIndicador === nomeIcone ? 'bg-blue-500 text-white' : 'bg-white text-gray-500 hover:text-blue-500 hover:bg-gray-200'}`}
+                                            className={`flex items-center justify-center h-11 sm:h-auto p-2 rounded-2xl transition-colors ${iconeIndicador === nomeIcone ? 'bg-blue-500 text-white' : 'bg-white text-gray-500 hover:text-blue-500 hover:bg-gray-200'}`}
                                             disabled={isNewVersionMode}
                                             title={nomeIcone}
                                         >
@@ -296,7 +310,7 @@ export const AbaIndicador: React.FC<AbaIndicadorProps> = (props) => {
                                 })}
                             </div>
                         </div>
-                        <div className="flex-1">
+                        <div className="flex-1 w-full">
                             <label className="block text-sm font-medium text-gray-500 mb-2">Cor</label>
                             <div className="flex items-center gap-2 flex-wrap">
                                 {Object.entries(coresPredefinidas).map(([nome, corHex]) => (
@@ -305,16 +319,16 @@ export const AbaIndicador: React.FC<AbaIndicadorProps> = (props) => {
                                         title={nome}
                                         onClick={() => setCorIndicador(corHex)}
                                         className={cn(
-                                            "w-8 h-8 rounded-full transition-transform hover:scale-110",
+                                            "w-11 h-11 sm:w-8 sm:h-8 rounded-full transition-transform hover:scale-110",
                                             corIndicador === corHex ? 'ring-2 ring-offset-2 ring-current' : ''
                                         )}
                                         style={{ backgroundColor: corHex, color: corHex }}
                                         disabled={isNewVersionMode}
                                     ></button>
                                 ))}
-                                <div className="relative w-8 h-8">
+                                <div className="relative w-11 h-11 sm:w-8 sm:h-8">
                                     <input type="color" value={corIndicador} onChange={(e) => setCorIndicador(e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" title="Escolher cor personalizada" disabled={isNewVersionMode} />
-                                    <div className="w-8 h-8 rounded-full border-2 border-dashed pointer-events-none" style={{ borderColor: corIndicador }}></div>
+                                    <div className="w-full h-full rounded-full border-2 border-dashed pointer-events-none" style={{ borderColor: corIndicador }}></div>
                                 </div>
                             </div>
                         </div>
@@ -324,8 +338,8 @@ export const AbaIndicador: React.FC<AbaIndicadorProps> = (props) => {
 
             {/* Coluna 3: Preview */}
             <div className="flex flex-col h-full pt-1">
-                <h3 className="text-lg font-medium text-gray-700 mb-2">Pré-visualização</h3>
-                <div className="w-full max-w-xs mx-auto mt-4">
+                <h3 className="text-base sm:text-lg font-medium text-gray-700 mb-2">Pré-visualização</h3>
+                <div className="w-full max-w-xs mx-auto mt-2 sm:mt-4">
                     <PrevisualizacaoIndicador
                         titulo={tituloIndicador}
                         descricao={descricaoIndicador}

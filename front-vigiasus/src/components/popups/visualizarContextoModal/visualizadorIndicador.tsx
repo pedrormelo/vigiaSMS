@@ -50,24 +50,24 @@ export const VisualizadorIndicador: React.FC<VisualizadorIndicadorProps> = ({
 
     return (
         <div 
-            className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 flex flex-col justify-between min-h-[160px] w-full max-w-xs transition-all"
+            className="bg-white rounded-lg sm:rounded-xl border border-gray-200 shadow-sm p-3 sm:p-4 flex flex-col justify-between min-h-[140px] sm:min-h-[160px] w-full max-w-xs transition-all"
             style={{ borderLeft: `4px solid ${cor || '#cccccc'}` }}
         >
-            <div className="flex justify-between items-start">
-                <p className="font-semibold text-gray-600 break-words pr-2">{title || "Título"}</p>
-                <div className="text-gray-400">{IconeDoCard}</div>
+            <div className="flex justify-between items-start gap-2">
+                <p className="font-semibold text-gray-600 break-words pr-1 text-xs sm:text-sm">{title || "Título"}</p>
+                <div className="text-gray-400 flex-shrink-0">{IconeDoCard}</div>
             </div>
-            <div className="my-2 text-center">
-                <p className="text-4xl font-bold text-gray-900 leading-none">
-                    {eUnidadeMonetaria && unidade && <span className="text-2xl font-medium text-gray-500 mr-1">{unidade}</span>}
+            <div className="my-1 sm:my-2 text-center">
+                <p className="text-3xl sm:text-4xl font-bold text-gray-900 leading-none">
+                    {eUnidadeMonetaria && unidade && <span className="text-lg sm:text-2xl font-medium text-gray-500 mr-0.5 sm:mr-1">{unidade}</span>}
                     {valorAtual ?? "0"}
-                    {!eUnidadeMonetaria && unidade && unidade !== "Nenhum" && <span className="text-2xl font-medium text-gray-500 ml-1">{unidade}</span>}
+                    {!eUnidadeMonetaria && unidade && unidade !== "Nenhum" && <span className="text-lg sm:text-2xl font-medium text-gray-500 ml-0.5 sm:ml-1">{unidade}</span>}
                 </p>
-                <p className="text-sm text-gray-500 mt-1 break-words">{description || "Descrição"}</p>
+                <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1 break-words">{description || "Descrição"}</p>
             </div>
             <div className="h-5">
                 {textoComparativo && (
-                    <div className={`text-sm font-semibold flex items-center gap-1 ${corTextoComparativo}`}>
+                    <div className={`text-xs sm:text-sm font-semibold flex items-center gap-0.5 sm:gap-1 ${corTextoComparativo}`}>
                         {changeType === "positive" && <span>▲</span>}
                         {changeType === "negative" && <span>▼</span>}
                         {changeType === "neutral" && <span className="font-bold">—</span>}
