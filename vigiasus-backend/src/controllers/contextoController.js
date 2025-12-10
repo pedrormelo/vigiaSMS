@@ -7,6 +7,7 @@ const { mapContextoDetalhe } = require('../mappers/contextoMapper');
 const versaoService = require('../services/versaoService');
 const notificacaoService = require('../services/notificacaoService'); // Importação essencial
 const fileStorageService = require('../services/fileStorageService.js');
+const csvParserService = require('../services/csvParserService');
 
 // Função auxiliar para mapear resposta simples
 function mapContextoWithVersao(ctx, versao) {
@@ -1456,3 +1457,38 @@ function mapContextoWithVersaoDetalhada(ctx, versaoPrincipal, todasVersoes, isIn
         versoes: versoesVisiveis,
     };
 }
+
+// POST /contextos/dashboards/parse-csv
+// Endpoint para parsear CSV e retornar dataset estruturado para preview/edição
+exports.parseDashboardCsv = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'Arquivo não foi enviado' });
+        }
+
+        const parsed = csvParserService.parseCSV(req.file.buffer);
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                colunas: parsed.colunas,
+                linhas: parsed.linhas,
+                formatos: parsed.formatos,
+                avisos: parsed.avisos,
+                metadata: {
+                    delimitador: parsed.delimitador,
+                    linhasOriginais: parsed.linhasOriginais,
+                    colunasOriginais: parsed.colunasOriginais,
+                    linhasImportadas: parsed.linhas.length,
+                    colunasImportadas: parsed.colunas.length
+                }
+            }
+        });
+    } catch (err) {
+        console.error('Erro ao parsear CSV:', err);
+        return res.status(400).json({ 
+            success: false, 
+            message: err.message || 'Erro ao processar arquivo CSV' 
+        });
+    }
+};

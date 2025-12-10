@@ -4,6 +4,7 @@ const router = express.Router();
 const auth = require('../middlewares/authMiddleware');
 const ctrl = require('../controllers/contextoController'); // Aqui importamos como 'ctrl'
 const upload = require('../config/uploadsConfig');
+const uploadCsv = require('../config/csvUploadConfig');
 
 // Públicos
 router.get('/ultima-atualizacao', ctrl.getUltimaAtualizacao);
@@ -11,6 +12,9 @@ router.get('/publicados', ctrl.listPublicados);
 
 // Protegidos
 router.get('/pendentes', auth(['GERENTE', 'DIRETOR', 'MEMBRO']), ctrl.listPendentes);
+
+// CSV Parser (para preview de dashboards)
+router.post('/dashboards/parse-csv', auth(['MEMBRO']), uploadCsv.single('file'), ctrl.parseDashboardCsv);
 
 // Criação
 router.post('/', auth(['MEMBRO']), upload.single('file'), ctrl.createContexto);

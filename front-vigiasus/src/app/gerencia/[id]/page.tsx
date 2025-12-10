@@ -4,21 +4,23 @@
 import Image from 'next/image';
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import { SearchX, UploadCloud } from 'lucide-react';
+import { SearchX } from 'lucide-react';
 
 // Hooks
 import { useDebounce } from "@/hooks/useDebounce";
 import { useStaleness } from "@/hooks/useStaleness";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useGlobalDragDrop } from "@/components/providers/globalDragDropProvider";
 
 // Componentes
 import { FileGrid } from "@/components/contextosCard/contextosGrid";
-import { ViewToggle, ViewMode } from "@/components/contextosCard/viewToggle";
+import type { ViewMode } from "@/components/contextosCard/viewToggle";
 import FilterBar from "@/components/gerencia/painel-filterBar";
 import { AddDashboardButton } from "@/components/gerencia/dashboard-btn1";
 import GerenciaDashboardPreview from "@/components/gerencia/dashboard/gerencia-dashboard-preview";
 import { VisualizarContextoModal } from "@/components/popups/visualizarContextoModal/index";
 import { ModalAdicionarConteudo } from "@/components/popups/addContextoModal/index";
+import { CsvChoiceModal } from "@/components/popups/csvChoiceModal";
 import StatusBadge from "@/components/alerts/statusBadge";
 import StatusBanner from "@/components/ui/status-banner";
 import GlobalLoading from "@/components/ui/global-loading";
@@ -42,6 +44,7 @@ export default function GerenciaPage() {
     const [gerenciaData, setGerenciaData] = useState<Gerencia | null>(null);
 
     const user = useCurrentUser();
+    const { onDrop, removeDropZone } = useGlobalDragDrop();
     const perfil = (user?.role?.toLowerCase() as "diretor" | "gerente" | "membro") || "membro";
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -55,8 +58,8 @@ export default function GerenciaPage() {
     const [activeTab, setActiveTab] = useState<'recente' | 'todas'>("todas");
     const [selectedTypes, setSelectedTypes] = useState<FileType[]>([]);
     const debouncedSearchValue = useDebounce(searchValue, 300);
-    const [isDragging, setIsDragging] = useState(false);
     const [arquivoAnexadoPorDrop, setArquivoAnexadoPorDrop] = useState<File | null>(null);
+    const [csvChoiceModalAberto, setCsvChoiceModalAberto] = useState(false);
 
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -483,19 +486,26 @@ export default function GerenciaPage() {
         setDashboardsOcultosGerencia([]);
     }, []);
 
-    const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); if (modo === 'edicao') { setIsDragging(true); } }, [modo]);
-    const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); if (e.relatedTarget && (e.currentTarget as Node).contains(e.relatedTarget as Node)) { return; } setIsDragging(false); }, []);
-    const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-        e.preventDefault(); e.stopPropagation();
-        setIsDragging(false);
-        if (modo !== 'edicao') { return; }
-        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-            setArquivoAnexadoPorDrop(e.dataTransfer.files[0]);
-            setAbaInicial('contexto');
-            setIsModalOpen(true);
-            e.dataTransfer.clearData();
-        }
-    }, [modo]);
+    // Integração com drag-drop global
+    useEffect(() => {
+        if (modo !== 'edicao') return;
+
+        const handleGlobalDrop = (files: FileList) => {
+            if (files && files.length > 0) {
+                const isCsv = files[0].name.toLowerCase().endsWith('.csv');
+                if (isCsv) {
+                    setArquivoAnexadoPorDrop(files[0]);
+                       setCsvChoiceModalAberto(true);
+                }
+            }
+        };
+
+        const dropZoneId = onDrop(handleGlobalDrop);
+
+        return () => {
+            removeDropZone(dropZoneId);
+        };
+    }, [onDrop, removeDropZone, modo]);
 
     if (!slug) return <GlobalLoading />;
 
@@ -571,9 +581,6 @@ export default function GerenciaPage() {
     return (
         <div
             className="min-h-screen bg-[#FDFDFD] relative"
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
         >
             <ModalAdicionarConteudo
                 estaAberto={isModalOpen}
@@ -598,6 +605,24 @@ export default function GerenciaPage() {
 
             {/* [REMOVIDO] O modal OcultarContextoModal não é renderizado aqui para evitar duplicação */}
 
+                <CsvChoiceModal
+                    estaAberto={csvChoiceModalAberto}
+                    arquivo={arquivoAnexadoPorDrop}
+                    onDashboard={() => {
+                        setCsvChoiceModalAberto(false);
+                        setAbaInicial('dashboard');
+                        setIsModalOpen(true);
+                    }}
+                    onContexto={() => {
+                        setCsvChoiceModalAberto(false);
+                        setAbaInicial('contexto');
+                        setIsModalOpen(true);
+                    }}
+                    onClose={() => {
+                        setCsvChoiceModalAberto(false);
+                        setArquivoAnexadoPorDrop(null);
+                    }}
+                />
             <div className="relative p-4 md:p-8 mb-6 text-white shadow-lg"
                 style={{
                     background: diretoria?.bannerImage
@@ -665,12 +690,6 @@ export default function GerenciaPage() {
                 </div>
             </div>
 
-            {isDragging && (
-                <div className="absolute inset-0 bg-blue-500/20 backdrop-blur-sm z-50 flex flex-col items-center justify-center pointer-events-none">
-                    <UploadCloud className="w-32 h-32 text-white/90 animate-pulse" />
-                    <p className="mt-4 text-3xl font-bold text-white">Solte para adicionar</p>
-                </div>
-            )}
         </div>
     );
 }

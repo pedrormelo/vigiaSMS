@@ -17,7 +17,7 @@ type AbaDashboardProps = Pick<
     | 'abaFonteDeDados' | 'setAbaFonteDeDados'
     | 'conjuntoDeDados' | 'definirCoresDoGrafico'
     | 'atualizarCelula' | 'adicionarLinha' | 'removerLinha' | 'adicionarColuna' | 'removerColuna' | 'atualizarNomeColuna'
-    | 'arquivoDeDados' | 'setArquivoDeDados' | 'baixarModelo'
+    | 'arquivoDeDados' | 'setArquivoDeDados' | 'baixarModelo' | 'aoProcessarDatasetDoCsv'
     | 'isNewVersionMode'
     | 'selectedVersion'
     | 'tipoVersao'
@@ -44,7 +44,7 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
         tipoGrafico, aoMudarTipo, abaFonteDeDados, setAbaFonteDeDados,
         conjuntoDeDados, definirCoresDoGrafico,
         atualizarCelula, adicionarLinha, removerLinha, adicionarColuna, removerColuna, atualizarNomeColuna,
-        arquivoDeDados, setArquivoDeDados, baixarModelo,
+        arquivoDeDados, setArquivoDeDados, baixarModelo, aoProcessarDatasetDoCsv,
         isNewVersionMode, selectedVersion, tipoVersao, setTipoVersao, descricaoVersao, setDescricaoVersao,
         atualizarFormatoColuna,
         definirFormatoDasSeries,
@@ -244,34 +244,58 @@ export const AbaDashboard: React.FC<AbaDashboardProps> = (props) => {
                                 formatoSeries={formatoSeries}
                             />
                         ) : (
-                            <SecaoUploadArquivo arquivoDeDados={arquivoDeDados} setArquivoDeDados={setArquivoDeDados} aoBaixarModelo={baixarModelo} />
+                            <SecaoUploadArquivo 
+                                arquivoDeDados={arquivoDeDados} 
+                                setArquivoDeDados={setArquivoDeDados} 
+                                aoBaixarModelo={baixarModelo}
+                                aoProcessarDataset={aoProcessarDatasetDoCsv}
+                            />
                         )}
                     </div>
                 </div>
 
-                {/* Coluna Direita */}
-                <div className="flex flex-col space-y-2 h-full">
-                    <label className="block text-base sm:text-lg font-medium text-gray-700 flex-shrink-0">Pré-visualização</label>
-                    <div className="flex-1 min-h-[220px] sm:min-h-[280px] h-full overflow-auto overscroll-contain">
-                        <PrevisualizacaoGrafico
-                            tipoGrafico={tipoGrafico}
-                            conjuntoDeDados={conjuntoDeDados}
-                            titulo={tituloGrafico}
-                            aoAlternarTelaCheia={alternarTelaCheia}
-                            refreshKey={dashboardRefreshKey}
-                        />
+                {/* Coluna Direita - Pré-visualização */}
+                <div className="flex flex-col space-y-1.5 sm:space-y-2 h-auto lg:h-full min-h-[280px] sm:min-h-[320px] lg:min-h-full">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <label className="text-sm sm:text-base lg:text-lg font-medium text-gray-700 flex-shrink-0">Pré-visualização</label>
+                        <button 
+                            onClick={alternarTelaCheia}
+                            className="text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2 bg-blue-50 text-blue-600 font-medium rounded-lg hover:bg-blue-100 transition-colors flex-shrink-0 hidden lg:flex items-center gap-1"
+                            title="Expandir para tela cheia"
+                        >
+                            <Minimize className="w-3 h-3 sm:w-4 sm:h-4" />
+                            <span>Tela cheia</span>
+                        </button>
+                    </div>
+                    <div className="flex-1 w-full min-h-[250px] sm:min-h-[300px] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                        <div className="w-full h-full overflow-auto overscroll-contain p-2 sm:p-4">
+                            <PrevisualizacaoGrafico
+                                tipoGrafico={tipoGrafico}
+                                conjuntoDeDados={conjuntoDeDados}
+                                titulo={tituloGrafico}
+                                aoAlternarTelaCheia={alternarTelaCheia}
+                                refreshKey={dashboardRefreshKey}
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {/* Modal Tela Cheia */}
+            {/* Modal Tela Cheia - Responsivo */}
             {graficoEmTelaCheia && (
-                <div className="fixed inset-0 bg-white z-[60] p-3 sm:p-4 lg:p-8 flex flex-col animate-fade-in overscroll-contain">
-                    <div className="flex justify-between items-center mb-3 sm:mb-4 flex-shrink-0">
-                        <h2 className="text-lg sm:text-2xl font-semibold text-gray-800">{tituloGrafico || "Gráfico em Tela Cheia"}</h2>
-                        <button onClick={alternarTelaCheia} className="w-11 h-11 sm:w-auto sm:h-auto p-3 bg-gray-100 rounded-full text-gray-700 hover:bg-gray-200 transition-colors flex items-center justify-center flex-shrink-0" title="Fechar tela cheia"><Minimize className="w-5 h-5 sm:w-6 sm:h-6" /></button>
+                <div className="fixed inset-0 bg-white z-[60] p-2 sm:p-3 lg:p-8 flex flex-col animate-fade-in overscroll-contain">
+                    <div className="flex justify-between items-center mb-2 sm:mb-3 lg:mb-4 flex-shrink-0 gap-2">
+                        <h2 className="text-base sm:text-lg lg:text-2xl font-semibold text-gray-800 truncate">{tituloGrafico || "Gráfico"}</h2>
+                        <button 
+                            onClick={alternarTelaCheia} 
+                            className="flex-shrink-0 p-2 sm:p-3 bg-gray-100 rounded-full text-gray-700 hover:bg-gray-200 transition-colors flex items-center justify-center" 
+                            title="Fechar tela cheia"
+                            aria-label="Fechar tela cheia"
+                        >
+                            <Minimize className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
+                        </button>
                     </div>
-                    <div className="flex-1 min-h-0 w-full h-full overflow-auto overscroll-contain">
+                    <div className="flex-1 min-h-0 w-full h-full overflow-auto overscroll-contain rounded-lg border border-gray-200 bg-gray-50 p-2 sm:p-4">
                         <PrevisualizacaoGrafico
                             tipoGrafico={tipoGrafico}
                             conjuntoDeDados={conjuntoDeDados}

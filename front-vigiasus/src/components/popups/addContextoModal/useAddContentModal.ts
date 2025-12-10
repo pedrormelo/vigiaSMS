@@ -10,6 +10,7 @@ import {
 } from "./types";
 import { showWarningToast, showErrorToast, showDispatchToast, showSuccessToast } from "@/components/ui/Toasts";
 import { FileType } from "@/components/contextosCard/contextoCard";
+import { uploadAndParseCsv } from "@/services/csvUploadService";
 
 // --- DEFINIÇÕES DE TIPO DE ARQUIVO ---
 const FILE_TYPE_DEFINITIONS: Record<FileType, { mimes: string[], extensions: string[], label: string }> = {
@@ -202,7 +203,35 @@ export const useModalAdicionarConteudo = ({
             
             } else if (arquivoAnexado) {
                 const tipoDetectado = detectarTipoPorArquivo(arquivoAnexado);
-                
+
+                // Se o usuário escolheu Dashboard no modal de escolha, não force contexto.
+                if (abaInicial === 'dashboard') {
+                    setAbaAtiva('dashboard');
+                    setAbaFonteDeDados('arquivo');
+                    setArquivoDeDados(arquivoAnexado);
+
+                    const nomeSemExtensao = arquivoAnexado.name.split('.').slice(0, -1).join('.');
+                    if (nomeSemExtensao) {
+                        const tituloFormatado = nomeSemExtensao.replace(/[-_]/g, ' ');
+                        setTituloGrafico(tituloFormatado);
+                    }
+
+                    // Processar o CSV imediatamente para já exibir o gráfico
+                    (async () => {
+                        try {
+                            const { dataset, avisos } = await uploadAndParseCsv(arquivoAnexado);
+                            aoProcessarDatasetDoCsv(dataset, avisos);
+                            if (avisos?.length) {
+                                avisos.forEach(aviso => showWarningToast("CSV Info", aviso));
+                            }
+                        } catch (err) {
+                            const message = err instanceof Error ? err.message : 'Erro ao processar CSV';
+                            showErrorToast("Erro ao processar CSV", message);
+                        }
+                    })();
+                    return;
+                }
+
                 if (tipoDetectado && tipoDetectado !== 'dashboard' && tipoDetectado !== 'indicador') {
                     setArquivoContexto(arquivoAnexado);
                     setTipoArquivoDetectado(tipoDetectado);
@@ -272,6 +301,15 @@ export const useModalAdicionarConteudo = ({
         setArquivoContexto(arquivo);
         setUrlContexto("");
         setTipoArquivoDetectado(tipoDetectado);
+    };
+
+    // Processa dataset a partir do upload de CSV
+    const aoProcessarDatasetDoCsv = (dataset: ConjuntoDeDadosGrafico, avisos: string[]) => {
+        setConjuntoDeDados(dataset);
+        setFormatoSeries(dataset.formatos?.[1] || 'number');
+        if (avisos.length > 0) {
+            console.log('Avisos do CSV:', avisos);
+        }
     };
 
     const aoSubmeterFormulario = () => {
@@ -398,11 +436,46 @@ export const useModalAdicionarConteudo = ({
     };
 
     const baixarModelo = () => {
-        const cabecalho = conjuntoDeDados.colunas.join(",") + "\n";
-        const linhasExemplo = Array(2).fill(Array(conjuntoDeDados.colunas.length).fill("dado")).map(r => r.join(",")).join("\n");
-        const csv = cabecalho + linhasExemplo;
+        // Gera template de exemplo com dados realistas baseado no tipo de gráfico e formato
+        const colunas = conjuntoDeDados.colunas;
+        const formatos = conjuntoDeDados.formatos || ['text', 'number'];
+        
+        // Categorias de exemplo
+        const categorias = [
+            'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio'
+        ];
+        
+        // Gera dados de exemplo baseado no formato
+        const linhasExemplo = categorias.map((cat, idx) => {
+            const valores = colunas.slice(1).map((_, colIdx) => {
+                const formato = formatos[colIdx + 1] || 'number';
+                
+                if (formato === 'currency') {
+                    // Moeda: valores realistas entre 1000 e 10000
+                    return (1000 + Math.random() * 9000).toLocaleString('pt-BR', { 
+                        style: 'currency', 
+                        currency: 'BRL',
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    }).replace('R$ ', '');
+                } else if (formato === 'percent') {
+                    // Percentual: valores entre 10 e 95
+                    return ((10 + Math.random() * 85).toFixed(2)).replace('.', ',') + '%';
+                } else {
+                    // Número: valores entre 50 e 500
+                    return Math.floor(50 + Math.random() * 450).toString();
+                }
+            });
+            
+            return [cat, ...valores].join(',');
+        });
+        
+        // Monta CSV com cabeçalho e dados
+        const cabecalho = colunas.join(",");
+        const csv = [cabecalho, ...linhasExemplo].join("\n");
+        
         const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-        saveAs(blob, `modelo-${tipoGrafico}.csv`);
+        saveAs(blob, `template-${tipoGrafico}-${new Date().getTime()}.csv`);
     };
 
     const formatarTamanhoArquivo = (bytes: number) => {
@@ -467,7 +540,7 @@ export const useModalAdicionarConteudo = ({
         acceptString, helpText, tipoArquivoDetectado, setTipoArquivoDetectado, tipoArquivoOriginal, 
         isNewVersionMode, selectedVersion, tipoVersao, setTipoVersao, descricaoVersao, setDescricaoVersao,
         abaFonteDeDados, setAbaFonteDeDados, tituloGrafico, setTituloGrafico, detalhesGrafico, setDetalhesGrafico,
-        tipoGrafico, aoMudarTipo: aoMudarTipoGrafico, arquivoDeDados, setArquivoDeDados,
+        tipoGrafico, aoMudarTipo: aoMudarTipoGrafico, arquivoDeDados, setArquivoDeDados, aoProcessarDatasetDoCsv,
         conjuntoDeDados, definirCoresDoGrafico, adicionarLinha, removerLinha, atualizarCelula, adicionarColuna, removerColuna, atualizarNomeColuna,
         atualizarFormatoColuna, definirFormatoDasSeries, formatoSeries, baixarModelo, dashboardRefreshKey,
         tituloIndicador, setTituloIndicador, descricaoIndicador, setDescricaoIndicador, valorAtualIndicador,

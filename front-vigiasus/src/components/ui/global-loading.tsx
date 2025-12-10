@@ -17,12 +17,14 @@ export default function GlobalLoading({
   subMessage,
 }: GlobalLoadingProps) {
   return (
-    <div className="min-h-screen w-full bg-white">
+    <div className="w-full bg-white pb-[80px] md:pb-0">
       <SpinnerCarregamento
         mensagem={message}
         subMensagem={subMessage}
         tamanho="grande"
-        centralizarTela={true}
+        // Em mobile não ocupamos a tela inteira: usamos o espaço entre os navbars.
+        centralizarTela={false}
+        className="min-h-[calc(100vh-120px)] md:min-h-screen flex"
       />
     </div>
   );

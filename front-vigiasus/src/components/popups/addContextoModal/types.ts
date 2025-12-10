@@ -116,6 +116,7 @@ export interface SecaoUploadArquivoProps {
   arquivoDeDados: File | null;
   setArquivoDeDados: (arquivo: File | null) => void;
   aoBaixarModelo: () => void;
+  aoProcessarDataset?: (dataset: ConjuntoDeDadosGrafico, avisos: string[]) => void;
 }
 export interface AbaIndicadorProps {
     // ... (props inalteradas)

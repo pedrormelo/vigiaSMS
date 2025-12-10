@@ -8,6 +8,7 @@ import GlobalScrollArea from '@/components/ui/global-scroll-area';
 import { Toaster } from "sonner";
 // [NOVO IMPORT] Importa o provedor de sessão
 import SessionTimeoutProvider from "@/components/providers/session-timeout-provider";
+import { GlobalDragDropProvider } from "@/components/providers/globalDragDropProvider";
 import OnboardingModal from '@/components/onboarding/onboardingModal';
 import OnboardingWrapper from '@/components/onboarding/onboardingWrapper';
 import AppTour from '@/components/tour/appTour';
@@ -33,18 +34,20 @@ export default function RootLayout({
     <html lang="pt-BR">
       <body className={`${montserrat.className} antialiased flex flex-col selection:bg-green-400 selection:text-white`}>
         <GlobalScrollArea>
-          {/* Envolvemos com o TourProvider */}
+          {/* Envolvemos com o TourProvider e GlobalDragDropProvider */}
           <TourProvider>
-            <SessionTimeoutProvider>
-              <IndicadorNavegacao />
-              <AppShell>
-                {children}
-              </AppShell>
-              <OnboardingWrapper />
-              <TourManager />
-              <AppTour />
-              <Toaster />
-            </SessionTimeoutProvider>
+            <GlobalDragDropProvider>
+              <SessionTimeoutProvider>
+                <IndicadorNavegacao />
+                <AppShell>
+                  {children}
+                </AppShell>
+                <OnboardingWrapper />
+                <TourManager />
+                <AppTour />
+                <Toaster />
+              </SessionTimeoutProvider>
+            </GlobalDragDropProvider>
           </TourProvider>
         </GlobalScrollArea>
       </body>
