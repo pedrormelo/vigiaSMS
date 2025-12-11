@@ -88,9 +88,10 @@ export default function ValidacaoContextos() {
       await deleteContexto(contextoParaExcluir.id);
       showSuccessToast("Contexto excluído com sucesso.");
       carregarContextos();
-    } catch (err: any) {
+    } catch (err) {
       console.error("Erro ao excluir:", err);
-      showErrorToast(err.message || "Erro ao excluir contexto.");
+      const message = err instanceof Error ? err.message : "Erro ao excluir contexto.";
+      showErrorToast(message);
     } finally {
       setIsDeleteModalOpen(false);
       setContextoParaExcluir(null);
@@ -121,7 +122,7 @@ export default function ValidacaoContextos() {
       showSuccessToast("Contexto indeferido.");
       setIsDetalhesModalOpen(false);
       carregarContextos();
-    } catch (err) {
+    } catch {
       showErrorToast("Erro ao indeferir.");
     }
   };
@@ -132,7 +133,7 @@ export default function ValidacaoContextos() {
       showSuccessToast("Correção solicitada ao autor.");
       setIsDetalhesModalOpen(false);
       carregarContextos();
-    } catch (err) {
+    } catch {
       showErrorToast("Erro ao solicitar correção.");
     }
   };
@@ -142,7 +143,7 @@ export default function ValidacaoContextos() {
     if (!contextoParaEditar || !contextoParaEditar.id) return;
 
     try {
-      let payload: any = {};
+      let payload: Record<string, unknown> = {};
       let file: File | null = null;
 
       // Extração condicional baseada no tipo
@@ -312,6 +313,7 @@ export default function ValidacaoContextos() {
         isEditing={false}
         isFromHistory={false}
         usuarioGerenciaId={user?.gerenciaId}
+        currentUserId={user?.id}
       />
 
       {/* Modal de Edição / Correção */}

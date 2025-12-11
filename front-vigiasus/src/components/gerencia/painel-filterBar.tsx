@@ -11,7 +11,7 @@ import { ViewToggle, ViewMode } from "@/components/contextosCard/viewToggle";
 
 import { cn } from '@/lib/utils';
 
-type Tab = "recente" | "todas";
+type Tab = "recente" | "todas" | "publicados";
 
 interface GerenciasFilterBarProps {
   searchValue: string;
@@ -24,6 +24,7 @@ interface GerenciasFilterBarProps {
   tourId?: string;
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
+  showPublicadosTab?: boolean;
 }
 
 // ATUALIZADO: "excel" -> "planilha"
@@ -51,6 +52,7 @@ export default function GerenciasFilterBar({
   tourId,
   viewMode,
   onViewModeChange,
+  showPublicadosTab = false,
 }: GerenciasFilterBarProps) {
 
   const filterableTypes = Object.keys(filterIconMap).filter(
@@ -134,6 +136,9 @@ export default function GerenciasFilterBar({
         {/* Botões de abas */}
         <button onClick={() => onTabChange("recente")} className={cn("px-4 md:px-6 py-2 cursor-pointer rounded-full font-medium transition shadow-sm text-sm md:text-base", activeTab === "recente" ? "bg-blue-600 text-white" : "bg-white text-gray-500 hover:bg-gray-50")}>Recentes</button>
         <button onClick={() => onTabChange("todas")} className={cn("px-4 md:px-6 py-2 cursor-pointer rounded-full font-medium transition shadow-sm text-sm md:text-base", activeTab === "todas" ? "bg-blue-600 text-white" : "bg-white text-gray-500 hover:bg-gray-50")}>Todas</button>
+        {showPublicadosTab && (
+          <button onClick={() => onTabChange("publicados")} className={cn("px-4 md:px-6 py-2 cursor-pointer rounded-full font-medium transition shadow-sm text-sm md:text-base", activeTab === "publicados" ? "bg-blue-600 text-white" : "bg-white text-gray-500 hover:bg-gray-50")}>Publicados</button>
+        )}
 
         <ViewToggle value={viewMode} onValueChange={onViewModeChange} />
 

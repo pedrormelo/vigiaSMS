@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils"
 
 import { Trash } from "lucide-react"
 import { useMemo, useState, type ReactNode } from "react"
+import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { VisualizarContextoModal } from "@/components/popups/visualizarContextoModal"
 import type { DetalhesContexto, ConjuntoDeDadosGrafico, TipoGrafico } from "@/components/popups/addContextoModal/types"
 import type { FileType } from "@/components/contextosCard/contextoCard"
@@ -57,6 +58,7 @@ export function DashboardPreview({
     removeButtonIcon,
     showHighlightToggle = true,
 }: DashboardPreviewProps) {
+    const currentUser = useCurrentUser()
     const [modalAberto, setModalAberto] = useState(false)
     const [detalhesSelecionados, setDetalhesSelecionados] = useState<DetalhesContexto | null>(null)
 
@@ -199,6 +201,7 @@ export function DashboardPreview({
                 aoFechar={() => setModalAberto(false)}
                 dadosDoContexto={detalhesSelecionados}
                 perfil="membro"
+                currentUserId={currentUser.id}
             />
         </div>
     )

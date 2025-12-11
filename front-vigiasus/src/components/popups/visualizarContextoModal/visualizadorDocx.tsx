@@ -37,6 +37,9 @@ export const VisualizadorDocx: React.FC<VisualizadorDocxProps> = ({ url, emTelaC
             try {
                 const response = await fetch(url);
                 if (!response.ok) throw new Error(`Erro ${response.status}: Ficheiro não encontrado`);
+                const contentType = response.headers.get('Content-Type')?.toLowerCase() || '';
+                const isPpt = contentType.includes('presentation') || url.toLowerCase().includes('.ppt') || url.toLowerCase().includes('.pptx');
+                if (isPpt) throw new Error('Apresentação não é visualizada aqui; faça o download.');
                 const blob = await response.blob();
                 
                 if (active && viewerRef.current) {

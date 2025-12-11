@@ -416,6 +416,7 @@ export default function Navbar({ onOpenSidebar }: NavbarProps) {
         onCorrigir={handleCorrigir}
 
         usuarioGerenciaId={userProfile?.gerenciaId}
+        currentUserId={userProfile?.id}
       />
 
       {/* Modal de Correção (Upload de nova versão) */}

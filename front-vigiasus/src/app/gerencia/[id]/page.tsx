@@ -55,7 +55,7 @@ export default function GerenciaPage() {
     const [ficheiroSelecionado, setFicheiroSelecionado] = useState<DetalhesContexto | null>(null);
 
     const [searchValue, setSearchValue] = useState("");
-    const [activeTab, setActiveTab] = useState<'recente' | 'todas'>("todas");
+    const [activeTab, setActiveTab] = useState<'recente' | 'todas' | 'publicados'>("todas");
     const [selectedTypes, setSelectedTypes] = useState<FileType[]>([]);
     const debouncedSearchValue = useDebounce(searchValue, 300);
     const [arquivoAnexadoPorDrop, setArquivoAnexadoPorDrop] = useState<File | null>(null);
@@ -359,6 +359,15 @@ export default function GerenciaPage() {
     };
 
     const canSeePending = modo === 'edicao' || perfil === 'gerente';
+    const isGerenciaMember = useMemo(() => (
+        user?.role === 'membro' && !!gerenciaData?.id && user?.gerenciaId === gerenciaData.id
+    ), [user?.role, user?.gerenciaId, gerenciaData?.id]);
+
+    useEffect(() => {
+        if (!isGerenciaMember && activeTab === 'publicados') {
+            setActiveTab('todas');
+        }
+    }, [isGerenciaMember, activeTab]);
 
     const filteredIndicators = useMemo(() => {
         return todosOsContextos.filter(ctx => {
@@ -395,15 +404,17 @@ export default function GerenciaPage() {
             if (file.type === 'indicador') return false;
 
             const matchesSearch = file.title.toLowerCase().includes(debouncedSearchValue.toLowerCase());
-            const matchesTab = activeTab === 'todas' || new Date(file.insertedDate) >= sevenDaysAgo;
+            const matchesRecente = new Date(file.insertedDate) >= sevenDaysAgo;
+            const matchesTab = activeTab === 'todas' ? true : activeTab === 'recente' ? matchesRecente : true;
             const matchesType = selectedTypes.length === 0 || selectedTypes.includes(file.type);
             
             // No modo visualização, apenas publicados; no modo edição, todos (inclusive indeferidos)
-            const matchesStatus = canSeePending ? true : file.status === StatusContexto.Publicado;
+            const matchesStatusBase = canSeePending ? true : file.status === StatusContexto.Publicado;
+            const matchesStatusTab = activeTab === 'publicados' ? file.status === StatusContexto.Publicado : matchesStatusBase;
             
             const matchesVisibility = (modo === 'edicao') || !file.estaOculto;
 
-            return matchesStatus && matchesVisibility && matchesSearch && matchesTab && matchesType;
+            return matchesStatusTab && matchesVisibility && matchesSearch && matchesTab && matchesType;
         });
     }, [debouncedSearchValue, activeTab, selectedTypes, todosOsContextos, modo, canSeePending]);
 
@@ -462,12 +473,12 @@ export default function GerenciaPage() {
 
     // [REMOVIDO] handleConfirmarOcultar e handleCancelarOcultar (Lógica movida para o Card)
 
-    const lidarComAlternarVisibilidadeVersao = (contextoId: string, versaoId: number) => {
+    const lidarComAlternarVisibilidadeVersao = (contextoId: string, versaoId: string) => {
         setTodosOsContextos(prev => prev.map(ctx => {
             if (ctx.id === contextoId && ctx.versoes) {
                 return {
                     ...ctx,
-                    versoes: ctx.versoes.map(v => v.id === versaoId ? { ...v, estaOculta: !v.estaOculta } : v)
+                    versoes: ctx.versoes.map(v => String(v.id) === String(versaoId) ? { ...v, estaOculta: !v.estaOculta } : v)
                 };
             }
             return ctx;
@@ -551,6 +562,7 @@ export default function GerenciaPage() {
                             tourId="tour-gerencia-filter"
                             viewMode={viewMode}
                             onViewModeChange={setViewMode}
+                            showPublicadosTab={isGerenciaMember}
                         />
                     </div>
                     {/* <ViewToggle value={viewMode} onValueChange={setViewMode} /> */}
@@ -601,6 +613,7 @@ export default function GerenciaPage() {
                 aoAlternarVisibilidadeIndicador={lidarComAlternarVisibilidadeContexto}
                     usuarioGerenciaId={user?.gerenciaId}
                     ocultarBloqueadoMap={contextosBloqueadosOcultar}
+                    currentUserId={user?.id}
             />
 
             {/* [REMOVIDO] O modal OcultarContextoModal não é renderizado aqui para evitar duplicação */}

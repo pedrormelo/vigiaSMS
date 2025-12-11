@@ -50,16 +50,19 @@ interface VisualizarContextoModalProps {
     onCorrigir?: (versaoId: string, justificativa: string) => void | Promise<void>;
     usuarioGerenciaId?: string;
     ocultarBloqueadoMap?: Record<string, string>;
+    currentUserId?: string;
+    modoPagina?: boolean;
 }
 
 type TipoAba = 'detalhes' | 'versoes';
 
 const BotaoAba = ({ id, label, Icon, abaAtiva, setAbaAtiva }: { id: TipoAba; label: string; Icon: React.ElementType<LucideProps>; abaAtiva: TipoAba; setAbaAtiva: (aba: TipoAba) => void; }) => (
     <button onClick={() => setAbaAtiva(id)} className={cn(
-        "flex-1 py-2 px-2 sm:py-3 sm:px-4 rounded-lg sm:rounded-xl font-semibold transition-all flex justify-center items-center text-xs sm:text-sm gap-1 sm:gap-2",
+        "flex-1 py-2 px-2 sm:py-3 sm:px-4 rounded-lg sm:rounded-xl font-semibold transition-all flex justify-center items-center text-[10px] sm:text-sm gap-1 sm:gap-2",
         abaAtiva === id ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:bg-gray-200/50"
     )}>
-        <Icon className="w-3 h-3 sm:w-4 sm:h-4" /> <span className="hidden sm:inline">{label}</span><span className="sm:hidden text-[10px] font-medium">{label.substring(0, 4)}</span>
+        <Icon className="w-3 h-3 sm:w-4 sm:h-4" />
+        <span className="font-medium sm:font-semibold">{label}</span>
     </button>
 );
 
@@ -78,7 +81,9 @@ export function VisualizarContextoModal({
     onIndeferir,
     onCorrigir,
     usuarioGerenciaId: gerenciaIdProp,
-    ocultarBloqueadoMap
+    ocultarBloqueadoMap,
+    currentUserId: currentUserIdProp,
+    modoPagina: _modoPagina
 }: VisualizarContextoModalProps) {
 
     // [CORREÇÃO DE TIPAGEM]: O hook retorna o objeto do usuário diretamente
@@ -88,6 +93,7 @@ export function VisualizarContextoModal({
     const perfil = perfilProp || currentUser.role || 'membro';
     // Prioriza a prop passada, senão usa o do hook (gerenciaId)
     const usuarioGerenciaId = gerenciaIdProp || currentUser.gerenciaId;
+    const currentUserId = currentUserIdProp || currentUser.id;
 
     const [abaAtiva, setAbaAtiva] = useState<TipoAba>('detalhes');
     const [emTelaCheia, setEmTelaCheia] = useState(false);
@@ -452,7 +458,7 @@ export function VisualizarContextoModal({
 
                     {/* Corpo */}
                     <div className="flex-1 px-3 sm:px-4 md:px-6 lg:px-8 pt-4 sm:pt-6 pb-3 sm:pb-4 flex flex-col min-h-0 overflow-hidden">
-                        <div className="flex space-x-1 sm:space-x-1.5 bg-gray-100 rounded-lg sm:rounded-2xl p-1 sm:p-1.5 flex-shrink-0 mb-4 sm:mb-6">
+                        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 bg-gray-100 rounded-2xl p-2 flex-shrink-0 mb-4 sm:mb-6">
                             <BotaoAba id="detalhes" label="Detalhes" Icon={Info} abaAtiva={abaAtiva} setAbaAtiva={setAbaAtiva} />
                             <BotaoAba id="versoes" label="Versões e Histórico" Icon={History} abaAtiva={abaAtiva} setAbaAtiva={setAbaAtiva} />
                         </div>
@@ -472,6 +478,8 @@ export function VisualizarContextoModal({
                                     isValidationView={isValidation || !!podeAgir}
                                     podeAgir={!!podeAgir}
                                     versaoEmJulgamento={versaoEmJulgamento}
+                                    perfil={perfil}
+                                    currentUserId={currentUserId}
                                 />
                             )}
                             {abaAtiva === 'versoes' && (

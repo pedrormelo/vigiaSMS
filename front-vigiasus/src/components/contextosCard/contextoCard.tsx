@@ -284,10 +284,7 @@ export function FileItem({
                     <h3 className={cn("font-semibold text-[10px] md:text-sm leading-tight truncate line-clamp-2", textColor)} title={title}>{title}</h3>
                 </div>
                 <div className="flex flex-col gap-0.5 md:gap-1 z-10">
-                    <div className={cn("flex items-center justify-center text-white/90")}>
-                        <span className={cn("text-[12px] md:text-[14px] font-bold uppercase tracking-tight px-2.5 md:px-3 py-1 md:py-1.5 rounded-full bg-white/20")}>{config.label}</span>
-                    </div>
-                    <div className={cn("flex items-center justify-center gap-0.5 md:gap-1 z-10", "text-white/80")}>
+                    <div className={cn("flex items-center justify-center gap-0.5 md:gap-1 z-10", "text-white/80")}> 
                         <Calendar className="h-2.5 md:h-3.5 w-2.5 md:w-3.5" />
                         <time dateTime={insertedDate} className="text-[7px] md:text-[9px]">
                             {new Date(insertedDate).toLocaleDateString("pt-BR")}

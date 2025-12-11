@@ -221,6 +221,7 @@ export default function HistoricoPage() {
                 onDeferir={undefined}
                 onIndeferir={undefined}
                 onCorrigir={undefined}
+                currentUserId={user?.id}
             />
 
             {/* Loader flutuante para feedback (opcional, mas recomendado) */}

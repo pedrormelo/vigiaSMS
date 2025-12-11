@@ -168,6 +168,28 @@ export async function toggleVisibilityVersao(contextoId: string, versaoId: strin
     return data.versao || { isOculta: false, estaOculta: false };
 }
 
+// --- SERVIÇO DE COMENTÁRIOS (VERSÃO) ---
+export async function enviarComentarioVersao(versaoId: string, texto: string): Promise<void> {
+    const base = apiBase();
+    const token = authService.getToken();
+    const targetId = String(versaoId);
+    if (!base || !token) throw new Error('Sessão expirada. Faça login novamente.');
+
+    const res = await fetch(`${base}/comentarios/${targetId}`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ texto, privado: false })
+    });
+
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'Falha ao enviar comentário.');
+    }
+}
+
 // --- SERVIÇOS DE EXCLUSÃO (NOVO) ---
 
 export async function deleteContexto(contextoId: string): Promise<void> {
@@ -508,6 +530,7 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
     let gerenciaSlug: string | undefined;
     let gerenciaNome: string | undefined;
     let estaOcultoBackend: boolean = false;
+    let autorOriginalId: string | undefined;
 
     let versaoRecente: BackendVersao | undefined;
     let versoesLista: BackendVersao[] = [];
@@ -522,6 +545,8 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
         gerenciaId = ctx.gerenciaDonaId;
 
         estaOcultoBackend = ctx.isOculto ?? ctx.estaOculto ?? false;
+
+        autorOriginalId = ctx.autorOriginalId || ctx.autorId;
 
         gerenciaSlug = ctx.gerenciaSlug || ctx.gerencia?.slug;
         gerenciaNome = ctx.gerenciaNome || ctx.gerencia?.nome;
@@ -558,6 +583,8 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
             gerenciaId = ctxPai.gerenciaDonaId;
             estaOcultoBackend = ctxPai.isOculto ?? ctxPai.estaOculto ?? false;
 
+            autorOriginalId = ctxPai.autorOriginalId || ctxPai.autorId;
+
             gerenciaSlug = ctxPai.gerenciaSlug || ctxPai.gerencia?.slug;
             gerenciaNome = ctxPai.gerenciaNome || ctxPai.gerencia?.nome;
             
@@ -570,6 +597,9 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
         historicoGeralLista = v.validacaohistorico || v.historico || [];
     }
 
+    const rawArquivoUrl = (versaoRecente as any)?.versaoarquivo?.url;
+    const rawArquivoDocType = (versaoRecente as any)?.versaoarquivo?.docType;
+
     const dadosEspecificosRaw = versaoRecente
         ? (versaoRecente.versaoarquivo || versaoRecente.versaodashboard || versaoRecente.versaoindicador || {})
         : {} as any;
@@ -581,15 +611,13 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
             : {}),
     } as any;
 
+    const { frontType: arquivoFrontType } = normalizeDocType(rawArquivoDocType, rawArquivoUrl);
+
     let frontType: Contexto['type'] = 'pdf';
     if (tipoBackend === 'DASHBOARD') frontType = 'dashboard';
     else if (tipoBackend === 'INDICADOR') frontType = 'indicador';
     else if (tipoBackend === 'ARQUIVO_LINK') {
-        const docType = (versaoRecente as any)?.versaoarquivo?.docType;
-        if (docType === 'LINK') frontType = 'link';
-        else if (docType === 'PDF') frontType = 'pdf';
-        else if (docType === 'EXCEL') frontType = 'planilha';
-        else frontType = 'doc';
+        frontType = arquivoFrontType;
     }
 
     const versoesFrontend: VersaoContexto[] = versoesLista.map(v => {
@@ -635,16 +663,15 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
             : (dadosVersaoRaw as any).payload;
 
         const tipoBackendVersao = v.contexto?.tipo || tipoBackend;
-        const docTypeVersao = (v.versaoarquivo as any)?.docType;
+        const docTypeVersaoRaw = (v.versaoarquivo as any)?.docType;
+        const rawUrlVersao = (v.versaoarquivo as any)?.url;
+        const { frontType: frontTypeVersaoInferido, normalizedDocType: normalizedDocTypeVersao } = normalizeDocType(docTypeVersaoRaw, rawUrlVersao);
 
         let frontTypeVersao: Contexto['type'] = 'pdf';
         if (tipoBackendVersao === 'DASHBOARD') frontTypeVersao = 'dashboard';
         else if (tipoBackendVersao === 'INDICADOR') frontTypeVersao = 'indicador';
         else if (tipoBackendVersao === 'ARQUIVO_LINK') {
-            if (docTypeVersao === 'LINK') frontTypeVersao = 'link';
-            else if (docTypeVersao === 'PDF') frontTypeVersao = 'pdf';
-            else if (docTypeVersao === 'EXCEL') frontTypeVersao = 'planilha';
-            else frontTypeVersao = 'doc';
+            frontTypeVersao = frontTypeVersaoInferido;
         } else {
             frontTypeVersao = 'doc';
         }
@@ -655,7 +682,6 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
             ?? (typeof payloadVersao?.type === 'string' ? payloadVersao.type : undefined);
         const chartTypeVersao = normalizeGraphType(rawChartTypeVersao);
 
-        const rawUrlVersao = (v.versaoarquivo as any)?.url;
         const absoluteUrlVersao = typeof rawUrlVersao === 'string' && /^https?:\/\//i.test(rawUrlVersao)
             ? rawUrlVersao
             : rawUrlVersao
@@ -668,6 +694,7 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
             nome: v.titulo,
             data: v.updatedAt,
             autor: v.solicitanteNome || v.user?.nome || v.solicitanteId || 'Sistema',
+            autorId: v.solicitanteId || v.contexto?.autorId || undefined,
             status: statusMapeado,
             estaOculta: v.isOculta ?? false,
             historico: historicoVersaoFrontend,
@@ -675,7 +702,7 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
             url: absoluteUrlVersao,
             payload: frontTypeVersao === 'dashboard' ? payloadVersao : (payloadVersao ?? dadosVersaoRaw),
             type: frontTypeVersao,
-            docType: docTypeVersao,
+            docType: normalizedDocTypeVersao || docTypeVersaoRaw,
             chartType: chartTypeVersao,
         };
     });
@@ -713,11 +740,10 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
         ?? (typeof dadosEspecificos?.payload?.type === 'string' ? dadosEspecificos.payload.type : undefined);
     const chartType = normalizeGraphType(rawChartType);
 
-    const rawUrl = (versaoRecente as any)?.versaoarquivo?.url;
-    const absoluteUrl = typeof rawUrl === 'string' && /^https?:\/\//i.test(rawUrl)
-        ? rawUrl
-        : rawUrl
-            ? `${apiBase()}${rawUrl}`
+    const absoluteUrl = typeof rawArquivoUrl === 'string' && /^https?:\/\//i.test(rawArquivoUrl)
+        ? rawArquivoUrl
+        : rawArquivoUrl
+            ? `${apiBase()}${rawArquivoUrl}`
             : undefined;
 
     return {
@@ -726,6 +752,7 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
         type: frontType,
         insertedDate: versaoRecente?.updatedAt || new Date().toISOString(),
         status: versaoRecente ? mapStatus(versaoRecente.statusValidacao) : StatusContexto.AguardandoGerente,
+        autorId: versaoRecente?.solicitanteId || versaoRecente?.contexto?.autorId || autorOriginalId,
         description: versaoRecente?.descricao || undefined,
         gerencia: gerenciaNome || gerenciaSlug || gerenciaId,
         payload: tipoBackend === 'DASHBOARD' ? (dadosEspecificos?.payload ?? undefined) : dadosEspecificos,
@@ -739,6 +766,27 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
 }
 
 function safeJsonParse(s: string) { try { return JSON.parse(s); } catch { return undefined; } }
+function normalizeDocType(rawDocType?: string, rawUrl?: string): { frontType: Contexto['type']; normalizedDocType?: string } {
+    const docTypeUpper = typeof rawDocType === 'string' ? rawDocType.toUpperCase() : '';
+    const ext = typeof rawUrl === 'string' && rawUrl.includes('.') ? rawUrl.substring(rawUrl.lastIndexOf('.') + 1) : '';
+    const extUpper = ext.toUpperCase();
+
+    const normalizedDocType = docTypeUpper || extUpper || undefined;
+
+    if (docTypeUpper === 'LINK') return { frontType: 'link', normalizedDocType };
+
+    const isPpt = docTypeUpper.includes('PPT') || docTypeUpper.includes('PRESENTATION') || docTypeUpper.includes('POWERPOINT')
+        || extUpper === 'PPTX' || extUpper === 'PPT';
+    if (isPpt) return { frontType: 'apresentacao', normalizedDocType };
+
+    const isPdf = docTypeUpper.includes('PDF') || extUpper === 'PDF';
+    if (isPdf) return { frontType: 'pdf', normalizedDocType };
+
+    const isExcel = docTypeUpper.includes('XLS') || docTypeUpper.includes('SPREADSHEET') || extUpper === 'XLSX' || extUpper === 'XLS';
+    if (isExcel) return { frontType: 'planilha', normalizedDocType };
+
+    return { frontType: 'doc', normalizedDocType };
+}
 function mapStatus(status: string): StatusContexto {
     const resultado = (() => {
         switch (status) {

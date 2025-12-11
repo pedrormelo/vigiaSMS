@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
     Download, Info, MessageCircle, ChevronDown, User,
-    FileType as FileIcon, Building, Send, Eye
+    FileType as FileIcon, Building, Send, Eye, Loader2
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -15,11 +15,12 @@ import { VisualizadorDeConteudo } from './visualizadorDeConteudo';
 import type { DetalhesContexto, Versao } from '@/components/popups/addContextoModal/types';
 //import type { DocType } from '@/components/validar/typesDados';
 import { StatusContexto } from '@/components/validar/typesDados';
-import { showSuccessToast } from '@/components/ui/Toasts';
+import { showSuccessToast, showErrorToast } from '@/components/ui/Toasts';
 import { diretoriasConfig } from '@/constants/diretorias'; 
 import { FileType } from '@/components/contextosCard/contextoCard';
 // [MODIFICAÇÃO] Importar o config de status para usar no banner
 import { statusConfig } from '@/components/validar/colunasTable/statusConfig';
+import { enviarComentarioVersao } from '@/services/contextoService';
 
 // Props (Interface permanece a mesma)
 interface AbaDetalhesProps {
@@ -35,6 +36,8 @@ interface AbaDetalhesProps {
     podeAgir?: boolean;
     versaoEmJulgamento?: Versao | null;
     motivoBloqueioOcultar?: string;
+    perfil?: string;
+    currentUserId?: string;
 }
 
 const AbaDetalhes = ({
@@ -43,12 +46,15 @@ const AbaDetalhes = ({
     isValidationView = false,
     podeAgir = false,
     versaoEmJulgamento = null,
-    motivoBloqueioOcultar
+    motivoBloqueioOcultar,
+    perfil,
+    currentUserId
 }: AbaDetalhesProps) => {
 
     // --- ESTADOS INTERNOS ---
     const [mostrarInputComentario, setMostrarInputComentario] = useState(false);
     const [novoComentario, setNovoComentario] = useState("");
+    const [enviandoComentario, setEnviandoComentario] = useState(false);
 
     const nomeGerencia = useMemo(() => {
         if (!dados.gerencia) return 'N/A';
@@ -63,19 +69,28 @@ const AbaDetalhes = ({
     }, [dados.gerencia]);
 
 
-    const handleEnviarComentario = () => {
+    const handleEnviarComentario = async () => {
         if (!novoComentario.trim()) return;
-        console.log("Enviando comentário para o contexto:", dados.id, "Comentário:", novoComentario);
-        showSuccessToast("Comentário enviado.");
-        setNovoComentario("");
-        setMostrarInputComentario(false);
-    };
+        if (!versaoSelecionada) { showErrorToast("Selecione uma versão para comentar."); return; }
+        if (bloqueadoComentarioPorCriador) { return; }
 
-    // --- LÓGICA DE VERSÕES (REFINADA v3) ---
+        const alvo = versaoSelecionada.dbId || String(versaoSelecionada.id);
+        setEnviandoComentario(true);
+        try {
+            await enviarComentarioVersao(alvo, novoComentario.trim());
+            showSuccessToast("Comentário enviado.");
+            setNovoComentario("");
+            setMostrarInputComentario(false);
+        } catch (error: any) {
+            showErrorToast(error?.message || "Falha ao enviar comentário.");
+        } finally {
+            setEnviandoComentario(false);
+        }
+    };
     
-    // [CORREÇÃO] Memoizar a lista base para garantir estabilidade da referência (ESLint Fix)
+    // Lista base de versões (memoizada)
     const versoesDisponiveis = useMemo(() => dados.versoes || [], [dados.versoes]);
-    
+
     // 1. Encontrar todas as versões publicadas
     const versoesPublicadas = useMemo(() => 
         versoesDisponiveis.filter(v => v.status === StatusContexto.Publicado), 
@@ -148,7 +163,15 @@ const AbaDetalhes = ({
     // - Em modo visualização: APENAS versões publicadas E visíveis (ocultar ocultas de usuários normais)
     const listaDropdown = isEditing ? versoesDisponiveis : versoesPublicadasEVisiveis;
 
-    const podeComentar = !isEditing && !isFromHistory;
+    const bloqueadoComentarioPorCriador = useMemo(() => {
+        if (perfil !== 'membro' || !currentUserId) return false;
+        const autorContexto = dados.autorId;
+        const autorVersao = versaoSelecionada?.autorId;
+        return (autorContexto && String(autorContexto) === String(currentUserId))
+            || (autorVersao && String(autorVersao) === String(currentUserId));
+    }, [perfil, currentUserId, dados.autorId, versaoSelecionada?.autorId]);
+
+    const podeComentar = !isEditing && !isFromHistory && !bloqueadoComentarioPorCriador;
     const statusAtual = versaoSelecionada?.status || dados.status;
     const isPublishedGeral = statusAtual === StatusContexto.Publicado; // Status da versão em exibição
     const tipoLabel = dadosParaExibir.type === 'indicador' ? 'Indicador' : 'Contexto';
@@ -324,12 +347,13 @@ const AbaDetalhes = ({
                                     aria-controls="comentario-panel"
                                     aria-expanded={mostrarInputComentario}
                                     className={cn(
-                                        "relative flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 font-semibold rounded-lg sm:rounded-2xl transition-all text-xs sm:text-sm h-8 sm:h-9",
+                                        "relative flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 font-semibold rounded-lg sm:rounded-2xl transition-all text-xs sm:text-sm h-8 sm:h-9 disabled:opacity-50 disabled:cursor-not-allowed",
                                         mostrarInputComentario
                                             ? "bg-white text-blue-700 border border-blue-300 shadow-sm ring-2 ring-blue-300"
                                             : "bg-blue-600 text-white hover:bg-blue-700"
                                     )}
-                                    title={mostrarInputComentario ? "Fechar comentários" : "Comentar"}
+                                    disabled={enviandoComentario || !versaoSelecionada}
+                                    title={!versaoSelecionada ? "Selecione uma versão para comentar." : (mostrarInputComentario ? "Fechar comentários" : "Comentar")}
                                 >
                                     <MessageCircle className='w-3 h-3 sm:w-4 sm:h-4' />
                                     <span className="hidden sm:inline">{mostrarInputComentario ? 'Comentando' : 'Comentar'}</span>
@@ -384,8 +408,8 @@ const AbaDetalhes = ({
                             />
                             <div className="flex flex-col sm:flex-row justify-end gap-1.5 sm:gap-2">
                                 <Button variant="ghost" size="sm" onClick={() => setMostrarInputComentario(false)} className="px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium text-gray-600 hover:bg-gray-100 h-8 sm:h-9">Cancelar</Button>
-                                <Button variant="default" size="sm" onClick={handleEnviarComentario} disabled={!novoComentario.trim()} className="px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed h-8 sm:h-9">
-                                    <Send className="w-3 h-3 sm:w-4 sm:h-4 mr-1" /> <span className="hidden sm:inline">Enviar</span><span className="sm:hidden">OK</span>
+                                <Button variant="default" size="sm" onClick={handleEnviarComentario} disabled={!novoComentario.trim() || enviandoComentario} className="px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed h-8 sm:h-9">
+                                    {enviandoComentario ? <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 animate-spin" /> : <Send className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />} <span className="hidden sm:inline">Enviar</span><span className="sm:hidden">OK</span>
                                 </Button>
                             </div>
                         </div>

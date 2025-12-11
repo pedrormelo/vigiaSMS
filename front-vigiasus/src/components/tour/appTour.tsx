@@ -13,6 +13,10 @@ const INITIAL_POSITION_UPDATE_DELAY_MS = 120;
 const POPOVER_PADDING_PX = 10;
 const ESTIMATED_POPOVER_HEIGHT_PX = 240;
 const VIEWPORT_EDGE_MARGIN_PX = 20;
+const TABLET_BREAKPOINT = 640;
+const DESKTOP_BREAKPOINT = 1024;
+const MAX_TABLET_POPOVER_WIDTH = 420;
+const MAX_DESKTOP_POPOVER_WIDTH = 420;
 const SCROLL_REVEAL_MARGIN_PX = 40;
 
 export default function AppTour() {
@@ -57,7 +61,7 @@ export default function AppTour() {
         const hasSize = rect.width > 1 && rect.height > 1;
         const isOffscreen = rect.right < 0 || rect.left > window.innerWidth || rect.bottom < 0 || rect.top > window.innerHeight;
 
-        if (!hasSize || isOffscreen) {
+        if (!hasSize) {
           if (attempts >= MAX_ELEMENT_SEARCH_ATTEMPTS) {
             nextStep();
             return;
@@ -74,20 +78,25 @@ export default function AppTour() {
         const bottomMargin = isMobile ? 120 : ESTIMATED_POPOVER_HEIGHT_PX + 100;
         const fullyVisible = rect.top >= topMargin && rect.bottom <= window.innerHeight - bottomMargin;
 
-        if (!fullyVisible) {
-          // Scroll mais agressivo em mobile para centralizar bem
+        // Se estiver fora da viewport ou parcialmente oculto, força scroll para centralizar o alvo
+        if (isOffscreen || !fullyVisible) {
+          if (attempts >= MAX_ELEMENT_SEARCH_ATTEMPTS) {
+            nextStep();
+            return;
+          }
+          attempts += 1;
           const elementCenter = rect.top + window.scrollY + rect.height / 2;
+          const headerOffset = isMobile ? 20 : 72; // compensa navbar fixa
           const mobileScrollMargin = isMobile ? 30 : SCROLL_REVEAL_MARGIN_PX;
           const desiredScrollY = Math.max(
-            elementCenter - (window.innerHeight / 2) - mobileScrollMargin,
+            elementCenter - (window.innerHeight / 2) - headerOffset - mobileScrollMargin,
             0
           );
 
           window.scrollTo({ top: desiredScrollY, behavior: scrollBehavior });
 
-          // Aguarda o scroll completar antes de atualizar o rect
-          const scrollDelay = isMobile ? 100 : 400;
-          setTimeout(() => {
+          const scrollDelay = isMobile ? 120 : 450;
+          retryTimeoutId = window.setTimeout(() => {
             rafId = window.requestAnimationFrame(() => {
               const newRect = element.getBoundingClientRect();
               setTargetRect(newRect);
@@ -135,8 +144,13 @@ export default function AppTour() {
     const popoverStyle: React.CSSProperties = {};
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
-    const isMobile = viewportWidth < 640; // Breakpoint sm
-    const popoverWidth = isMobile ? Math.min(viewportWidth * 0.92, 360) : 380; // Mais agressivo em mobile
+    const isMobile = viewportWidth < TABLET_BREAKPOINT;
+    const isTablet = viewportWidth >= TABLET_BREAKPOINT && viewportWidth < DESKTOP_BREAKPOINT;
+    const popoverWidth = isMobile
+      ? Math.min(viewportWidth * 0.92, 360)
+      : isTablet
+        ? Math.min(viewportWidth * 0.55, MAX_TABLET_POPOVER_WIDTH)
+        : Math.min(viewportWidth * 0.4, MAX_DESKTOP_POPOVER_WIDTH);
 
     const clampHorizontal = (left: number) => {
       const minLeft = isMobile ? 8 : VIEWPORT_EDGE_MARGIN_PX;
@@ -146,14 +160,15 @@ export default function AppTour() {
       return left;
     };
 
-    // Centraliza horizontalmente em mobile com margem mínima
-    const centerPopover = () => {
-      return (viewportWidth - popoverWidth) / 2;
-    };
+    // Centraliza horizontalmente com base no alvo, usando clamp para não colar nas bordas
+    const centerOnTarget = () => clampHorizontal(targetRect.left + (targetRect.width / 2) - (popoverWidth / 2));
+
+    // Centraliza quando não há alvo (fallback) ou em mobile
+    const centerViewport = () => (viewportWidth - popoverWidth) / 2;
 
     // Estratégia de posicionamento com prioridade em visibilidade
     if (activeStepData.position === "right") {
-      const desiredTop = Math.max(targetRect.top, VIEWPORT_EDGE_MARGIN_PX);
+      const desiredTop = Math.max(targetRect.top + (targetRect.height / 2) - (ESTIMATED_POPOVER_HEIGHT_PX / 2), VIEWPORT_EDGE_MARGIN_PX);
       popoverStyle.top = Math.min(desiredTop, viewportHeight - ESTIMATED_POPOVER_HEIGHT_PX - VIEWPORT_EDGE_MARGIN_PX);
       popoverStyle.left = clampHorizontal(targetRect.right + POPOVER_PADDING_PX + 10);
     } else if (activeStepData.position === "top") {
@@ -165,7 +180,7 @@ export default function AppTour() {
       } else {
         popoverStyle.top = desiredTop;
       }
-      popoverStyle.left = isMobile ? centerPopover() : clampHorizontal(targetRect.left);
+      popoverStyle.left = isMobile ? centerViewport() : centerOnTarget();
     } else {
       // Padrão ou "bottom" - estratégia principal
       let desiredTop = isMobile 
@@ -179,8 +194,11 @@ export default function AppTour() {
       }
       
       popoverStyle.top = Math.max(desiredTop, VIEWPORT_EDGE_MARGIN_PX);
-      popoverStyle.left = isMobile ? centerPopover() : clampHorizontal(targetRect.left);
+      popoverStyle.left = isMobile ? centerViewport() : centerOnTarget();
     }
+
+    // Largura fixa por cálculo para tablets/desktop com clamp horizontal
+    popoverStyle.width = popoverWidth;
 
     return (
       <div className="fixed inset-0 z-[9999] pointer-events-none overflow-hidden">
@@ -198,7 +216,7 @@ export default function AppTour() {
 
       {/* O Balão de Texto (Tooltip) - Responsivo */}
       <div
-        className="absolute pointer-events-auto bg-white p-4 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl md:rounded-3xl shadow-xl sm:shadow-2xl md:shadow-[0_20px_40px_rgba(0,0,0,0.15)] animate-in fade-in zoom-in-95 duration-300 w-11/12 sm:w-10/12 max-w-xs sm:max-w-sm md:max-w-md border border-gray-100"
+        className="absolute pointer-events-auto bg-white p-4 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl md:rounded-3xl shadow-xl sm:shadow-2xl md:shadow-[0_20px_40px_rgba(0,0,0,0.15)] animate-in fade-in zoom-in-95 duration-300 w-auto max-w-[92vw] sm:max-w-[85vw] md:max-w-[70vw] border border-gray-100"
         style={popoverStyle}
         role="dialog"
         aria-label="Dica do tour"

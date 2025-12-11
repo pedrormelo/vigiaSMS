@@ -37,6 +37,7 @@ export interface Versao {
   nome: string;
   data: string;
   autor: string;
+  autorId?: string;
   estaOculta?: boolean;
   status?: StatusContexto;
   historico?: HistoricoEvento[];
@@ -58,6 +59,7 @@ export interface Contexto {
   type: FileType;         // 'docType' foi unificado em 'type'
   insertedDate: string;   // 'data' agora é 'insertedDate'
   status: StatusContexto; // 'situacao' agora é 'status'
+  autorId?: string;       // Identificador do criador para regras de permissão
   
   // Campos opcionais
   url?: string;

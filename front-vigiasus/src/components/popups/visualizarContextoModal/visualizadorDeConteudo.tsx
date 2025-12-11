@@ -3,11 +3,12 @@
 
 import React from 'react';
 import dynamic from 'next/dynamic';
-import { Link as LinkIcon, Download, FileText, Loader2, BarChart3 } from 'lucide-react';
+import { Link as LinkIcon, Download, FileText, BarChart3, Presentation } from 'lucide-react';
 import { PrevisualizacaoGrafico } from '@/components/popups/addContextoModal/previsualizacaoGrafico';
 import type { FileType } from '@/components/contextosCard/contextoCard';
 import { VisualizadorIndicador } from './visualizadorIndicador';
 import { DetalhesContexto, ConjuntoDeDadosGrafico } from '@/components/popups/addContextoModal/types';
+import SpinnerCarregamento from '@/components/ui/spinner-carregamento';
 
 // Carregamento dinâmico para evitar peso inicial e erros de SSR
 const VisualizadorPdf = dynamic(() => import('./visualizadorPDF').then(mod => mod.VisualizadorPdf), {
@@ -21,10 +22,11 @@ const VisualizadorDocx = dynamic(() => import('./visualizadorDocx').then(mod => 
 });
 
 const LoadingState = ({ label }: { label: string }) => (
-    <div className="flex flex-col items-center justify-center h-full text-gray-500">
-        <Loader2 className="w-8 h-8 animate-spin mr-2" />
-        <p>{label}</p>
-    </div>
+    <SpinnerCarregamento
+        mensagem={label}
+        tamanho="medio"
+        className="h-full min-h-[180px] bg-gray-50 rounded-lg sm:rounded-2xl border border-gray-100"
+    />
 );
 
 interface VisualizadorProps {
@@ -57,7 +59,7 @@ export const VisualizadorDeConteudo: React.FC<VisualizadorProps> = ({ tipo, url,
     );
 
     // Se não houver URL para tipos de arquivo, mostra erro específico
-    if ((tipo === 'pdf' || tipo === 'doc' || tipo === 'planilha') && !url) {
+    if ((tipo === 'pdf' || tipo === 'doc' || tipo === 'planilha' || tipo === 'apresentacao') && !url) {
         return renderFallback("O arquivo solicitado não foi encontrado no servidor.");
     }
 
@@ -137,6 +139,18 @@ export const VisualizadorDeConteudo: React.FC<VisualizadorProps> = ({ tipo, url,
                     <p className="text-gray-600 my-1 sm:my-2 max-w-xs text-xs sm:text-sm">As planilhas devem ser baixadas para visualização completa.</p>
                     <a href={url} download className="mt-3 sm:mt-4 flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-1.5 sm:py-2.5 bg-green-600 text-white font-medium rounded-full hover:bg-green-700 transition-colors shadow-md text-xs sm:text-sm">
                         <Download className="w-3 h-3 sm:w-4 sm:h-4" /> <span className="hidden sm:inline">Baixar Planilha</span><span className="sm:hidden">Baixar</span>
+                    </a>
+                </div>
+            );
+
+        case 'apresentacao':
+            return (
+                <div className="animate-fade-in h-full flex flex-col items-center justify-center bg-amber-50/50 rounded-lg sm:rounded-2xl p-3 sm:p-6 text-center border border-amber-100">
+                    <Presentation className="w-12 h-12 sm:w-16 sm:h-16 text-amber-500 mb-2 sm:mb-4 opacity-80" />
+                    <h3 className="text-lg sm:text-xl font-semibold text-gray-800">Apresentação</h3>
+                    <p className="text-gray-600 my-1 sm:my-2 max-w-xs text-xs sm:text-sm">As apresentações devem ser baixadas para visualização completa.</p>
+                    <a href={url} download className="mt-3 sm:mt-4 flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-1.5 sm:py-2.5 bg-amber-500 text-white font-medium rounded-full hover:bg-amber-600 transition-colors shadow-md text-xs sm:text-sm">
+                        <Download className="w-3 h-3 sm:w-4 sm:h-4" /> <span className="hidden sm:inline">Baixar Apresentação</span><span className="sm:hidden">Baixar</span>
                     </a>
                 </div>
             );

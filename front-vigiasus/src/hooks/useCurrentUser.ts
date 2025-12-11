@@ -8,6 +8,7 @@ import { authService, type AuthUser } from "@/services/authService";
 export type UserRole = "admin" | "secretaria" | "diretor" | "gerente" | "membro";
 
 export interface CurrentUser {
+  id?: string;
   name: string;
   role: UserRole;
   diretoriaId?: string; 
@@ -36,6 +37,7 @@ export function useCurrentUser(): CurrentUser {
       }
 
       return {
+        id: typeof parsed.id === "string" ? parsed.id : undefined,
         name: typeof parsed.name === "string" ? parsed.name : "Visitante",
         role,
         diretoriaId: typeof parsed.diretoriaId === "string" ? parsed.diretoriaId : undefined,
