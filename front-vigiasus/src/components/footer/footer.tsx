@@ -28,7 +28,7 @@ export default function Footer() {
         <footer className="bg-gradient-to-r from-white via-blue-50 to-white border-t border-blue-100">
             <div className="h-1 w-full bg-gradient-to-r from-blue-500 via-cyan-400 to-blue-700" aria-hidden />
 
-            <div className="container mx-auto px-4 md:px-6 py-5 md:py-6">
+            <div className="container mx-auto px-4 md:px-6 py-5 md:py-6 flex flex-col items-center">
                 <div className="grid grid-cols-2 md:grid-cols-3 items-center gap-3 md:gap-4 justify-items-center md:justify-items-start">
                     <div className="hidden md:flex justify-start">
                         <Image
@@ -56,7 +56,7 @@ export default function Footer() {
                             alt="GTI"
                             width={60}
                             height={48}
-                            className="h-9 md:h-10 w-auto opacity-95"
+                            className="h-9 md:h-10 w-auto opacity-95 ml-20"
                         />
                     </div>
                 </div>

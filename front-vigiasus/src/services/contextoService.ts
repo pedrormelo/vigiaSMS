@@ -546,7 +546,7 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
 
         estaOcultoBackend = ctx.isOculto ?? ctx.estaOculto ?? false;
 
-        autorOriginalId = ctx.autorOriginalId || ctx.autorId;
+        autorOriginalId = ctx.autorOriginalId;
 
         gerenciaSlug = ctx.gerenciaSlug || ctx.gerencia?.slug;
         gerenciaNome = ctx.gerenciaNome || ctx.gerencia?.nome;
@@ -569,7 +569,7 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
         const v = item as BackendVersao;
         const ctxPai = v.contexto;
 
-        console.log(`📌 Mapeando versão isolada: v${v.versaoNumero}, status=${v.statusValidacao}, contextoId=${v.contextoId}`);
+        console.log(`📌 Mapeando versão isolada: v${v.versaoNumero}, status=${v.statusValidacao}, contextoId=${v.contexto?.id}`);
 
         if (!ctxPai) {
             contextoId = "unknown";
@@ -583,14 +583,14 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
             gerenciaId = ctxPai.gerenciaDonaId;
             estaOcultoBackend = ctxPai.isOculto ?? ctxPai.estaOculto ?? false;
 
-            autorOriginalId = ctxPai.autorOriginalId || ctxPai.autorId;
+            autorOriginalId = ctxPai.autorOriginalId;
 
             gerenciaSlug = ctxPai.gerenciaSlug || ctxPai.gerencia?.slug;
             gerenciaNome = ctxPai.gerenciaNome || ctxPai.gerencia?.nome;
             
-            // CORREÇÃO: Usar todas as versões do contexto (backend agora inclui contexto.contextoversao)
-            versoesLista = ctxPai.contextoversao || [v];
-            console.log(`  - Contexto.contextoversao disponível: ${ctxPai.contextoversao ? ctxPai.contextoversao.length : 'não'} versões`);
+            // CORREÇÃO: Usar apenas a versão atual, pois contextoversao não existe em BackendContextoBase
+            versoesLista = [v];
+            console.log('  - Contexto.contextoversao não disponível, usando apenas a versão atual.');
         }
         // IMPORTANTE: versaoRecente é a versão ESPECÍFICA desta linha do histórico
         versaoRecente = v;
@@ -694,11 +694,11 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
             nome: v.titulo,
             data: v.updatedAt,
             autor: v.solicitanteNome || v.user?.nome || v.solicitanteId || 'Sistema',
-            autorId: v.solicitanteId || v.contexto?.autorId || undefined,
+            autorId: v.solicitanteId || undefined,
             status: statusMapeado,
             estaOculta: v.isOculta ?? false,
             historico: historicoVersaoFrontend,
-            descricao: v.descricao,
+            descricao: v.descricao ?? undefined,
             url: absoluteUrlVersao,
             payload: frontTypeVersao === 'dashboard' ? payloadVersao : (payloadVersao ?? dadosVersaoRaw),
             type: frontTypeVersao,
@@ -752,7 +752,7 @@ function mapBackendToFrontend(item: BackendContexto | BackendVersao): Contexto {
         type: frontType,
         insertedDate: versaoRecente?.updatedAt || new Date().toISOString(),
         status: versaoRecente ? mapStatus(versaoRecente.statusValidacao) : StatusContexto.AguardandoGerente,
-        autorId: versaoRecente?.solicitanteId || versaoRecente?.contexto?.autorId || autorOriginalId,
+        autorId: versaoRecente?.solicitanteId || autorOriginalId,
         description: versaoRecente?.descricao || undefined,
         gerencia: gerenciaNome || gerenciaSlug || gerenciaId,
         payload: tipoBackend === 'DASHBOARD' ? (dadosEspecificos?.payload ?? undefined) : dadosEspecificos,

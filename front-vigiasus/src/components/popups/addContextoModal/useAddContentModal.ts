@@ -207,7 +207,7 @@ export const useModalAdicionarConteudo = ({
                 // Se o usuário escolheu Dashboard no modal de escolha, não force contexto.
                 if (abaInicial === 'dashboard') {
                     setAbaAtiva('dashboard');
-                    setAbaFonteDeDados('arquivo');
+                    setAbaFonteDeDados('upload');
                     setArquivoDeDados(arquivoAnexado);
 
                     const nomeSemExtensao = arquivoAnexado.name.split('.').slice(0, -1).join('.');

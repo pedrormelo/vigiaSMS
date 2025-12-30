@@ -1,7 +1,7 @@
 // src/components/validar/colunasTable/gerenteColumns.tsx
 
 import React from 'react';
-import { Column, Contexto } from "@/components/validar/typesDados";
+import { Column, Contexto, StatusContexto } from "@/components/validar/typesDados";
 import { FaEye } from 'react-icons/fa';
 import IconeDocumento from '@/components/validar/iconeDocumento';
 import { statusConfig } from './statusConfig'; 
@@ -37,7 +37,7 @@ export const gerenteColumns: Column<Contexto>[] = [
       const versaoEspecifica = row.versoes?.find(v => v.status === row.status) || row.versoes?.[0];
       const versaoNum = versaoEspecifica?.id || 1;
       const totalVersoes = row.versoes ? row.versoes.length : 1;
-      const versoesPublicadas = row.versoes ? row.versoes.filter(v => v.status === 'PUBLICADO').length : 0;
+      const versoesPublicadas = row.versoes ? row.versoes.filter(v => v.status === StatusContexto.Publicado).length : 0;
       const maiorVersao = row.versoes ? Math.max(...row.versoes.map(v => v.id)) : 1;
       const isVersaoMaisRecente = versaoNum === maiorVersao;
       

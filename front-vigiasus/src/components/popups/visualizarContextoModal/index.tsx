@@ -268,9 +268,16 @@ export function VisualizarContextoModal({
         }
     };
 
-    const alternarTelaCheia = (conteudo?: ConteudoVisualizacao | null) => {
+    const alternarTelaCheia = (event?: React.MouseEvent<HTMLButtonElement> | ConteudoVisualizacao | null) => {
+        // Se for evento de clique, apenas alterna tela cheia
+        if (event && typeof event === 'object' && 'preventDefault' in event) {
+            setEmTelaCheia(false);
+            setZoomLevel(1);
+            return;
+        }
+        // Se for chamada programática, aceita o conteúdo
         if (!emTelaCheia) {
-            setConteudoParaVisualizar(conteudo ?? conteudoParaVisualizar);
+            setConteudoParaVisualizar((event as ConteudoVisualizacao) ?? conteudoParaVisualizar);
             setEmTelaCheia(true);
             setZoomLevel(1);
             return;
@@ -542,7 +549,7 @@ export function VisualizarContextoModal({
                     <div className="flex-1 min-h-0 w-full h-full overflow-hidden">
                         <VisualizadorDeConteudo
                             tipo={conteudoParaTelaCheia.type}
-                            titulo={conteudoParaTelaCheia.title}
+                            titulo={conteudoParaTelaCheia.title ?? ''}
                             payload={conteudoParaTelaCheia.payload}
                             descricao={conteudoParaTelaCheia.description}
                             url={conteudoParaTelaCheia.url}

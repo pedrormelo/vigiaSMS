@@ -15,6 +15,7 @@ import AppTour from '@/components/tour/appTour';
 import { TourProvider } from '@/contexts/tourContext';
 import TourManager from '@/components/tour/tourManager';
 import IndicadorNavegacao from '@/components/ui/indicador-navegacao';
+import { Suspense } from 'react';
 
 const montserrat = Montserrat({
   subsets: ['latin'],
@@ -38,7 +39,9 @@ export default function RootLayout({
           <TourProvider>
             <GlobalDragDropProvider>
               <SessionTimeoutProvider>
-                <IndicadorNavegacao />
+                <Suspense fallback={null}>
+                  <IndicadorNavegacao />
+                </Suspense>
                 <AppShell>
                   {children}
                 </AppShell>

@@ -66,6 +66,7 @@ export function GraphCard({
     onRemove,
 }: GraphCardProps) {
     const config = graphTypeConfig[type] ?? graphTypeConfig.chart
+    // IconComponent agora é uma função que retorna o ícone já com className
     const IconComponent = config.icon
     const cardClasses = cn(
         "group relative flex h-full w-full flex-col justify-between rounded-lg md:rounded-2xl border border-blue-100 bg-white/95 p-3 md:p-5 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-400 hover:shadow-md",
@@ -95,7 +96,7 @@ export function GraphCard({
 
             <div className="flex items-center justify-between gap-2">
                 <div className={cn("flex h-8 md:h-10 w-8 md:w-10 items-center justify-center rounded-full flex-shrink-0", config.iconBg)}>
-                    <IconComponent className="h-4 w-4 md:h-5 md:w-5" />
+                    {IconComponent()}
                 </div>
                 <span className={cn("rounded-full px-2 md:px-3 py-0.5 md:py-1 text-[10px] md:text-[11px] font-semibold uppercase tracking-wide whitespace-nowrap", config.badge)}>
                     {config.label}

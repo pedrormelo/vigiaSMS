@@ -10,7 +10,7 @@ export interface Usuario {
     nome: string;
     email: string;
     cpf: string;
-    role: 'SECRETARIA' | 'DIRETOR' | 'GERENTE' | 'MEMBRO';
+    role: 'SECRETARIA' | 'DIRETOR' | 'GERENTE' | 'MEMBRO' | 'ADMIN';
     diretoriaId?: string | null;
     gerenciaId?: string | null;
     createdAt: string;

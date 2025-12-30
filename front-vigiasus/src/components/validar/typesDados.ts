@@ -47,6 +47,7 @@ export interface Versao {
   type?: FileType;
   docType?: string;
   chartType?: TipoGrafico;
+  motivoNovaVersao?: string;
 }
 // Alias para compatibilidade com o service
 export type VersaoContexto = Versao;

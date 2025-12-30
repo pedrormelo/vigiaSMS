@@ -136,37 +136,37 @@ const handleFinish = () => {
           targetId: "tour-mobile-nav-home",
           title: "Página Inicial",
           description: "Acesse a página inicial onde você vê todas as suas informações e métricas importantes.",
-          position: "top"
+          position: "top" as const
         },
         {
           targetId: "tour-mobile-nav-dashboard",
           title: "Dashboard",
           description: "Visualize gráficos e indicadores de desempenho da sua diretoria ou gerência.",
-          position: "top"
+          position: "top" as const
         },
         {
           targetId: "tour-mobile-nav-minhasGerencias",
           title: "Gerências",
           description: "Acesse todas as gerências vinculadas à sua diretoria.",
-          position: "top"
+          position: "top" as const
         },
         {
           targetId: "tour-mobile-nav-contextos",
           title: "Validar",
           description: "Revise e aprove contextos pendentes de validação.",
-          position: "top"
+          position: "top" as const
         },
         {
           targetId: "tour-mobile-nav-dadosGerais",
           title: "Dados",
           description: "Acesse dados consolidados e relatórios do sistema.",
-          position: "top"
+          position: "top" as const
         },
         {
           targetId: "tour-mobile-nav-ajuda",
           title: "Ajuda",
           description: "Encontre documentação, tutoriais e respostas para suas dúvidas.",
-          position: "top"
+          position: "top" as const
         }
       ].filter(step => {
         // Filtra passos cujos elementos não existem para evitar erros
