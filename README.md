@@ -1,8 +1,8 @@
-# VigiaSUS - Painel de Monitoramento Estratégico
+# Sige Saúde - Painel de Monitoramento Estratégico
 
 ## 🎯 Sobre o Projeto
 
-O **VigiaSUS** é uma plataforma digital desenvolvida para a Secretaria Municipal de Saúde de Jaboatão dos Guararapes. Seu principal objetivo é centralizar dados, relatórios e informações estratégicas para apoiar a tomada de decisões e a gestão da saúde pública no município.
+O **Sige Saúde** é uma plataforma digital desenvolvida para a Secretaria Municipal de Saúde de Jaboatão dos Guararapes. Seu principal objetivo é centralizar dados, relatórios e informações estratégicas para apoiar a tomada de decisões e a gestão da saúde pública no município.
 
 A aplicação permite que diferentes níveis hierárchicos (membros de equipe, gerentes e diretores) interajam com os dados, submetam novos "contextos" para aprovação e visualizem indicadores e dashboards de forma clara e intuitiva.
 
@@ -46,7 +46,7 @@ Este projeto foi construído com as seguintes tecnologias:
 
 ## 🛠️ Como Rodar o Projeto Localmente
 
-Para executar o VigiaSUS em seu ambiente de desenvolvimento, siga os passos abaixo.
+Para executar o Sige Saúde em seu ambiente de desenvolvimento, siga os passos abaixo.
 
 ### Pré-requisitos
 
@@ -57,7 +57,7 @@ Para executar o VigiaSUS em seu ambiente de desenvolvimento, siga os passos abai
 
 ```bash
 git clone https://github.com/pedrormelo/vigiaSMS.git
-cd front-vigiasus
+cd front-Sige Saúde
 ```
 
 ### 2\. Instalar as Dependências
